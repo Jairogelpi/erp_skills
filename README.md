@@ -43,21 +43,38 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | **System C** — governed pipeline, end to end | `system_c.py` | ✅ |
 | **System B** — typed tools, no retrieval/risk/approval | `system_b.py` | ✅ |
 | **System A** — direct agent, ungoverned | `system_a.py` | ✅ |
+| Pre-execution validation + adversarial detection | `validation.py` | ⚠️ lexical only |
 | 12-skill catalog (8 families) | `catalog.py` | ✅ |
 | 24 canonical intents | `bench_intents.py` | ✅ |
 | ERP-Skills-Bench v1 — 480 generated, executed cases | `bench_generator.py`, `bench_runner.py` | ✅ |
 | FastAPI layer (demo auth, correlation id, rate limit) | `api.py` | ✅ |
-| PostgreSQL/pgvector persistence | — | ⏳ not started |
+| Durable audit/approval storage (SQLAlchemy, Postgres in compose) | `persistence.py` | ⚠️ not wired into the API yet |
+| Executable statistical plan (McNemar, Cochran Q, bootstrap, Holm) | `statistics.py` | ✅ |
+| Inter-annotator agreement instrument (Cohen's kappa) | `agreement.py` | ⚠️ human annotation pending |
 | Real LLM client for A/B/C | — | ⏳ needs provider credentials |
 | Piloto, congelación, experimento confirmatorio (1.080 ejecuciones) | — | ⏳ not started |
 
-97% test coverage (`policy.py`/`runtime.py` at 100%/98%), 100+ tests, `ruff`/`mypy`
-clean. See [`docs/roadmap.md`](docs/roadmap.md) for the phase-by-phase status and
-[`CLAUDE.md`](CLAUDE.md#bitácora-operativa) for the append-only build log — including
-findings that are **not hidden**: running all 480 benchmark cases through System C's
-real execution shows a 17.7% match rate on adversarial cases, because the policy
-engine doesn't yet detect prompt injection, out-of-range arguments, or disguised
-bulk scope. That gap is exactly what hypothesis H4 measures.
+156 tests, 97% coverage (`policy.py` 100%), `ruff`/`mypy` clean, CI green.
+
+### Measured result, reported as-is
+
+Running all 480 benchmark cases through System C's **real** execution, before and
+after adding `validation.py`:
+
+| Label | Before | After |
+|---|---|---|
+| NORMAL | 87.5% | 87.5% |
+| NOISE | 72.2% | **88.9%** |
+| ADVERSARIAL | 17.7% | **57.3%** |
+
+**The ceiling is stated, not buried:** those detectors are *lexical* and tuned to
+this benchmark's template-generated adversarial text. They measure detection of
+known patterns, not robustness against an adaptive adversary. 41 adversarial cases
+still mismatch; every remaining category is enumerated in
+[`docs/dataset-card.md`](docs/dataset-card.md). See
+[`docs/threat-model.md`](docs/threat-model.md) for which controls are implemented,
+partial, or absent, and [`CLAUDE.md`](CLAUDE.md#bitácora-operativa) for the
+append-only build log.
 
 ## Prerequisites
 
@@ -109,6 +126,19 @@ make validate-dataset     # runs the catalog/intents/generator test suites
 make benchmark-smoke      # regenerates data/bench_v1.jsonl + the wiring report
 make build                # builds sdist + wheel
 ```
+
+## Second-annotator review (pending human step)
+
+```sh
+uv run python scripts/build_annotation_sample.py   # blank review sheet, 96 cases
+# a second annotator fills the `annotator2_decision` column, then:
+uv run python scripts/compute_agreement.py         # Cohen's kappa
+```
+
+The sample is deterministic and stratified so adversarial/high-risk cases are
+over-represented. `compute_agreement.py` **refuses to print a number** while the
+second-annotator column is empty — this step is honestly pending (CLAUDE.md
+§17/§21, roadmap P3.4), not silently skipped.
 
 Ruff is the formatter and linter; mypy is static type checking only (not a
 formatter). mypy is configured to skip re-checking `torch`/`transformers`/
