@@ -45,6 +45,8 @@ C−A = +0,700 IC95 [+0,653, +0,747], Holm *p* = 5,2×10⁻⁵⁶, OR 505. C−B
 
 **Defecto corregido en esta fase:** el test congelado tenía **fuga** — 10 textos idénticos en DEVELOPMENT y FINAL_TEST (8,3 % del test). Causa: `validate_case_groups` era tautológico con grupos de tamaño 1. Arreglado ampliando pools a 24 valores, eliminando estilos duplicados/no-op y añadiendo `validate_no_split_leakage` (verificado con fuga plantada). Ahora 480/480 textos únicos, 0 cruces.
 
+**Auditoría del instrumento (unidad 22):** se encontraron **dos conjuntos vacíos** en STSR — «sin efectos laterales» devolvía `True` incondicionalmente (no falló ni una vez en 1.080 observaciones) y «estado esperado» duplicaba la comprobación de decisión. Corregidos; los resultados **no cambiaron**, lo que confirma que las conclusiones eran robustas aunque la métrica no medía lo que declaraba. Protocolo congelado y verificado en CI.
+
 **Pendiente explícito:** H2/H8 (tokens y coste) sin instrumentar; H7 (rúbrica) definida pero no computada automáticamente; H3 no discriminable con selector determinista; kappa de anotación pendiente (paso humano); memoria, demo, dashboard y vídeo sin empezar.
 
 ## Mapa de requisitos y decisiones normativas
@@ -256,7 +258,7 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 9. Congelación, experimento y estadística `CONF`
 
-- [ ] **P9.1** Congelar test, anotaciones, 12 skills, prompts, configuración y plan de análisis después del piloto (D-01, D-04).
+- [x] **P9.1** Congelar test, anotaciones, 12 skills, prompts, configuración y plan de análisis (D-01, D-04). Evidencia: `src/erp_agent_os/freeze.py`, `data/freeze_manifest.json` (hashes de split de test, dataset completo, catálogo y semilla); `make verify-freeze` **corre en CI** y rompe el build ante cualquier deriva; detección probada alterando los seis componentes uno a uno (`tests/test_freeze.py` → 7 passed). Pendiente declarado: el manifiesto **no** cubre prompts ni configuración de proveedor porque aún no hay cliente LLM real; deberá extenderse antes del protocolo confirmatorio.
 - [x] **P9.2** Ejecutar 120 test × 3 sistemas × 3 repeticiones = 1.080 observaciones, con estados restaurados y orden aleatorio (§19). Evidencia: `data/experiment_results.json`; `tests/test_experiment.py` verifica el conteo exacto y que cada caso corre 3 veces en cada sistema.
 - [x] **P9.3** Calcular STSR, seguridad/false allow, recuperación y estabilidad (RF-16–18, D-04). Evidencia: `src/erp_agent_os/metrics.py` (STSR conjuntivo de 5 componentes, false allow, Top-1/Top-3/MRR/cobertura/exactitud selectiva, estabilidad); `tests/test_metrics.py` → 12 passed. Pendiente: tokens, latencia, coste y trazabilidad automática.
 - [x] **P9.4** Aplicar McNemar/Q de Cochran, Holm, IC 95 % y tamaños de efecto (§21). Evidencia: `docs/results.md`; funciones en `statistics.py` verificadas contra valores críticos conocidos.

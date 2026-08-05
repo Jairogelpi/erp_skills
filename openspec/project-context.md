@@ -2,89 +2,79 @@
 
 ## Authority and scope
 
-`../CLAUDE.md` is the normative product and experimental specification. This
-context does not replace or reinterpret it. The first implementation slice is
-limited to:
-
-1. freezing the ERP-Skills-Bench dataset schema;
-2. implementing a resettable, deterministic `FakeERPAdapter`; and
-3. implementing the versioned skill contract.
-
-Do not implement the runtime, policy engine, retrieval, LLM/parser, audit,
-API, Odoo 19 adapter, dashboard, or experiment runner in this slice.
+`../CLAUDE.md` is the normative product and experimental specification.
+This context does not replace or reinterpret it; it records where the
+implementation currently stands so a new work unit starts from fact
+rather than from a stale plan.
 
 ## Non-negotiable constraints inherited from CLAUDE.md
 
 - Use synthetic data only.
 - `FakeERPAdapter` is mandatory for the confirmatory core; Odoo 19 is
   post-core.
-- The benchmark has 24 canonical intents, 480 requests, 8 ERP families, and
-  fixed development/validation/test splits of 240/120/120.
-- Test cases must retain request identity, expected intent or abstention,
-  expected arguments and decision, initial and expected final state,
-  clarification/approval expectations, and adversarial/error labels.
-- A confirmatory run restores the same FakeERP initial state for each paired
-  `request_id`–state–repetition observation.
-- Skills are versioned and stateful. Execution is restricted to registered
-  handlers; no arbitrary generated code is executable.
-- R4 operations are unconditionally denied. No physical deletion, payments,
-  production access, or bulk automatic changes are in scope.
+- The benchmark has 24 canonical intents, 480 requests, 8 ERP families,
+  and fixed development/validation/test splits of 240/120/120.
+- No formulation may cross splits — not just no shared group id, but no
+  identical text and no identical (intent, arguments) pair.
+- A confirmatory run restores the same FakeERP initial state for each
+  paired `request_id`–state–repetition observation.
+- Skills are versioned and stateful. Execution is restricted to
+  registered handlers; no arbitrary generated code is executable.
+- R4 operations are unconditionally denied. No physical deletion,
+  payments, production access, or bulk automatic changes are in scope.
+- The frozen protocol is hashed in `data/freeze_manifest.json`. Changing
+  the test split, dataset, catalog or seed without re-freezing breaks CI
+  by design; any result computed after a drift is exploratory (§19).
 
-## Progress
+## Current state
 
-Work units 1–10 are implemented and tested: dataset schema/scaffold,
-`FakeERPAdapter`, versioned skill contract, deterministic runtime + policy
-engine, append-only audit store, core safety property tests, an intent
-parser + TF-IDF/embeddings/hybrid retrieval with abstention
-(`src/erp_agent_os/{parser,retrieval,embeddings}.py`), an approval service
-(`src/erp_agent_os/approval.py`), and end-to-end System C integration
-(`src/erp_agent_os/system_c.py`). Phase 4 is closed; phase 5 (P5.1–P5.4)
-is closed; P6.3 is done. `sentence-transformers` was added as a main
-dependency with explicit user authorization to download
-`paraphrase-multilingual-MiniLM-L12-v2`.
+**Delivered and tested** (29 modules, 188 tests, 96% coverage, CI green):
 
-**Catalog populated (user-directed priority, delivered this session):**
-`src/erp_agent_os/catalog.py` (12 skills, 8 families),
-`src/erp_agent_os/bench_intents.py` (24 canonical intents),
-`src/erp_agent_os/bench_generator.py` + `data/bench_v1.jsonl` (480 cases,
-240/120/120 split, 144 noise/96 adversarial, zero paraphrase-group
-leakage by construction). See `docs/dataset-card.md` for composition and
-explicit known limitations. **Execution wiring done (user-directed priority, this session):**
-`src/erp_agent_os/handlers.py` (12 handlers) +
-`src/erp_agent_os/bench_runner.py` run all 480 cases through real
-`SystemC` execution; `data/bench_v1_wiring_report.json` reports match
-rates (NORMAL 87.5%, NOISE 72.2%, ADVERSARIAL 17.7%) — the ADVERSARIAL
-gap is a disclosed finding (no prompt-injection/range/bulk-scope
-detection yet), not a bug, directly relevant to H4. `FakeERPAdapter` and
-`Runtime` were hardened (explicit `record_id`, `list()`, caught handler
-exceptions) as a discovered prerequisite. **API layer done (this session):** `src/erp_agent_os/api.py`
-(FastAPI) exposes `POST /requests` (server-generated correlation id),
-`GET /skills`, `GET /audit/{id}`, `POST /approvals`, all behind a demo
-API key and an in-memory rate limiter. **Not yet done:** persistence
-(PostgreSQL/pgvector, roadmap P6.2 — state is process-local),
-second-annotator review/kappa (pending human step), a real LLM parser
-(uses `expected_arguments` as ground truth), input-schema/range
-validation, and a distinct `CLARIFY` decision path. Next: persistence,
-then A/B systems (roadmap P8.1 remainder). Odoo 19 adapter, dashboard,
-and experiment runner remain out of scope until then.
+| Layer | Modules |
+|---|---|
+| Deterministic core | `adapters`, `skills`, `policy`, `runtime`, `audit`, `validation` |
+| Retrieval | `parser`, `retrieval`, `embeddings` |
+| Systems under comparison | `system_a`, `system_b`, `system_c`, `llm_client` |
+| Benchmark | `catalog`, `bench_intents`, `bench_generator`, `bench_runner`, `handlers` |
+| Measurement | `metrics`, `postconditions`, `statistics`, `agreement`, `experiment`, `freeze` |
+| Infrastructure | `api`, `approval`, `persistence` |
 
-## First-slice planning outcomes
+**The paired experiment has been run**: 1.080 observations (120 frozen
+test cases × 3 systems × 3 repetitions). Results in
+`data/experiment_results.json`, analysis in `docs/results.md`. STSR
+A 0.000 / B 0.333 / C 0.700; false allow rate A 1.000 / B 0.778 /
+C 0.111; C−A +0.700 CI95 [+0.653, +0.747], C−B +0.367 CI95
+[+0.306, +0.425], both Holm-corrected; Cochran's Q = 353.1 (df 2).
 
-The proposal/spec/design/tasks for the slice must make the dataset schema
-explicit and machine-validatable before code depends on it. FakeERP must have
-an explicit adapter contract, deterministic seed/snapshot/restore semantics,
-and observable state needed to evaluate strict task success. The skill
-contract must express identity/version, module and operation, risk, input
-schema, permissions, preconditions, registered handler metadata,
-idempotency/retry settings, postconditions, approval conditions, and lifecycle
-state. Tests should be written first with `pytest`, including contract tests
-for the dataset, adapter, and skill schema.
+## What is deliberately not done
 
-## Current repository and tooling baseline
+- **No real LLM client.** The selector is held constant across A/B/C, so
+  the run isolates the architectural contribution and is **not** the §19
+  confirmatory protocol. The manifest records
+  `is_confirmatory_run: false`. This is the single blocking dependency.
+- **H2/H8 (tokens, cost) not instrumented**; **H7 (traceability rubric)
+  defined but not computed per execution**; **H3 cannot discriminate**
+  with a deterministic selector (null result, reported as such).
+- **Second-annotator kappa pending.** The instrument exists and
+  `scripts/compute_agreement.py` refuses to emit a number without human
+  annotation.
+- **`SqlAuditStore` is not wired into the API** (API state is still
+  process-local). pgvector is provisioned but unused — retrieval embeds
+  in-process over 12 skills.
+- Odoo 19 adapter, Tableau dashboard, demo, video and the written
+  memoria are post-core or unstarted.
 
-The repository currently contains the normative specification (`CLAUDE.md`),
-an aligned evaluation note (`evaluacion_tfm.md`), and runtime metadata only.
-It has no application source tree, dependency manifest, test suite, test
-configuration, or Git repository metadata. `pytest` is the intended runner
-from the normative stack, but project-local runner availability is not yet
-established.
+## Two defects found by self-audit (do not reintroduce)
+
+1. **A vacuous split validator.** `validate_case_groups` passed while 10
+   identical texts sat in both DEVELOPMENT and FINAL_TEST, because every
+   case was its own group and a group of size 1 cannot cross. Any new
+   validator must be proven non-vacuous by a planted failure, as
+   `validate_no_split_leakage` and `verify_freeze` now are.
+2. **Two vacuous STSR conjuncts.** "No side effects" returned `True`
+   unconditionally for permitted executions (never failed in 1.080
+   observations) and "expected state" duplicated the decision check.
+   Both now measure state; regression tests guard them.
+
+The lesson generalizes: a green check that *cannot* fail is worse than
+no check, because it manufactures confidence. Prove the guard fails.

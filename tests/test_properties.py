@@ -16,6 +16,7 @@ from erp_agent_os.dataset import RiskClass
 from erp_agent_os.policy import PolicyDecision, decide
 from erp_agent_os.runtime import Runtime
 from erp_agent_os.skills import Execution, Permissions, SkillDefinition, SkillState
+from erp_agent_os.validation import Finding, FindingKind
 
 _PERMISSIVENESS = {
     PolicyDecision.DENY: 0,
@@ -148,3 +149,41 @@ def test_inactive_state_never_more_permissive_than_active(risk, approval):
     )
 
     assert _PERMISSIVENESS[inactive.decision] <= _PERMISSIVENESS[active.decision]
+
+
+@given(
+    risk=st.sampled_from(_NON_R4_RISKS),
+    approval=st.booleans(),
+    kind=st.sampled_from(list(FindingKind)),
+)
+def test_a_finding_never_makes_a_decision_more_permissive(risk, approval, kind):
+    """Adding evidence of a problem must never loosen the decision.
+
+    `policy.decide` gained a `findings` argument; the monotonicity
+    property above predates it and did not cover it. A blocking finding
+    that somehow produced a *more* permissive outcome would be a serious
+    security defect, so it is asserted directly.
+    """
+    active = skill(risk_class=risk, state=SkillState.ACTIVE)
+
+    without = decide(active, "sales_user", approval_granted=approval)
+    with_finding = decide(
+        active,
+        "sales_user",
+        approval_granted=approval,
+        findings=[Finding(kind, "planted")],
+    )
+
+    assert _PERMISSIVENESS[with_finding.decision] <= _PERMISSIVENESS[without.decision]
+
+
+@given(risk=st.sampled_from(_NON_R4_RISKS), approval=st.booleans())
+def test_a_blocking_finding_always_denies(risk, approval):
+    active = skill(risk_class=risk, state=SkillState.ACTIVE)
+    outcome = decide(
+        active,
+        "sales_user",
+        approval_granted=approval,
+        findings=[Finding(FindingKind.PROMPT_INJECTION, "planted")],
+    )
+    assert outcome.decision is PolicyDecision.DENY

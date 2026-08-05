@@ -95,6 +95,15 @@ class SplitPlan(_Model):
 
 
 def validate_case_groups(cases: list[BenchmarkCase]) -> None:
+    """Check the declared paraphrase-group id does not cross splits.
+
+    **This is NOT sufficient on its own.** When every case is its own
+    group, this check is vacuous -- a group of size 1 cannot cross
+    anything -- and it passed while 10 identical request texts sat in both
+    DEVELOPMENT and FINAL_TEST. Always pair it with
+    `validate_no_split_leakage`, which checks the text and the
+    (intent, arguments) pair and is proven non-vacuous by a planted leak.
+    """
     groups: dict[str, DatasetSplit] = {}
     for case in cases:
         previous = groups.setdefault(case.paraphrase_group_id, case.split)

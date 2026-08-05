@@ -30,14 +30,23 @@ by intent index so all 11 categories appear across the 24 intents).
 
 ## Split methodology
 
-Every case is its own paraphrase group (`paraphrase_group_id ==
-request_id`): each formulation is generated independently from its own
-seeded slot values, so no two cases are literal duplicates sharing a group,
-and `dataset.validate_case_groups` trivially cannot detect leakage because
-no group has more than one member. Per intent, the 20 drafts are
-deterministically shuffled (seeded) before slicing into 10 dev / 5
-validation / 5 test, so category labels interleave across splits instead
-of clustering in one (verified: `python -m pytest tests/test_bench_generator.py`).
+Split allocation is 10 development / 5 validation / 5 test per intent
+(240/120/120 overall), assigned after a seeded shuffle.
+
+**Corrección de un defecto anterior.** Una versión previa de esta tarjeta
+afirmaba que, al ser cada caso su propio grupo de paráfrasis,
+`validate_case_groups` «trivialmente no puede detectar fuga». Eso era
+cierto — y precisamente por eso era **una justificación equivocada**: el
+validador pasaba de forma vacua mientras **10 textos idénticos** estaban a
+la vez en `DEVELOPMENT` y `FINAL_TEST` (8,3 % del test). §17 prohíbe que
+cruce «ni formulación semánticamente equivalente», no solo un id de grupo.
+
+Arreglado: pools de valores ampliados de 4–8 a 24, asignación de slots sin
+repetición dentro de una intención, un estilo duplicado sustituido y el
+truncado de `incomplete_instruction` alargado. El validador real es ahora
+`validate_no_split_leakage` (texto normalizado **y** par
+(intención, argumentos)), **probado con una fuga plantada** para que no
+vuelva a ser vacuo. Estado actual: **480/480 textos únicos, 0 cruces**.
 
 ## Execution wiring (done — roadmap P8 groundwork)
 
@@ -50,8 +59,8 @@ produces `data/bench_v1_wiring_report.json`. Latest run:
 
 | Label | Matched | Total | Rate | (first pass, before `validation.py`) |
 |---|---|---|---|---|
-| NORMAL | 210 | 240 | 87.5% | 87.5% |
-| NOISE | 128 | 144 | 88.9% | 72.2% |
+| NORMAL | 211 | 240 | 87.9% | 87.5% |
+| NOISE | 129 | 144 | 89.6% | 72.2% |
 | ADVERSARIAL | 55 | 96 | 57.3% | 17.7% |
 
 The first-pass column is the honest baseline measured *before* any

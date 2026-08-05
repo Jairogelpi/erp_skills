@@ -53,11 +53,12 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Metrics: STSR, false allow, Top-1/Top-3/MRR, stability | `metrics.py` | ✅ |
 | Executable postconditions (verification engine) | `postconditions.py` | ✅ |
 | Paired A/B/C experiment runner (1.080 observations) | `experiment.py` | ✅ |
+| Freeze manifest + drift detection (CI-enforced) | `freeze.py` | ✅ |
 | Inter-annotator agreement instrument (Cohen's kappa) | `agreement.py` | ⚠️ human annotation pending |
 | Real LLM client for A/B/C | — | ⏳ needs provider credentials |
 | Confirmatory run with a real LLM (CLAUDE.md §19) | — | ⏳ needs provider credentials |
 
-176 tests, `ruff`/`mypy` clean, CI green.
+188 tests, 96% coverage, `ruff`/`mypy` clean, CI green.
 
 ### Measured result: the paired A/B/C experiment
 
@@ -138,6 +139,7 @@ make test                 # pytest runs the full suite
 make coverage             # pytest reports package coverage
 make validate-dataset     # runs the catalog/intents/generator test suites
 make benchmark-smoke      # regenerates data/bench_v1.jsonl + the wiring report
+make verify-freeze        # fails if the frozen test split or catalog drifted
 make experiment           # runs the 1.080-execution paired A/B/C experiment
 make build                # builds sdist + wheel
 ```

@@ -1,3 +1,13 @@
+> **CORRECCIÓN (unidad 21).** El razonamiento marcado abajo sobre los
+> grupos de paráfrasis **era erróneo** y produjo una fuga real: 10 textos
+> idénticos acabaron a la vez en `DEVELOPMENT` y `FINAL_TEST` (8,3 % del
+> test). Que un grupo de tamaño 1 «trivialmente no pueda cruzar» no
+> satisface §17, que prohíbe además que cruce cualquier *formulación
+> semánticamente equivalente*. Se conserva el texto original porque esta
+> bitácora es append-only, pero **no debe leerse como una decisión de
+> diseño válida**. El arreglo y el validador no vacuo están en
+> `openspec/changes/close-scientific-core/`.
+
 # Design: ERP-Skills-Bench v1 generation
 
 ## Approach
