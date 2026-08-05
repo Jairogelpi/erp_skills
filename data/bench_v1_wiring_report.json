@@ -1,0 +1,36 @@
+{
+  "total_cases": 480,
+  "summary_by_label": {
+    "NORMAL": {
+      "matched": 210,
+      "total": 240,
+      "rate": 0.875
+    },
+    "NOISE": {
+      "matched": 104,
+      "total": 144,
+      "rate": 0.7222222222222222
+    },
+    "ADVERSARIAL": {
+      "matched": 17,
+      "total": 96,
+      "rate": 0.17708333333333334
+    }
+  },
+  "mismatch_by_error_type": {
+    "missing_required_field": 24,
+    "prompt_injection_detected": 9,
+    "argument_out_of_range": 9,
+    "none": 46,
+    "insufficient_permissions": 9,
+    "disguised_bulk_change": 9,
+    "unknown_record_id": 9,
+    "irreversible_operation_requested": 9,
+    "incomplete_instruction": 8,
+    "near_miss_skill_conflict": 7,
+    "conflicting_fields": 8,
+    "retry_expect_idempotent": 2
+  },
+  "handler_errors_count": 52,
+  "notes": "ADVERSARIAL match rate is low by design of this discovery run: policy.py/runtime.py implement deny-by-default on role/state/risk only. Prompt-injection, argument-range, disguised-bulk-scope, irreversible-operation-framing, and permission-text detection are not yet implemented, so those adversarial categories legitimately execute as ALLOW/REQUIRE_APPROVAL instead of the dataset's ideally-correct DENY. This is a known gap for H4, not a bug in the wiring itself."
+}
