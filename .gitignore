@@ -1,0 +1,70 @@
+# Virtual environments and Python/tool caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.python-version
+.pytype/
+.mypy_cache/
+.pyre/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+
+# Coverage, tests, builds, and generated local artifacts
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.pytest_benchmark/
+*.log
+*.tmp
+*.bak
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+site/
+.benchmarks/
+
+# Local configuration, secrets, and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.secrets
+secrets/
+credentials/
+
+# Local developer/runtime state
+.atl/
+.pi-subagents/
+.mcp/local/
+.mcp/tool-venv/
+
+# IDE and operating-system files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Retained reviewable templates, provenance, and documentation
+!.mcp/codebase-memory.template.json
+!.ponytail/UPSTREAM.md
+!.ponytail/LICENSE
+!README.md
+!docs/

@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "codebase-memory": {
+      "command": "__REPOSITORY_ROOT__/.mcp/local/bin/codebase-memory-mcp",
+      "cwd": "__REPOSITORY_ROOT__",
+      "env": {
+        "CBM_ALLOWED_ROOT": "__REPOSITORY_ROOT__",
+        "CBM_CACHE_DIR": "__REPOSITORY_ROOT__/.mcp/local/cache",
+        "CBM_DIAGNOSTICS": "0",
+        "CBM_LOG_LEVEL": "warn"
+      }
+    }
+  },
+  "x-tool-policy": {
+    "access_mode": "read-mostly",
+    "strict_read_only": false,
+    "rationale": "Upstream codebase-memory-mcp exposes mutable tools; do not treat this configuration as strict read-only."
+  },
+  "x-provenance": {
+    "upstream": "https://github.com/DeusData/codebase-memory-mcp",
+    "release": "v0.9.1-rc.1",
+    "upstream_commit": "4bbe0984f785b097956fe95f976111b043122848",
+    "checksums_sha256": "4f7c514f6a384950a2f72c4bd3507b9ab9de57704e7342bf1f695b07534b1429",
+    "license": "MIT"
+  }
+}

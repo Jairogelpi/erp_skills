@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "erp-agent-os"
+version = "0.1.0"
+description = "Deterministic, synthetic-only ERP Agent OS foundations"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = ["pydantic>=2,<3"]
+
+[dependency-groups]
+dev = [
+  "build==1.2.2.post1",
+  "mypy==1.15.0",
+  "pytest==8.3.5",
+  "pytest-cov==6.0.0",
+  "ruff==0.11.13",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+extend-exclude = [
+  ".atl",
+  ".benchmarks",
+  ".mcp/local",
+  ".pi",
+  ".pi-subagents",
+  ".pytest_cache",
+  ".ruff_cache",
+  ".venv",
+  "build",
+  "dist",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]

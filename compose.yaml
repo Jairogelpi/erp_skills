@@ -1,0 +1,11 @@
+---
+# Invoke with: docker compose --env-file config/development.defaults <command>
+services:
+  development:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ERP_AGENT_OS_MODE: ${ERP_AGENT_OS_MODE:-development}
+    ports:
+      - "${ERP_AGENT_OS_PORT:-8000}:8000"

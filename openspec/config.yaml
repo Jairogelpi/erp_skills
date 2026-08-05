@@ -1,0 +1,40 @@
+---
+# SDD configuration for ERP Agent OS. CLAUDE.md remains normative for
+# product scope and experiment protocol.
+project:
+  name: ERP Agent OS
+  repository_context: epistemologi
+  normative_specification: ../CLAUDE.md
+  language: Python 3.12
+
+sdd:
+  artifact_store: both
+  execution_mode: auto
+  strict_tdd: true
+  phase_rules:
+    - Complete one approved SDD phase at a time.
+    - Keep implementation slices within the frozen scope in CLAUDE.md.
+    - Freeze the dataset schema before FakeERP or dependent runtime work.
+    - Build FakeERP before the skill contract; exclude Odoo 19 from core.
+    - Preserve the confirmatory benchmark protocol and frozen-test boundary.
+  current_planning_slice:
+    - Freeze ERP-Skills-Bench dataset schema and minimal scaffold (work unit 1).
+    - Defer FakeERPAdapter and skill contract to a follow-on SDD change.
+
+testing:
+  runner: pytest
+  command: python -m pytest
+  coverage_command: python -m pytest --cov
+  strict_tdd_cycle: RED -> GREEN -> TRIANGULATE -> REFACTOR
+  planned_quality_tools:
+    - pytest-cov
+    - Hypothesis
+    - Ruff
+    - mypy
+  discovered_capabilities: >-
+    No application manifest, test suite, or project-local test configuration
+    exists yet.
+
+review:
+  strategy: auto-forecast
+  changed_line_budget: 400
