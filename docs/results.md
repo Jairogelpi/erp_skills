@@ -139,6 +139,64 @@ donde no hay confianza mejora la precisión sin sacrificar utilidad neta.
 
 ---
 
+## Segmentación (§21)
+
+§21 exige analizar por módulo, riesgo y etiqueta: un sistema puede parecer
+sólido en agregado y fallar una familia entera.
+
+### Por módulo
+
+| Estrato | A | B | C | n (por sistema) |
+|---|---|---|---|---|
+| billing | 0,000 | 0,800 | 0,900 | 30 |
+| contacts | 0,000 | 0,400 | 0,500 | 30 |
+| crm | 0,000 | 0,500 | 0,767 | 90 |
+| inventory | 0,000 | 0,600 | 0,900 | 30 |
+| product | 0,000 | 0,000 | 1,000 | 30 |
+| purchasing | 0,000 | 0,400 | 0,900 | 30 |
+| sales | 0,000 | 0,100 | 0,500 | 90 |
+| tasks | 0,000 | 0,000 | 0,400 | 30 |
+
+### Por clase de riesgo
+
+| Estrato | A | B | C | n (por sistema) |
+|---|---|---|---|---|
+| R0 | 0,000 | 0,600 | 0,700 | 90 |
+| R1 | 0,000 | 0,367 | 0,633 | 180 |
+| R2 | 0,000 | 0,000 | 1,000 | 60 |
+| R3 | 0,000 | 0,000 | 0,500 | 30 |
+
+### Por etiqueta
+
+| Estrato | A | B | C | n (por sistema) |
+|---|---|---|---|---|
+| ADVERSARIAL | 0,000 | 0,053 | 0,579 | 57 |
+| NOISE | 0,000 | 0,297 | 0,676 | 111 |
+| NORMAL | 0,000 | 0,438 | 0,750 | 192 |
+
+**Lectura honesta de los puntos débiles de C:** `contacts` es su peor
+módulo (0.500) y R3 su peor clase de riesgo
+(0.500). En R3 la política exige simulación incluso
+tras aprobación (§16), de modo que los casos que el dataset espera
+ejecutados no pueden puntuar: es una tensión real entre la norma de
+seguridad y la métrica de éxito, no un fallo de implementación, y debe
+discutirse como tal en la memoria.
+
+### Riesgo de reutilización errónea (§20)
+
+| Sistema | false-reuse risk |
+|---|---|
+| A | 0.415 |
+| B | 0.390 |
+| C | **0.220** |
+
+Proporción de reutilizaciones automáticas que eligieron la skill
+equivocada. C reutiliza mal en un 22.0 % de los casos en que se
+compromete, frente a 39.0 % de B: abstenerse cuando no hay
+confianza reduce la reutilización errónea, que es lo que H6 predice.
+
+---
+
 ## Hipótesis no evaluadas en esta ejecución
 
 | H | Estado | Motivo |

@@ -6,6 +6,7 @@ from erp_agent_os.metrics import (
     ExecutionRecord,
     retrieval_metrics,
     security_metrics,
+    segment_success,
     stability,
     stsr_breakdown,
 )
@@ -178,3 +179,57 @@ def test_conjunct4_for_an_allow_requires_postconditions_not_just_the_decision():
     breakdown = stsr_breakdown(case, record(case, postconditions_met=False))
     assert breakdown.correct_action is True
     assert breakdown.expected_state is False
+
+
+def test_false_reuse_risk_counts_wrong_automatic_reuses():
+    # §20 "Reutilización": committing to the wrong skill is a bad reuse,
+    # even when the abstention rate looks healthy.
+    case = a_case(expected_decision=ExpectedDecision.ALLOW, error_type="none")
+    wrong = record(case, selected_skill_id="tasks.create_task")
+
+    metrics = retrieval_metrics(CASES, [wrong])
+
+    assert metrics.coverage == 1.0
+    assert metrics.false_reuse_risk == 1.0
+    assert metrics.selective_accuracy == 0.0
+
+
+def test_false_reuse_risk_is_zero_on_correct_reuse():
+    case = a_case(expected_decision=ExpectedDecision.ALLOW, error_type="none")
+    assert retrieval_metrics(CASES, [record(case)]).false_reuse_risk == 0.0
+
+
+@pytest.mark.parametrize("dimension", ["module", "risk_class", "label"])
+def test_segmentation_partitions_every_observation(dimension):
+    cases = CASES[:40]
+    records = [record(c) for c in cases]
+
+    segments = segment_success(cases, records, dimension)
+
+    # Every observation lands in exactly one bucket -- a segmentation that
+    # silently drops cases would misreport per-segment rates.
+    assert sum(s["n"] for s in segments.values()) == len(records)
+    assert all(0.0 <= s["stsr"] <= 1.0 for s in segments.values())
+
+
+def test_segmentation_rejects_an_unknown_dimension():
+    with pytest.raises(ValueError):
+        segment_success(CASES[:5], [record(c) for c in CASES[:5]], "nonexistent")
+
+
+def test_segmentation_separates_a_failing_family():
+    # A system can look fine overall while failing an entire module; §21
+    # requires that to be visible.
+    cases = CASES[:30]
+    records = [
+        record(
+            c,
+            postconditions_met=(c.module != "crm"),
+            decision=c.expected_decision.value,
+        )
+        for c in cases
+    ]
+    segments = segment_success(cases, records, "module")
+    if "crm" in segments and len(segments) > 1:
+        others = [k for k in segments if k != "crm"]
+        assert segments["crm"]["stsr"] <= max(segments[o]["stsr"] for o in others)

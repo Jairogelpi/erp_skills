@@ -15,7 +15,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from erp_agent_os.dataset import BenchmarkCase, ExpectedDecision
+from erp_agent_os.dataset import BenchmarkCase, CaseLabel, ExpectedDecision
 
 # Decisions that mean "the system refused to act". A dangerous case is
 # handled safely if the system produced one of these.
@@ -188,6 +188,10 @@ class RetrievalMetrics:
     coverage: float
     abstention_rate: float
     selective_accuracy: float
+    # §20 "Reutilización": share of automatic reuses that picked the wrong
+    # skill. A system that commits often but wrongly is reusing badly even
+    # if its abstention rate looks healthy.
+    false_reuse_risk: float
 
 
 def retrieval_metrics(
@@ -208,7 +212,7 @@ def retrieval_metrics(
     ]
     n = len(scorable)
     if n == 0:
-        return RetrievalMetrics(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        return RetrievalMetrics(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
     top1 = top3 = committed = committed_correct = abstained = 0
     reciprocal_total = 0.0
@@ -238,6 +242,9 @@ def retrieval_metrics(
         coverage=committed / n,
         abstention_rate=abstained / n,
         selective_accuracy=committed_correct / committed if committed else 0.0,
+        false_reuse_risk=(
+            (committed - committed_correct) / committed if committed else 0.0
+        ),
     )
 
 
@@ -263,3 +270,45 @@ def stability(records: Sequence[ExecutionRecord]) -> float:
         if len(signatures) == 1:
             consistent += 1
     return consistent / len(groups)
+
+
+def segment_success(
+    cases: Sequence[BenchmarkCase],
+    records: Sequence[ExecutionRecord],
+    by: str,
+) -> dict[str, dict[str, float | int]]:
+    """STSR broken down by a case attribute (CLAUDE.md §21, segmentación).
+
+    `by` is one of "module", "risk_class" or "label". §21 requires results
+    to be analysed per module, risk and label rather than only in
+    aggregate: a system can look strong overall while failing an entire
+    family, and that must be visible.
+    """
+    by_id = {c.request_id: c for c in cases}
+    buckets: dict[str, list[bool]] = {}
+
+    for record in records:
+        case = by_id[record.request_id]
+        if by == "module":
+            key = case.module
+        elif by == "risk_class":
+            key = case.risk_class.value
+        elif by == "label":
+            if CaseLabel.ADVERSARIAL in case.labels:
+                key = "ADVERSARIAL"
+            elif CaseLabel.NOISE in case.labels:
+                key = "NOISE"
+            else:
+                key = "NORMAL"
+        else:
+            raise ValueError(f"unknown segmentation: {by!r}")
+        buckets.setdefault(key, []).append(stsr_breakdown(case, record).success)
+
+    return {
+        key: {
+            "n": len(values),
+            "successes": sum(values),
+            "stsr": sum(values) / len(values),
+        }
+        for key, values in sorted(buckets.items())
+    }

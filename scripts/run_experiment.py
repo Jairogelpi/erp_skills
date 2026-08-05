@@ -18,6 +18,7 @@ from erp_agent_os.llm_client import DeterministicStubClient
 from erp_agent_os.metrics import (
     retrieval_metrics,
     security_metrics,
+    segment_success,
     stability,
     stsr_breakdown,
 )
@@ -121,6 +122,15 @@ def main() -> None:
             }
             for s, m in security.items()
         },
+        "segmentation": {
+            dimension: {
+                system: segment_success(
+                    test_cases, per_system_records[system], dimension
+                )
+                for system in ("A", "B", "C")
+            }
+            for dimension in ("module", "risk_class", "label")
+        },
         "H5_retrieval": {
             s: {
                 "n": m.n,
@@ -130,6 +140,7 @@ def main() -> None:
                 "coverage": m.coverage,
                 "abstention_rate": m.abstention_rate,
                 "selective_accuracy": m.selective_accuracy,
+                "false_reuse_risk": m.false_reuse_risk,
             }
             for s, m in retrieval.items()
         },

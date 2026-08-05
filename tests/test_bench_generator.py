@@ -34,8 +34,28 @@ def test_noise_and_adversarial_counts_match_spec():
 
 
 def test_no_paraphrase_group_crosses_splits():
+    # Contract check only. This assertion is WEAK by construction: every
+    # case is its own group, so it cannot fail. The real leakage gate is
+    # test_no_identical_text_or_semantics_crosses_splits below, which is
+    # proven non-vacuous by a planted leak.
     cases = generate_cases()
-    validate_case_groups(cases)  # raises ValueError on leakage
+    validate_case_groups(cases)
+
+
+def test_validate_case_groups_still_detects_a_genuine_group_crossing():
+    # Even though it is insufficient for this dataset, the mechanism must
+    # work: a real shared group id spanning two splits has to raise.
+    cases = generate_cases()
+    dev = next(c for c in cases if c.split is DatasetSplit.DEVELOPMENT)
+    twin = dev.model_copy(
+        update={
+            "request_id": "twin",
+            "split": DatasetSplit.FINAL_TEST,
+            "paraphrase_group_id": dev.paraphrase_group_id,
+        }
+    )
+    with pytest.raises(ValueError, match="crosses splits"):
+        validate_case_groups([dev, twin])
 
 
 def test_expected_skill_is_cataloged_or_abstention():

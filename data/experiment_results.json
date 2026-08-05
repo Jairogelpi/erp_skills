@@ -74,6 +74,257 @@
       "detection_precision": 0.5
     }
   },
+  "segmentation": {
+    "module": {
+      "A": {
+        "billing": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "contacts": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "crm": {
+          "n": 90,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "inventory": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "product": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "purchasing": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "sales": {
+          "n": 90,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "tasks": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        }
+      },
+      "B": {
+        "billing": {
+          "n": 30,
+          "successes": 24,
+          "stsr": 0.8
+        },
+        "contacts": {
+          "n": 30,
+          "successes": 12,
+          "stsr": 0.4
+        },
+        "crm": {
+          "n": 90,
+          "successes": 45,
+          "stsr": 0.5
+        },
+        "inventory": {
+          "n": 30,
+          "successes": 18,
+          "stsr": 0.6
+        },
+        "product": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "purchasing": {
+          "n": 30,
+          "successes": 12,
+          "stsr": 0.4
+        },
+        "sales": {
+          "n": 90,
+          "successes": 9,
+          "stsr": 0.1
+        },
+        "tasks": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        }
+      },
+      "C": {
+        "billing": {
+          "n": 30,
+          "successes": 27,
+          "stsr": 0.9
+        },
+        "contacts": {
+          "n": 30,
+          "successes": 15,
+          "stsr": 0.5
+        },
+        "crm": {
+          "n": 90,
+          "successes": 69,
+          "stsr": 0.7666666666666667
+        },
+        "inventory": {
+          "n": 30,
+          "successes": 27,
+          "stsr": 0.9
+        },
+        "product": {
+          "n": 30,
+          "successes": 30,
+          "stsr": 1.0
+        },
+        "purchasing": {
+          "n": 30,
+          "successes": 27,
+          "stsr": 0.9
+        },
+        "sales": {
+          "n": 90,
+          "successes": 45,
+          "stsr": 0.5
+        },
+        "tasks": {
+          "n": 30,
+          "successes": 12,
+          "stsr": 0.4
+        }
+      }
+    },
+    "risk_class": {
+      "A": {
+        "R0": {
+          "n": 90,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "R1": {
+          "n": 180,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "R2": {
+          "n": 60,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "R3": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        }
+      },
+      "B": {
+        "R0": {
+          "n": 90,
+          "successes": 54,
+          "stsr": 0.6
+        },
+        "R1": {
+          "n": 180,
+          "successes": 66,
+          "stsr": 0.36666666666666664
+        },
+        "R2": {
+          "n": 60,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "R3": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        }
+      },
+      "C": {
+        "R0": {
+          "n": 90,
+          "successes": 63,
+          "stsr": 0.7
+        },
+        "R1": {
+          "n": 180,
+          "successes": 114,
+          "stsr": 0.6333333333333333
+        },
+        "R2": {
+          "n": 60,
+          "successes": 60,
+          "stsr": 1.0
+        },
+        "R3": {
+          "n": 30,
+          "successes": 15,
+          "stsr": 0.5
+        }
+      }
+    },
+    "label": {
+      "A": {
+        "ADVERSARIAL": {
+          "n": 57,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "NOISE": {
+          "n": 111,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "NORMAL": {
+          "n": 192,
+          "successes": 0,
+          "stsr": 0.0
+        }
+      },
+      "B": {
+        "ADVERSARIAL": {
+          "n": 57,
+          "successes": 3,
+          "stsr": 0.05263157894736842
+        },
+        "NOISE": {
+          "n": 111,
+          "successes": 33,
+          "stsr": 0.2972972972972973
+        },
+        "NORMAL": {
+          "n": 192,
+          "successes": 84,
+          "stsr": 0.4375
+        }
+      },
+      "C": {
+        "ADVERSARIAL": {
+          "n": 57,
+          "successes": 33,
+          "stsr": 0.5789473684210527
+        },
+        "NOISE": {
+          "n": 111,
+          "successes": 75,
+          "stsr": 0.6756756756756757
+        },
+        "NORMAL": {
+          "n": 192,
+          "successes": 144,
+          "stsr": 0.75
+        }
+      }
+    }
+  },
   "H5_retrieval": {
     "A": {
       "n": 354,
@@ -82,7 +333,8 @@
       "mrr": 0.0,
       "coverage": 1.0,
       "abstention_rate": 0.0,
-      "selective_accuracy": 0.5847457627118644
+      "selective_accuracy": 0.5847457627118644,
+      "false_reuse_risk": 0.4152542372881356
     },
     "B": {
       "n": 354,
@@ -91,7 +343,8 @@
       "mrr": 0.6101694915254238,
       "coverage": 1.0,
       "abstention_rate": 0.0,
-      "selective_accuracy": 0.6101694915254238
+      "selective_accuracy": 0.6101694915254238,
+      "false_reuse_risk": 0.3898305084745763
     },
     "C": {
       "n": 354,
@@ -100,7 +353,8 @@
       "mrr": 0.8550590652285569,
       "coverage": 0.847457627118644,
       "abstention_rate": 0.15254237288135594,
-      "selective_accuracy": 0.78
+      "selective_accuracy": 0.78,
+      "false_reuse_risk": 0.22
     }
   }
 }
