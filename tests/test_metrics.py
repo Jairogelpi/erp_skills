@@ -4,6 +4,7 @@ from erp_agent_os.bench_generator import generate_cases
 from erp_agent_os.dataset import ExpectedDecision
 from erp_agent_os.metrics import (
     ExecutionRecord,
+    collapse_repetitions,
     retrieval_metrics,
     security_metrics,
     segment_success,
@@ -233,3 +234,43 @@ def test_segmentation_separates_a_failing_family():
     if "crm" in segments and len(segments) > 1:
         others = [k for k in segments if k != "crm"]
         assert segments["crm"]["stsr"] <= max(segments[o]["stsr"] for o in others)
+
+
+def test_collapse_reduces_repetitions_to_one_unit_per_case():
+    case = a_case(expected_decision=ExpectedDecision.ALLOW, error_type="none")
+    records = [record(case, repetition=i) for i in range(3)]
+
+    collapsed = collapse_repetitions(CASES, records)
+
+    # Three executions, one inference unit -- not three.
+    assert list(collapsed["C"]) == [case.request_id]
+
+
+def test_collapse_takes_the_majority_when_repetitions_disagree():
+    case = a_case(expected_decision=ExpectedDecision.ALLOW, error_type="none")
+    two_good_one_bad = [
+        record(case, repetition=0),
+        record(case, repetition=1),
+        record(case, repetition=2, postconditions_met=False),
+    ]
+    two_bad_one_good = [
+        record(case, repetition=0, postconditions_met=False),
+        record(case, repetition=1, postconditions_met=False),
+        record(case, repetition=2),
+    ]
+
+    assert collapse_repetitions(CASES, two_good_one_bad)["C"][case.request_id] is True
+    assert collapse_repetitions(CASES, two_bad_one_good)["C"][case.request_id] is False
+
+
+def test_collapse_prevents_pseudo_replication():
+    # Regression guard. Feeding every repetition to a paired test inflates
+    # n, narrowing CIs by ~sqrt(k) and shrinking p-values by orders of
+    # magnitude. The inference unit must be the case.
+    cases = CASES[:20]
+    records = [record(c, repetition=i) for c in cases for i in range(3)]
+
+    collapsed = collapse_repetitions(cases, records)
+
+    assert len(records) == 60
+    assert len(collapsed["C"]) == 20

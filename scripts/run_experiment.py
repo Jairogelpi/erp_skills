@@ -16,11 +16,11 @@ from erp_agent_os.dataset import DatasetSplit
 from erp_agent_os.experiment import run_experiment
 from erp_agent_os.llm_client import DeterministicStubClient
 from erp_agent_os.metrics import (
+    collapse_repetitions,
     retrieval_metrics,
     security_metrics,
     segment_success,
     stability,
-    stsr_breakdown,
 )
 from erp_agent_os.statistics import (
     cochran_q,
@@ -38,20 +38,22 @@ OUTPUT_PATH = (
 def main() -> None:
     cases = generate_cases()
     test_cases = [c for c in cases if c.split is DatasetSplit.FINAL_TEST]
-    by_id = {c.request_id: c for c in cases}
 
     records, manifest = run_experiment(cases, DeterministicStubClient())
 
-    # Paired vectors: same (request_id, repetition) order for all systems.
-    keyed: dict[str, dict[tuple[str, int], bool]] = defaultdict(dict)
     per_system_records = defaultdict(list)
     for record in records:
-        success = stsr_breakdown(by_id[record.request_id], record).success
-        keyed[record.system][(record.request_id, record.repetition)] = success
         per_system_records[record.system].append(record)
 
-    units = sorted(keyed["C"])
-    vectors = {system: [keyed[system][u] for u in units] for system in ("A", "B", "C")}
+    # Inference unit is the CASE, not (case, repetition): repetitions of
+    # the same case are not independent, and treating them as such is
+    # pseudo-replication that would narrow every CI by ~sqrt(3) and shrink
+    # p-values by orders of magnitude. Repetitions feed H3 (stability).
+    collapsed = collapse_repetitions(test_cases, records)
+    units = sorted(collapsed["C"])
+    vectors = {
+        system: [collapsed[system][u] for u in units] for system in ("A", "B", "C")
+    }
 
     stsr = {s: sum(v) / len(v) for s, v in vectors.items()}
 
@@ -79,6 +81,12 @@ def main() -> None:
             "selector": manifest.selector,
             "is_confirmatory_run": manifest.is_confirmatory,
             "n_observations": len(records),
+            "n_inference_units": len(units),
+            "inference_note": (
+                "Repetitions are collapsed per case before any paired test. "
+                "Using all 1.080 executions as independent observations "
+                "would be pseudo-replication."
+            ),
             "n_cases": manifest.n_cases,
             "n_repetitions": manifest.n_repetitions,
             "seed": manifest.seed,

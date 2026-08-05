@@ -74,9 +74,10 @@ randomized order, `FakeERPAdapter` rebuilt per observation. Full analysis in
 | Retrieval Top-1 | 0.000 | 0.610 | **0.780** |
 | Retrieval Top-3 / MRR | — | 0.610 | **0.941 / 0.855** |
 
-- **C − A** = +0.700, 95% CI [+0.653, +0.747], Holm *p* = 5.2×10⁻⁵⁶, OR 505
-- **C − B** = +0.367, 95% CI [+0.306, +0.425], Holm *p* = 5.2×10⁻²⁴, OR 8.14
-- Cochran's Q = 353.1 (df 2). **H1 (non-inferiority, −5 pp margin): accepted.**
+- **C − A** = +0.700, 95% CI [+0.617, +0.783], Holm *p* = 2.7×10⁻¹⁹, OR 169
+- **C − B** = +0.367, 95% CI [+0.267, +0.467], Holm *p* = 9.1×10⁻⁹, OR 7.8
+- Cochran's Q = 117.7 (df 2). **H1 (non-inferiority, −5 pp margin): accepted.**
+- **Inference unit is the case (n = 120), not the execution.** Repetitions of a case are not independent; using all 360 per system would be pseudo-replication, narrowing every CI by ≈√3.
 
 C cuts the false-allow rate from 1.000/0.778 to **0.111** *while also* blocking
 fewer legitimate requests (0.072) — it does not buy safety by refusing work.

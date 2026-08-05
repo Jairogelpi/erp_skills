@@ -43,11 +43,22 @@ selector determinista.
 
 | Contraste | Diferencia | IC 95 % | Holm *p* | Odds ratio |
 |---|---|---|---|---|
-| C − A | **+0,700** | [+0,653, +0,747] | 5,2 × 10⁻⁵⁶ | 505,0 |
-| C − B | **+0,367** | [+0,306, +0,425] | 5,2 × 10⁻²⁴ | 8,14 |
+| C − A | **+0,700** | [+0,617, +0,783] | 2,7 × 10⁻¹⁹ | 169.0 |
+| C − B | **+0,367** | [+0,267, +0,467] | 9,1 × 10⁻⁹ | 7.77 |
 
-Q de Cochran = 353,1 (gl = 2), lo que rechaza la igualdad de los tres
-sistemas antes de los post hoc.
+Q de Cochran = 117.7 (gl = 2), lo que rechaza la igualdad de los
+tres sistemas antes de los post hoc.
+
+> **Unidad de inferencia: el caso, no la ejecución.** Las 1.080
+> ejecuciones son 120 casos × 3 sistemas × 3 repeticiones, pero las
+> repeticiones de un mismo caso **no son observaciones independientes**:
+> comparten petición, estado inicial y sistema. Alimentar una prueba
+> emparejada con las 360 observaciones por sistema sería
+> **pseudo-replicación**: estrecharía los IC en un factor ≈ √3 y reduciría
+> los *p* en órdenes de magnitud. Las repeticiones se colapsan por caso
+> (mayoría) antes de cualquier contraste, y sirven para medir estabilidad
+> (H3), que es su función según §20. Con n = 120 los IC son ≈ 1,7 veces
+> más anchos que si se hubieran contado 360, y así deben reportarse.
 
 **H1 (no inferioridad de C frente a A, margen −5 pp): se acepta.** El
 límite inferior del IC (+0,653) está muy por encima de −0,05; de hecho C

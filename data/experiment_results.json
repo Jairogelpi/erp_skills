@@ -3,6 +3,8 @@
     "selector": "DeterministicStubClient",
     "is_confirmatory_run": false,
     "n_observations": 1080,
+    "n_inference_units": 120,
+    "inference_note": "Repetitions are collapsed per case before any paired test. Using all 1.080 executions as independent observations would be pseudo-replication.",
     "n_cases": 120,
     "n_repetitions": 3,
     "seed": 20260805,
@@ -17,27 +19,27 @@
     "C_minus_A": {
       "point": 0.7,
       "ci95": [
-        0.6527777777777778,
-        0.7472222222222222
+        0.6166666666666667,
+        0.7833333333333333
       ],
-      "mcnemar_p": 2.591639345410384e-56,
-      "holm_p": 5.183278690820768e-56,
-      "discordant_C_wins": 252,
+      "mcnemar_p": 1.3526945495274315e-19,
+      "holm_p": 2.705389099054863e-19,
+      "discordant_C_wins": 84,
       "discordant_A_wins": 0,
-      "odds_ratio": 505.0
+      "odds_ratio": 169.0
     },
     "C_minus_B": {
       "point": 0.36666666666666664,
       "ci95": [
-        0.3055555555555556,
-        0.425
+        0.26666666666666666,
+        0.4666666666666667
       ],
-      "mcnemar_p": 5.150376970709647e-24,
-      "holm_p": 5.150376970709647e-24,
-      "odds_ratio": 8.135135135135135
+      "mcnemar_p": 9.131629405642209e-09,
+      "holm_p": 9.131629405642209e-09,
+      "odds_ratio": 7.769230769230769
     },
     "cochran_q": {
-      "statistic": 353.06666666666666,
+      "statistic": 117.68888888888888,
       "df": 2
     },
     "non_inferiority_margin": -0.05,

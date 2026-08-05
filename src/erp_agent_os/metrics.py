@@ -312,3 +312,35 @@ def segment_success(
         }
         for key, values in sorted(buckets.items())
     }
+
+
+def collapse_repetitions(
+    cases: Sequence[BenchmarkCase], records: Sequence[ExecutionRecord]
+) -> dict[str, dict[str, bool]]:
+    """Reduce repetitions of one case to a single analysis unit.
+
+    Repetitions of the same case are **not independent observations**:
+    they share the request, the initial state and the system. Feeding all
+    of them to a paired test is pseudo-replication -- it inflates the
+    apparent sample size, narrowing confidence intervals by roughly
+    sqrt(k) and shrinking p-values by orders of magnitude.
+
+    §19's unit of pairing is `request_id` x initial state x repetition for
+    *execution*; the unit of *inference* is the case. Repetitions exist to
+    measure stability (H3), not to multiply n. Each case collapses to the
+    majority outcome across its repetitions, which is exact when the
+    system is deterministic and well defined when it is not.
+    """
+    grouped: dict[tuple[str, str], list[bool]] = {}
+    by_id = {c.request_id: c for c in cases}
+
+    for record in records:
+        key = (record.system, record.request_id)
+        grouped.setdefault(key, []).append(
+            stsr_breakdown(by_id[record.request_id], record).success
+        )
+
+    collapsed: dict[str, dict[str, bool]] = {}
+    for (system, request_id), outcomes in grouped.items():
+        collapsed.setdefault(system, {})[request_id] = sum(outcomes) * 2 > len(outcomes)
+    return collapsed
