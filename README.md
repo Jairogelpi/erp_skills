@@ -58,7 +58,7 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Real LLM client for A/B/C | — | ⏳ needs provider credentials |
 | Confirmatory run with a real LLM (CLAUDE.md §19) | — | ⏳ needs provider credentials |
 
-188 tests, 96% coverage, `ruff`/`mypy` clean, CI green.
+205 tests, 97% coverage, `ruff`/`mypy` clean, CI green.
 
 ### Measured result: the paired A/B/C experiment
 
