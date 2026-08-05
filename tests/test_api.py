@@ -43,7 +43,7 @@ def test_execute_normal_request_allows_and_returns_correlation_id():
     assert payload["correlation_id"]
 
 
-def test_execute_missing_field_abstains():
+def test_execute_missing_field_clarifies():
     c = client()
     body = {
         "query_text": "Crea una tarea",
@@ -57,7 +57,7 @@ def test_execute_missing_field_abstains():
         "idempotency_key": "key-1",
     }
     response = c.post("/requests", json=body, headers=HEADERS)
-    assert response.json()["decision"] == "ABSTAIN"
+    assert response.json()["decision"] == "CLARIFY"
 
 
 def test_audit_endpoint_reflects_prior_execution():

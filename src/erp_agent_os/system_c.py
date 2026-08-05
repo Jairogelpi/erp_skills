@@ -16,6 +16,7 @@ from erp_agent_os.parser import IntentProposal
 from erp_agent_os.policy import decide
 from erp_agent_os.retrieval import TfidfRetriever, should_abstain
 from erp_agent_os.runtime import ExecutionResult, Runtime
+from erp_agent_os.validation import detect_text_signals, validate_arguments
 
 
 @dataclass(frozen=True)
@@ -51,12 +52,17 @@ class SystemC:
     ) -> SystemCResult:
         ranked = self._retriever.rank(query_text, role=role)
 
+        # Missing required data is a *clarification* request, not an
+        # abstention: the system knows what it needs and can ask for it.
+        # Abstention is reserved for "no candidate is trustworthy enough"
+        # (CLAUDE.md §17 distinguishes `CLARIFY` from `sin_skill/abstención`).
+        if proposal.missing_fields:
+            reasons = [f"missing field: {f}" for f in proposal.missing_fields]
+            self._audit.record_abstention(correlation_id, reasons)
+            return SystemCResult("CLARIFY", None, None, tuple(reasons))
+
         if should_abstain(ranked, proposal.missing_fields):
-            reasons = (
-                [f"missing field: {f}" for f in proposal.missing_fields]
-                if proposal.missing_fields
-                else ["no confident candidate"]
-            )
+            reasons = ["no confident candidate"]
             self._audit.record_abstention(correlation_id, reasons)
             return SystemCResult("ABSTAIN", None, None, tuple(reasons))
 
@@ -65,13 +71,20 @@ class SystemC:
             self._approval and self._approval.is_valid(skill.skill_id)
         )
 
-        outcome = decide(skill, role, approval_granted=approval_granted)
+        findings = detect_text_signals(query_text) + validate_arguments(
+            skill, proposal.arguments
+        )
+
+        outcome = decide(
+            skill, role, approval_granted=approval_granted, findings=findings
+        )
         execution = self._runtime.execute(
             skill,
             proposal.arguments,
             role,
             idempotency_key,
             approval_granted=approval_granted,
+            findings=findings,
         )
         self._audit.record(
             correlation_id, skill, role, outcome, execution, idempotency_key

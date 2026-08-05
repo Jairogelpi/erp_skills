@@ -61,7 +61,7 @@ def test_full_allow_path_mutates_erp_and_audits():
     assert len(audit.events("corr-1")) == 1
 
 
-def test_missing_field_abstains_without_touching_erp():
+def test_missing_field_clarifies_without_touching_erp():
     skill = make_skill()
     erp, system, audit = build_system(skill)
     proposal = structure_proposal(skill.skill_id, {}, ["name"], confidence=0.9)
@@ -70,7 +70,9 @@ def test_missing_field_abstains_without_touching_erp():
         "corr-2", "crear una oportunidad comercial", proposal, "sales_user", "key-1"
     )
 
-    assert result.decision == "ABSTAIN"
+    # Missing required data asks for clarification; abstention is reserved
+    # for "no candidate is trustworthy enough".
+    assert result.decision == "CLARIFY"
     assert erp._records["crm.lead"] == {}
     assert len(audit.abstentions("corr-2")) == 1
     assert len(audit.events("corr-2")) == 0

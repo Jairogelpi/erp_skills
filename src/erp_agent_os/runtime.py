@@ -18,6 +18,7 @@ from erp_agent_os.adapters import (
 )
 from erp_agent_os.policy import PolicyDecision, decide
 from erp_agent_os.skills import SkillDefinition
+from erp_agent_os.validation import Finding
 
 Handler = Callable[[FakeERPAdapter, dict[str, Any]], Any]
 PostconditionCheck = Callable[[FakeERPAdapter, Any], bool]
@@ -54,8 +55,11 @@ class Runtime:
         *,
         approval_granted: bool = False,
         postcondition_checks: tuple[PostconditionCheck, ...] = (),
+        findings: list[Finding] | None = None,
     ) -> ExecutionResult:
-        outcome = decide(skill, role, approval_granted=approval_granted)
+        outcome = decide(
+            skill, role, approval_granted=approval_granted, findings=findings
+        )
 
         if outcome.decision in (PolicyDecision.DENY, PolicyDecision.REQUIRE_APPROVAL):
             return ExecutionResult(outcome.decision, None, False, None)

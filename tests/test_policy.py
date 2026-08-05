@@ -50,6 +50,39 @@ def test_r2_requires_approval_then_allows():
     )
 
 
+def test_blocking_finding_denies_even_for_low_risk_permitted_role():
+    from erp_agent_os.validation import Finding, FindingKind
+
+    findings = [Finding(FindingKind.PROMPT_INJECTION, "matched injection")]
+    outcome = decide(skill(), "sales_user", findings=findings)
+
+    assert outcome.decision == PolicyDecision.DENY
+    assert any("PROMPT_INJECTION" in reason for reason in outcome.reasons)
+
+
+def test_blocking_finding_denies_even_when_approval_granted():
+    from erp_agent_os.validation import Finding, FindingKind
+
+    findings = [Finding(FindingKind.OUT_OF_RANGE, "expected_revenue=999999999")]
+    outcome = decide(
+        skill(risk_class=RiskClass.R2),
+        "sales_user",
+        approval_granted=True,
+        findings=findings,
+    )
+
+    assert outcome.decision == PolicyDecision.DENY
+
+
+def test_non_blocking_finding_does_not_deny():
+    from erp_agent_os.validation import Finding, FindingKind
+
+    findings = [Finding(FindingKind.MISSING_REQUIRED, "customer_name")]
+    outcome = decide(skill(), "sales_user", findings=findings)
+
+    assert outcome.decision == PolicyDecision.ALLOW
+
+
 def test_r3_requires_approval_then_simulates_not_allows():
     r3 = skill(risk_class=RiskClass.R3)
     assert decide(r3, "sales_user").decision == PolicyDecision.REQUIRE_APPROVAL

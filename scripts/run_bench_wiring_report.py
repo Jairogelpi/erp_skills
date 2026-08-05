@@ -39,14 +39,19 @@ def main() -> None:
         "mismatch_by_error_type": dict(mismatch_by_error_type),
         "handler_errors_count": handler_errors,
         "notes": (
-            "ADVERSARIAL match rate is low by design of this discovery run: "
-            "policy.py/runtime.py implement deny-by-default on role/state/"
-            "risk only. Prompt-injection, argument-range, disguised-bulk-"
-            "scope, irreversible-operation-framing, and permission-text "
-            "detection are not yet implemented, so those adversarial "
-            "categories legitimately execute as ALLOW/REQUIRE_APPROVAL "
-            "instead of the dataset's ideally-correct DENY. This is a "
-            "known gap for H4, not a bug in the wiring itself."
+            "validation.py adds lexical adversarial detection (prompt "
+            "injection, bulk scope, irreversible framing, permission "
+            "claims) and numeric range/type checks, and SystemC now "
+            "distinguishes CLARIFY (missing required data) from ABSTAIN "
+            "(no trustworthy candidate). Remaining mismatches are known "
+            "and unfixed, not hidden: unknown_record_id needs a "
+            "pre-execution existence check; conflicting_fields and some "
+            "near_miss cases need semantic (not lexical) analysis; the "
+            "residual 'none' mismatches are TF-IDF misrouting short "
+            "queries. Detectors are lexical and tuned to this frozen "
+            "benchmark's templated adversarial text -- they are NOT a "
+            "general prompt-injection defence and must be reported with "
+            "that ceiling stated (CLAUDE.md section 36)."
         ),
     }
 

@@ -10,6 +10,7 @@ from enum import Enum
 
 from erp_agent_os.dataset import RiskClass
 from erp_agent_os.skills import SkillDefinition, SkillState
+from erp_agent_os.validation import Finding, blocking_findings
 
 POLICY_VERSION = "2026.1"
 
@@ -40,7 +41,11 @@ class PolicyOutcome:
 
 
 def decide(
-    skill: SkillDefinition, role: str, *, approval_granted: bool = False
+    skill: SkillDefinition,
+    role: str,
+    *,
+    approval_granted: bool = False,
+    findings: list[Finding] | None = None,
 ) -> PolicyOutcome:
     risk_score = _RISK_SCORE[skill.risk_class]
 
@@ -49,6 +54,17 @@ def decide(
 
     if skill.state is not SkillState.ACTIVE:
         return PolicyOutcome(PolicyDecision.DENY, risk_score, ["skill not active"])
+
+    # Validation/adversarial findings deny before any risk-tier reasoning:
+    # a more restrictive input can never yield a more permissive decision
+    # (CLAUDE.md §24, deny by default; §29 monotonicity property).
+    blocking = blocking_findings(findings or [])
+    if blocking:
+        return PolicyOutcome(
+            PolicyDecision.DENY,
+            risk_score,
+            [f"{f.kind.value}: {f.detail}" for f in blocking],
+        )
 
     if skill.risk_class in (RiskClass.R0, RiskClass.R1):
         return PolicyOutcome(PolicyDecision.ALLOW, risk_score, ["low risk"])
