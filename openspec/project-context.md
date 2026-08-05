@@ -30,6 +30,44 @@ API, Odoo 19 adapter, dashboard, or experiment runner in this slice.
 - R4 operations are unconditionally denied. No physical deletion, payments,
   production access, or bulk automatic changes are in scope.
 
+## Progress
+
+Work units 1–10 are implemented and tested: dataset schema/scaffold,
+`FakeERPAdapter`, versioned skill contract, deterministic runtime + policy
+engine, append-only audit store, core safety property tests, an intent
+parser + TF-IDF/embeddings/hybrid retrieval with abstention
+(`src/erp_agent_os/{parser,retrieval,embeddings}.py`), an approval service
+(`src/erp_agent_os/approval.py`), and end-to-end System C integration
+(`src/erp_agent_os/system_c.py`). Phase 4 is closed; phase 5 (P5.1–P5.4)
+is closed; P6.3 is done. `sentence-transformers` was added as a main
+dependency with explicit user authorization to download
+`paraphrase-multilingual-MiniLM-L12-v2`.
+
+**Catalog populated (user-directed priority, delivered this session):**
+`src/erp_agent_os/catalog.py` (12 skills, 8 families),
+`src/erp_agent_os/bench_intents.py` (24 canonical intents),
+`src/erp_agent_os/bench_generator.py` + `data/bench_v1.jsonl` (480 cases,
+240/120/120 split, 144 noise/96 adversarial, zero paraphrase-group
+leakage by construction). See `docs/dataset-card.md` for composition and
+explicit known limitations. **Execution wiring done (user-directed priority, this session):**
+`src/erp_agent_os/handlers.py` (12 handlers) +
+`src/erp_agent_os/bench_runner.py` run all 480 cases through real
+`SystemC` execution; `data/bench_v1_wiring_report.json` reports match
+rates (NORMAL 87.5%, NOISE 72.2%, ADVERSARIAL 17.7%) — the ADVERSARIAL
+gap is a disclosed finding (no prompt-injection/range/bulk-scope
+detection yet), not a bug, directly relevant to H4. `FakeERPAdapter` and
+`Runtime` were hardened (explicit `record_id`, `list()`, caught handler
+exceptions) as a discovered prerequisite. **API layer done (this session):** `src/erp_agent_os/api.py`
+(FastAPI) exposes `POST /requests` (server-generated correlation id),
+`GET /skills`, `GET /audit/{id}`, `POST /approvals`, all behind a demo
+API key and an in-memory rate limiter. **Not yet done:** persistence
+(PostgreSQL/pgvector, roadmap P6.2 — state is process-local),
+second-annotator review/kappa (pending human step), a real LLM parser
+(uses `expected_arguments` as ground truth), input-schema/range
+validation, and a distinct `CLARIFY` decision path. Next: persistence,
+then A/B systems (roadmap P8.1 remainder). Odoo 19 adapter, dashboard,
+and experiment runner remain out of scope until then.
+
 ## First-slice planning outcomes
 
 The proposal/spec/design/tasks for the slice must make the dataset schema

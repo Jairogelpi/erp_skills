@@ -48,9 +48,11 @@ credentials/
 
 # Local developer/runtime state
 .atl/
+.pi/
 .pi-subagents/
 .mcp/local/
 .mcp/tool-venv/
+.codebase-memory/
 
 # IDE and operating-system files
 .vscode/
