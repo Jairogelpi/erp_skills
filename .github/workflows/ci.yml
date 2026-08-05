@@ -27,7 +27,17 @@ jobs:
       - run: make lint
       - run: make typecheck
       - run: make coverage
+      - run: make validate-dataset
+      - run: make benchmark-smoke
       - run: make build
+      # actions/upload-artifact v4.6.2
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: benchmark-artifacts
+          path: |
+            data/bench_v1.jsonl
+            data/bench_v1_wiring_report.json
+          retention-days: 14
 
-# Dataset validation, benchmark smoke, and artifact production are additive
-# CLAUDE.md §29 checks: their implementations and commands do not exist yet.
+# Odoo 19 adapter and dashboard artifacts are post-core extensions
+# (CLAUDE.md sections 26, 31); they never gate this workflow.
