@@ -105,6 +105,14 @@ def _style_enumeracion(t: str) -> str:
     return f"1) {t}"
 
 
+def _style_necesito(t: str) -> str:
+    return f"Necesito que {t[0].lower()}{t[1:]}"
+
+
+def _style_accion_pendiente(t: str) -> str:
+    return t.rstrip(".") + " y me confirmes cuando este hecho."
+
+
 def _style_tipografico(t: str) -> str:
     if len(t) < 4:
         return t
@@ -141,7 +149,7 @@ _STYLE_NORMAL = [
     _style_abreviatura,
     _style_sinonimo,
     _style_enumeracion,
-    _style_directa,
+    _style_necesito,
 ]
 
 _STYLE_NOISE = [
@@ -166,10 +174,20 @@ class _CaseDraft:
     skill_override: str | None = None
 
 
-def _fill(intent: IntentSpec, rng: random.Random) -> dict[str, str]:
-    return {
-        field: rng.choice(intent.field_pool(field)) for field in intent.required_fields
-    }
+def _fill(intent: IntentSpec, index: int) -> dict[str, str]:
+    """Deterministic, collision-free slot filling for formulation `index`.
+
+    Each field walks its pool at a different stride, so the 20 formulations
+    of one intent never repeat an argument tuple. Two cases with the same
+    intent AND the same arguments would be semantically equivalent and
+    could not be split across partitions (CLAUDE.md §17); making them
+    distinct by construction is what keeps the frozen test clean.
+    """
+    values: dict[str, str] = {}
+    for offset, field in enumerate(intent.required_fields):
+        pool = intent.field_pool(field)
+        values[field] = pool[(index + offset * 7) % len(pool)]
+    return values
 
 
 def _apply_adversarial(
@@ -300,7 +318,11 @@ def _apply_adversarial(
         )
     if category == "instruccion_incompleta":
         words = base_text.split(" ")
-        fragment = " ".join(words[:2]) if len(words) > 1 else base_text
+        # Keep enough words that two different intents cannot truncate to
+        # the same fragment (an identical text across splits would be a
+        # leak, CLAUDE.md §17), while still reading as incomplete.
+        keep = max(3, len(words) // 2)
+        fragment = " ".join(words[:keep]) if len(words) > 1 else base_text
         return _CaseDraft(
             fragment + "...",
             {},
@@ -325,15 +347,13 @@ def _apply_adversarial(
     raise ValueError(f"unknown adversarial category: {category}")
 
 
-def _generate_intent_drafts(
-    intent: IntentSpec, index: int, rng: random.Random
-) -> list[_CaseDraft]:
+def _generate_intent_drafts(intent: IntentSpec, index: int) -> list[_CaseDraft]:
     skill = CATALOG_BY_ID[intent.skill_id]
     base_decision = _base_decision(skill.risk_class)
     drafts: list[_CaseDraft] = []
 
-    for style in _STYLE_NORMAL:
-        values = _fill(intent, rng)
+    for slot, style in enumerate(_STYLE_NORMAL):
+        values = _fill(intent, slot)
         text = style(intent.template.format(**values))
         approval = base_decision is ExpectedDecision.REQUIRE_APPROVAL
         drafts.append(
@@ -349,8 +369,8 @@ def _generate_intent_drafts(
             )
         )
 
-    for style in _STYLE_NOISE:
-        values = _fill(intent, rng)
+    for slot, style in enumerate(_STYLE_NOISE, start=10):
+        values = _fill(intent, slot)
         text = style(intent.template.format(**values))
         approval = base_decision is ExpectedDecision.REQUIRE_APPROVAL
         drafts.append(
@@ -366,7 +386,7 @@ def _generate_intent_drafts(
             )
         )
 
-    values = _fill(intent, rng)
+    values = _fill(intent, 15)
     omit_field = intent.required_fields[0]
     partial_template = intent.template.replace("{" + omit_field + "}", "").replace(
         "  ", " "
@@ -389,8 +409,8 @@ def _generate_intent_drafts(
     )
 
     selected_categories = [_ADV_CATEGORIES[(index * 4 + k) % 11] for k in range(4)]
-    for category in selected_categories:
-        values = _fill(intent, rng)
+    for slot, category in enumerate(selected_categories, start=16):
+        values = _fill(intent, slot)
         base_text = intent.template.format(**values)
         drafts.append(
             _apply_adversarial(
@@ -408,7 +428,7 @@ def generate_cases(seed: int = SEED) -> list[BenchmarkCase]:
 
     for index, intent in enumerate(INTENTS):
         skill = CATALOG_BY_ID[intent.skill_id]
-        drafts = _generate_intent_drafts(intent, index, rng)
+        drafts = _generate_intent_drafts(intent, index)
         rng.shuffle(drafts)
         splits = (
             [DatasetSplit.DEVELOPMENT] * 10

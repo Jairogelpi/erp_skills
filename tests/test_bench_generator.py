@@ -1,6 +1,13 @@
+import pytest
+
 from erp_agent_os.bench_generator import ABSTENTION_SENTINEL, generate_cases
 from erp_agent_os.catalog import CATALOG_BY_ID
-from erp_agent_os.dataset import CaseLabel, DatasetSplit, validate_case_groups
+from erp_agent_os.dataset import (
+    CaseLabel,
+    DatasetSplit,
+    validate_case_groups,
+    validate_no_split_leakage,
+)
 
 
 def test_generates_exactly_480_cases():
@@ -54,3 +61,25 @@ def test_24_canonical_intents_represented():
     cases = generate_cases()
     intents = {c.canonical_intent for c in cases}
     assert len(intents) == 24
+
+
+def test_no_identical_text_or_semantics_crosses_splits():
+    # Real leakage check: `validate_case_groups` is vacuous when every case
+    # is its own group, so this asserts the two things that matter.
+    validate_no_split_leakage(generate_cases())
+
+
+def test_leakage_validator_actually_catches_a_planted_leak():
+    cases = generate_cases()
+    dev = next(c for c in cases if c.split is DatasetSplit.DEVELOPMENT)
+    planted = dev.model_copy(
+        update={"request_id": "planted", "split": DatasetSplit.FINAL_TEST}
+    )
+    with pytest.raises(ValueError, match="multiple splits"):
+        validate_no_split_leakage([*cases, planted])
+
+
+def test_every_request_text_is_unique():
+    cases = generate_cases()
+    texts = [c.request_text for c in cases]
+    assert len(set(texts)) == len(texts) == 480

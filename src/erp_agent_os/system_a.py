@@ -15,14 +15,30 @@ from typing import Any
 from erp_agent_os.adapters import FakeERPAdapter, UnknownModelError, UnknownRecordError
 from erp_agent_os.llm_client import LLMClient, ToolSpec
 
+# Descriptions are Spanish because the benchmark corpus is Spanish. With
+# English descriptions the shared selector could not match any query, and
+# System A would fail for a language mismatch rather than for its lack of
+# governance -- which would rig the comparison (CLAUDE.md D-03 requires
+# equivalent tool coverage across A/B/C).
 GENERIC_TOOLS: list[ToolSpec] = [
-    ToolSpec("create_record", "create a new record in a model", ["model", "fields"]),
+    ToolSpec(
+        "create_record",
+        "crea genera registra un nuevo registro oportunidad presupuesto "
+        "tarea factura pedido en un modelo",
+        ["model", "fields"],
+    ),
     ToolSpec(
         "update_record",
-        "update an existing record by id",
+        "actualiza modifica corrige cambia confirma valida anade incluye "
+        "un registro existente por su identificador",
         ["model", "record_id", "fields"],
     ),
-    ToolSpec("get_record", "read a record by id", ["model", "record_id"]),
+    ToolSpec(
+        "get_record",
+        "consulta busca revisa comprueba encuentra lee la disponibilidad "
+        "ficha o contacto de un registro existente",
+        ["model", "record_id"],
+    ),
 ]
 
 

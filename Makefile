@@ -1,4 +1,4 @@
-.PHONY: format format-check lint typecheck test coverage build up down logs compose-config bootstrap-codebase-memory remove-codebase-memory validate-dataset benchmark-smoke
+.PHONY: format format-check lint typecheck test coverage build up down logs compose-config bootstrap-codebase-memory remove-codebase-memory validate-dataset benchmark-smoke experiment
 
 up:
 	docker compose --env-file config/development.defaults up --build
@@ -39,6 +39,9 @@ validate-dataset:
 benchmark-smoke:
 	uv run python scripts/export_bench_v1.py
 	uv run python scripts/run_bench_wiring_report.py
+
+experiment:
+	uv run python scripts/run_experiment.py
 
 bootstrap-codebase-memory:
 	python scripts/bootstrap-codebase-memory.py

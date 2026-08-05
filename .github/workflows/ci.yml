@@ -29,6 +29,7 @@ jobs:
       - run: make coverage
       - run: make validate-dataset
       - run: make benchmark-smoke
+      - run: make experiment
       - run: make build
       # actions/upload-artifact v4.6.2
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -37,6 +38,7 @@ jobs:
           path: |
             data/bench_v1.jsonl
             data/bench_v1_wiring_report.json
+            data/experiment_results.json
           retention-days: 14
 
 # Odoo 19 adapter and dashboard artifacts are post-core extensions

@@ -100,3 +100,42 @@ def validate_case_groups(cases: list[BenchmarkCase]) -> None:
         previous = groups.setdefault(case.paraphrase_group_id, case.split)
         if previous != case.split:
             raise ValueError("paraphrase group crosses splits")
+
+
+def _normalize(text: str) -> str:
+    return " ".join(text.lower().split())
+
+
+def validate_no_split_leakage(cases: list[BenchmarkCase]) -> None:
+    """Reject any formulation that appears in more than one split.
+
+    CLAUDE.md §17 forbids a paraphrase group *or a semantically equivalent
+    formulation* from crossing partitions. `validate_case_groups` only
+    checks the declared group id, which is vacuous when every case is its
+    own group -- this checks the two things that actually matter:
+    identical request text, and identical (intent, arguments).
+    """
+    by_text: dict[str, set[DatasetSplit]] = {}
+    by_semantics: dict[tuple[str, str], set[DatasetSplit]] = {}
+
+    for case in cases:
+        by_text.setdefault(_normalize(case.request_text), set()).add(case.split)
+        key = (
+            case.canonical_intent,
+            repr(sorted(case.expected_arguments.items())),
+        )
+        by_semantics.setdefault(key, set()).add(case.split)
+
+    leaked_text = [t for t, splits in by_text.items() if len(splits) > 1]
+    if leaked_text:
+        raise ValueError(
+            f"{len(leaked_text)} request text(s) appear in multiple splits; "
+            f"first: {leaked_text[0]!r}"
+        )
+
+    leaked_semantics = [k for k, splits in by_semantics.items() if len(splits) > 1]
+    if leaked_semantics:
+        raise ValueError(
+            f"{len(leaked_semantics)} (intent, arguments) pair(s) appear in "
+            f"multiple splits; first: {leaked_semantics[0]}"
+        )

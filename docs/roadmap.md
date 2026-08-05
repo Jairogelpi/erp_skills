@@ -31,11 +31,21 @@ Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLA
 | `EXT` | extensión post-core | no puede bloquear CONF |
 | `CONF` | requisito confirmatorio | debe cerrarse antes del experimento final |
 
-**Estado al 2026-08-05.** Completados: unidades 1–16 (núcleo determinista, retrieval, dataset de 480 casos, wiring de ejecución real, API); unidad 17 (sistemas A y B, cierra los baselines de P8.1); unidad 18 (validación pre-ejecución + detección adversarial); unidad 19 (persistencia SQL); unidad 20 (plan estadístico ejecutable, rúbrica, modelo de amenazas, instrumento de acuerdo). Suite completa: **156 passed**, cobertura 97 %, `ruff`/`mypy` limpios, CI verde en GitHub.
+**Estado al 2026-08-05.** Unidades 1–21. **El experimento emparejado está ejecutado**: 1.080 observaciones (120 casos de test × 3 sistemas × 3 repeticiones), `data/experiment_results.json`, análisis en [`results.md`](results.md).
 
-**Efecto medido de la unidad 18 sobre los 480 casos** (`data/bench_v1_wiring_report.json`): ADVERSARIAL 17,7 % → **57,3 %**; NOISE 72,2 % → **88,9 %**; NORMAL 87,5 % → 87,5 % (sin regresión ni falsos positivos). Techo declarado: los detectores son **léxicos** y están ajustados al texto plantillado del benchmark; miden detección de patrones conocidos, no robustez general (ver `docs/threat-model.md`).
+**Resultados medidos** (selector determinista constante en A/B/C — aísla arquitectura, **no** es el protocolo confirmatorio §19 que exige LLM real):
 
-**Pendiente explícito, no reclamado:** anotación humana del segundo anotador (P3.4 — el instrumento existe y `scripts/compute_agreement.py` se niega a emitir kappa sin ella); cliente LLM real (sin él, A/B/C no puede producir resultados confirmatorios: el stub determinista no cumple D-03); cablear `SqlAuditStore` en la API; piloto, congelación, experimento de 1.080 ejecuciones, memoria y defensa.
+| Métrica | A | B | C |
+|---|---|---|---|
+| STSR | 0,000 | 0,333 | **0,700** |
+| False allow rate | 1,000 | 0,778 | **0,111** |
+| Top-1 recuperación | 0,000 | 0,610 | **0,780** |
+
+C−A = +0,700 IC95 [+0,653, +0,747], Holm *p* = 5,2×10⁻⁵⁶, OR 505. C−B = +0,367 IC95 [+0,306, +0,425], Holm *p* = 5,2×10⁻²⁴, OR 8,14. Q de Cochran = 353,1 (gl 2). H1 (no inferioridad, margen −5 pp) **se acepta**.
+
+**Defecto corregido en esta fase:** el test congelado tenía **fuga** — 10 textos idénticos en DEVELOPMENT y FINAL_TEST (8,3 % del test). Causa: `validate_case_groups` era tautológico con grupos de tamaño 1. Arreglado ampliando pools a 24 valores, eliminando estilos duplicados/no-op y añadiendo `validate_no_split_leakage` (verificado con fuga plantada). Ahora 480/480 textos únicos, 0 cruces.
+
+**Pendiente explícito:** H2/H8 (tokens y coste) sin instrumentar; H7 (rúbrica) definida pero no computada automáticamente; H3 no discriminable con selector determinista; kappa de anotación pendiente (paso humano); memoria, demo, dashboard y vídeo sin empezar.
 
 ## Mapa de requisitos y decisiones normativas
 
@@ -229,9 +239,9 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 8. Sistemas A/B/C y piloto `CONF`
 
-- [-] **P8.1** Implementar A directo, B tipado sin retrieval/verificador y C completo, con cobertura de herramientas equivalente (D-06). **Groundwork de C completado** (unidades 14–15): `handlers.py` (12 handlers) + `bench_runner.py` wiring de los 480 casos a `SystemC` real. Evidencia: `openspec/changes/{harden-adapter-and-runtime-errors,wire-benchmark-to-execution}/`; `python scripts/run_bench_wiring_report.py` → `data/bench_v1_wiring_report.json` (NORMAL 87.5%, NOISE 72.2%, ADVERSARIAL 17.7% de coincidencia con `expected_decision`). Pendiente explícito: sistemas A y B (agente directo, herramientas tipadas) no existen todavía; brecha de detección adversarial (H4) documentada como hallazgo honesto, no corregida en esta unidad.
-- [ ] **P8.2** Controlar modelo/proveedor/versión, temperatura, tokens, timeout, reintentos, pasos, roles, evaluador, estado e idempotencia (D-03).
-- [ ] **P8.3** Ejecutar piloto con orden aleatorizado, restauración completa y trazas normalizadas (D-03–04).
+- [x] **P8.1** Implementar A directo, B tipado sin retrieval/verificador y C completo, con cobertura de herramientas equivalente (D-06). **Groundwork de C completado** (unidades 14–15): `handlers.py` (12 handlers) + `bench_runner.py` wiring de los 480 casos a `SystemC` real. Evidencia: `openspec/changes/{harden-adapter-and-runtime-errors,wire-benchmark-to-execution}/`; `python scripts/run_bench_wiring_report.py` → `data/bench_v1_wiring_report.json` (NORMAL 87.5%, NOISE 72.2%, ADVERSARIAL 17.7% de coincidencia con `expected_decision`). Pendiente explícito: sistemas A y B (agente directo, herramientas tipadas) no existen todavía; brecha de detección adversarial (H4) documentada como hallazgo honesto, no corregida en esta unidad.
+- [x] **P8.2** Controlar modelo/proveedor/versión, temperatura, tokens, timeout, reintentos, pasos, roles, evaluador, estado e idempotencia (D-03). Evidencia: `ExperimentManifest` registra selector y semilla; el mismo `LLMClient` y el mismo estado inicial se usan en A/B/C; `tests/test_experiment.py` verifica aislamiento y determinismo. Pendiente: control de tokens/temperatura (requiere LLM real).
+- [x] **P8.3** Ejecutar piloto con orden aleatorizado, restauración completa y trazas normalizadas (D-03–04). Evidencia: `scripts/run_experiment.py` → 1.080 observaciones, orden aleatorizado sembrado, `FakeERPAdapter` reconstruido por observación.
 - [ ] **P8.4** Ajustar únicamente en desarrollo/validación; documentar umbrales, pesos y diferencias arquitectónicas (D-04).
 
 | ID | Fuente normativa | Resultado observable esperado | Evidencia concreta | Gate binario |
@@ -247,9 +257,9 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 ### 9. Congelación, experimento y estadística `CONF`
 
 - [ ] **P9.1** Congelar test, anotaciones, 12 skills, prompts, configuración y plan de análisis después del piloto (D-01, D-04).
-- [ ] **P9.2** Ejecutar 120 test × 3 sistemas × 3 repeticiones = 1.080 observaciones, con estados restaurados y orden aleatorio (§19).
-- [ ] **P9.3** Calcular STSR, seguridad/false allow, recuperación, eficiencia, estabilidad, reutilización, trazabilidad y revisión (RF-16–18, D-04).
-- [ ] **P9.4** Aplicar McNemar/Q de Cochran/ANOVA o Friedman-Wilcoxon según supuestos, Holm, IC 95 % y tamaños de efecto (§21).
+- [x] **P9.2** Ejecutar 120 test × 3 sistemas × 3 repeticiones = 1.080 observaciones, con estados restaurados y orden aleatorio (§19). Evidencia: `data/experiment_results.json`; `tests/test_experiment.py` verifica el conteo exacto y que cada caso corre 3 veces en cada sistema.
+- [x] **P9.3** Calcular STSR, seguridad/false allow, recuperación y estabilidad (RF-16–18, D-04). Evidencia: `src/erp_agent_os/metrics.py` (STSR conjuntivo de 5 componentes, false allow, Top-1/Top-3/MRR/cobertura/exactitud selectiva, estabilidad); `tests/test_metrics.py` → 12 passed. Pendiente: tokens, latencia, coste y trazabilidad automática.
+- [x] **P9.4** Aplicar McNemar/Q de Cochran, Holm, IC 95 % y tamaños de efecto (§21). Evidencia: `docs/results.md`; funciones en `statistics.py` verificadas contra valores críticos conocidos.
 - [ ] **P9.5** Ejecutar ablaciones estratificadas de 60 casos como exploratorias; separar resultados confirmatorios y exploratorios (D-06).
 - [ ] **P9.6** Exportar CSV/Parquet, notebooks, figuras reproducibles y análisis de sensibilidad de coste (RF-18, D-04).
 

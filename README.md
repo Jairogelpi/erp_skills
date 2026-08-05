@@ -50,31 +50,45 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | FastAPI layer (demo auth, correlation id, rate limit) | `api.py` | ✅ |
 | Durable audit/approval storage (SQLAlchemy, Postgres in compose) | `persistence.py` | ⚠️ not wired into the API yet |
 | Executable statistical plan (McNemar, Cochran Q, bootstrap, Holm) | `statistics.py` | ✅ |
+| Metrics: STSR, false allow, Top-1/Top-3/MRR, stability | `metrics.py` | ✅ |
+| Executable postconditions (verification engine) | `postconditions.py` | ✅ |
+| Paired A/B/C experiment runner (1.080 observations) | `experiment.py` | ✅ |
 | Inter-annotator agreement instrument (Cohen's kappa) | `agreement.py` | ⚠️ human annotation pending |
 | Real LLM client for A/B/C | — | ⏳ needs provider credentials |
-| Piloto, congelación, experimento confirmatorio (1.080 ejecuciones) | — | ⏳ not started |
+| Confirmatory run with a real LLM (CLAUDE.md §19) | — | ⏳ needs provider credentials |
 
-156 tests, 97% coverage (`policy.py` 100%), `ruff`/`mypy` clean, CI green.
+176 tests, `ruff`/`mypy` clean, CI green.
 
-### Measured result, reported as-is
+### Measured result: the paired A/B/C experiment
 
-Running all 480 benchmark cases through System C's **real** execution, before and
-after adding `validation.py`:
+**1.080 executions** (120 frozen-test cases × 3 systems × 3 repetitions),
+randomized order, `FakeERPAdapter` rebuilt per observation. Full analysis in
+[`docs/results.md`](docs/results.md); raw output in `data/experiment_results.json`.
 
-| Label | Before | After |
-|---|---|---|
-| NORMAL | 87.5% | 87.5% |
-| NOISE | 72.2% | **88.9%** |
-| ADVERSARIAL | 17.7% | **57.3%** |
+| Metric | A (ungoverned) | B (typed only) | **C (ERP Agent OS)** |
+|---|---|---|---|
+| **STSR** (primary endpoint) | 0.000 | 0.333 | **0.700** |
+| **False allow rate** (critical) | 1.000 | 0.778 | **0.111** |
+| False block rate | 0.216 | 0.243 | **0.072** |
+| Retrieval Top-1 | 0.000 | 0.610 | **0.780** |
+| Retrieval Top-3 / MRR | — | 0.610 | **0.941 / 0.855** |
 
-**The ceiling is stated, not buried:** those detectors are *lexical* and tuned to
-this benchmark's template-generated adversarial text. They measure detection of
-known patterns, not robustness against an adaptive adversary. 41 adversarial cases
-still mismatch; every remaining category is enumerated in
-[`docs/dataset-card.md`](docs/dataset-card.md). See
-[`docs/threat-model.md`](docs/threat-model.md) for which controls are implemented,
-partial, or absent, and [`CLAUDE.md`](CLAUDE.md#bitácora-operativa) for the
-append-only build log.
+- **C − A** = +0.700, 95% CI [+0.653, +0.747], Holm *p* = 5.2×10⁻⁵⁶, OR 505
+- **C − B** = +0.367, 95% CI [+0.306, +0.425], Holm *p* = 5.2×10⁻²⁴, OR 8.14
+- Cochran's Q = 353.1 (df 2). **H1 (non-inferiority, −5 pp margin): accepted.**
+
+C cuts the false-allow rate from 1.000/0.778 to **0.111** *while also* blocking
+fewer legitimate requests (0.072) — it does not buy safety by refusing work.
+
+> **⚠️ Scope.** The selector is held constant across A/B/C
+> (`DeterministicStubClient`), which isolates the **architectural** contribution
+> from model quality. This is **not** the CLAUDE.md §19 confirmatory protocol,
+> which requires a real LLM provider; the run manifest records
+> `is_confirmatory_run: false`. Other limits stated plainly in
+> [`docs/results.md`](docs/results.md): A scores 0 largely by construction
+> (generic CRUD cannot encode postconditions), so **C − B is the informative
+> contrast**; the adversarial detectors are lexical; H2/H8 (tokens, cost) are
+> **not instrumented**; H3 cannot discriminate with a deterministic selector.
 
 ## Prerequisites
 
@@ -124,6 +138,7 @@ make test                 # pytest runs the full suite
 make coverage             # pytest reports package coverage
 make validate-dataset     # runs the catalog/intents/generator test suites
 make benchmark-smoke      # regenerates data/bench_v1.jsonl + the wiring report
+make experiment           # runs the 1.080-execution paired A/B/C experiment
 make build                # builds sdist + wheel
 ```
 
