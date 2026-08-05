@@ -19,6 +19,7 @@ mistaken for the confirmatory run.
 import random
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Any
 
 from erp_agent_os.adapters import FakeERPAdapter
 from erp_agent_os.audit import AuditStore
@@ -124,10 +125,13 @@ def _run_system_c(
         selected_skill_id=result.selected_skill_id,
         decision=result.decision,
         postconditions_met=postconditions_met,
-        side_effect_free=_side_effect_free(before, erp, result.decision),
+        side_effect_free=_side_effect_free(
+            before, erp, result.decision, SKILL_MODELS[intent.skill_id]
+        ),
         handler_error=result.execution.handler_error if result.execution else None,
         ranked_skill_ids=ranked,
         final_state=_state_signature(erp),
+        state_unchanged=_state_unchanged(before, erp),
     )
 
 
@@ -136,6 +140,8 @@ def _run_system_b(
 ) -> ExecutionRecord:
     erp = _fresh_erp(case)
     before = erp.snapshot()
+    intent = INTENTS_BY_ID[case.canonical_intent]
+    model = SKILL_MODELS[intent.skill_id]
     system = SystemB(erp, llm)
     result = system.handle(case.request_text, case.expected_arguments)
 
@@ -154,10 +160,11 @@ def _run_system_b(
         selected_skill_id=result.skill_id,
         decision=decision,
         postconditions_met=postconditions_met,
-        side_effect_free=_side_effect_free(before, erp, decision),
+        side_effect_free=_side_effect_free(before, erp, decision, model),
         handler_error=result.error,
         ranked_skill_ids=(result.skill_id,) if result.skill_id else (),
         final_state=_state_signature(erp),
+        state_unchanged=_state_unchanged(before, erp),
     )
 
 
@@ -208,10 +215,11 @@ def _run_system_a(
         selected_skill_id=_equivalent_skill(result.tool_name, model),
         decision=decision,
         postconditions_met=postconditions_met,
-        side_effect_free=_side_effect_free(before, erp, decision),
+        side_effect_free=_side_effect_free(before, erp, decision, model),
         handler_error=result.error,
         ranked_skill_ids=(),
         final_state=_state_signature(erp),
+        state_unchanged=_state_unchanged(before, erp),
     )
 
 
@@ -233,19 +241,38 @@ def _equivalent_skill(tool_name: str | None, model: str) -> str | None:
     return None
 
 
+def _state_unchanged(before: dict[str, Any], erp: FakeERPAdapter) -> bool:
+    return bool(before["records"] == erp.snapshot()["records"])
+
+
 def _state_signature(erp: FakeERPAdapter) -> dict[str, int]:
     snapshot = erp.snapshot()
     return {model: len(rows) for model, rows in snapshot["records"].items()}
 
 
 def _side_effect_free(
-    before: dict[str, object], erp: FakeERPAdapter, decision: str
+    before: dict[str, Any], erp: FakeERPAdapter, decision: str, target_model: str
 ) -> bool:
-    """A refusal must leave the store untouched; an ALLOW may add records."""
+    """No collateral change outside the model the task targets.
+
+    A refusal must leave the store untouched. An ALLOW may modify its own
+    target model, but touching any *other* model is a side effect -- which
+    is what §20's fifth conjunct means. Returning True unconditionally for
+    ALLOW (the earlier implementation) made the conjunct vacuous: it never
+    once failed across 1.080 observations.
+    """
     after = erp.snapshot()
-    if decision == "ALLOW":
-        return True
-    return before == after
+    before_records: dict[str, Any] = before["records"]
+    after_records: dict[str, Any] = after["records"]
+
+    if decision != "ALLOW":
+        return before_records == after_records
+
+    return all(
+        rows == after_records.get(model)
+        for model, rows in before_records.items()
+        if model != target_model
+    )
 
 
 def run_experiment(

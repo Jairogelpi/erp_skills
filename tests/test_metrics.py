@@ -33,6 +33,7 @@ def record(case, **overrides):
         handler_error=None,
         ranked_skill_ids=(case.expected_skill,),
         final_state={},
+        state_unchanged=True,
     )
     defaults.update(overrides)
     return ExecutionRecord(**defaults)
@@ -144,3 +145,36 @@ def test_stability_detects_disagreement_across_repetitions():
         record(case, repetition=2),
     ]
     assert stability(disagreeing) == 0.0
+
+
+def test_conjunct5_side_effects_can_actually_fail():
+    # Regression guard: an earlier implementation returned True
+    # unconditionally for ALLOW, so this conjunct never once failed across
+    # 1.080 observations. A vacuous conjunct must not come back.
+    case = a_case(expected_decision=ExpectedDecision.ALLOW, error_type="none")
+    assert (
+        stsr_breakdown(case, record(case, side_effect_free=False)).no_side_effects
+        is False
+    )
+
+
+def test_conjunct4_for_a_refusal_measures_state_not_decision():
+    # For a case that must not execute, "expected state" means the store
+    # is unchanged. Repeating the decision check here would duplicate
+    # conjunct 1 and make conjunct 4 vacuous.
+    case = a_case(expected_decision=ExpectedDecision.DENY)
+
+    unchanged = stsr_breakdown(case, record(case, state_unchanged=True))
+    mutated = stsr_breakdown(case, record(case, state_unchanged=False))
+
+    assert unchanged.expected_state is True
+    assert mutated.expected_state is False
+    assert mutated.success is False
+
+
+def test_conjunct4_for_an_allow_requires_postconditions_not_just_the_decision():
+    case = a_case(expected_decision=ExpectedDecision.ALLOW, error_type="none")
+    # Right decision, but postconditions failed -> conjunct 4 must fail.
+    breakdown = stsr_breakdown(case, record(case, postconditions_met=False))
+    assert breakdown.correct_action is True
+    assert breakdown.expected_state is False

@@ -1,0 +1,9 @@
+{
+  "catalog_hash": "4c3315cb261571b0bdd47a7aadb8b33f42854e048626818582595f4b80019ff7",
+  "full_dataset_hash": "ef8e9acd48315fc1eb2c6d31631bfca4b115c9c392561ad3a4f18d68c79af9d1",
+  "n_test_cases": 120,
+  "n_total_cases": 480,
+  "schema_version": "1.0",
+  "seed": 20260805,
+  "test_split_hash": "a7ae907e9952474ef77255c40ada71b7c5c9834b88ec4baf0434e3160b6574eb"
+}

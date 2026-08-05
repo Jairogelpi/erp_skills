@@ -1,4 +1,4 @@
-.PHONY: format format-check lint typecheck test coverage build up down logs compose-config bootstrap-codebase-memory remove-codebase-memory validate-dataset benchmark-smoke experiment
+.PHONY: format format-check lint typecheck test coverage build up down logs compose-config bootstrap-codebase-memory remove-codebase-memory validate-dataset benchmark-smoke experiment verify-freeze
 
 up:
 	docker compose --env-file config/development.defaults up --build
@@ -39,6 +39,9 @@ validate-dataset:
 benchmark-smoke:
 	uv run python scripts/export_bench_v1.py
 	uv run python scripts/run_bench_wiring_report.py
+
+verify-freeze:
+	uv run python scripts/freeze_protocol.py --verify
 
 experiment:
 	uv run python scripts/run_experiment.py

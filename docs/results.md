@@ -150,6 +150,39 @@ donde no hay confianza mejora la precisión sin sacrificar utilidad neta.
 
 ---
 
+## Auditoría del propio instrumento de medida
+
+Antes de dar los resultados por buenos se auditó el marcador. Se
+encontraron y corrigieron **dos conjuntos vacíos** en STSR:
+
+1. **Conjunto 5 («sin efectos laterales») nunca fallaba.** La
+   implementación devolvía `True` incondicionalmente para toda ejecución
+   permitida: en 1.080 observaciones no falló ni una vez. Ahora compara el
+   estado de *todos los modelos salvo el que la tarea debía tocar*, y
+   detecta 3 observaciones reales de B que escriben en un modelo ajeno.
+2. **Conjunto 4 («estado esperado») duplicaba al conjunto 1** en los casos
+   sin ejecución: ambos comprobaban la decisión. Ahora, cuando la tarea no
+   debía ejecutarse, comprueba que el almacén quedó **intacto**, que es lo
+   que «estado final esperado» significa para un rechazo.
+
+**Los resultados no cambiaron** tras ambas correcciones (STSR A=0,000
+B=0,333 C=0,700, idénticos). Eso es evidencia de que las conclusiones eran
+robustas, no de que las correcciones fueran innecesarias: sin ellas, STSR
+era de facto una conjunción de tres componentes presentada como de cinco.
+
+Hay tests de regresión (`test_conjunct5_side_effects_can_actually_fail`,
+`test_conjunct4_for_a_refusal_measures_state_not_decision`) para que un
+conjunto vacío no vuelva a colarse.
+
+## Congelación del protocolo
+
+`data/freeze_manifest.json` registra los hashes del split de test, del
+dataset completo, del catálogo y de la semilla (§19, P9.1). `make
+verify-freeze` falla si alguno cambia, y corre **en CI**: a partir de
+ahora, tocar el generador o el catálogo sin re-congelar rompe el build en
+lugar de invalidar los resultados en silencio. El detector está probado
+alterando cada uno de los seis componentes por separado.
+
 ## Amenazas a la validez de estos resultados
 
 1. **Selector determinista** — el hallazgo aisla arquitectura, no
