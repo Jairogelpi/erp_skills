@@ -78,6 +78,36 @@ Mutantes probados, por módulo:
 | **McNemar sin corrección de continuidad** (quitar el `−1`) | Los tests solo comprobaban «*p* < 0,001», que se cumple con y sin corrección | Estadístico **anticonservador**: *p* pasa de 9,13×10⁻⁹ a 4,11×10⁻⁹ |
 | **Bootstrap sin remuestreo** (usar la muestra original) | El test comprobaba `low ≤ punto ≤ high`, y un IC degenerado `[x, x]` **lo cumple** | El IC colapsa a un punto: se publicaría «IC95 [0,700, 0,700]» |
 
+### El patrón que revela: dónde se concentran los defectos
+
+Los **dos únicos huecos de todo el proyecto** cayeron en `statistics.py` —
+la capa que produce los números que se defenderán en la memoria. **Cero**
+en los otros 22 módulos con lógica: núcleo determinista, sistemas A/B/C,
+API, retrieval, benchmark, persistencia.
+
+**Por qué, como conclusión metodológica defendible:** cada unidad de esos
+22 módulos se construyó con TDD estricto RED→GREEN→TRIANGULATE→REFACTOR
+**contra un requisito normativo explícito** (un RF, una decisión D-xx, un
+§ concreto de CLAUDE.md) — el ciclo obliga a escribir primero un test que
+exprese ese requisito y falle, así que el requisito queda protegido casi
+por construcción. Las funciones estadísticas, en cambio, se **calcularon**
+a partir de su fórmula matemática, y sus tests originales verificaban *que
+el resultado fuera significativo* (`p < 0,001`) o *que el intervalo
+estuviera en rango* (`low ≤ punto ≤ high`) — una aserción sobre la
+**conclusión** del cálculo, no sobre su **mecanismo**. Ambas propiedades se
+cumplían igual con la fórmula rota, así que el test nunca podía distinguir
+la versión correcta de la incorrecta.
+
+**Enunciado citable:** *el TDD estricto protege bien lo que se implementa
+contra un requisito explícito, y protege mal lo que solo se calcula a
+partir de una fórmula* — porque en el segundo caso es fácil verificar la
+conclusión de un cálculo sin verificar el mecanismo que la produce. La
+corrección fue sustituir esas aserciones de conclusión por aserciones de
+mecanismo: valor exacto del estadístico, anchura del intervalo no
+degenerada y proporcional al error estándar teórico. Material directo
+para la discusión de §29 (pruebas de propiedades) y §36 (validez de
+constructo) en la memoria.
+
 Cerrados con cuatro pruebas nuevas que fijan el valor exacto del estadístico
 y verifican que el intervalo no es degenerado, que se estrecha al crecer *n*
 y que su anchura concuerda con el error estándar teórico. Se comprobó que
