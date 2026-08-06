@@ -55,10 +55,29 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Paired A/B/C experiment runner (1.080 observations) | `experiment.py` | ✅ |
 | Freeze manifest + drift detection (CI-enforced) | `freeze.py` | ✅ |
 | Inter-annotator agreement instrument (Cohen's kappa) | `agreement.py` | ⚠️ human annotation pending |
-| Real LLM client for A/B/C | — | ⏳ needs provider credentials |
-| Confirmatory run with a real LLM (CLAUDE.md §19) | — | ⏳ needs provider credentials |
+| Real LLM client for A/B/C (Groq, free tier) | `groq_client.py` | ✅ |
+| Confirmatory run with a real LLM (CLAUDE.md §19) | `scripts/run_experiment.py --real-llm` | ⏳ implemented, not yet executed at full scale |
 
-205 tests, 97% coverage, `ruff`/`mypy` clean, CI green.
+223 tests, `ruff`/`mypy` clean, CI green.
+
+### Real LLM client
+
+`src/erp_agent_os/groq_client.py` implements the `LLMClient` protocol over
+Groq's free-tier API (`llama-3.3-70b-versatile`, temperature 0 per §23).
+CLAUDE.md D-03 requires A, B, and C to share the same model/provider/config —
+it does not require a frontier/paid model. Using a free tier is a stated
+limitation, not a hidden one: it must be disclosed the same way in the
+memoria.
+
+```sh
+cp .env.example .env   # fill in GROQ_API_KEY (free: console.groq.com/keys)
+uv run python scripts/run_experiment.py --real-llm
+```
+
+Without `--real-llm` (default, and what CI runs) the experiment uses
+`DeterministicStubClient` and is explicitly **not** the confirmatory
+protocol — the manifest records `is_confirmatory_run: false` either way,
+so results can never be silently misread as the real thing.
 
 ### Measured result: the paired A/B/C experiment
 

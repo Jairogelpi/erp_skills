@@ -31,9 +31,9 @@ Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLA
 | `EXT` | extensión post-core | no puede bloquear CONF |
 | `CONF` | requisito confirmatorio | debe cerrarse antes del experimento final |
 
-**Estado al 2026-08-05.** Unidades 1–21. **El experimento emparejado está ejecutado**: 1.080 observaciones (120 casos de test × 3 sistemas × 3 repeticiones), `data/experiment_results.json`, análisis en [`results.md`](results.md).
+**Estado al 2026-08-06.** Unidades 1–28. **El experimento emparejado está ejecutado**: 1.080 observaciones (120 casos de test × 3 sistemas × 3 repeticiones), `data/experiment_results.json`, análisis en [`results.md`](results.md). **Cliente LLM real disponible** (unidad 28, Groq nivel gratuito) — desbloquea la ejecución confirmatoria de §19, aún no lanzada a escala completa.
 
-**Resultados medidos** (selector determinista constante en A/B/C — aísla arquitectura, **no** es el protocolo confirmatorio §19 que exige LLM real):
+**Resultados medidos** (selector determinista constante en A/B/C — aísla arquitectura, **no** es el protocolo confirmatorio §19; unidad de inferencia = caso, n=120, no la ejecución — ver corrección de pseudo-replicación más abajo):
 
 | Métrica | A | B | C |
 |---|---|---|---|
@@ -41,11 +41,9 @@ Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLA
 | False allow rate | 1,000 | 0,778 | **0,111** |
 | Top-1 recuperación | 0,000 | 0,610 | **0,780** |
 
-C−A = +0,700 IC95 [+0,653, +0,747], Holm *p* = 5,2×10⁻⁵⁶, OR 505. C−B = +0,367 IC95 [+0,306, +0,425], Holm *p* = 5,2×10⁻²⁴, OR 8,14. Q de Cochran = 353,1 (gl 2). H1 (no inferioridad, margen −5 pp) **se acepta**.
+C−A = +0,700 IC95 [+0,617, +0,783], Holm *p* = 2,7×10⁻¹⁹, OR 169. C−B = +0,367 IC95 [+0,267, +0,467], Holm *p* = 9,1×10⁻⁹, OR 7,8. Q de Cochran = 117,7 (gl 2). H1 (no inferioridad, margen −5 pp) **se acepta**.
 
-**Defecto corregido en esta fase:** el test congelado tenía **fuga** — 10 textos idénticos en DEVELOPMENT y FINAL_TEST (8,3 % del test). Causa: `validate_case_groups` era tautológico con grupos de tamaño 1. Arreglado ampliando pools a 24 valores, eliminando estilos duplicados/no-op y añadiendo `validate_no_split_leakage` (verificado con fuga plantada). Ahora 480/480 textos únicos, 0 cruces.
-
-**Auditoría del instrumento (unidad 22):** se encontraron **dos conjuntos vacíos** en STSR — «sin efectos laterales» devolvía `True` incondicionalmente (no falló ni una vez en 1.080 observaciones) y «estado esperado» duplicaba la comprobación de decisión. Corregidos; los resultados **no cambiaron**, lo que confirma que las conclusiones eran robustas aunque la métrica no medía lo que declaraba. Protocolo congelado y verificado en CI.
+**Siete defectos encontrados y corregidos por auditoría propia** (unidades 21–26, detalle completo en [`docs/audit.md`](audit.md)): fuga del test congelado (10 textos idénticos en DEVELOPMENT/FINAL_TEST); validador de fuga tautológico; dos conjuntos vacíos de STSR («sin efectos laterales» nunca fallaba, «estado esperado» duplicaba la decisión); pseudo-replicación (360 observaciones tratadas como independientes siendo 120 casos × 3 copias idénticas — IC 1,7× más estrechos, *p* 15 órdenes de magnitud menor de lo correcto); dos huecos en la suite estadística hallados por mutation testing (McNemar sin corrección de continuidad, bootstrap sin remuestreo). Las conclusiones **sobrevivieron a las siete correcciones sin cambiar de signo**. Mutation testing acumulado: 40 mutantes, 40 muertos, cobertura de los 23 módulos con lógica.
 
 **Pendiente explícito:** H2/H8 (tokens y coste) sin instrumentar; H7 (rúbrica) definida pero no computada automáticamente; H3 no discriminable con selector determinista; kappa de anotación pendiente (paso humano); memoria, demo, dashboard y vídeo sin empezar.
 
@@ -258,7 +256,7 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 9. Congelación, experimento y estadística `CONF`
 
-- [x] **P9.1** Congelar test, anotaciones, 12 skills, prompts, configuración y plan de análisis (D-01, D-04). Evidencia: `src/erp_agent_os/freeze.py`, `data/freeze_manifest.json` (hashes de split de test, dataset completo, catálogo y semilla); `make verify-freeze` **corre en CI** y rompe el build ante cualquier deriva; detección probada alterando los seis componentes uno a uno (`tests/test_freeze.py` → 7 passed). Pendiente declarado: el manifiesto **no** cubre prompts ni configuración de proveedor porque aún no hay cliente LLM real; deberá extenderse antes del protocolo confirmatorio.
+- [x] **P9.1** Congelar test, anotaciones, 12 skills, prompts, configuración y plan de análisis (D-01, D-04). Evidencia: `src/erp_agent_os/freeze.py`, `data/freeze_manifest.json` (hashes de split de test, dataset completo, catálogo y semilla); `make verify-freeze` **corre en CI** y rompe el build ante cualquier deriva; detección probada alterando los seis componentes uno a uno (`tests/test_freeze.py` → 7 passed). Pendiente declarado: el manifiesto **todavía no** cubre prompts ni configuración de proveedor. El cliente LLM real ya existe (`groq_client.py`, unidad 28) pero el manifiesto no se ha extendido para incluir su `GroqConfig` (modelo, temperatura, reintentos) — hay que hacerlo antes de tratar cualquier ejecución con `--real-llm` como parte del protocolo confirmatorio congelado.
 - [x] **P9.2** Ejecutar 120 test × 3 sistemas × 3 repeticiones = 1.080 observaciones, con estados restaurados y orden aleatorio (§19). Evidencia: `data/experiment_results.json`; `tests/test_experiment.py` verifica el conteo exacto y que cada caso corre 3 veces en cada sistema.
 - [x] **P9.3** Calcular STSR, seguridad/false allow, recuperación y estabilidad (RF-16–18, D-04). Evidencia: `src/erp_agent_os/metrics.py` (STSR conjuntivo de 5 componentes, false allow, Top-1/Top-3/MRR/cobertura/exactitud selectiva, estabilidad); `tests/test_metrics.py` → 12 passed. Incluye `false_reuse_risk` (§20) y segmentación por módulo/riesgo/etiqueta (§21), tabuladas en `docs/results.md`. Pendiente: tokens, latencia, coste y trazabilidad automática.
 - [x] **P9.4** Aplicar McNemar/Q de Cochran, Holm, IC 95 % y tamaños de efecto (§21). Evidencia: `docs/results.md`; funciones en `statistics.py` verificadas contra valores críticos conocidos.

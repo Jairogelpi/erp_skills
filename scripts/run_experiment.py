@@ -1,13 +1,20 @@
 """Run the paired A/B/C experiment and produce the statistical report.
 
-    uv run python scripts/run_experiment.py
+    uv run python scripts/run_experiment.py              # architecture-only, stub
+    uv run python scripts/run_experiment.py --real-llm   # confirmatory, real Groq calls
 
 Writes data/experiment_results.json. Every number in it comes from the
 1.080 executions this script performs; nothing is asserted that was not
 measured.
+
+--real-llm requires GROQ_API_KEY (see .env.example) and makes real network
+calls billed against your free-tier quota (System A and B each call the
+LLM once per case per repetition; System C's retrieval is TF-IDF, not
+LLM-based, so it makes none). Not used by default or in CI.
 """
 
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -35,11 +42,27 @@ OUTPUT_PATH = (
 )
 
 
+def _select_llm(real_llm: bool):
+    if not real_llm:
+        return DeterministicStubClient()
+    from erp_agent_os.groq_client import GroqClient  # local import: optional dep path
+
+    print(
+        "Real-LLM confirmatory run: this makes network calls against your "
+        "Groq free-tier quota. System A and B each call the model once per "
+        "case per repetition (up to 120 * 2 * 3 = 720 calls); System C's "
+        "retrieval does not call the LLM.",
+        file=sys.stderr,
+    )
+    return GroqClient()
+
+
 def main() -> None:
+    real_llm = "--real-llm" in sys.argv
     cases = generate_cases()
     test_cases = [c for c in cases if c.split is DatasetSplit.FINAL_TEST]
 
-    records, manifest = run_experiment(cases, DeterministicStubClient())
+    records, manifest = run_experiment(cases, _select_llm(real_llm))
 
     per_system_records = defaultdict(list)
     for record in records:
