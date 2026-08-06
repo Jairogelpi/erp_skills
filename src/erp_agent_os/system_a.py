@@ -47,6 +47,8 @@ class SystemAResult:
     tool_name: str | None
     output: Any
     error: str | None
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
 
 
 class SystemA:
@@ -56,8 +58,9 @@ class SystemA:
 
     def handle(self, query_text: str, args: dict[str, Any]) -> SystemAResult:
         call = self._llm.propose_action(query_text, GENERIC_TOOLS)
+        tokens = (call.prompt_tokens, call.completion_tokens)
         if call.tool_name is None:
-            return SystemAResult(None, None, "no tool selected")
+            return SystemAResult(None, None, "no tool selected", *tokens)
 
         try:
             if call.tool_name == "create_record":
@@ -68,8 +71,10 @@ class SystemA:
             elif call.tool_name == "get_record":
                 output = self._erp.get(args["model"], args["record_id"])
             else:
-                return SystemAResult(call.tool_name, None, "unknown tool")
+                return SystemAResult(call.tool_name, None, "unknown tool", *tokens)
         except (UnknownModelError, UnknownRecordError, KeyError) as exc:
-            return SystemAResult(call.tool_name, None, f"{type(exc).__name__}: {exc}")
+            return SystemAResult(
+                call.tool_name, None, f"{type(exc).__name__}: {exc}", *tokens
+            )
 
-        return SystemAResult(call.tool_name, output, None)
+        return SystemAResult(call.tool_name, output, None, *tokens)

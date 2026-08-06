@@ -6,6 +6,7 @@ from erp_agent_os.statistics import (
     holm_correction,
     mcnemar,
     odds_ratio,
+    paired_mean_difference,
     paired_proportion_difference,
 )
 
@@ -135,6 +136,18 @@ def test_bootstrap_interval_is_not_degenerate():
 
     assert interval.high > interval.low, "bootstrap CI collapsed to a point"
     assert interval.low < interval.point < interval.high
+
+
+def test_paired_mean_difference_on_token_counts():
+    # H2: mean tokens per case, C (0, never calls the LLM) vs B.
+    b_tokens = [300.0, 250.0, 280.0, 310.0]
+    c_tokens = [0.0, 0.0, 0.0, 0.0]
+
+    interval = paired_mean_difference(c_tokens, b_tokens)
+
+    assert interval.point == pytest.approx(-285.0)
+    assert interval.low <= interval.point <= interval.high
+    assert interval.high < 0  # C uses strictly fewer tokens than B here
 
 
 def test_bootstrap_width_shrinks_as_the_sample_grows():

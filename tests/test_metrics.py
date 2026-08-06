@@ -5,11 +5,13 @@ from erp_agent_os.dataset import ExpectedDecision
 from erp_agent_os.metrics import (
     ExecutionRecord,
     collapse_repetitions,
+    collapse_tokens,
     retrieval_metrics,
     security_metrics,
     segment_success,
     stability,
     stsr_breakdown,
+    token_metrics,
 )
 
 CASES = generate_cases()
@@ -36,6 +38,8 @@ def record(case, **overrides):
         ranked_skill_ids=(case.expected_skill,),
         final_state={},
         state_unchanged=True,
+        prompt_tokens=0,
+        completion_tokens=0,
     )
     defaults.update(overrides)
     return ExecutionRecord(**defaults)
@@ -274,3 +278,37 @@ def test_collapse_prevents_pseudo_replication():
 
     assert len(records) == 60
     assert len(collapsed["C"]) == 20
+
+
+def test_token_metrics_sums_prompt_and_completion_across_records():
+    case = CASES[0]
+    records = [
+        record(case, prompt_tokens=100, completion_tokens=10),
+        record(case, prompt_tokens=50, completion_tokens=5),
+    ]
+
+    metrics = token_metrics(records)
+
+    assert metrics.total_prompt_tokens == 150
+    assert metrics.total_completion_tokens == 15
+    assert metrics.total_tokens == 165
+    assert metrics.mean_tokens_per_execution == pytest.approx(82.5)
+
+
+def test_token_metrics_of_an_empty_run_is_zero_not_a_crash():
+    metrics = token_metrics([])
+
+    assert metrics.n == 0
+    assert metrics.mean_tokens_per_execution == 0.0
+
+
+def test_collapse_tokens_averages_repetitions_of_the_same_case():
+    case = CASES[0]
+    records = [
+        record(case, repetition=0, prompt_tokens=100, completion_tokens=0),
+        record(case, repetition=1, prompt_tokens=200, completion_tokens=0),
+    ]
+
+    collapsed = collapse_tokens(records)
+
+    assert collapsed["C"][case.request_id] == pytest.approx(150.0)

@@ -29,6 +29,12 @@ class ToolSpec:
 class ToolCall:
     tool_name: str | None
     arguments: dict[str, Any]
+    # Real per-call token counts (CLAUDE.md H2/H8). 0 for any client that
+    # made no real LLM call -- DeterministicStubClient always, System C
+    # never (its retrieval is TF-IDF), so 0 here means "no cost", not
+    # "unmeasured".
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
 
 
 class LLMClient(Protocol):

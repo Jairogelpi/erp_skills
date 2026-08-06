@@ -42,3 +42,14 @@ def test_disallowed_model_surfaces_error_not_exception():
     )
 
     assert result.error is not None
+
+
+def test_token_usage_from_the_llm_call_is_carried_onto_the_result():
+    erp = FakeERPAdapter(allowed_models={"crm.lead"})
+    system = SystemA(erp, _StubLLM(ToolCall("create_record", {}, 100, 20)))
+
+    result = system.handle(
+        "crea un lead", {"model": "crm.lead", "fields": {"name": "Acme"}}
+    )
+
+    assert (result.prompt_tokens, result.completion_tokens) == (100, 20)

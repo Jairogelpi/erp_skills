@@ -18,7 +18,7 @@ import json
 import logging
 import os
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from groq import Groq, RateLimitError
 
@@ -128,7 +128,15 @@ class GroqClient:
                 )
                 content = response.choices[0].message.content or "{}"
                 logger.info("groq call ok in %.2fs", time.monotonic() - call_started)
-                return _parse_tool_call(content, tools)
+                call = _parse_tool_call(content, tools)
+                usage = response.usage
+                if usage is None:
+                    return call
+                return replace(
+                    call,
+                    prompt_tokens=usage.prompt_tokens,
+                    completion_tokens=usage.completion_tokens,
+                )
             except Exception as exc:  # noqa: BLE001 - retry any transient failure
                 last_error = exc
                 if attempt < self._config.max_retries - 1:

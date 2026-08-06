@@ -25,18 +25,28 @@ from erp_agent_os.experiment import run_experiment
 from erp_agent_os.llm_client import DeterministicStubClient
 from erp_agent_os.metrics import (
     collapse_repetitions,
+    collapse_tokens,
     retrieval_metrics,
     security_metrics,
     segment_success,
     stability,
+    token_metrics,
 )
 from erp_agent_os.statistics import (
     cochran_q,
     holm_correction,
     mcnemar,
     odds_ratio,
+    paired_mean_difference,
     paired_proportion_difference,
 )
+from erp_agent_os.traceability import WEIGHTS as TRACEABILITY_WEIGHTS
+
+# H8 cost sensitivity (CLAUDE.md §20): declared assumptions, not measured
+# spend. Groq's llama-3.1-8b-instant free tier has no per-token price;
+# this rate is a stand-in for "a small hosted model", stated so the
+# scenario is reproducible, not so it reads as a real invoice.
+USD_PER_1K_TOKENS = 0.05
 
 OUTPUT_PATH = (
     Path(__file__).resolve().parent.parent / "data" / "experiment_results.json"
@@ -131,6 +141,17 @@ def main() -> None:
     q_statistic, q_df = cochran_q(vectors["A"], vectors["B"], vectors["C"])
     adjusted = holm_correction([h1_test.p_value, cb_test.p_value])
 
+    # H2: tokens per execution, paired on the case (mean across its
+    # repetitions), same pseudo-replication guard as STSR above.
+    token_collapsed = collapse_tokens(records)
+    token_units = sorted(token_collapsed["C"])
+    token_vectors = {
+        s: [token_collapsed[s][u] for u in token_units] for s in ("A", "B", "C")
+    }
+    cb_tokens = paired_mean_difference(token_vectors["C"], token_vectors["B"])
+    ca_tokens = paired_mean_difference(token_vectors["C"], token_vectors["A"])
+    token_totals = {s: token_metrics(per_system_records[s]) for s in ("A", "B", "C")}
+
     security = {
         s: security_metrics(test_cases, per_system_records[s]) for s in ("A", "B", "C")
     }
@@ -177,6 +198,45 @@ def main() -> None:
             "non_inferiority_margin": -0.05,
             "H1_supported": h1_non_inferior,
         },
+        "H2_tokens": {
+            "note": (
+                "Mean total tokens per case (repetitions collapsed, same "
+                "unit as H1). 0 for any system/run using a client that "
+                "made no real LLM call -- System C never does; A/B are 0 "
+                "under the stub-selector run and real under --real-llm."
+            ),
+            "totals": {
+                s: {
+                    "n_executions": m.n,
+                    "total_prompt_tokens": m.total_prompt_tokens,
+                    "total_completion_tokens": m.total_completion_tokens,
+                    "total_tokens": m.total_tokens,
+                    "mean_tokens_per_execution": m.mean_tokens_per_execution,
+                }
+                for s, m in token_totals.items()
+            },
+            "C_minus_B": {
+                "point": cb_tokens.point,
+                "ci95": [cb_tokens.low, cb_tokens.high],
+            },
+            "C_minus_A": {
+                "point": ca_tokens.point,
+                "ci95": [ca_tokens.low, ca_tokens.high],
+            },
+        },
+        "H8_cost_sensitivity": {
+            "caveat": (
+                "Sensitivity analysis with a declared, non-measured token "
+                "price (CLAUDE.md section 20 limits H8 to this, not to "
+                "observed savings). USD_PER_1K_TOKENS is a stand-in rate, "
+                "not Groq's real (unpriced, free-tier) cost."
+            ),
+            "usd_per_1k_tokens": USD_PER_1K_TOKENS,
+            "inference_cost_usd": {
+                s: m.total_tokens / 1000 * USD_PER_1K_TOKENS
+                for s, m in token_totals.items()
+            },
+        },
         "H3_stability": stab,
         "H4_security": {
             s: {
@@ -210,6 +270,22 @@ def main() -> None:
                 "false_reuse_risk": m.false_reuse_risk,
             }
             for s, m in retrieval.items()
+        },
+        "H7_traceability": {
+            "note": (
+                "Weighted rubric (docs/traceability-rubric.md), scored per "
+                "execution from real audit evidence, not log volume. A/B "
+                "score low on policy_decision/skill_version_and_key/"
+                "postcondition_or_block_evidence by construction -- they "
+                "have no policy engine, no versioned skill, no audit "
+                "store (CLAUDE.md section 18)."
+            ),
+            "weights": TRACEABILITY_WEIGHTS,
+            "mean_score": {
+                s: sum(r.traceability_score for r in per_system_records[s])
+                / len(per_system_records[s])
+                for s in ("A", "B", "C")
+            },
         },
     }
 

@@ -53,6 +53,13 @@ class ExecutionRecord:
     # True when the store is byte-identical to its pre-execution snapshot.
     # For a case that must not execute, this IS the expected final state.
     state_unchanged: bool = True
+    # Real per-call token counts (CLAUDE.md H2/H8). 0 for System C (never
+    # calls the LLM) and for any stub selector -- see ToolCall.
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    # CLAUDE.md H7/§20: weighted traceability rubric score in [0, 1] for
+    # this one execution. See traceability.py.
+    traceability_score: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -343,4 +350,60 @@ def collapse_repetitions(
     collapsed: dict[str, dict[str, bool]] = {}
     for (system, request_id), outcomes in grouped.items():
         collapsed.setdefault(system, {})[request_id] = sum(outcomes) * 2 > len(outcomes)
+    return collapsed
+
+
+@dataclass(frozen=True)
+class TokenMetrics:
+    """CLAUDE.md H2 (tokens): totals and per-execution mean for a system.
+
+    0 for a system whose selector made no real LLM call (System C always;
+    any run using DeterministicStubClient) -- that is "no cost", not
+    "unmeasured". Real only when the client attached real usage to
+    ToolCall (see llm_client.ToolCall, groq_client.py).
+    """
+
+    n: int
+    total_prompt_tokens: int
+    total_completion_tokens: int
+
+    @property
+    def total_tokens(self) -> int:
+        return self.total_prompt_tokens + self.total_completion_tokens
+
+    @property
+    def mean_tokens_per_execution(self) -> float:
+        return self.total_tokens / self.n if self.n else 0.0
+
+
+def token_metrics(records: Sequence[ExecutionRecord]) -> TokenMetrics:
+    return TokenMetrics(
+        n=len(records),
+        total_prompt_tokens=sum(r.prompt_tokens for r in records),
+        total_completion_tokens=sum(r.completion_tokens for r in records),
+    )
+
+
+def collapse_tokens(
+    records: Sequence[ExecutionRecord],
+) -> dict[str, dict[str, float]]:
+    """Per-case mean total tokens, one inference unit per (system, case).
+
+    Mirrors `collapse_repetitions`: repetitions of one case are not
+    independent, so H2's paired comparison uses the mean total tokens
+    per case, not each repetition as its own observation. Every case in
+    this dataset has an expected skill by construction (no abstention
+    label in ERP-Skills-Bench v1), so no case-level filter is applied --
+    "peticiones de test con skill esperada" (§20) is all of them here.
+    """
+    grouped: dict[tuple[str, str], list[int]] = {}
+    for record in records:
+        key = (record.system, record.request_id)
+        grouped.setdefault(key, []).append(
+            record.prompt_tokens + record.completion_tokens
+        )
+
+    collapsed: dict[str, dict[str, float]] = {}
+    for (system, request_id), totals in grouped.items():
+        collapsed.setdefault(system, {})[request_id] = sum(totals) / len(totals)
     return collapsed

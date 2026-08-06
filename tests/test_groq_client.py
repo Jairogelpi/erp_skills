@@ -21,9 +21,14 @@ TOOLS = [
 ]
 
 
-def _fake_response(content: str) -> SimpleNamespace:
+def _fake_response(
+    content: str, prompt_tokens: int = 42, completion_tokens: int = 7
+) -> SimpleNamespace:
     return SimpleNamespace(
-        choices=[SimpleNamespace(message=SimpleNamespace(content=content))]
+        choices=[SimpleNamespace(message=SimpleNamespace(content=content))],
+        usage=SimpleNamespace(
+            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        ),
     )
 
 
@@ -90,7 +95,7 @@ def test_propose_action_parses_a_successful_response(monkeypatch):
 
     call = client.propose_action("crea una tarea para llamar", TOOLS)
 
-    assert call == ToolCall("create_task", {"title": "llamar"})
+    assert call == ToolCall("create_task", {"title": "llamar"}, 42, 7)
     client._client.chat.completions.create.assert_called_once()
     kwargs = client._client.chat.completions.create.call_args.kwargs
     assert kwargs["temperature"] == 0.0
@@ -114,7 +119,7 @@ def test_propose_action_retries_transient_failures_then_succeeds(monkeypatch):
 
     result = client.propose_action("algo", TOOLS)
 
-    assert result == ToolCall(None, {})
+    assert result == ToolCall(None, {}, 42, 7)
     assert calls["n"] == 3
 
 

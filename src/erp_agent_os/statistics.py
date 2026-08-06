@@ -79,14 +79,9 @@ def cochran_q(*systems: Sequence[bool]) -> tuple[float, int]:
     return numerator / denominator, k - 1
 
 
-def paired_proportion_difference(
-    first: Sequence[bool],
-    second: Sequence[bool],
-    *,
-    confidence: float = 0.95,
-    seed: int = 20260805,
+def _bootstrap_paired_mean_diff(
+    first: Sequence[float], second: Sequence[float], confidence: float, seed: int
 ) -> Interval:
-    """Bootstrap CI for the paired difference in success proportion."""
     if len(first) != len(second):
         raise ValueError("paired sequences must have equal length")
     n = len(first)
@@ -105,6 +100,32 @@ def paired_proportion_difference(
     low = diffs[int(alpha * _BOOTSTRAP_RESAMPLES)]
     high = diffs[min(int((1 - alpha) * _BOOTSTRAP_RESAMPLES), _BOOTSTRAP_RESAMPLES - 1)]
     return Interval(point, low, high)
+
+
+def paired_proportion_difference(
+    first: Sequence[bool],
+    second: Sequence[bool],
+    *,
+    confidence: float = 0.95,
+    seed: int = 20260805,
+) -> Interval:
+    """Bootstrap CI for the paired difference in success proportion."""
+    return _bootstrap_paired_mean_diff(first, second, confidence, seed)
+
+
+def paired_mean_difference(
+    first: Sequence[float],
+    second: Sequence[float],
+    *,
+    confidence: float = 0.95,
+    seed: int = 20260805,
+) -> Interval:
+    """Bootstrap CI for a paired difference in means (e.g. token counts).
+
+    Same resampling as `paired_proportion_difference`, generalised to any
+    paired continuous measurement (CLAUDE.md H2/H8: tokens per case).
+    """
+    return _bootstrap_paired_mean_diff(first, second, confidence, seed)
 
 
 def odds_ratio(first: Sequence[bool], second: Sequence[bool]) -> float:

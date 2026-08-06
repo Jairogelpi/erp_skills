@@ -29,6 +29,8 @@ class SystemBResult:
     skill_id: str | None
     output: Any
     error: str | None
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
 
 
 class SystemB:
@@ -38,8 +40,9 @@ class SystemB:
 
     def handle(self, query_text: str, arguments: dict[str, Any]) -> SystemBResult:
         call = self._llm.propose_action(query_text, TYPED_TOOLS)
+        tokens = (call.prompt_tokens, call.completion_tokens)
         if call.tool_name is None or call.tool_name not in CATALOG_BY_ID:
-            return SystemBResult(None, None, "no matching tool")
+            return SystemBResult(None, None, "no matching tool", *tokens)
 
         skill = CATALOG_BY_ID[call.tool_name]
         required = skill.input_schema["required"]
@@ -50,12 +53,14 @@ class SystemB:
         ]
         if missing:
             return SystemBResult(
-                skill.skill_id, None, f"missing required fields: {missing}"
+                skill.skill_id, None, f"missing required fields: {missing}", *tokens
             )
 
         try:
             output = HANDLERS[skill.skill_id](self._erp, arguments)
         except (UnknownModelError, UnknownRecordError, KeyError) as exc:
-            return SystemBResult(skill.skill_id, None, f"{type(exc).__name__}: {exc}")
+            return SystemBResult(
+                skill.skill_id, None, f"{type(exc).__name__}: {exc}", *tokens
+            )
 
-        return SystemBResult(skill.skill_id, output, None)
+        return SystemBResult(skill.skill_id, output, None, *tokens)

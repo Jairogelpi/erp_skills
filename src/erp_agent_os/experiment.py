@@ -37,6 +37,10 @@ from erp_agent_os.runtime import Runtime
 from erp_agent_os.system_a import SystemA
 from erp_agent_os.system_b import SystemB
 from erp_agent_os.system_c import SystemC
+from erp_agent_os.traceability import (
+    score_governed_execution,
+    score_ungoverned_execution,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +104,8 @@ def _run_system_c(
     for skill in CATALOG:
         runtime.register(skill.skill_id, skill.version, HANDLERS[skill.skill_id])
     retriever = TfidfRetriever(CATALOG)
-    system = SystemC(erp, runtime, retriever, AuditStore())
+    audit = AuditStore()
+    system = SystemC(erp, runtime, retriever, audit)
 
     intent = INTENTS_BY_ID[case.canonical_intent]
     required = CATALOG_BY_ID[intent.skill_id].input_schema["required"]
@@ -121,6 +126,16 @@ def _run_system_c(
         output = result.execution.output if result.execution else None
         postconditions_met = all(check(erp, output) for check in checks)
 
+    audit_events = audit.events(case.request_id)
+    abstentions = audit.abstentions(case.request_id)
+    trace_score = score_governed_execution(
+        correlation_id=case.request_id,
+        has_interpretation=bool(proposal.intent),
+        ranked_skill_ids=ranked,
+        abstention_reasons=abstentions[-1].reasons if abstentions else result.reasons,
+        audit_event=audit_events[-1] if audit_events else None,
+    ).total
+
     return ExecutionRecord(
         request_id=case.request_id,
         system="C",
@@ -135,6 +150,7 @@ def _run_system_c(
         ranked_skill_ids=ranked,
         final_state=_state_signature(erp),
         state_unchanged=_state_unchanged(before, erp),
+        traceability_score=trace_score,
     )
 
 
@@ -168,6 +184,13 @@ def _run_system_b(
         ranked_skill_ids=(result.skill_id,) if result.skill_id else (),
         final_state=_state_signature(erp),
         state_unchanged=_state_unchanged(before, erp),
+        prompt_tokens=result.prompt_tokens,
+        completion_tokens=result.completion_tokens,
+        traceability_score=score_ungoverned_execution(
+            correlation_id=case.request_id,
+            tool_or_skill_id=result.skill_id,
+            output_present=result.output is not None,
+        ).total,
     )
 
 
@@ -223,6 +246,13 @@ def _run_system_a(
         ranked_skill_ids=(),
         final_state=_state_signature(erp),
         state_unchanged=_state_unchanged(before, erp),
+        prompt_tokens=result.prompt_tokens,
+        completion_tokens=result.completion_tokens,
+        traceability_score=score_ungoverned_execution(
+            correlation_id=case.request_id,
+            tool_or_skill_id=result.tool_name,
+            output_present=result.output is not None,
+        ).total,
     )
 
 
