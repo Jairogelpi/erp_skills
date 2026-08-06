@@ -104,3 +104,67 @@ def test_holm_correction_matches_known_values():
     # Classic worked example: p = .01, .02, .03 with m = 3
     # -> .03, .04, .03 -> enforced monotone -> .03, .04, .04
     assert holm_correction([0.01, 0.02, 0.03]) == pytest.approx([0.03, 0.04, 0.04])
+
+
+def test_mcnemar_applies_the_continuity_correction_exactly():
+    # Mutation-testing gap: dropping the -1 continuity correction left the
+    # whole suite green. Without it the statistic is anti-conservative
+    # (smaller p, easier to declare significance), so the exact value is
+    # pinned rather than merely checked for "significant".
+    first = [True] * 50 + [False] * 6 + [True] * 10
+    second = [False] * 50 + [True] * 6 + [True] * 10
+    result = mcnemar(first, second)
+
+    b, c = 50, 6
+    with_correction = (abs(b - c) - 1) ** 2 / (b + c)
+    without_correction = (abs(b - c)) ** 2 / (b + c)
+
+    assert result.statistic == pytest.approx(with_correction)
+    assert result.statistic != pytest.approx(without_correction)
+
+
+def test_bootstrap_interval_is_not_degenerate():
+    # Mutation-testing gap: replacing the resample with the original sample
+    # collapsed the CI to a single point and no test noticed, because
+    # "low <= point <= high" holds for a degenerate interval. A CI of zero
+    # width would be published as [0.700, 0.700].
+    first = [True] * 70 + [False] * 30
+    second = [True] * 40 + [False] * 60
+
+    interval = paired_proportion_difference(first, second)
+
+    assert interval.high > interval.low, "bootstrap CI collapsed to a point"
+    assert interval.low < interval.point < interval.high
+
+
+def test_bootstrap_width_shrinks_as_the_sample_grows():
+    # A real bootstrap narrows with n; a broken one does not react at all.
+    small_a, small_b = [True] * 15 + [False] * 5, [True] * 5 + [False] * 15
+    large_a, large_b = [True] * 150 + [False] * 50, [True] * 50 + [False] * 150
+
+    small = paired_proportion_difference(small_a, small_b)
+    large = paired_proportion_difference(large_a, large_b)
+
+    assert (large.high - large.low) < (small.high - small.low)
+
+
+def test_bootstrap_width_tracks_the_theoretical_standard_error():
+    # The strongest guard against a broken resample: the interval width
+    # must be in the right ballpark for the sample, not merely non-zero.
+    # For a paired difference of proportions the normal approximation gives
+    # a full width of about 2 * 1.96 * SE.
+    import math
+
+    first = [True] * 70 + [False] * 30
+    second = [True] * 40 + [False] * 60
+    n = len(first)
+
+    interval = paired_proportion_difference(first, second)
+    width = interval.high - interval.low
+
+    b = sum(1 for x, y in zip(first, second, strict=True) if x and not y)
+    c = sum(1 for x, y in zip(first, second, strict=True) if y and not x)
+    se = math.sqrt((b + c) - (b - c) ** 2 / n) / n
+    expected = 2 * 1.96 * se
+
+    assert 0.5 * expected < width < 1.5 * expected
