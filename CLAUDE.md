@@ -1890,3 +1890,11 @@ Cada entrada debe estar fechada y consignar: **qué** cambió, **por qué**, **o
 * **Documento nuevo:** `docs/audit.md` consolida las seis rondas de auditoría, los cinco defectos previos, el mutation testing y la verificación analítica. Es material directamente utilizable en la memoria para §29 y §36.
 * **Evidencia:** `python -m pytest` → **212 passed**; `ruff`/`mypy` limpios (29 archivos); freeze intacto. Trazabilidad: §21, §29, §36.
 * **Siguiente paso:** sin cambios — cliente LLM real (bloquea §19); tokens/latencia (H2/H8); rúbrica automática (H7); kappa humano; memoria.
+
+### 2026-08-06 UTC — unidad 27: mutation testing de los 12 módulos restantes
+
+* **Qué:** la ronda anterior cubrió 11 módulos; esta cubre los 12 que faltaban, con 17 mutantes: `api` (API key no verificada, rate limit desactivado, `correlation_id` fijo en vez de generado por el servidor), `system_b` (campos requeridos no validados, skill fuera de catálogo aceptada), `system_c` (abstención desactivada, `CLARIFY` nunca emitido, hallazgos de validación no propagados), `retrieval` (umbral de abstención y filtro de rol anulados), `parser` (`missing_fields` siempre vacío), `approval` (expiración ignorada), `audit` (eventos no guardados, redacción desactivada), `handlers` (estado de negocio no escrito), `bench_generator` (proporción de ruido alterada) y `persistence` (transacción append-only rota).
+* **Resultado: 17 de 17 muertos, 0 supervivientes.** Primera ronda de auditoría que sale limpia a la primera desde que empezaron.
+* **Lectura acumulada: 40 mutantes, 40 muertos.** Los dos únicos huecos aparecidos en todo el proyecto estaban en la **capa de análisis estadístico** —la que produce los números publicados—, no en la lógica de negocio, ya protegida por el TDD estricto de cada unidad. Es coherente: el TDD cubre bien lo que se implementa contra un requisito explícito y cubre mal lo que solo se *calcula*.
+* **Evidencia:** log de mutación completo con los 17 nombres; suite sin cambios (esta ronda no requirió ninguna corrección de código). `docs/audit.md` actualizado con la tabla de las dos rondas y el desglose por módulo.
+* **Siguiente paso:** sin cambios — cliente LLM real (bloquea §19); tokens/latencia (H2/H8); rúbrica automática (H7); kappa humano; memoria.

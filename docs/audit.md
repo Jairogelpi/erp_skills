@@ -34,8 +34,18 @@ Se rompió el código deliberadamente y se comprobó si la suite lo detecta.
 Un mutante que **sobrevive** señala un hueco: hay lógica que ningún test
 verifica.
 
-**Resultado: 23 mutantes inyectados, 23 muertos** tras cerrar los dos huecos
-que la primera pasada reveló.
+**Resultado global: 40 mutantes inyectados, 40 muertos** tras cerrar los dos
+huecos que la primera pasada reveló. Cobertura: los 23 módulos con lógica.
+
+| Ronda | Ámbito | Mutantes | Muertos | Supervivientes |
+|---|---|---|---|---|
+| 1 | núcleo, métricas, dataset, freeze, validación, estadística | 23 | 21 → 23 | 2 → 0 |
+| 2 | API, sistemas A/B/C, retrieval, parser, approval, auditoría, handlers, generador, persistencia | 17 | **17** | **0** |
+
+La segunda ronda salió limpia a la primera, lo que sugiere que los huecos
+se concentraban en la capa de análisis —la que produce los números
+publicados— y no en la lógica de negocio, ya cubierta por el TDD estricto
+de cada unidad.
 
 Mutantes probados, por módulo:
 
@@ -50,6 +60,16 @@ Mutantes probados, por módulo:
 - **`postconditions`** — postcondición desconocida pasa en silencio
 - **`statistics`** — Holm anulada · McNemar sin corrección de continuidad · bootstrap sin remuestreo
 - **`agreement`** — kappa sin corrección por azar
+- **`api`** — API key no verificada · rate limit desactivado · `correlation_id` fijo en vez de generado por el servidor
+- **`system_b`** — campos requeridos no validados · skill fuera de catálogo aceptada
+- **`system_c`** — abstención desactivada · `CLARIFY` nunca emitido · hallazgos de validación no propagados
+- **`retrieval`** — abstención por umbral anulada · filtro de rol anulado
+- **`parser`** — `missing_fields` siempre vacío
+- **`approval`** — expiración ignorada
+- **`audit`** — eventos no guardados · redacción desactivada
+- **`handlers`** — estado de negocio no escrito
+- **`bench_generator`** — proporción de ruido alterada
+- **`persistence`** — transacción append-only rota
 
 ### Los dos huecos que reveló
 
