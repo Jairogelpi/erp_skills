@@ -19,14 +19,15 @@ import os
 import time
 from dataclasses import dataclass
 
-from groq import Groq
+from groq import Groq, RateLimitError
 
 from erp_agent_os.llm_client import ToolCall, ToolSpec
 
 DEFAULT_MODEL = "llama-3.3-70b-versatile"
 DEFAULT_TEMPERATURE = 0.0  # low temperature: CLAUDE.md §23 ("temperatura baja")
-DEFAULT_MAX_RETRIES = 3
+DEFAULT_MAX_RETRIES = 5
 DEFAULT_TIMEOUT_SECONDS = 30
+DEFAULT_MIN_INTERVAL_SECONDS = 2.0  # paces calls to stay under free-tier RPM
 
 
 class MissingApiKeyError(RuntimeError):
@@ -41,6 +42,7 @@ class GroqConfig:
     temperature: float = DEFAULT_TEMPERATURE
     max_retries: int = DEFAULT_MAX_RETRIES
     timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS
+    min_interval_seconds: float = DEFAULT_MIN_INTERVAL_SECONDS
 
 
 _SYSTEM_PROMPT = (
@@ -77,10 +79,20 @@ class GroqClient:
             )
         self._config = config or GroqConfig()
         self._client = Groq(api_key=api_key, timeout=self._config.timeout_seconds)
+        self._last_call_at: float | None = None
 
     @property
     def config(self) -> GroqConfig:
         return self._config
+
+    def _pace(self) -> None:
+        """Sleep so consecutive calls stay under the free-tier RPM limit."""
+        if self._last_call_at is not None:
+            elapsed = time.monotonic() - self._last_call_at
+            remaining = self._config.min_interval_seconds - elapsed
+            if remaining > 0:
+                time.sleep(remaining)
+        self._last_call_at = time.monotonic()
 
     def propose_action(self, query_text: str, tools: list[ToolSpec]) -> ToolCall:
         if not tools:
@@ -92,6 +104,7 @@ class GroqClient:
 
         last_error: Exception | None = None
         for attempt in range(self._config.max_retries):
+            self._pace()
             try:
                 response = self._client.chat.completions.create(
                     model=self._config.model,
@@ -108,11 +121,23 @@ class GroqClient:
             except Exception as exc:  # noqa: BLE001 - retry any transient failure
                 last_error = exc
                 if attempt < self._config.max_retries - 1:
-                    time.sleep(2**attempt)  # exponential backoff
+                    time.sleep(_retry_delay(exc, attempt))
 
         raise RuntimeError(
             f"Groq call failed after {self._config.max_retries} attempts"
         ) from last_error
+
+
+def _retry_delay(exc: Exception, attempt: int) -> float:
+    """Honor the server's Retry-After header on 429s; else back off."""
+    if isinstance(exc, RateLimitError):
+        retry_after = exc.response.headers.get("retry-after")
+        if retry_after is not None:
+            try:
+                return float(retry_after) + 0.5
+            except ValueError:
+                pass
+    return float(2**attempt)
 
 
 def _parse_tool_call(content: str, tools: list[ToolSpec]) -> ToolCall:

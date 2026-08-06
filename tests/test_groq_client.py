@@ -2,13 +2,16 @@ import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import httpx
 import pytest
+from groq import RateLimitError
 
 from erp_agent_os.groq_client import (
     GroqClient,
     GroqConfig,
     MissingApiKeyError,
     _parse_tool_call,
+    _retry_delay,
 )
 from erp_agent_os.llm_client import ToolCall, ToolSpec
 
@@ -127,3 +130,64 @@ def test_propose_action_raises_after_exhausting_retries(monkeypatch):
         client.propose_action("algo", TOOLS)
 
     assert client._client.chat.completions.create.call_count == 2
+
+
+def test_config_paces_calls_under_free_tier_rate_limit():
+    config = GroqConfig()
+    assert config.min_interval_seconds > 0
+
+
+def test_pace_sleeps_to_respect_min_interval(monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    client = GroqClient(GroqConfig(min_interval_seconds=5.0))
+
+    clock = {"t": 0.0}
+    monkeypatch.setattr("erp_agent_os.groq_client.time.monotonic", lambda: clock["t"])
+    sleeps = []
+    monkeypatch.setattr(
+        "erp_agent_os.groq_client.time.sleep", lambda s: sleeps.append(s)
+    )
+
+    client._pace()  # first call: no prior call, no sleep
+    clock["t"] = 1.0  # only 1s elapsed, need 5s
+    client._pace()
+
+    assert sleeps == [4.0]
+
+
+def test_pace_does_not_sleep_once_interval_has_elapsed(monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    client = GroqClient(GroqConfig(min_interval_seconds=2.0))
+
+    clock = {"t": 0.0}
+    monkeypatch.setattr("erp_agent_os.groq_client.time.monotonic", lambda: clock["t"])
+    sleeps = []
+    monkeypatch.setattr(
+        "erp_agent_os.groq_client.time.sleep", lambda s: sleeps.append(s)
+    )
+
+    client._pace()
+    clock["t"] = 5.0  # well past the interval
+    client._pace()
+
+    assert sleeps == []
+
+
+def _fake_rate_limit_error(headers: dict[str, str]) -> RateLimitError:
+    request = httpx.Request("POST", "https://api.groq.com/v1/chat/completions")
+    response = httpx.Response(429, headers=headers, request=request)
+    return RateLimitError("rate limited", response=response, body=None)
+
+
+def test_retry_delay_honors_retry_after_header():
+    exc = _fake_rate_limit_error({"retry-after": "7"})
+    assert _retry_delay(exc, attempt=0) == 7.5
+
+
+def test_retry_delay_falls_back_to_exponential_backoff_without_header():
+    exc = _fake_rate_limit_error({})
+    assert _retry_delay(exc, attempt=2) == 4.0
+
+
+def test_retry_delay_falls_back_for_non_rate_limit_errors():
+    assert _retry_delay(ConnectionError("boom"), attempt=1) == 2.0
