@@ -31,21 +31,21 @@ Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLA
 | `EXT` | extensión post-core | no puede bloquear CONF |
 | `CONF` | requisito confirmatorio | debe cerrarse antes del experimento final |
 
-**Estado al 2026-08-06.** Unidades 1–28. **El experimento emparejado está ejecutado**: 1.080 observaciones (120 casos de test × 3 sistemas × 3 repeticiones), `data/experiment_results.json`, análisis en [`results.md`](results.md). **Cliente LLM real disponible** (unidad 28, Groq nivel gratuito) — desbloquea la ejecución confirmatoria de §19, aún no lanzada a escala completa.
+**Estado al 2026-08-06.** Unidades 1–29 (incluye la ejecución confirmatoria real y su corrección de caveat). **El experimento confirmatorio de §19 está ejecutado con LLM real**: 1.080 observaciones (120 casos de test × 3 sistemas × 3 repeticiones), `manifest.selector: "GroqClient"`, `is_confirmatory_run: true`, `data/experiment_results.json`, análisis completo en [`results.md`](results.md), que conserva también la línea base con selector stub (`is_confirmatory_run: false`) para aislar la contribución arquitectónica.
 
-**Resultados medidos** (selector determinista constante en A/B/C — aísla arquitectura, **no** es el protocolo confirmatorio §19; unidad de inferencia = caso, n=120, no la ejecución — ver corrección de pseudo-replicación más abajo):
+**Resultados medidos, ejecución confirmatoria real** (unidad de inferencia = caso, n=120, no la ejecución — ver corrección de pseudo-replicación más abajo):
 
 | Métrica | A | B | C |
 |---|---|---|---|
-| STSR | 0,000 | 0,333 | **0,700** |
-| False allow rate | 1,000 | 0,778 | **0,111** |
-| Top-1 recuperación | 0,000 | 0,610 | **0,780** |
+| STSR | 0,000 | 0,483 | **0,700** |
+| False allow rate | 0,889 | 0,889 | **0,111** |
+| Top-1 recuperación | 0,000 | 0,898 | **0,780** |
 
-C−A = +0,700 IC95 [+0,617, +0,783], Holm *p* = 2,7×10⁻¹⁹, OR 169. C−B = +0,367 IC95 [+0,267, +0,467], Holm *p* = 9,1×10⁻⁹, OR 7,8. Q de Cochran = 117,7 (gl 2). H1 (no inferioridad, margen −5 pp) **se acepta**.
+C−A = +0,700 IC95 [+0,617, +0,783], Holm *p* = 2,71×10⁻¹⁹, OR 169. C−B = +0,217 IC95 [+0,100, +0,333], Holm *p* = 1,03×10⁻³, OR 2,58. Q de Cochran = 110,96 (gl 2). H1 (no inferioridad, margen −5 pp) **se acepta**. C nunca llama al LLM (recuperación TF-IDF): sus métricas son idénticas a la ejecución con selector stub; B mejora sustancialmente con selector real (STSR 0,333→0,483) y C−B se estrecha pero sigue significativo.
 
-**Siete defectos encontrados y corregidos por auditoría propia** (unidades 21–26, detalle completo en [`docs/audit.md`](audit.md)): fuga del test congelado (10 textos idénticos en DEVELOPMENT/FINAL_TEST); validador de fuga tautológico; dos conjuntos vacíos de STSR («sin efectos laterales» nunca fallaba, «estado esperado» duplicaba la decisión); pseudo-replicación (360 observaciones tratadas como independientes siendo 120 casos × 3 copias idénticas — IC 1,7× más estrechos, *p* 15 órdenes de magnitud menor de lo correcto); dos huecos en la suite estadística hallados por mutation testing (McNemar sin corrección de continuidad, bootstrap sin remuestreo). Las conclusiones **sobrevivieron a las siete correcciones sin cambiar de signo**. Mutation testing acumulado: 40 mutantes, 40 muertos, cobertura de los 23 módulos con lógica.
+**Ocho defectos encontrados y corregidos por auditoría propia** (unidades 21–29, detalle completo en [`docs/audit.md`](audit.md)): fuga del test congelado (10 textos idénticos en DEVELOPMENT/FINAL_TEST); validador de fuga tautológico; dos conjuntos vacíos de STSR («sin efectos laterales» nunca fallaba, «estado esperado» duplicaba la decisión); pseudo-replicación (360 observaciones tratadas como independientes siendo 120 casos × 3 copias idénticas — IC 1,7× más estrechos, *p* 15 órdenes de magnitud menor de lo correcto); dos huecos en la suite estadística hallados por mutation testing (McNemar sin corrección de continuidad, bootstrap sin remuestreo); caveat del manifiesto inconsistente con `is_confirmatory_run` en la primera ejecución real, hallado leyendo la propia salida. Las conclusiones **sobrevivieron a las ocho correcciones sin cambiar de signo**. Mutation testing acumulado: 40 mutantes, 40 muertos, cobertura de los 23 módulos con lógica.
 
-**Pendiente explícito:** H2/H8 (tokens y coste) sin instrumentar; H7 (rúbrica) definida pero no computada automáticamente; H3 no discriminable con selector determinista; kappa de anotación pendiente (paso humano); memoria, demo, dashboard y vídeo sin empezar.
+**Pendiente explícito:** H2/H8 (tokens y coste) sin instrumentar; H7 (rúbrica) definida pero no computada automáticamente; H3 no discriminable ni con LLM real (temperatura 0 exigida por §23 la vuelve determinista por diseño); congelación (`freeze_manifest.json`) sin extender a configuración del proveedor LLM; kappa de anotación pendiente (paso humano); memoria, demo, dashboard y vídeo sin empezar.
 
 ## Mapa de requisitos y decisiones normativas
 

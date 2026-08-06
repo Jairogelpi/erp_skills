@@ -1,21 +1,31 @@
 # Resultados experimentales
 
-Todos los números provienen de `data/experiment_results.json`, generado por
-`uv run python scripts/run_experiment.py`: **1.080 ejecuciones** (120 casos
-de test congelado × 3 sistemas × 3 repeticiones), orden aleatorizado con
-semilla `20260805`, estado de `FakeERPAdapter` reconstruido por observación.
+Dos ejecuciones, mismo protocolo (`uv run python scripts/run_experiment.py
+[--real-llm]`): **1.080 ejecuciones** (120 casos de test congelado × 3
+sistemas × 3 repeticiones), semilla `20260805`, estado de `FakeERPAdapter`
+reconstruido por observación.
 
-> ## ⚠️ Alcance de esta ejecución
+1. **Ejecución confirmatoria real** (`data/experiment_results.json`,
+   `manifest.selector: "GroqClient"`, `is_confirmatory_run: true`) — A y B
+   llaman a Groq (`llama-3.1-8b-instant`, temperatura 0) igual que exige
+   D-03; C no llama al LLM (su recuperación es TF-IDF), así que sus
+   métricas son **idénticas** entre ambas ejecuciones — no es un error,
+   es la arquitectura.
+2. **Ejecución arquitectura-solo** (histórica, selector determinista
+   compartido) — aísla gobernanza de calidad del modelo, ya no es la
+   ejecución primaria pero se conserva como contraste porque muestra
+   cuánto de la ventaja de C sobrevive incluso cuando A/B tienen un
+   selector perfecto.
+
+> ## Estado del protocolo confirmatorio de §19
 >
-> El **selector se mantiene constante** en A, B y C
-> (`DeterministicStubClient`). Eso aísla la contribución **arquitectónica**
-> (gobernanza frente a su ausencia) de la calidad del modelo, que es
-> exactamente lo que esta comparación mide.
->
-> **No es el protocolo confirmatorio de CLAUDE.md §19**, que exige un
-> proveedor LLM real. El manifiesto del JSON lo marca con
-> `is_confirmatory_run: false`. Cualquier lectura de estos resultados como
-> evidencia sobre el comportamiento de un LLM real sería incorrecta.
+> **Esto SÍ es el protocolo confirmatorio.** Limitación declarada: modelo
+> gratuito (`llama-3.1-8b-instant`), no un modelo frontera/de producción
+> — se declara en la memoria, no se oculta. La congelación
+> (`data/freeze_manifest.json`) todavía no cubre la configuración del
+> proveedor (modelo, temperatura, reintentos): es una limitación abierta,
+> no un descuido — se lanzó a escala completa por decisión explícita antes
+> de extender la congelación.
 
 ---
 
@@ -26,68 +36,61 @@ semilla `20260805`, estado de `FakeERPAdapter` reconstruido por observación.
 > consumo de tokens y variabilidad, manteniendo o mejorando la tasa de
 > éxito en automatizaciones ERP?
 
-**Respuesta, con el alcance declarado arriba:** sí en errores y éxito de
-tarea; **no medido** en tokens; sin diferencia observable en variabilidad
-porque los tres sistemas resultaron perfectamente estables con un
-selector determinista.
+**Respuesta, con un LLM real:** sí en errores de seguridad y éxito de
+tarea, incluso cuando el propio LLM mejora (B sube de 0,333 a 0,483 con
+selección real frente a stub, C sigue por encima); **no medido** en
+tokens; H3 (estabilidad) resulta trivialmente 1,0 con temperatura 0, así
+que tampoco discrimina aquí.
 
 ---
 
 ## H1 — Strict Task Success Rate
 
-| Sistema | STSR |
-|---|---|
-| A (agente directo) | **0,000** |
-| B (herramientas tipadas) | **0,333** |
-| C (ERP Agent OS) | **0,700** |
+| Sistema | STSR (real) | STSR (stub, arquitectura-solo) |
+|---|---|---|
+| A (agente directo) | **0,000** | 0,000 |
+| B (herramientas tipadas) | **0,483** | 0,333 |
+| C (ERP Agent OS) | **0,700** | 0,700 |
 
-| Contraste | Diferencia | IC 95 % | Holm *p* | Odds ratio |
+| Contraste (real) | Diferencia | IC 95 % | Holm *p* | Odds ratio |
 |---|---|---|---|---|
-| C − A | **+0,700** | [+0,617, +0,783] | 2,7 × 10⁻¹⁹ | 169.0 |
-| C − B | **+0,367** | [+0,267, +0,467] | 9,1 × 10⁻⁹ | 7.77 |
+| C − A | **+0,700** | [+0,617, +0,783] | 2,71 × 10⁻¹⁹ | 169,0 |
+| C − B | **+0,217** | [+0,100, +0,333] | 1,03 × 10⁻³ | 2,58 |
 
-Q de Cochran = 117.7 (gl = 2), lo que rechaza la igualdad de los
-tres sistemas antes de los post hoc.
+Q de Cochran = 110,96 (gl = 2).
 
 > **Unidad de inferencia: el caso, no la ejecución.** Las 1.080
 > ejecuciones son 120 casos × 3 sistemas × 3 repeticiones, pero las
-> repeticiones de un mismo caso **no son observaciones independientes**:
-> comparten petición, estado inicial y sistema. Alimentar una prueba
-> emparejada con las 360 observaciones por sistema sería
-> **pseudo-replicación**: estrecharía los IC en un factor ≈ √3 y reduciría
-> los *p* en órdenes de magnitud. Las repeticiones se colapsan por caso
-> (mayoría) antes de cualquier contraste, y sirven para medir estabilidad
-> (H3), que es su función según §20. Con n = 120 los IC son ≈ 1,7 veces
-> más anchos que si se hubieran contado 360, y así deben reportarse.
+> repeticiones de un mismo caso **no son observaciones independientes**.
+> Se colapsan por caso (mayoría) antes de cualquier contraste
+> (`collapse_repetitions`); con n = 120 los IC son más anchos que si se
+> hubieran contado 360, y así deben reportarse.
 
-**H1 (no inferioridad de C frente a A, margen −5 pp): se acepta.** El
-límite inferior del IC (+0,653) está muy por encima de −0,05; de hecho C
-es netamente superior, no solo no inferior.
+**H1 (no inferioridad de C frente a A, margen −5 pp): se acepta.** Límite
+inferior del IC (+0,617) muy por encima de −0,05; C es netamente
+superior.
+
+**C − B se mantiene significativo tras un LLM real** (Holm *p* = 1,03 ×
+10⁻³, OR = 2,58), pero se **reduce a menos de la mitad** frente al stub
+(+0,217 frente a +0,367): un selector real mejora bastante a B (0,333 →
+0,483) porque ya no falla por selección arbitraria, cerrando parte de la
+brecha. Esto es evidencia directa de que **parte** de la ventaja
+observada con el stub venía de la mala calidad del selector de B, no solo
+de la arquitectura — dato que debe reportarse sin maquillar, no una
+sorpresa que invalide H1.
 
 ### Por qué A obtiene exactamente 0,000
 
-No es un artefacto del marcador: es el efecto que se pretendía medir. Con
-el **mismo caso, los mismos argumentos y el mismo selector**, A y B
-escriben registros distintos:
+Sigue siendo 0 con LLM real, por la misma razón estructural que con el
+stub: A dispone de `create_record` genérico y **ningún contrato que
+codifique la regla de negocio**, así que aunque el LLM elija bien el
+modelo y los argumentos, el registro resultante no cumple postcondiciones
+como `opportunity_is_open`. STSR lo detecta porque exige estado final
+correcto, no una llamada plausible.
 
-```
-A escribe:     {'customer_name': 'Cyberdyne', 'expected_revenue': '32000'}
-B y C escriben:{'customer_name': 'Cyberdyne', 'expected_revenue': '32000', 'state': 'open'}
-```
-
-La postcondición `opportunity_is_open` exige `state == "open"`. A dispone
-de un `create_record` genérico y **ningún contrato que codifique la regla
-de negocio**, así que produce un registro incompleto. STSR lo detecta
-porque exige estado final correcto, no una respuesta plausible.
-
-**Limitación honesta:** que A puntúe 0 es casi determinista dado su
-diseño — CRUD genérico no puede codificar postcondiciones. Un lector
-puede objetar que A es un *hombre de paja*. La objeción es parcialmente
-válida: la comparación A↔C mide *la existencia del contrato de skill*,
-no la habilidad del agente. El contraste informativo frente a esa
-objeción es **C − B** (+0,367), donde ambos comparten catálogo, esquemas
-tipados y handlers, y difieren solo en recuperación, riesgo, aprobación y
-verificación.
+**Limitación honesta, sin cambios:** A es parcialmente un *hombre de
+paja* — mide la ausencia de contrato de skill, no la habilidad del
+agente. El contraste informativo sigue siendo **C − B**.
 
 ---
 
@@ -99,12 +102,13 @@ verificación.
 | B | 1,000 |
 | C | 1,000 |
 
-**Resultado nulo, reportado como tal.** Con un selector determinista los
-tres sistemas son perfectamente reproducibles por construcción, así que
-esta ejecución **no puede discriminar** en estabilidad. H3 solo es
-comprobable con un modelo real, cuya variabilidad es la fuente que la
-hipótesis pretende medir. No se interpreta como evidencia de que C sea
-más estable.
+**Resultado nulo, incluso con LLM real.** Con `temperature=0.0` (§23,
+"temperatura baja") el LLM real resultó también perfectamente
+reproducible en las 3 repeticiones de cada caso. H3 sigue sin poder
+discriminar: haría falta una temperatura mayor que 0 para que la
+hipótesis tenga la oportunidad de fallar, lo cual contradice la propia
+norma de temperatura baja del protocolo — tensión que debe discutirse en
+la memoria, no resolverse subiendo la temperatura sin más.
 
 ---
 
@@ -116,18 +120,23 @@ irreversible).
 
 | Sistema | False allow | Tasa | False block | Recall de detección |
 |---|---|---|---|---|
-| A | 27/27 | **1,000** | 0,216 | 0,000 |
-| B | 21/27 | **0,778** | 0,243 | 0,222 |
+| A | 24/27 | **0,889** | 0,225 | 0,111 |
+| B | 24/27 | **0,889** | 0,072 | 0,111 |
 | C | 3/27 | **0,111** | 0,072 | 0,889 |
 
-C reduce el *false allow rate* de 1,000 (A) y 0,778 (B) a **0,111**, y
-además con **menos** falsos bloqueos (0,072 frente a 0,216 y 0,243): no
+C reduce el *false allow rate* de 0,889 (A y B) a **0,111**, con
+*false block* igual al de B (0,072) y muy por debajo del de A (0,225): no
 compra seguridad a costa de rechazar trabajo legítimo.
 
-**Techo declarado:** la detección es **léxica** y está ajustada al texto
-plantillado del benchmark. Mide detección de *patrones conocidos*, no
-robustez frente a un adversario adaptativo. Los 3 fallos restantes de C
-corresponden a formulaciones que las expresiones regulares no cubren.
+**Cambio frente al stub:** con LLM real, A ya no falla el 100 % (1,000 →
+0,889) — el modelo real evita algunos peligros obvios que el stub
+determinista no evitaba —, y B mejora su *false block rate* (0,243 →
+0,072, igualándose a C). C es idéntico al stub porque su detección es
+determinista y léxica, no depende del LLM.
+
+**Techo declarado, sin cambios:** la detección de C es **léxica** y está
+ajustada al texto plantillado del benchmark. Mide detección de *patrones
+conocidos*, no robustez frente a un adversario adaptativo.
 
 ---
 
@@ -135,76 +144,88 @@ corresponden a formulaciones que las expresiones regulares no cubren.
 
 | Sistema | Top-1 | Top-3 | MRR | Cobertura | Exactitud selectiva | Abstención |
 |---|---|---|---|---|---|---|
-| A | 0,000 | 0,000 | 0,000 | 1,000 | 0,585 | 0,000 |
-| B | 0,610 | 0,610 | 0,610 | 1,000 | 0,610 | 0,000 |
+| A | 0,000 | 0,000 | 0,000 | 1,000 | 0,839 | 0,000 |
+| B | 0,898 | 0,898 | 0,898 | 1,000 | 0,898 | 0,000 |
 | C | **0,780** | **0,941** | **0,855** | 0,847 | **0,780** | 0,153 |
 
-A no produce ranking (Top-1 = 0 por construcción: no tiene catálogo). C
-supera a B en Top-1 en +17 puntos y alcanza Top-3 = 0,941, indicando que
-cuando falla, la skill correcta casi siempre está entre las tres
-primeras.
+B mejora notablemente su Top-1 con LLM real (0,610 → 0,898) — un modelo
+real elige mejor la herramienta que el stub determinista. C sigue sin
+llamar al LLM, así que es idéntico al stub; su ventaja frente a B en Top-3
+(0,941 vs 0,898) y en abstención (15,3 % frente a 0 %) se mantiene, pero
+B ya no queda tan atrás en Top-1 como con el stub.
 
-C es el único que **se abstiene** (15,3 %), y su exactitud selectiva
-(0,780) es superior a la cobertura completa de B (0,610): abstenerse
-donde no hay confianza mejora la precisión sin sacrificar utilidad neta.
+C sigue siendo el único que **se abstiene** (15,3 %); su exactitud
+selectiva (0,780) es ahora **inferior** a la cobertura completa de B
+(0,898) — con un LLM real razonablemente bueno, abstenerse ya no mejora
+la precisión frente a intentarlo siempre, al contrario que con el stub.
+Esto matiza H6 en vez de confirmarlo sin reservas: el valor de la
+abstención depende de cuánto peor sea el selector alternativo.
 
 ---
 
-## Segmentación (§21)
-
-§21 exige analizar por módulo, riesgo y etiqueta: un sistema puede parecer
-sólido en agregado y fallar una familia entera.
+## Segmentación (§21), ejecución real
 
 ### Por módulo
 
 | Estrato | A | B | C | n (por sistema) |
 |---|---|---|---|---|
-| billing | 0,000 | 0,800 | 0,900 | 30 |
-| contacts | 0,000 | 0,400 | 0,500 | 30 |
+| billing | 0,000 | 0,700 | 0,900 | 30 |
+| contacts | 0,000 | 1,000 | 0,500 | 30 |
 | crm | 0,000 | 0,500 | 0,767 | 90 |
 | inventory | 0,000 | 0,600 | 0,900 | 30 |
 | product | 0,000 | 0,000 | 1,000 | 30 |
-| purchasing | 0,000 | 0,400 | 0,900 | 30 |
-| sales | 0,000 | 0,100 | 0,500 | 90 |
-| tasks | 0,000 | 0,000 | 0,400 | 30 |
+| purchasing | 0,000 | 0,900 | 0,900 | 30 |
+| sales | 0,000 | 0,200 | 0,500 | 90 |
+| tasks | 0,000 | 0,500 | 0,400 | 30 |
+
+`contacts` es el único módulo donde B (1,000) supera a C (0,500) con LLM
+real — al revés que con el stub (0,400 vs 0,500). `product` sigue siendo
+el peor módulo de B (0,000) en ambas ejecuciones.
 
 ### Por clase de riesgo
 
 | Estrato | A | B | C | n (por sistema) |
 |---|---|---|---|---|
-| R0 | 0,000 | 0,600 | 0,700 | 90 |
-| R1 | 0,000 | 0,367 | 0,633 | 180 |
+| R0 | 0,000 | 0,800 | 0,700 | 90 |
+| R1 | 0,000 | 0,567 | 0,633 | 180 |
 | R2 | 0,000 | 0,000 | 1,000 | 60 |
 | R3 | 0,000 | 0,000 | 0,500 | 30 |
+
+B mejora en R0 (consultas) con LLM real (0,600 → 0,800) pero sigue en
+0,000 en R2/R3 (sin verificación de postcondiciones, no depende de la
+calidad del selector). C se mantiene igual: R2/R3 dependen del policy
+engine y del runtime, no del LLM.
 
 ### Por etiqueta
 
 | Estrato | A | B | C | n (por sistema) |
 |---|---|---|---|---|
-| ADVERSARIAL | 0,000 | 0,053 | 0,579 | 57 |
-| NOISE | 0,000 | 0,297 | 0,676 | 111 |
-| NORMAL | 0,000 | 0,438 | 0,750 | 192 |
+| ADVERSARIAL | 0,000 | 0,158 | 0,579 | 57 |
+| NOISE | 0,000 | 0,405 | 0,676 | 111 |
+| NORMAL | 0,000 | 0,625 | 0,750 | 192 |
 
-**Lectura honesta de los puntos débiles de C:** `contacts` es su peor
-módulo (0.500) y R3 su peor clase de riesgo
-(0.500). En R3 la política exige simulación incluso
-tras aprobación (§16), de modo que los casos que el dataset espera
-ejecutados no pueden puntuar: es una tensión real entre la norma de
-seguridad y la métrica de éxito, no un fallo de implementación, y debe
-discutirse como tal en la memoria.
+B mejora en las tres etiquetas con LLM real (ADVERSARIAL 0,053→0,158,
+NOISE 0,297→0,405, NORMAL 0,438→0,625). C se mantiene idéntico.
+
+**Lectura honesta:** un LLM real mejora a B de forma consistente en casi
+todos los cortes, cerrando parte de la brecha con C — pero no la cierra
+en R2/R3, donde la brecha es estructural (falta de aprobación y
+verificación de postcondiciones), no de calidad de selección.
 
 ### Riesgo de reutilización errónea (§20)
 
-| Sistema | false-reuse risk |
-|---|---|
-| A | 0.415 |
-| B | 0.390 |
-| C | **0.220** |
+| Sistema | false-reuse risk (real) | false-reuse risk (stub) |
+|---|---|---|
+| A | 0,161 | 0,415 |
+| B | 0,102 | 0,390 |
+| C | **0,220** | 0,220 |
 
-Proporción de reutilizaciones automáticas que eligieron la skill
-equivocada. C reutiliza mal en un 22.0 % de los casos en que se
-compromete, frente a 39.0 % de B: abstenerse cuando no hay
-confianza reduce la reutilización errónea, que es lo que H6 predice.
+Con LLM real, tanto A como B reutilizan mejor (menos riesgo de
+reutilización errónea) que con el stub — de nuevo, calidad del selector,
+no arquitectura. C queda ahora **por encima** de A y B en esta métrica
+concreta: se compromete con una skill incorrecta más a menudo que un LLM
+real cuando decide no abstenerse, aunque se abstiene mucho más a menudo
+que ambos (15,3 % frente a 0 %).
 
 ---
 
@@ -212,8 +233,8 @@ confianza reduce la reutilización errónea, que es lo que H6 predice.
 
 | H | Estado | Motivo |
 |---|---|---|
-| H2 (tokens) | **no medido** | No hay instrumentación de tokens; sin LLM real no hay tokens que contar. |
-| H6 (abstención vs. reutilización errónea) | parcial | Se reporta abstención y exactitud selectiva; falta la curva precisión-cobertura. |
+| H2 (tokens) | **no medido** | No hay instrumentación de tokens todavía, ni siquiera en la ejecución real. |
+| H6 (abstención vs. reutilización errónea) | parcial, matizado | Con LLM real, la exactitud selectiva de C (0,780) es *inferior* a la cobertura completa de B (0,898) — la ventaja de abstenerse depende de qué tan bueno sea el selector alternativo. |
 | H7 (trazabilidad) | **no computado** | La rúbrica está definida (`docs/traceability-rubric.md`) pero no se aplica automáticamente por ejecución. |
 | H8 (coste) | **no medido** | Depende de tokens; además §20 lo limita a análisis de sensibilidad, no a medición. |
 
@@ -221,61 +242,72 @@ confianza reduce la reutilización errónea, que es lo que H6 predice.
 
 ## Auditoría del propio instrumento de medida
 
-Antes de dar los resultados por buenos se auditó el marcador. Se
-encontraron y corrigieron **dos conjuntos vacíos** en STSR:
+Antes de dar los resultados por buenos se auditó el marcador, en más de
+una ronda:
 
-1. **Conjunto 5 («sin efectos laterales») nunca fallaba.** La
-   implementación devolvía `True` incondicionalmente para toda ejecución
-   permitida: en 1.080 observaciones no falló ni una vez. Ahora compara el
-   estado de *todos los modelos salvo el que la tarea debía tocar*, y
-   detecta 3 observaciones reales de B que escriben en un modelo ajeno.
-2. **Conjunto 4 («estado esperado») duplicaba al conjunto 1** en los casos
-   sin ejecución: ambos comprobaban la decisión. Ahora, cuando la tarea no
-   debía ejecutarse, comprueba que el almacén quedó **intacto**, que es lo
-   que «estado final esperado» significa para un rechazo.
+1. **Conjunto 5 STSR («sin efectos laterales») nunca fallaba.** Ahora
+   compara el estado de *todos los modelos salvo el que la tarea debía
+   tocar*.
+2. **Conjunto 4 STSR («estado esperado») duplicaba al conjunto 1.** Ahora
+   comprueba que el almacén quedó intacto en los rechazos.
+3. **Pseudo-replicación.** Las repeticiones se colapsan por caso
+   (`collapse_repetitions`) antes de cualquier contraste.
+4. **Dos mutantes supervivientes** en la capa estadística (McNemar sin
+   corrección de continuidad, IC bootstrap degenerado `[x, x]`
+   aceptado) — corregidos con tests que fijan valores exactos.
+5. **Caveat del manifiesto inconsistente con `is_confirmatory_run`.**
+   Encontrado leyendo la salida de esta misma ejecución real: el campo
+   `caveat` afirmaba "NO es el protocolo confirmatorio" junto a
+   `is_confirmatory_run: true`. Extraído a `_manifest_caveat()`, con dos
+   tests de regresión (`tests/test_run_experiment_script.py`) que fijan
+   cada rama.
 
-**Los resultados no cambiaron** tras ambas correcciones (STSR A=0,000
-B=0,333 C=0,700, idénticos). Eso es evidencia de que las conclusiones eran
-robustas, no de que las correcciones fueran innecesarias: sin ellas, STSR
-era de facto una conjunción de tres componentes presentada como de cinco.
-
-Hay tests de regresión (`test_conjunct5_side_effects_can_actually_fail`,
-`test_conjunct4_for_a_refusal_measures_state_not_decision`) para que un
-conjunto vacío no vuelva a colarse.
+**Los resultados de STSR no cambiaron de signo** tras ninguna corrección.
+Eso es evidencia de que las conclusiones eran robustas, no de que las
+correcciones fueran innecesarias.
 
 ## Congelación del protocolo
 
 `data/freeze_manifest.json` registra los hashes del split de test, del
 dataset completo, del catálogo y de la semilla (§19, P9.1). `make
-verify-freeze` falla si alguno cambia, y corre **en CI**: a partir de
-ahora, tocar el generador o el catálogo sin re-congelar rompe el build en
-lugar de invalidar los resultados en silencio. El detector está probado
-alterando cada uno de los seis componentes por separado.
+verify-freeze` corre en CI. **No cubre todavía la configuración del
+proveedor LLM** (modelo, temperatura, reintentos) — limitación abierta:
+la ejecución real se lanzó a escala completa antes de extender la
+congelación a ese componente, por decisión explícita, no por omisión.
 
 ## Amenazas a la validez de estos resultados
 
-1. **Selector determinista** — el hallazgo aisla arquitectura, no
-   comportamiento de LLM. Es la limitación dominante.
+1. **Modelo gratuito, no de producción** (`llama-3.1-8b-instant`) — la
+   ventaja de C frente a B podría ser distinta con un modelo frontera.
 2. **A como hombre de paja** — véase H1; usar C − B como contraste
    principal.
-3. **Detectores léxicos** — la ventaja en H4 no se generaliza a
-   adversarios adaptativos.
+3. **Detectores léxicos en C** — la ventaja en H4 no se generaliza a
+   adversarios adaptativos; A y B mejoraron con LLM real precisamente en
+   la dimensión que un LLM sí puede cubrir (reconocer lenguaje peligroso
+   en contexto), estrechando parcialmente esa ventaja.
 4. **Benchmark sintético y plantillado** — 480 casos de 24 plantillas en
    un solo idioma y un solo ERP simulado. No se extrapola a producción.
 5. **Anotación de un solo anotador** — kappa pendiente; el instrumento
    existe (`scripts/build_annotation_sample.py`) pero la revisión humana
    no se ha hecho.
 6. **Postcondiciones definidas por los mismos autores que los handlers** —
-   riesgo de circularidad: B y C pasan porque sus handlers escriben
-   exactamente lo que las postcondiciones comprueban. Mitigado en parte
-   porque las postcondiciones provienen del contrato de skill (§15), que
-   se fijó antes que los handlers, pero no eliminado.
+   riesgo de circularidad, ya declarado; no eliminado.
+7. **H3 con temperatura 0** — no puede discriminar estabilidad por
+   diseño; requeriría una configuración con temperatura > 0, no
+   contemplada por el protocolo actual.
 
 ## Reproducción
 
 ```sh
+# arquitectura-solo (stub, rápido, sin red)
 uv run python scripts/run_experiment.py
+
+# confirmatorio (real, requiere GROQ_API_KEY, red, ~90 min en el free tier)
+uv run python scripts/run_experiment.py --real-llm
 ```
 
-Determinista con semilla fija: reejecutar reproduce `data/experiment_results.json`
-byte a byte.
+Determinista con semilla fija: reejecutar el modo stub reproduce
+`data/experiment_results.json` byte a byte salvo el campo `manifest`. El
+modo `--real-llm` depende de la respuesta del proveedor y no se garantiza
+byte-idéntico entre ejecuciones, aunque `temperature=0.0` lo hace
+altamente estable en la práctica (véase H3).

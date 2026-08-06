@@ -56,9 +56,9 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Freeze manifest + drift detection (CI-enforced) | `freeze.py` | ✅ |
 | Inter-annotator agreement instrument (Cohen's kappa) | `agreement.py` | ⚠️ human annotation pending |
 | Real LLM client for A/B/C (Groq, free tier) | `groq_client.py` | ✅ |
-| Confirmatory run with a real LLM (CLAUDE.md §19) | `scripts/run_experiment.py --real-llm` | ⏳ implemented, not yet executed at full scale |
+| Confirmatory run with a real LLM (CLAUDE.md §19) | `scripts/run_experiment.py --real-llm` | ✅ executed, 1.080 observations |
 
-223 tests, `ruff`/`mypy` clean, CI green.
+231 tests, `ruff`/`mypy` clean, CI green.
 
 ### Real LLM client
 
@@ -74,42 +74,50 @@ cp .env.example .env   # fill in GROQ_API_KEY (free: console.groq.com/keys)
 uv run python scripts/run_experiment.py --real-llm
 ```
 
-Without `--real-llm` (default, and what CI runs) the experiment uses
-`DeterministicStubClient` and is explicitly **not** the confirmatory
-protocol — the manifest records `is_confirmatory_run: false` either way,
-so results can never be silently misread as the real thing.
+Without `--real-llm` the experiment uses `DeterministicStubClient`
+(architecture-isolation baseline, `is_confirmatory_run: false`); both
+manifests state the flag explicitly so results can never be silently
+misread as the other kind.
 
-### Measured result: the paired A/B/C experiment
+### Measured result: the confirmatory A/B/C experiment (real LLM)
 
 **1.080 executions** (120 frozen-test cases × 3 systems × 3 repetitions),
-randomized order, `FakeERPAdapter` rebuilt per observation. Full analysis in
-[`docs/results.md`](docs/results.md); raw output in `data/experiment_results.json`.
+randomized order, `FakeERPAdapter` rebuilt per observation, A/B/C sharing
+one real Groq selector (`llama-3.1-8b-instant`, temperature 0). Full
+analysis — including the stub-selector baseline kept for comparison — in
+[`docs/results.md`](docs/results.md); raw output in
+`data/experiment_results.json` (`is_confirmatory_run: true`).
 
 | Metric | A (ungoverned) | B (typed only) | **C (ERP Agent OS)** |
 |---|---|---|---|
-| **STSR** (primary endpoint) | 0.000 | 0.333 | **0.700** |
-| **False allow rate** (critical) | 1.000 | 0.778 | **0.111** |
-| False block rate | 0.216 | 0.243 | **0.072** |
-| Retrieval Top-1 | 0.000 | 0.610 | **0.780** |
-| Retrieval Top-3 / MRR | — | 0.610 | **0.941 / 0.855** |
+| **STSR** (primary endpoint) | 0.000 | 0.483 | **0.700** |
+| **False allow rate** (critical) | 0.889 | 0.889 | **0.111** |
+| False block rate | 0.225 | 0.072 | **0.072** |
+| Retrieval Top-1 | 0.000 | 0.898 | **0.780** |
+| Retrieval Top-3 / MRR | — | 0.898 | **0.941 / 0.855** |
 
-- **C − A** = +0.700, 95% CI [+0.617, +0.783], Holm *p* = 2.7×10⁻¹⁹, OR 169
-- **C − B** = +0.367, 95% CI [+0.267, +0.467], Holm *p* = 9.1×10⁻⁹, OR 7.8
-- Cochran's Q = 117.7 (df 2). **H1 (non-inferiority, −5 pp margin): accepted.**
+- **C − A** = +0.700, 95% CI [+0.617, +0.783], Holm *p* = 2.71×10⁻¹⁹, OR 169
+- **C − B** = +0.217, 95% CI [+0.100, +0.333], Holm *p* = 1.03×10⁻³, OR 2.58
+- Cochran's Q = 110.96 (df 2). **H1 (non-inferiority, −5 pp margin): accepted.**
 - **Inference unit is the case (n = 120), not the execution.** Repetitions of a case are not independent; using all 360 per system would be pseudo-replication, narrowing every CI by ≈√3.
+- System C never calls the LLM (its retrieval is TF-IDF) — its metrics are
+  byte-identical to the earlier stub-selector run, by architecture, not by
+  accident. B improved substantially with a real selector (STSR 0.333→0.483,
+  Top-1 0.610→0.898): part of C's stub-run margin was selector quality, not
+  just governance — C − B narrowed but stayed significant.
 
-C cuts the false-allow rate from 1.000/0.778 to **0.111** *while also* blocking
-fewer legitimate requests (0.072) — it does not buy safety by refusing work.
+C cuts the false-allow rate from 0.889 to **0.111** *while also* matching B's
+false-block rate (0.072) — it does not buy safety by refusing work.
 
-> **⚠️ Scope.** The selector is held constant across A/B/C
-> (`DeterministicStubClient`), which isolates the **architectural** contribution
-> from model quality. This is **not** the CLAUDE.md §19 confirmatory protocol,
-> which requires a real LLM provider; the run manifest records
-> `is_confirmatory_run: false`. Other limits stated plainly in
+> **⚠️ Scope.** Free-tier model (`llama-3.1-8b-instant`), not a
+> frontier/production model — disclosed, not hidden. The freeze manifest
+> does not yet cover provider config (model, temperature, retries); the run
+> was launched before extending it, a disclosed trade-off. Other limits in
 > [`docs/results.md`](docs/results.md): A scores 0 largely by construction
 > (generic CRUD cannot encode postconditions), so **C − B is the informative
 > contrast**; the adversarial detectors are lexical; H2/H8 (tokens, cost) are
-> **not instrumented**; H3 cannot discriminate with a deterministic selector.
+> **not instrumented**; H3 cannot discriminate even with a real LLM because
+> `temperature=0.0` makes it perfectly reproducible by design.
 
 ## Prerequisites
 

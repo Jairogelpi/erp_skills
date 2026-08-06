@@ -58,6 +58,29 @@ def _select_llm(real_llm: bool):
     return GroqClient()
 
 
+def _manifest_caveat(is_confirmatory: bool) -> str:
+    """The manifest's caveat text must match `is_confirmatory_run`.
+
+    A prior version hardcoded the non-confirmatory text unconditionally,
+    so a real-LLM run would publish "is_confirmatory_run: true" next to a
+    caveat claiming it was NOT the confirmatory protocol -- a factual
+    contradiction discovered by reading the output of the first real run.
+    """
+    if not is_confirmatory:
+        return (
+            "Selector held constant across A/B/C, so this isolates the "
+            "ARCHITECTURAL contribution. It is NOT the CLAUDE.md section 19 "
+            "confirmatory protocol, which requires a real LLM provider."
+        )
+    return (
+        "Real LLM selector (Groq free tier) shared identically across "
+        "A/B/C, per CLAUDE.md D-03. This IS the section 19 confirmatory "
+        "protocol. Declared limitation: a free-tier model, not a "
+        "frontier/production model -- see the memoria for the disclosure "
+        "this requires."
+    )
+
+
 def _configure_logging(real_llm: bool) -> None:
     """Real-call visibility: one line per observation, per attempt, per
     retry, flushed immediately -- so `tail -f` on the log shows live
@@ -130,11 +153,7 @@ def main() -> None:
             "n_cases": manifest.n_cases,
             "n_repetitions": manifest.n_repetitions,
             "seed": manifest.seed,
-            "caveat": (
-                "Selector held constant across A/B/C, so this isolates the "
-                "ARCHITECTURAL contribution. It is NOT the CLAUDE.md section 19 "
-                "confirmatory protocol, which requires a real LLM provider."
-            ),
+            "caveat": _manifest_caveat(manifest.is_confirmatory),
         },
         "H1_stsr": {
             "stsr": stsr,

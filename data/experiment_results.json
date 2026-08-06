@@ -1,19 +1,19 @@
 {
   "manifest": {
-    "selector": "DeterministicStubClient",
-    "is_confirmatory_run": false,
+    "selector": "GroqClient",
+    "is_confirmatory_run": true,
     "n_observations": 1080,
     "n_inference_units": 120,
     "inference_note": "Repetitions are collapsed per case before any paired test. Using all 1.080 executions as independent observations would be pseudo-replication.",
     "n_cases": 120,
     "n_repetitions": 3,
     "seed": 20260805,
-    "caveat": "Selector held constant across A/B/C, so this isolates the ARCHITECTURAL contribution. It is NOT the CLAUDE.md section 19 confirmatory protocol, which requires a real LLM provider."
+    "caveat": "Real LLM selector (Groq free tier) shared identically across A/B/C, per CLAUDE.md D-03. This IS the section 19 confirmatory protocol. Declared limitation: a free-tier model, not a frontier/production model -- see the memoria for the disclosure this requires."
   },
   "H1_stsr": {
     "stsr": {
       "A": 0.0,
-      "B": 0.3333333333333333,
+      "B": 0.48333333333333334,
       "C": 0.7
     },
     "C_minus_A": {
@@ -29,17 +29,17 @@
       "odds_ratio": 169.0
     },
     "C_minus_B": {
-      "point": 0.36666666666666664,
+      "point": 0.21666666666666667,
       "ci95": [
-        0.26666666666666666,
-        0.4666666666666667
+        0.1,
+        0.3333333333333333
       ],
-      "mcnemar_p": 9.131629405642209e-09,
-      "holm_p": 9.131629405642209e-09,
-      "odds_ratio": 7.769230769230769
+      "mcnemar_p": 0.0010283231106303406,
+      "holm_p": 0.0010283231106303406,
+      "odds_ratio": 2.5757575757575757
     },
     "cochran_q": {
-      "statistic": 117.68888888888888,
+      "statistic": 110.96,
       "df": 2
     },
     "non_inferiority_margin": -0.05,
@@ -53,19 +53,19 @@
   "H4_security": {
     "A": {
       "dangerous_total": 27,
-      "false_allow": 27,
-      "false_allow_rate": 1.0,
-      "false_block_rate": 0.21621621621621623,
-      "detection_recall": 0.0,
-      "detection_precision": 0.0
+      "false_allow": 24,
+      "false_allow_rate": 0.8888888888888888,
+      "false_block_rate": 0.22522522522522523,
+      "detection_recall": 0.1111111111111111,
+      "detection_precision": 0.038461538461538464
     },
     "B": {
       "dangerous_total": 27,
-      "false_allow": 21,
-      "false_allow_rate": 0.7777777777777778,
-      "false_block_rate": 0.24324324324324326,
-      "detection_recall": 0.2222222222222222,
-      "detection_precision": 0.06896551724137931
+      "false_allow": 24,
+      "false_allow_rate": 0.8888888888888888,
+      "false_block_rate": 0.07207207207207207,
+      "detection_recall": 0.1111111111111111,
+      "detection_precision": 0.1111111111111111
     },
     "C": {
       "dangerous_total": 27,
@@ -123,13 +123,13 @@
       "B": {
         "billing": {
           "n": 30,
-          "successes": 24,
-          "stsr": 0.8
+          "successes": 21,
+          "stsr": 0.7
         },
         "contacts": {
           "n": 30,
-          "successes": 12,
-          "stsr": 0.4
+          "successes": 30,
+          "stsr": 1.0
         },
         "crm": {
           "n": 90,
@@ -148,18 +148,18 @@
         },
         "purchasing": {
           "n": 30,
-          "successes": 12,
-          "stsr": 0.4
+          "successes": 27,
+          "stsr": 0.9
         },
         "sales": {
           "n": 90,
-          "successes": 9,
-          "stsr": 0.1
+          "successes": 18,
+          "stsr": 0.2
         },
         "tasks": {
           "n": 30,
-          "successes": 0,
-          "stsr": 0.0
+          "successes": 15,
+          "stsr": 0.5
         }
       },
       "C": {
@@ -231,13 +231,13 @@
       "B": {
         "R0": {
           "n": 90,
-          "successes": 54,
-          "stsr": 0.6
+          "successes": 72,
+          "stsr": 0.8
         },
         "R1": {
           "n": 180,
-          "successes": 66,
-          "stsr": 0.36666666666666664
+          "successes": 102,
+          "stsr": 0.5666666666666667
         },
         "R2": {
           "n": 60,
@@ -294,18 +294,18 @@
       "B": {
         "ADVERSARIAL": {
           "n": 57,
-          "successes": 3,
-          "stsr": 0.05263157894736842
+          "successes": 9,
+          "stsr": 0.15789473684210525
         },
         "NOISE": {
           "n": 111,
-          "successes": 33,
-          "stsr": 0.2972972972972973
+          "successes": 45,
+          "stsr": 0.40540540540540543
         },
         "NORMAL": {
           "n": 192,
-          "successes": 84,
-          "stsr": 0.4375
+          "successes": 120,
+          "stsr": 0.625
         }
       },
       "C": {
@@ -335,18 +335,18 @@
       "mrr": 0.0,
       "coverage": 1.0,
       "abstention_rate": 0.0,
-      "selective_accuracy": 0.5847457627118644,
-      "false_reuse_risk": 0.4152542372881356
+      "selective_accuracy": 0.8389830508474576,
+      "false_reuse_risk": 0.16101694915254236
     },
     "B": {
       "n": 354,
-      "top1": 0.6101694915254238,
-      "top3": 0.6101694915254238,
-      "mrr": 0.6101694915254238,
+      "top1": 0.8983050847457628,
+      "top3": 0.8983050847457628,
+      "mrr": 0.8983050847457628,
       "coverage": 1.0,
       "abstention_rate": 0.0,
-      "selective_accuracy": 0.6101694915254238,
-      "false_reuse_risk": 0.3898305084745763
+      "selective_accuracy": 0.8983050847457628,
+      "false_reuse_risk": 0.1016949152542373
     },
     "C": {
       "n": 354,

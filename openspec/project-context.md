@@ -35,7 +35,7 @@ rather than from a stale plan.
 
 ## Current state
 
-**Delivered and tested** (30 modules, 223 tests, `ruff`/`mypy` clean, CI green):
+**Delivered and tested** (30 modules, 231 tests, `ruff`/`mypy` clean, CI green):
 
 | Layer | Modules |
 |---|---|
@@ -46,35 +46,37 @@ rather than from a stale plan.
 | Measurement | `metrics`, `postconditions`, `statistics`, `agreement`, `experiment`, `freeze` |
 | Infrastructure | `api`, `approval`, `persistence` |
 
-**The paired experiment has been run**: 1.080 observations (120 frozen
-test cases × 3 systems × 3 repetitions), inference unit = case (n=120).
-Results in `data/experiment_results.json`, analysis in `docs/results.md`.
-STSR A 0.000 / B 0.333 / C 0.700; false allow rate A 1.000 / B 0.778 /
-C 0.111; C−A +0.700 CI95 [+0.617, +0.783] Holm *p*=2.7e-19 OR=169;
-C−B +0.367 CI95 [+0.267, +0.467] Holm *p*=9.1e-09 OR=7.8; Cochran's
-Q = 117.7 (df 2). This run used a deterministic stub selector shared by
-A/B/C — it isolates the architectural contribution, and is **not** the
-§19 confirmatory protocol (manifest: `is_confirmatory_run: false`).
+**The confirmatory paired experiment has been run for real**: 1.080
+observations (120 frozen test cases × 3 systems × 3 repetitions),
+inference unit = case (n=120), `manifest.selector: "GroqClient"`,
+`is_confirmatory_run: true`. Results in `data/experiment_results.json`,
+full analysis in `docs/results.md`. STSR A 0.000 / B 0.483 / C 0.700;
+false allow rate A 0.889 / B 0.889 / C 0.111; C−A +0.700 CI95
+[+0.617, +0.783] Holm *p*=2.71e-19 OR=169; C−B +0.217 CI95
+[+0.100, +0.333] Holm *p*=1.03e-3 OR=2.58; Cochran's Q = 110.96 (df 2).
+System C never calls the LLM (its retrieval is TF-IDF), so its metrics
+are byte-identical to the earlier stub run — by architecture, not by
+accident. A stub-selector run (`is_confirmatory_run: false`) is kept as
+an architecture-isolation baseline; both are documented side by side in
+`docs/results.md`.
 
-**A real LLM client now exists**: `groq_client.py` wraps Groq's free
-tier (`llama-3.1-8b-instant`, temperature 0). `scripts/
-run_experiment.py --real-llm` runs the confirmatory comparison for real;
-without the flag (default, and what CI runs) it stays on the stub. Not
-yet executed at the full 720-call scale — verified only with a 2-case /
-12-call smoke test. CLAUDE.md D-03 requires A/B/C to share one model/
-provider/config, not a specific paid tier; using a free one is a stated
-limitation to disclose in the memoria, not a hidden shortcut.
+**Real LLM client**: `groq_client.py` wraps Groq's free tier
+(`llama-3.1-8b-instant`, temperature 0). CLAUDE.md D-03 requires A/B/C to
+share one model/provider/config, not a specific paid tier; using a free
+one is a stated limitation disclosed in the memoria, not a hidden
+shortcut.
 
 ## What is deliberately not done
 
-- **Confirmatory run at full scale not yet executed.** The client exists;
-  `--real-llm` has not been run over all 120 test cases × 3 systems × 3
-  repetitions. The freeze manifest also does not yet cover provider
-  config (model, temperature, retries) — extend it first.
+- **The freeze manifest does not yet cover provider config** (model,
+  temperature, retries) — the real run was launched at full scale before
+  extending it, a disclosed trade-off, not an oversight.
 - **H2/H8 (tokens, cost) not instrumented**; **H7 (traceability rubric)
   defined but not computed per execution**; **H3 cannot discriminate**
-  with a deterministic selector (null result, reported as such) — a real
-  LLM run should make H3 substantive rather than trivially 1.0.
+  even with a real LLM, because `temperature=0.0` (mandated by CLAUDE.md
+  §23) makes it perfectly reproducible by design — a genuine tension
+  between the low-temperature requirement and H3's testability, to
+  discuss in the memoria rather than silently raise the temperature.
 - **Second-annotator kappa pending.** The instrument exists and
   `scripts/compute_agreement.py` refuses to emit a number without human
   annotation.
