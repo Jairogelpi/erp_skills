@@ -57,7 +57,7 @@ A/B/C — it isolates the architectural contribution, and is **not** the
 §19 confirmatory protocol (manifest: `is_confirmatory_run: false`).
 
 **A real LLM client now exists**: `groq_client.py` wraps Groq's free
-tier (`llama-3.3-70b-versatile`, temperature 0). `scripts/
+tier (`llama-3.1-8b-instant`, temperature 0). `scripts/
 run_experiment.py --real-llm` runs the confirmatory comparison for real;
 without the flag (default, and what CI runs) it stays on the stub. Not
 yet executed at the full 720-call scale — verified only with a 2-case /

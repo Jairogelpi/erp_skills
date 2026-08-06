@@ -14,6 +14,7 @@ LLM-based, so it makes none). Not used by default or in CI.
 """
 
 import json
+import logging
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -57,8 +58,24 @@ def _select_llm(real_llm: bool):
     return GroqClient()
 
 
+def _configure_logging(real_llm: bool) -> None:
+    """Real-call visibility: one line per observation, per attempt, per
+    retry, flushed immediately -- so `tail -f` on the log shows live
+    progress instead of nothing until the final JSON dump."""
+    if not real_llm:
+        return
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(name)s %(message)s",
+        datefmt="%H:%M:%S",
+        stream=sys.stderr,
+        force=True,
+    )
+
+
 def main() -> None:
     real_llm = "--real-llm" in sys.argv
+    _configure_logging(real_llm)
     cases = generate_cases()
     test_cases = [c for c in cases if c.split is DatasetSplit.FINAL_TEST]
 

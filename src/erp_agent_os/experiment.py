@@ -16,6 +16,7 @@ records which selector was used so results can never be silently
 mistaken for the confirmatory run.
 """
 
+import logging
 import random
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -36,6 +37,8 @@ from erp_agent_os.runtime import Runtime
 from erp_agent_os.system_a import SystemA
 from erp_agent_os.system_b import SystemB
 from erp_agent_os.system_c import SystemC
+
+logger = logging.getLogger(__name__)
 
 ROLE = "erp_user"
 REPETITIONS = 3
@@ -294,7 +297,18 @@ def run_experiment(
     rng.shuffle(plan)  # randomized order, CLAUDE.md §19
 
     runners = {"A": _run_system_a, "B": _run_system_b, "C": _run_system_c}
-    records = [runners[system](case, llm, rep) for case, system, rep in plan]
+    total = len(plan)
+    records = []
+    for i, (case, system, rep) in enumerate(plan, start=1):
+        logger.info(
+            "observation %d/%d: system=%s case=%s rep=%d",
+            i,
+            total,
+            system,
+            case.request_id,
+            rep,
+        )
+        records.append(runners[system](case, llm, rep))
 
     manifest = ExperimentManifest(
         selector=type(llm).__name__,

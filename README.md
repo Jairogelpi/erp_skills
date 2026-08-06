@@ -63,7 +63,7 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 ### Real LLM client
 
 `src/erp_agent_os/groq_client.py` implements the `LLMClient` protocol over
-Groq's free-tier API (`llama-3.3-70b-versatile`, temperature 0 per §23).
+Groq's free-tier API (`llama-3.1-8b-instant`, temperature 0 per §23).
 CLAUDE.md D-03 requires A, B, and C to share the same model/provider/config —
 it does not require a frontier/paid model. Using a free tier is a stated
 limitation, not a hidden one: it must be disclosed the same way in the

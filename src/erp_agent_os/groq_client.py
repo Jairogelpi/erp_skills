@@ -15,6 +15,7 @@ loudly, not produce numbers from `DeterministicStubClient` by accident.
 """
 
 import json
+import logging
 import os
 import time
 from dataclasses import dataclass
@@ -23,7 +24,9 @@ from groq import Groq, RateLimitError
 
 from erp_agent_os.llm_client import ToolCall, ToolSpec
 
-DEFAULT_MODEL = "llama-3.3-70b-versatile"
+logger = logging.getLogger(__name__)
+
+DEFAULT_MODEL = "llama-3.1-8b-instant"
 DEFAULT_TEMPERATURE = 0.0  # low temperature: CLAUDE.md §23 ("temperatura baja")
 DEFAULT_MAX_RETRIES = 5
 DEFAULT_TIMEOUT_SECONDS = 30
@@ -105,6 +108,13 @@ class GroqClient:
         last_error: Exception | None = None
         for attempt in range(self._config.max_retries):
             self._pace()
+            logger.info(
+                "groq call attempt=%d/%d query=%r",
+                attempt + 1,
+                self._config.max_retries,
+                query_text[:60],
+            )
+            call_started = time.monotonic()
             try:
                 response = self._client.chat.completions.create(
                     model=self._config.model,
@@ -117,11 +127,25 @@ class GroqClient:
                     ],
                 )
                 content = response.choices[0].message.content or "{}"
+                logger.info("groq call ok in %.2fs", time.monotonic() - call_started)
                 return _parse_tool_call(content, tools)
             except Exception as exc:  # noqa: BLE001 - retry any transient failure
                 last_error = exc
                 if attempt < self._config.max_retries - 1:
-                    time.sleep(_retry_delay(exc, attempt))
+                    delay = _retry_delay(exc, attempt)
+                    logger.warning(
+                        "groq call failed (%s: %s), retrying in %.1fs",
+                        type(exc).__name__,
+                        exc,
+                        delay,
+                    )
+                    time.sleep(delay)
+                else:
+                    logger.error(
+                        "groq call failed (%s: %s), no attempts left",
+                        type(exc).__name__,
+                        exc,
+                    )
 
         raise RuntimeError(
             f"Groq call failed after {self._config.max_retries} attempts"
