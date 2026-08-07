@@ -26,27 +26,39 @@ idempotencia; política de restauración. Las diferencias arquitectónicas
 necesarias (C tiene recuperación y verificación; A y B no) se versionan
 y se reportan explícitamente.
 
-> **Estado actual:** no existe todavía un `LLMClient` real. El
-> `DeterministicStubClient` de `llm_client.py` **no** satisface esta
-> sección y no puede producir resultados confirmatorios. Ejecutar el
-> protocolo requiere primero un cliente de proveedor real con credencial
-> suministrada por entorno.
+> **Estado actual:** existen tres `LLMClient` reales intercambiables
+> (`groq_client.py`, `gemini_client.py`, `openrouter_client.py`),
+> seleccionables vía `scripts/run_experiment.py --real-llm --provider
+> {groq,gemini,openrouter}`. El `DeterministicStubClient` sigue sin
+> satisfacer esta sección — se usa solo para la línea base de
+> aislamiento arquitectónico (`is_confirmatory_run: false`), nunca para
+> resultados confirmatorios. La ejecución confirmatoria completada
+> (`data/experiment_results.json`, `manifest.selector:
+> "OpenRouterClient"`) usó `openai/gpt-oss-20b:free` vía OpenRouter,
+> tras que Groq y Gemini agotaran sus cuotas gratuitas respectivas
+> (detalle en `docs/results.md`). D-03 exige un único proveedor
+> **dentro** de una ejecución, no un proveedor fijo entre ejecuciones.
 
 ## 3. Contrastes por hipótesis
 
 | H | Endpoint | Prueba | Efecto | Función |
 |---|---|---|---|---|
 | H1 | STSR, C vs A | No inferioridad, margen −5 pp; McNemar | Diferencia de proporciones + IC bootstrap | `mcnemar`, `paired_proportion_difference` |
-| H2 | Tokens totales | Friedman → Wilcoxon emparejado, Holm | Cliff's delta | `holm_correction`, `cliffs_delta` |
+| H2 | Tokens totales | Bootstrap emparejado sobre la media por caso | Diferencia de medias + IC | `paired_mean_difference` |
 | H3 | Consistencia entre 3 repeticiones | Q de Cochran → post hoc, Holm | Diferencia de proporciones | `cochran_q`, `holm_correction` |
 | H4 | False allow / detección preejecución | McNemar sobre casos peligrosos | Odds ratio emparejado | `mcnemar`, `odds_ratio` |
 | H5 | Top-1/Top-3, coverage, selective accuracy | Descriptivo + IC bootstrap | — | `paired_proportion_difference` |
 | H6 | Abstención y false-reuse risk | Curva precisión-cobertura | — | — |
-| H7 | Rúbrica de trazabilidad | Wilcoxon emparejado | Cliff's delta | `cliffs_delta` |
+| H7 | Rúbrica de trazabilidad (0–1 por ejecución) | Descriptivo: media por sistema | — | `traceability.score_governed_execution`/`score_ungoverned_execution` |
 | H8 | Coste modelado | Análisis de sensibilidad, no confirmatorio | — | — |
 
 Todas las funciones están implementadas y testeadas en
-`src/erp_agent_os/statistics.py` / `tests/test_statistics.py`.
+`src/erp_agent_os/statistics.py` / `tests/test_statistics.py`. **H2 y H7
+se ejecutaron por primera vez con datos reales en la unidad 30** (§
+bitácora de `CLAUDE.md`); H7 se reporta hoy como descriptivo (media por
+sistema), sin la prueba emparejada con tamaño de efecto que la tabla
+original preveía — pendiente si el presupuesto de tiempo lo permite,
+señalado aquí en vez de reclamarlo hecho.
 
 ## 4. Regla de decisión
 

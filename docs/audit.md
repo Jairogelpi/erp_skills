@@ -1,9 +1,10 @@
 # Auditoría del instrumento de medida
 
 Este documento registra las auditorías hechas **sobre el propio aparato de
-evaluación**, no sobre el sistema evaluado. Existe porque cinco rondas
-sucesivas encontraron cinco defectos reales, y todos compartían la misma
-forma: **código que pasaba en silencio**, no código que fallaba a gritos.
+evaluación**, no sobre el sistema evaluado. Existe porque nueve rondas
+sucesivas encontraron nueve defectos reales, y casi todos compartían la
+misma forma: **código (o texto) que pasaba en silencio**, no código que
+fallaba a gritos.
 
 ## Por qué importa para el TFM
 
@@ -22,11 +23,24 @@ este tipo de escrutinio.
 | 3 | **Conjunto 5 de STSR vacío**: «sin efectos laterales» devolvía `True` incondicionalmente | Conteo de fallos por conjunto en 1.080 observaciones (0 fallos) | STSR era una conjunción de 3 presentada como de 5 |
 | 4 | **Conjunto 4 duplicaba al 1**: ambos comprobaban la decisión, ninguno el estado | Lectura del código de métricas | «Estado esperado» no medía estado |
 | 5 | **Pseudo-replicación**: 360 observaciones tratadas como independientes siendo 120 casos × 3 copias idénticas | Comprobación empírica: 360/360 grupos daban resultados idénticos | IC 1,7× más estrechos; *p* 15 órdenes de magnitud menores |
+| 6 | **McNemar sin corrección de continuidad** (mutation testing, ver abajo) | Mutante sobrevivió: los tests solo comprobaban *p* < 0,001 | Estadístico anticonservador |
+| 7 | **Bootstrap sin remuestreo** (mutation testing, ver abajo) | Mutante sobrevivió: el test aceptaba un IC degenerado `[x, x]` | IC publicable como un punto, no un intervalo |
+| 8 | **Caveat del manifiesto inconsistente con `is_confirmatory_run`**: la primera ejecución real (Groq) publicaba «NO es el protocolo confirmatorio» junto a `is_confirmatory_run: true` | Lectura de la salida de la propia ejecución antes de reportarla | Contradicción factual en el propio artefacto publicado |
+| 9 | **Caveat con el proveedor hardcodeado**: tras corregir el #8, el texto seguía diciendo literalmente «Groq free tier» sin importar qué proveedor se usara — la ejecución con OpenRouter habría publicado un caveat que nombraba a Groq | Lectura de la salida de la ejecución con OpenRouter | Atribución incorrecta del proveedor en el artefacto publicado |
 
-Las conclusiones del experimento **sobrevivieron a las cinco correcciones
+Las conclusiones del experimento **sobrevivieron a las nueve correcciones
 sin cambiar de signo**. Eso es evidencia de robustez, no de que las
-correcciones fueran innecesarias: una métrica que acierta por accidente
-sigue estando rota.
+correcciones fueran innecesarias: una métrica (o un texto) que acierta
+por accidente sigue estando rota.
+
+Los defectos 8 y 9 rompen el patrón de los siete anteriores en un
+detalle: no estaban en la capa de *medición* sino en la capa de
+*reporte* — el propio texto explicativo de un resultado, no el cálculo
+del resultado. Ambos caen en el mismo campo (`manifest.caveat`) y ambos
+se encontraron con el mismo método: leer la salida completa de una
+ejecución real antes de reportarla al usuario, no confiar en que un
+texto generado por interpolación de estado sea correcto solo porque el
+código compila.
 
 ## Mutation testing
 
