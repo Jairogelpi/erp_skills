@@ -1,0 +1,148 @@
+from unittest.mock import MagicMock
+
+import httpx
+import pytest
+
+from erp_agent_os.odoo_client import (
+    MissingCredentialsError,
+    Odoo19Adapter,
+    OdooApiError,
+    UnknownFieldError,
+    UnknownModelError,
+)
+
+ALLOWED = {"res.partner": frozenset({"name", "email"})}
+
+
+def _adapter(**overrides) -> Odoo19Adapter:
+    kwargs = dict(
+        allowed_fields=ALLOWED,
+        url="https://example.odoo.com",
+        database="mydb",
+        api_key="test-key",
+    )
+    kwargs.update(overrides)
+    return Odoo19Adapter(**kwargs)
+
+
+def _fake_response(body, status: int = 200) -> httpx.Response:
+    return httpx.Response(
+        status, json=body, request=httpx.Request("POST", "https://example.odoo.com")
+    )
+
+
+def test_missing_credentials_raises_not_falls_back(monkeypatch):
+    monkeypatch.delenv("ODOO_URL", raising=False)
+    monkeypatch.delenv("ODOO_DB", raising=False)
+    monkeypatch.delenv("ODOO_API_KEY", raising=False)
+    with pytest.raises(MissingCredentialsError):
+        Odoo19Adapter(allowed_fields=ALLOWED)
+
+
+def test_unknown_model_rejected_before_any_http_call():
+    adapter = _adapter()
+    adapter._client.post = MagicMock()
+    with pytest.raises(UnknownModelError):
+        adapter.get("crm.lead", "1")
+    adapter._client.post.assert_not_called()
+
+
+def test_unallowlisted_field_rejected_on_create_before_any_http_call():
+    adapter = _adapter()
+    adapter._client.post = MagicMock()
+    with pytest.raises(UnknownFieldError):
+        adapter.create("res.partner", {"name": "Acme", "secret_field": "x"})
+    adapter._client.post.assert_not_called()
+
+
+def test_unallowlisted_field_rejected_on_update_before_any_http_call():
+    adapter = _adapter()
+    adapter._client.post = MagicMock()
+    with pytest.raises(UnknownFieldError):
+        adapter.update("res.partner", "1", {"vat_number": "ES123"})
+    adapter._client.post.assert_not_called()
+
+
+def test_create_sends_only_allowlisted_fields_and_returns_id():
+    adapter = _adapter()
+    adapter._client.post = MagicMock(return_value=_fake_response([42]))
+
+    record_id = adapter.create("res.partner", {"name": "Acme", "email": "a@acme.test"})
+
+    assert record_id == "42"
+    call = adapter._client.post.call_args
+    assert call.args[0] == "/json/2/res.partner/create"
+    assert call.kwargs["json"] == {
+        "vals_list": [{"name": "Acme", "email": "a@acme.test"}]
+    }
+
+
+def test_get_reads_only_allowlisted_fields_and_strips_id():
+    adapter = _adapter()
+    adapter._client.post = MagicMock(
+        return_value=_fake_response(
+            [{"id": 42, "name": "Acme", "email": "a@acme.test"}]
+        )
+    )
+
+    record = adapter.get("res.partner", "42")
+
+    assert record == {"name": "Acme", "email": "a@acme.test"}
+    call = adapter._client.post.call_args
+    assert call.kwargs["json"] == {"ids": [42], "fields": ["email", "name"]}
+
+
+def test_get_missing_record_raises_key_error():
+    adapter = _adapter()
+    adapter._client.post = MagicMock(return_value=_fake_response([]))
+    with pytest.raises(KeyError):
+        adapter.get("res.partner", "999")
+
+
+def test_list_returns_records_keyed_by_id_without_id_field():
+    adapter = _adapter()
+    adapter._client.post = MagicMock(
+        return_value=_fake_response(
+            [
+                {"id": 1, "name": "Acme", "email": "a@acme.test"},
+                {"id": 2, "name": "Beta", "email": "b@beta.test"},
+            ]
+        )
+    )
+
+    records = adapter.list("res.partner")
+
+    assert records == {
+        "1": {"name": "Acme", "email": "a@acme.test"},
+        "2": {"name": "Beta", "email": "b@beta.test"},
+    }
+
+
+def test_update_sends_only_allowlisted_fields():
+    adapter = _adapter()
+    adapter._client.post = MagicMock(return_value=_fake_response(True))
+
+    adapter.update("res.partner", "42", {"email": "new@acme.test"})
+
+    call = adapter._client.post.call_args
+    assert call.args[0] == "/json/2/res.partner/write"
+    assert call.kwargs["json"] == {"ids": [42], "vals": {"email": "new@acme.test"}}
+
+
+def test_error_response_raises_odoo_api_error():
+    adapter = _adapter()
+    adapter._client.post = MagicMock(
+        return_value=_fake_response(
+            {"name": "werkzeug.exceptions.Unauthorized", "message": "Invalid apikey"},
+            status=401,
+        )
+    )
+    with pytest.raises(OdooApiError, match="Invalid apikey"):
+        adapter.get("res.partner", "1")
+
+
+def test_no_unlink_method_exists_at_all():
+    # Structural, not conventional: irreversible deletion is not
+    # reachable through this adapter's public surface (CLAUDE.md R4).
+    assert not hasattr(Odoo19Adapter, "unlink")
+    assert not hasattr(Odoo19Adapter, "delete")
