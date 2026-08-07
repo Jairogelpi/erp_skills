@@ -1,0 +1,25 @@
+{
+  "target": "real Odoo 19 (Development branch, demo data)",
+  "all_postconditions_met": true,
+  "steps": [
+    {
+      "step": "crm.create_opportunity",
+      "opportunity_id": "45",
+      "postcondition_met": true
+    },
+    {
+      "step": "crm.update_expected_revenue",
+      "opportunity_id": "45",
+      "postcondition_met": true
+    },
+    {
+      "step": "independent_reread",
+      "record": {
+        "expected_revenue": 27000.0,
+        "name": "Oportunidad: ERP-AGENT-OS-DEMO",
+        "partner_name": "ERP-AGENT-OS-DEMO",
+        "type": "opportunity"
+      }
+    }
+  ]
+}

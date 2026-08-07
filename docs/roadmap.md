@@ -281,7 +281,7 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 10. Extensiones y demostración `EXT`
 
-- [ ] **P10.1** Construir Odoo19Adapter limitado sobre JSON-2, sandbox, API key fuera del repo, allowlists, timeout y redacción; prohibir R4 (§26).
+- [x] **P10.1** Construir Odoo19Adapter limitado sobre JSON-2, sandbox, API key fuera del repo, allowlists, timeout y redacción; prohibir R4 (§26). Evidencia: `src/erp_agent_os/odoo_client.py` (mismo contrato que `FakeERPAdapter`, allowlist de modelos y campos aplicado antes de cualquier HTTP, sin `delete`, timeout, logs redactados); `python -m pytest tests/test_odoo_client.py` → 11 passed. Verificado en vivo contra una instancia Odoo 19 real (Odoo.sh, rama Development con datos demo): `docs/odoo-demo.md`, 2 skills mapeadas (`crm.create_opportunity`/`crm.update_expected_revenue` → `crm.lead`), ciclo crear→verificar→actualizar→relectura independiente, `all_postconditions_met: true`. **Pendiente declarado:** solo 2 de 12 skills mapeadas a Odoo real; no pasa por Policy Engine ni System C (adaptador aislado, no wiring de gobernanza completa).
 - [ ] **P10.2** Construir dashboard Tableau desde exportaciones; mantener Matplotlib/Plotly y estadística reproducible como fuente analítica (§27, §31).
 - [ ] **P10.3** Implementar generación candidata solo sandbox, validación, tests, aprobación humana y versionado; excluirla de A/B/C (§15).
 - [ ] **P10.4** Preparar demo determinista FakeERP de seis escenarios; Odoo solo si no fragiliza la demo (§38).
