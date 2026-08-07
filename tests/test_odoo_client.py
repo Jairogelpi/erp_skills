@@ -146,3 +146,24 @@ def test_no_unlink_method_exists_at_all():
     # reachable through this adapter's public surface (CLAUDE.md R4).
     assert not hasattr(Odoo19Adapter, "unlink")
     assert not hasattr(Odoo19Adapter, "delete")
+
+
+def test_unknown_model_and_record_errors_are_the_same_classes_runtime_catches():
+    # Runtime.execute() imports UnknownModelError/UnknownRecordError
+    # from adapters.py and catches them by class identity. If
+    # Odoo19Adapter defined lookalike classes with the same name
+    # instead of reusing these, Runtime would not catch them and an
+    # Odoo failure would crash System C's whole request instead of
+    # surfacing as a normal handler_error -- this is what makes
+    # Odoo19Adapter a genuine drop-in for FakeERPAdapter, not just a
+    # duck-typed one that happens to break error handling.
+    from erp_agent_os.adapters import UnknownModelError as AdaptersUnknownModelError
+    from erp_agent_os.adapters import UnknownRecordError as AdaptersUnknownRecordError
+    from erp_agent_os.odoo_client import UnknownModelError as OdooUnknownModelError
+
+    assert OdooUnknownModelError is AdaptersUnknownModelError
+
+    adapter = _adapter()
+    adapter._client.post = MagicMock(return_value=_fake_response([]))
+    with pytest.raises(AdaptersUnknownRecordError):
+        adapter.get("res.partner", "999")

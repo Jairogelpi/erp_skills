@@ -33,17 +33,30 @@ from typing import Any
 
 import httpx
 
+from erp_agent_os.adapters import UnknownModelError, UnknownRecordError
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT_SECONDS = 20
 
+# Re-exported so callers of this module never need to import adapters.py
+# too: Runtime.execute() catches these by class identity (see
+# runtime.py), so raising the *same* classes here -- not lookalikes with
+# the same name -- is what makes Odoo19Adapter a genuine drop-in
+# replacement for FakeERPAdapter, not just a duck-typed one that happens
+# to break error handling.
+__all__ = [
+    "MissingCredentialsError",
+    "OdooApiError",
+    "Odoo19Adapter",
+    "UnknownFieldError",
+    "UnknownModelError",
+    "UnknownRecordError",
+]
+
 
 class MissingCredentialsError(RuntimeError):
     """Raised when ODOO_URL/ODOO_DB/ODOO_API_KEY are not all set."""
-
-
-class UnknownModelError(ValueError):
-    """Raised when an operation targets a model outside the allowlist."""
 
 
 class UnknownFieldError(ValueError):
@@ -130,7 +143,7 @@ class Odoo19Adapter:
             model, "read", {"ids": [int(record_id)], "fields": sorted(allowed)}
         )
         if not result:
-            raise KeyError(record_id)
+            raise UnknownRecordError(record_id)
         record = dict(result[0])
         record.pop("id", None)
         return record

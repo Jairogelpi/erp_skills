@@ -131,3 +131,37 @@ def test_handler_key_error_from_mismatched_args_is_caught_not_raised():
     assert result.output is None
     assert result.handler_error is not None
     assert "KeyError" in result.handler_error
+
+
+def test_runtime_accepts_any_erp_adapter_structurally_not_just_fakeerp():
+    # Runtime is generic over the adapter type (docs/odoo-demo.md):
+    # a minimal object that only implements the ErpAdapter Protocol's
+    # methods, not FakeERPAdapter at all, must work as a drop-in.
+    class MinimalAdapter:
+        def __init__(self):
+            self.created = []
+
+        def create(self, model, fields):
+            self.created.append((model, fields))
+            return "real-id-1"
+
+        def get(self, model, record_id):
+            return {"name": "x"}
+
+        def list(self, model):
+            return {}
+
+        def update(self, model, record_id, fields):
+            pass
+
+    adapter = MinimalAdapter()
+    runtime: Runtime = Runtime(adapter)
+
+    def handler(erp, args):
+        return erp.create("crm.lead", {"name": args["name"]})
+
+    runtime.register("crm.create_opportunity", "1.0.0", handler)
+    result = runtime.execute(skill(), {"name": "Acme"}, "sales_user", "key-minimal")
+
+    assert result.output == "real-id-1"
+    assert adapter.created == [("crm.lead", {"name": "Acme"})]

@@ -9,19 +9,24 @@ SIMULATE previews without mutating).
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Generic, TypeVar
 
-from erp_agent_os.adapters import (
-    FakeERPAdapter,
-    UnknownModelError,
-    UnknownRecordError,
-)
+from erp_agent_os.adapters import ErpAdapter, UnknownModelError, UnknownRecordError
 from erp_agent_os.policy import PolicyDecision, decide
 from erp_agent_os.skills import SkillDefinition
 from erp_agent_os.validation import Finding
 
-Handler = Callable[[FakeERPAdapter, dict[str, Any]], Any]
-PostconditionCheck = Callable[[FakeERPAdapter, Any], bool]
+# Runtime is generic over the concrete adapter type (FakeERPAdapter,
+# Odoo19Adapter, ...): a handler written for FakeERPAdapter promises
+# only to accept FakeERPAdapter, not "any ErpAdapter" -- Callable
+# parameter types are contravariant, so binding Runtime to a fixed
+# ErpAdapter type would reject those handlers even though they work
+# correctly at runtime. Parametrizing per Runtime instance keeps mypy
+# honest about which adapter a given registered handler was written for.
+T = TypeVar("T", bound=ErpAdapter)
+
+Handler = Callable[[T, dict[str, Any]], Any]
+PostconditionCheck = Callable[[T, Any], bool]
 
 
 class UnregisteredHandlerError(ValueError):
@@ -37,13 +42,13 @@ class ExecutionResult:
     handler_error: str | None = None
 
 
-class Runtime:
-    def __init__(self, erp: FakeERPAdapter) -> None:
+class Runtime(Generic[T]):
+    def __init__(self, erp: T) -> None:
         self._erp = erp
-        self._handlers: dict[tuple[str, str], Handler] = {}
+        self._handlers: dict[tuple[str, str], Handler[T]] = {}
         self._idempotency_cache: dict[str, ExecutionResult] = {}
 
-    def register(self, skill_id: str, version: str, handler: Handler) -> None:
+    def register(self, skill_id: str, version: str, handler: Handler[T]) -> None:
         self._handlers[(skill_id, version)] = handler
 
     def execute(
@@ -54,7 +59,7 @@ class Runtime:
         idempotency_key: str,
         *,
         approval_granted: bool = False,
-        postcondition_checks: tuple[PostconditionCheck, ...] = (),
+        postcondition_checks: tuple[PostconditionCheck[T], ...] = (),
         findings: list[Finding] | None = None,
     ) -> ExecutionResult:
         outcome = decide(

@@ -2,7 +2,7 @@
 
 The catalog declares postconditions as identifiers (`"quote_is_draft"`).
 This module maps each identifier to a callable that actually inspects
-`FakeERPAdapter` after execution, so the verification engine verifies
+`ErpAdapter` after execution, so the verification engine verifies
 something instead of accepting an HTTP-style "it returned fine".
 
 Each check is built as a closure over the pre-execution snapshot, because
@@ -13,11 +13,11 @@ field changed") and cannot be evaluated from the final state alone.
 from collections.abc import Callable
 from typing import Any
 
-from erp_agent_os.adapters import FakeERPAdapter
+from erp_agent_os.adapters import ErpAdapter
 from erp_agent_os.handlers import SKILL_MODELS
 from erp_agent_os.skills import SkillDefinition
 
-Check = Callable[[FakeERPAdapter, Any], bool]
+Check = Callable[[ErpAdapter, Any], bool]
 
 
 class UnknownPostconditionError(KeyError):
@@ -31,14 +31,14 @@ def _records(snapshot: dict[str, Any], model: str) -> dict[str, Any]:
 def _exactly_one_new(model: str, before: dict[str, Any]) -> Check:
     baseline = len(_records(before, model))
 
-    def check(erp: FakeERPAdapter, output: Any) -> bool:
+    def check(erp: ErpAdapter, output: Any) -> bool:
         return len(erp.list(model)) == baseline + 1
 
     return check
 
 
 def _state_is(model: str, expected_state: str) -> Check:
-    def check(erp: FakeERPAdapter, output: Any) -> bool:
+    def check(erp: ErpAdapter, output: Any) -> bool:
         record_id = output if isinstance(output, str) else None
         if record_id is None:
             return False
@@ -51,7 +51,7 @@ def _state_is(model: str, expected_state: str) -> Check:
 
 
 def _field_matches(model: str, field: str, arguments: dict[str, Any]) -> Check:
-    def check(erp: FakeERPAdapter, output: Any) -> bool:
+    def check(erp: ErpAdapter, output: Any) -> bool:
         record_id = output if isinstance(output, str) else None
         if record_id is None:
             return False
@@ -72,7 +72,7 @@ def _no_other_fields_changed(
 ) -> Check:
     baseline = _records(before, model)
 
-    def check(erp: FakeERPAdapter, output: Any) -> bool:
+    def check(erp: ErpAdapter, output: Any) -> bool:
         record_id = output if isinstance(output, str) else None
         if record_id is None or record_id not in baseline:
             # A newly created record trivially changed nothing else.
@@ -89,7 +89,7 @@ def _no_other_fields_changed(
 
 
 def _output_has_key(key: str) -> Check:
-    def check(erp: FakeERPAdapter, output: Any) -> bool:
+    def check(erp: ErpAdapter, output: Any) -> bool:
         return isinstance(output, dict) and key in output
 
     return check
@@ -98,7 +98,7 @@ def _output_has_key(key: str) -> Check:
 def _count_unchanged(model: str, before: dict[str, Any]) -> Check:
     baseline = len(_records(before, model))
 
-    def check(erp: FakeERPAdapter, output: Any) -> bool:
+    def check(erp: ErpAdapter, output: Any) -> bool:
         return len(erp.list(model)) == baseline
 
     return check

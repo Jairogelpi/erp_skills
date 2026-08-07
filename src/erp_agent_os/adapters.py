@@ -7,7 +7,7 @@ external I/O, no policy/runtime/skill behavior.
 """
 
 from copy import deepcopy
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 
 class UnknownModelError(ValueError):
@@ -20,6 +20,27 @@ class UnknownRecordError(KeyError):
 
 class DuplicateRecordError(ValueError):
     """Raised when `create` is given a `record_id` that already exists."""
+
+
+@runtime_checkable
+class ErpAdapter(Protocol):
+    """The subset of adapter behaviour handlers/Runtime actually call.
+
+    Both `FakeERPAdapter` and `Odoo19Adapter` satisfy this structurally
+    (PEP 544, no inheritance needed): the point is that `Runtime`,
+    `postconditions.py` and every skill handler can be typed against
+    this Protocol instead of the concrete `FakeERPAdapter`, so a real
+    adapter is a genuine, statically-typed drop-in, not just something
+    that happens to work at runtime via duck typing. `create`'s
+    `record_id` kwarg is FakeERPAdapter-specific (used only to seed
+    confirmatory-experiment state, CLAUDE.md §19) and deliberately not
+    part of this Protocol -- no handler calls it.
+    """
+
+    def create(self, model: str, fields: dict[str, Any]) -> str: ...
+    def get(self, model: str, record_id: str) -> dict[str, Any]: ...
+    def list(self, model: str) -> dict[str, dict[str, Any]]: ...
+    def update(self, model: str, record_id: str, fields: dict[str, Any]) -> None: ...
 
 
 class FakeERPAdapter:

@@ -9,7 +9,7 @@ here — `IntentProposal` is taken as already produced (work unit 7's scope).
 
 from dataclasses import dataclass
 
-from erp_agent_os.adapters import FakeERPAdapter
+from erp_agent_os.adapters import ErpAdapter
 from erp_agent_os.approval import ApprovalService
 from erp_agent_os.audit import AuditStore
 from erp_agent_os.parser import IntentProposal
@@ -30,7 +30,7 @@ class SystemCResult:
 class SystemC:
     def __init__(
         self,
-        erp: FakeERPAdapter,
+        erp: ErpAdapter,
         runtime: Runtime,
         retriever: TfidfRetriever,
         audit: AuditStore,
