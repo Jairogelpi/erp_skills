@@ -35,48 +35,67 @@ rather than from a stale plan.
 
 ## Current state
 
-**Delivered and tested** (30 modules, 231 tests, `ruff`/`mypy` clean, CI green):
+**Delivered and tested** (35 modules, 274 tests, `ruff`/`mypy` clean, CI green):
 
 | Layer | Modules |
 |---|---|
 | Deterministic core | `adapters`, `skills`, `policy`, `runtime`, `audit`, `validation` |
 | Retrieval | `parser`, `retrieval`, `embeddings` |
-| Systems under comparison | `system_a`, `system_b`, `system_c`, `llm_client`, `groq_client` |
+| Systems under comparison | `system_a`, `system_b`, `system_c`, `llm_client`, `groq_client`, `gemini_client`, `openrouter_client` |
 | Benchmark | `catalog`, `bench_intents`, `bench_generator`, `bench_runner`, `handlers` |
-| Measurement | `metrics`, `postconditions`, `statistics`, `agreement`, `experiment`, `freeze` |
+| Measurement | `metrics`, `postconditions`, `statistics`, `agreement`, `experiment`, `freeze`, `traceability` |
 | Infrastructure | `api`, `approval`, `persistence` |
 
 **The confirmatory paired experiment has been run for real**: 1.080
 observations (120 frozen test cases × 3 systems × 3 repetitions),
-inference unit = case (n=120), `manifest.selector: "GroqClient"`,
-`is_confirmatory_run: true`. Results in `data/experiment_results.json`,
-full analysis in `docs/results.md`. STSR A 0.000 / B 0.483 / C 0.700;
-false allow rate A 0.889 / B 0.889 / C 0.111; C−A +0.700 CI95
-[+0.617, +0.783] Holm *p*=2.71e-19 OR=169; C−B +0.217 CI95
-[+0.100, +0.333] Holm *p*=1.03e-3 OR=2.58; Cochran's Q = 110.96 (df 2).
-System C never calls the LLM (its retrieval is TF-IDF), so its metrics
-are byte-identical to the earlier stub run — by architecture, not by
-accident. A stub-selector run (`is_confirmatory_run: false`) is kept as
-an architecture-isolation baseline; both are documented side by side in
-`docs/results.md`.
+inference unit = case (n=120), `manifest.selector: "OpenRouterClient"`
+(`openai/gpt-oss-20b:free`), `is_confirmatory_run: true`. Results in
+`data/experiment_results.json`, full analysis in `docs/results.md`. STSR
+A 0.000 / B 0.517 / C 0.700; false allow rate A 0.333 / B 0.889 / C
+0.111; C−A +0.700 CI95[+0.617,+0.783] Holm *p*=2.71e-19 OR=169; C−B
++0.183 CI95[+0.058,+0.308] Holm *p*=7.65e-3 OR=2.07; Cochran's
+Q=109.46 (df 2). H2 (tokens) and H7 (traceability) are populated with
+real numbers for the first time: mean tokens/execution A=198 B=230 C=0;
+mean traceability score A=0.19 B=0.36 C=0.80. System C never calls the
+LLM (TF-IDF retrieval), so its metrics are byte-identical across every
+real run tried — by architecture, not by accident. A stub-selector run
+is kept as an architecture-isolation baseline in `docs/results.md`.
 
-**Real LLM client**: `groq_client.py` wraps Groq's free tier
-(`llama-3.1-8b-instant`, temperature 0). CLAUDE.md D-03 requires A/B/C to
-share one model/provider/config, not a specific paid tier; using a free
-one is a stated limitation disclosed in the memoria, not a hidden
-shortcut.
+**Provider history, for transparency.** Groq (`llama-3.1-8b-instant`)
+completed one full confirmatory run before H2/H7 existed; relaunching
+with the new instrumentation exhausted Groq's daily quota (prior
+interrupted attempts, before checkpointing existed, had already spent
+it). Gemini was tried next (`gemini-flash-latest`, `gemini-2.5-flash-lite`,
+`gemini-3.1-flash-lite`) — every model on this key carries a
+20-requests-PER-DAY free-tier cap, unusable for the ~240 real calls one
+run needs. OpenRouter (`openai/gpt-oss-20b:free`) is what actually
+completed with the full H2/H7 instrumentation and is the run reported
+above. All three clients are kept in the codebase, tested, and
+selectable via `--provider {groq,gemini,openrouter}` — this is a
+disclosed practical constraint (free-tier quota shopping), not a hidden
+methodology change; CLAUDE.md D-03 requires one provider *within* a run,
+not a specific provider.
+
+**Checkpoint/resume and call caching**, added after three interrupted
+Groq runs: `run_experiment(..., checkpoint_path=...)` persists each
+completed observation to a per-provider JSONL file, so an interruption
+(quota, Windows sleep — the actual root cause once diagnosed, now
+disabled for this session — or anything else) only costs the calls not
+yet checkpointed. `CachingLLMClient` serves repetitions 2 and 3 of the
+same case from an in-process cache (temperature=0 makes this exact, per
+H3=1.0 in three independent real runs), cutting real calls for A+B from
+720 to ~240.
 
 ## What is deliberately not done
 
 - **The freeze manifest does not yet cover provider config** (model,
-  temperature, retries) — the real run was launched at full scale before
-  extending it, a disclosed trade-off, not an oversight.
-- **H2/H8 (tokens, cost) not instrumented**; **H7 (traceability rubric)
-  defined but not computed per execution**; **H3 cannot discriminate**
-  even with a real LLM, because `temperature=0.0` (mandated by CLAUDE.md
-  §23) makes it perfectly reproducible by design — a genuine tension
-  between the low-temperature requirement and H3's testability, to
-  discuss in the memoria rather than silently raise the temperature.
+  temperature, retries) — a disclosed trade-off, not an oversight.
+- **H8 (cost)** is a declared-rate sensitivity analysis per CLAUDE.md
+  §20, not measured spend (the providers used are genuinely free).
+  **H3 cannot discriminate** even with a real LLM, because
+  `temperature=0.0` (mandated by CLAUDE.md §23) makes it perfectly
+  reproducible by design — confirmed across three independent real runs
+  on three different providers, not just once.
 - **Second-annotator kappa pending.** The instrument exists and
   `scripts/compute_agreement.py` refuses to emit a number without human
   annotation.
@@ -88,9 +107,9 @@ shortcut.
 
 ## Defects found by self-audit (do not reintroduce)
 
-Seven rounds of self-audit found seven real defects — full detail in
-`docs/audit.md`. The recurring shape: code that passed *silently*, never
-code that failed loudly.
+Nine rounds of self-audit found nine real defects — full detail in
+`docs/audit.md` and the `CLAUDE.md` bitácora. The recurring shape: code
+that passed *silently*, never code that failed loudly.
 
 1. **A vacuous split validator.** `validate_case_groups` passed while 10
    identical texts sat in both DEVELOPMENT and FINAL_TEST, because every
@@ -105,11 +124,18 @@ code that failed loudly.
 4. **Two mutation-testing survivors** in the statistics layer: McNemar
    without its continuity correction (anti-conservative), and the
    bootstrap CI test accepting a degenerate `[x, x]` interval.
+5. **A manifest caveat inconsistent with `is_confirmatory_run`** in the
+   first real run's own report: it claimed "NOT the confirmatory
+   protocol" next to `is_confirmatory_run: true`.
+6. **A manifest caveat that hardcoded the wrong provider name.** After
+   fixing #5, the confirmatory-branch text still literally said "Groq
+   free tier" regardless of which provider actually ran — a run made
+   with OpenRouterClient would have published a caveat naming Groq.
 
-All seven were fixed; results did not change sign after any of them —
+All nine were fixed; results did not change sign after any of them —
 evidence the conclusions were robust, not that the fixes were needless.
-Mutation testing now covers all 23 logic-bearing modules: 40 mutants
-injected, 40 killed.
+Mutation testing covers all 23 logic-bearing modules from before this
+session: 40 mutants injected, 40 killed.
 
 **The lesson generalizes:** a green check that *cannot* fail is worse
 than no check, because it manufactures confidence. Every new guard must

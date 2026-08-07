@@ -31,21 +31,25 @@ Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLA
 | `EXT` | extensión post-core | no puede bloquear CONF |
 | `CONF` | requisito confirmatorio | debe cerrarse antes del experimento final |
 
-**Estado al 2026-08-06.** Unidades 1–29 (incluye la ejecución confirmatoria real y su corrección de caveat). **El experimento confirmatorio de §19 está ejecutado con LLM real**: 1.080 observaciones (120 casos de test × 3 sistemas × 3 repeticiones), `manifest.selector: "GroqClient"`, `is_confirmatory_run: true`, `data/experiment_results.json`, análisis completo en [`results.md`](results.md), que conserva también la línea base con selector stub (`is_confirmatory_run: false`) para aislar la contribución arquitectónica.
+**Estado al 2026-08-07.** Unidades 1–30 (incluye tokens/H2, rúbrica de trazabilidad/H7, tres clientes LLM reales, checkpoint/resume y caché de llamadas). **El experimento confirmatorio de §19 está ejecutado con LLM real y con H2/H7 medidos por primera vez**: 1.080 observaciones (120 casos de test × 3 sistemas × 3 repeticiones), `manifest.selector: "OpenRouterClient"` (`openai/gpt-oss-20b:free`), `is_confirmatory_run: true`, `data/experiment_results.json`, análisis completo en [`results.md`](results.md), que conserva también la línea base con selector stub para aislar la contribución arquitectónica.
 
-**Resultados medidos, ejecución confirmatoria real** (unidad de inferencia = caso, n=120, no la ejecución — ver corrección de pseudo-replicación más abajo):
+**Historial de proveedor:** Groq completó una corrida entera antes de que existieran H2/H7; al relanzar con la instrumentación nueva, la cuota diaria de Groq (agotada por intentos previos sin checkpoint) y luego la de Gemini (20 peticiones/día por modelo en todos los modelos probados) bloquearon el reintento. OpenRouter (`openai/gpt-oss-20b:free`) es el que completó la corrida que se reporta. Los tres clientes quedan en el repo, probados y seleccionables vía `--provider {groq,gemini,openrouter}`.
+
+**Resultados medidos, ejecución confirmatoria real** (unidad de inferencia = caso, n=120, no la ejecución):
 
 | Métrica | A | B | C |
 |---|---|---|---|
-| STSR | 0,000 | 0,483 | **0,700** |
-| False allow rate | 0,889 | 0,889 | **0,111** |
-| Top-1 recuperación | 0,000 | 0,898 | **0,780** |
+| STSR | 0,000 | 0,517 | **0,700** |
+| False allow rate | 0,333 | 0,889 | **0,111** |
+| Tokens medios/ejecución (H2) | 198,2 | 230,3 | **0,0** |
+| Trazabilidad media (H7) | 0,19 | 0,36 | **0,80** |
+| Top-1 recuperación | 0,000 | 0,890 | **0,780** |
 
-C−A = +0,700 IC95 [+0,617, +0,783], Holm *p* = 2,71×10⁻¹⁹, OR 169. C−B = +0,217 IC95 [+0,100, +0,333], Holm *p* = 1,03×10⁻³, OR 2,58. Q de Cochran = 110,96 (gl 2). H1 (no inferioridad, margen −5 pp) **se acepta**. C nunca llama al LLM (recuperación TF-IDF): sus métricas son idénticas a la ejecución con selector stub; B mejora sustancialmente con selector real (STSR 0,333→0,483) y C−B se estrecha pero sigue significativo.
+C−A = +0,700 IC95 [+0,617, +0,783], Holm *p* = 2,71×10⁻¹⁹, OR 169. C−B = +0,183 IC95 [+0,058, +0,308], Holm *p* = 7,65×10⁻³, OR 2,07 (el margen más estrecho medido hasta ahora — B mejora con cada selector real probado: 0,333 stub → 0,483 Groq → 0,517 OpenRouter). Q de Cochran = 109,46 (gl 2). H1 (no inferioridad, margen −5 pp) **se acepta**. C nunca llama al LLM (recuperación TF-IDF): sus métricas son idénticas en las tres ejecuciones reales probadas.
 
-**Ocho defectos encontrados y corregidos por auditoría propia** (unidades 21–29, detalle completo en [`docs/audit.md`](audit.md)): fuga del test congelado (10 textos idénticos en DEVELOPMENT/FINAL_TEST); validador de fuga tautológico; dos conjuntos vacíos de STSR («sin efectos laterales» nunca fallaba, «estado esperado» duplicaba la decisión); pseudo-replicación (360 observaciones tratadas como independientes siendo 120 casos × 3 copias idénticas — IC 1,7× más estrechos, *p* 15 órdenes de magnitud menor de lo correcto); dos huecos en la suite estadística hallados por mutation testing (McNemar sin corrección de continuidad, bootstrap sin remuestreo); caveat del manifiesto inconsistente con `is_confirmatory_run` en la primera ejecución real, hallado leyendo la propia salida. Las conclusiones **sobrevivieron a las ocho correcciones sin cambiar de signo**. Mutation testing acumulado: 40 mutantes, 40 muertos, cobertura de los 23 módulos con lógica.
+**Nueve defectos encontrados y corregidos por auditoría propia** (unidades 21–30, detalle completo en [`docs/audit.md`](audit.md)): fuga del test congelado; validador de fuga tautológico; dos conjuntos vacíos de STSR; pseudo-replicación; dos huecos en la suite estadística (mutation testing); caveat del manifiesto inconsistente con `is_confirmatory_run`; **caveat con el nombre del proveedor hardcodeado** ("Groq free tier" fijo en el texto aunque el selector real fuera otro — encontrado leyendo la salida de la corrida con OpenRouter). Las conclusiones **sobrevivieron a las nueve correcciones sin cambiar de signo**. Mutation testing acumulado: 40 mutantes, 40 muertos, cobertura de los 23 módulos con lógica de antes de esta sesión.
 
-**Pendiente explícito:** H2/H8 (tokens y coste) sin instrumentar; H7 (rúbrica) definida pero no computada automáticamente; H3 no discriminable ni con LLM real (temperatura 0 exigida por §23 la vuelve determinista por diseño); congelación (`freeze_manifest.json`) sin extender a configuración del proveedor LLM; kappa de anotación pendiente (paso humano); memoria, demo, dashboard y vídeo sin empezar.
+**Pendiente explícito:** H8 (coste) es análisis de sensibilidad declarado, no gasto medido (los proveedores usados son gratis de verdad); H3 no discriminable ni con LLM real en tres proveedores distintos (temperatura 0 exigida por §23 la vuelve determinista por diseño); congelación (`freeze_manifest.json`) sin extender a configuración del proveedor LLM; kappa de anotación pendiente (paso humano); memoria, demo, dashboard y vídeo sin empezar.
 
 ## Mapa de requisitos y decisiones normativas
 

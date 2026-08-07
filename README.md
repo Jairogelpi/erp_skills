@@ -55,69 +55,87 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Paired A/B/C experiment runner (1.080 observations) | `experiment.py` | ✅ |
 | Freeze manifest + drift detection (CI-enforced) | `freeze.py` | ✅ |
 | Inter-annotator agreement instrument (Cohen's kappa) | `agreement.py` | ⚠️ human annotation pending |
-| Real LLM client for A/B/C (Groq, free tier) | `groq_client.py` | ✅ |
-| Confirmatory run with a real LLM (CLAUDE.md §19) | `scripts/run_experiment.py --real-llm` | ✅ executed, 1.080 observations |
+| Real LLM clients for A/B/C (Groq, Gemini, OpenRouter — all free tier) | `groq_client.py`, `gemini_client.py`, `openrouter_client.py` | ✅ |
+| Checkpoint/resume + call caching for real-LLM runs | `experiment.py`, `llm_client.CachingLLMClient` | ✅ |
+| Token instrumentation (H2) and traceability rubric (H7) | `metrics.py`, `traceability.py` | ✅ |
+| Confirmatory run with a real LLM (CLAUDE.md §19) | `scripts/run_experiment.py --real-llm --provider {groq,gemini,openrouter}` | ✅ executed, 1.080 observations |
 
-231 tests, `ruff`/`mypy` clean, CI green.
+274 tests, `ruff`/`mypy` clean, CI green.
 
-### Real LLM client
+### Real LLM clients
 
-`src/erp_agent_os/groq_client.py` implements the `LLMClient` protocol over
-Groq's free-tier API (`llama-3.1-8b-instant`, temperature 0 per §23).
-CLAUDE.md D-03 requires A, B, and C to share the same model/provider/config —
-it does not require a frontier/paid model. Using a free tier is a stated
-limitation, not a hidden one: it must be disclosed the same way in the
-memoria.
+Three interchangeable `LLMClient` implementations exist —
+`groq_client.py`, `gemini_client.py`, `openrouter_client.py` — because
+free-tier quotas turned out to be the practical bottleneck, not the
+architecture: Groq's daily token quota got exhausted by earlier
+interrupted runs, and every Gemini model tested on this project's key
+carried a 20-requests-per-day cap. CLAUDE.md D-03 requires A, B, and C to
+share the same model/provider/config *within one run* — it does not
+mandate a specific provider. The confirmatory run reported below used
+OpenRouter (`openai/gpt-oss-20b:free`).
 
 ```sh
-cp .env.example .env   # fill in GROQ_API_KEY (free: console.groq.com/keys)
-uv run python scripts/run_experiment.py --real-llm
+cp .env.example .env   # fill in GROQ_API_KEY / GEMINI_API_KEY / OPENROUTER_API_KEY
+uv run python scripts/run_experiment.py --real-llm --provider openrouter
 ```
 
 Without `--real-llm` the experiment uses `DeterministicStubClient`
 (architecture-isolation baseline, `is_confirmatory_run: false`); both
 manifests state the flag explicitly so results can never be silently
-misread as the other kind.
+misread as the other kind. Each `--real-llm` run checkpoints progress
+per-provider (`data/checkpoint_real_llm_<provider>.jsonl`, gitignored)
+and reuses one real call across a case's 3 repetitions
+(`CachingLLMClient`) instead of calling the LLM 3×, since
+`temperature=0.0` was empirically confirmed reproducible across three
+independent real runs (H3 = 1.0 every time).
 
 ### Measured result: the confirmatory A/B/C experiment (real LLM)
 
 **1.080 executions** (120 frozen-test cases × 3 systems × 3 repetitions),
 randomized order, `FakeERPAdapter` rebuilt per observation, A/B/C sharing
-one real Groq selector (`llama-3.1-8b-instant`, temperature 0). Full
-analysis — including the stub-selector baseline kept for comparison — in
-[`docs/results.md`](docs/results.md); raw output in
+one real OpenRouter selector (`openai/gpt-oss-20b:free`, temperature 0).
+Full analysis — including the stub-selector baseline kept for comparison
+— in [`docs/results.md`](docs/results.md); raw output in
 `data/experiment_results.json` (`is_confirmatory_run: true`).
 
 | Metric | A (ungoverned) | B (typed only) | **C (ERP Agent OS)** |
 |---|---|---|---|
-| **STSR** (primary endpoint) | 0.000 | 0.483 | **0.700** |
-| **False allow rate** (critical) | 0.889 | 0.889 | **0.111** |
-| False block rate | 0.225 | 0.072 | **0.072** |
-| Retrieval Top-1 | 0.000 | 0.898 | **0.780** |
-| Retrieval Top-3 / MRR | — | 0.898 | **0.941 / 0.855** |
+| **STSR** (primary endpoint) | 0.000 | 0.517 | **0.700** |
+| **False allow rate** (critical) | 0.333 | 0.889 | **0.111** |
+| Mean tokens/execution (H2) | 198.2 | 230.3 | **0.0** |
+| Traceability score, 0–1 (H7) | 0.19 | 0.36 | **0.80** |
+| Retrieval Top-1 | 0.000 | 0.890 | **0.780** |
+| Retrieval Top-3 / MRR | — | 0.890 | **0.941 / 0.855** |
 
 - **C − A** = +0.700, 95% CI [+0.617, +0.783], Holm *p* = 2.71×10⁻¹⁹, OR 169
-- **C − B** = +0.217, 95% CI [+0.100, +0.333], Holm *p* = 1.03×10⁻³, OR 2.58
-- Cochran's Q = 110.96 (df 2). **H1 (non-inferiority, −5 pp margin): accepted.**
+- **C − B** = +0.183, 95% CI [+0.058, +0.308], Holm *p* = 7.65×10⁻³, OR 2.07
+- Cochran's Q = 109.46 (df 2). **H1 (non-inferiority, −5 pp margin): accepted.**
 - **Inference unit is the case (n = 120), not the execution.** Repetitions of a case are not independent; using all 360 per system would be pseudo-replication, narrowing every CI by ≈√3.
 - System C never calls the LLM (its retrieval is TF-IDF) — its metrics are
-  byte-identical to the earlier stub-selector run, by architecture, not by
-  accident. B improved substantially with a real selector (STSR 0.333→0.483,
-  Top-1 0.610→0.898): part of C's stub-run margin was selector quality, not
-  just governance — C − B narrowed but stayed significant.
+  byte-identical across every real-LLM run tried, by architecture, not by
+  accident. B keeps improving as selector quality improves (STSR
+  0.333→0.483→0.517 across stub→Groq→OpenRouter): C − B narrows with each
+  better selector but stayed significant in all three.
+- H2 and H7 have real numbers for the first time this run: C consumes 0
+  tokens (no LLM call) and scores 0.80/1.0 on the traceability rubric
+  versus 0.19/0.36 for A/B, which structurally lack a policy engine,
+  versioned skills, and an audit store.
 
-C cuts the false-allow rate from 0.889 to **0.111** *while also* matching B's
-false-block rate (0.072) — it does not buy safety by refusing work.
+C cuts the false-allow rate to **0.111**, well below B's 0.889. A's
+false-allow rate varies sharply by provider (0.889 with Groq, 0.333 here)
+— a real, disclosed sensitivity to which LLM sits behind the ungoverned
+baseline, not a property of "A" in the abstract.
 
-> **⚠️ Scope.** Free-tier model (`llama-3.1-8b-instant`), not a
+> **⚠️ Scope.** Free-tier model (`openai/gpt-oss-20b:free`), not a
 > frontier/production model — disclosed, not hidden. The freeze manifest
-> does not yet cover provider config (model, temperature, retries); the run
-> was launched before extending it, a disclosed trade-off. Other limits in
-> [`docs/results.md`](docs/results.md): A scores 0 largely by construction
-> (generic CRUD cannot encode postconditions), so **C − B is the informative
-> contrast**; the adversarial detectors are lexical; H2/H8 (tokens, cost) are
-> **not instrumented**; H3 cannot discriminate even with a real LLM because
-> `temperature=0.0` makes it perfectly reproducible by design.
+> does not yet cover provider config (model, temperature, retries), a
+> disclosed trade-off. Other limits in [`docs/results.md`](docs/results.md):
+> A scores 0 on STSR largely by construction (generic CRUD cannot encode
+> postconditions), so **C − B is the informative contrast**; the
+> adversarial detectors are lexical; H8 (cost) is a declared-rate
+> sensitivity analysis, not measured spend; H3 cannot discriminate even
+> with a real LLM because `temperature=0.0` makes it perfectly
+> reproducible by design.
 
 ## Prerequisites
 
