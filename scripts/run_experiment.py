@@ -89,13 +89,18 @@ def _select_llm(real_llm: bool, provider: str):
     return GroqClient()
 
 
-def _manifest_caveat(is_confirmatory: bool) -> str:
-    """The manifest's caveat text must match `is_confirmatory_run`.
+def _manifest_caveat(is_confirmatory: bool, selector: str) -> str:
+    """The manifest's caveat text must match `is_confirmatory_run` AND
+    name the selector that was actually used.
 
-    A prior version hardcoded the non-confirmatory text unconditionally,
-    so a real-LLM run would publish "is_confirmatory_run: true" next to a
-    caveat claiming it was NOT the confirmatory protocol -- a factual
-    contradiction discovered by reading the output of the first real run.
+    Two related bugs found by reading a run's own output before
+    reporting it: (1) a prior version hardcoded the non-confirmatory
+    text unconditionally, so a real-LLM run would publish
+    "is_confirmatory_run: true" next to a caveat claiming it was NOT the
+    confirmatory protocol; (2) a later version hardcoded "Groq free
+    tier" in the confirmatory branch, so a run made with GeminiClient or
+    OpenRouterClient would publish a caveat naming the wrong provider.
+    Both are now derived, not literal.
     """
     if not is_confirmatory:
         return (
@@ -104,11 +109,11 @@ def _manifest_caveat(is_confirmatory: bool) -> str:
             "confirmatory protocol, which requires a real LLM provider."
         )
     return (
-        "Real LLM selector (Groq free tier) shared identically across "
-        "A/B/C, per CLAUDE.md D-03. This IS the section 19 confirmatory "
-        "protocol. Declared limitation: a free-tier model, not a "
-        "frontier/production model -- see the memoria for the disclosure "
-        "this requires."
+        f"Real LLM selector ({selector}, free tier) shared identically "
+        "across A/B/C, per CLAUDE.md D-03. This IS the section 19 "
+        "confirmatory protocol. Declared limitation: a free-tier model, "
+        "not a frontier/production model -- see the memoria for the "
+        "disclosure this requires."
     )
 
 
@@ -207,7 +212,7 @@ def main() -> None:
             "n_cases": manifest.n_cases,
             "n_repetitions": manifest.n_repetitions,
             "seed": manifest.seed,
-            "caveat": _manifest_caveat(manifest.is_confirmatory),
+            "caveat": _manifest_caveat(manifest.is_confirmatory, manifest.selector),
         },
         "H1_stsr": {
             "stsr": stsr,
