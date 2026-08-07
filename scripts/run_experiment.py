@@ -65,27 +65,27 @@ def _checkpoint_path(provider: str) -> Path:
 def _select_llm(real_llm: bool, provider: str):
     if not real_llm:
         return DeterministicStubClient()
+
+    print(
+        f"Real-LLM confirmatory run ({provider}): this makes network calls "
+        "against your free-tier quota. System A and B each call the model "
+        "once per case (repetitions reuse the first call, see "
+        "CachingLLMClient); System C's retrieval does not call the LLM.",
+        file=sys.stderr,
+    )
     if provider == "gemini":
         from erp_agent_os.gemini_client import GeminiClient  # optional dep path
 
-        print(
-            "Real-LLM confirmatory run: this makes network calls against "
-            "your Gemini free-tier quota. System A and B each call the "
-            "model once per case (repetitions reuse the first call, see "
-            "CachingLLMClient); System C's retrieval does not call the LLM.",
-            file=sys.stderr,
-        )
         return GeminiClient()
+    if provider == "openrouter":
+        from erp_agent_os.openrouter_client import (  # optional dep path
+            OpenRouterClient,
+        )
+
+        return OpenRouterClient()
 
     from erp_agent_os.groq_client import GroqClient  # local import: optional dep path
 
-    print(
-        "Real-LLM confirmatory run: this makes network calls against your "
-        "Groq free-tier quota. System A and B each call the model once per "
-        "case (repetitions reuse the first call, see CachingLLMClient); "
-        "System C's retrieval does not call the LLM.",
-        file=sys.stderr,
-    )
     return GroqClient()
 
 

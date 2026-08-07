@@ -7,12 +7,13 @@ configuración" within one run. Whichever provider a run uses, it is used
 identically across all three systems; a run's manifest records which one
 (see `ExperimentManifest.selector`).
 
-`gemini-flash-latest` is used rather than pinning a dated model name: it
-is Google's alias for its current best generally-available (non-preview)
-Flash model, so this client tracks whichever model that resolves to
-without needing an update when Google ships a new one. At the time this
-was written it resolved to `gemini-3.6-flash`
-(`response.model_version` confirms the resolved model on every call).
+`gemini-2.5-flash-lite` was picked over the newer `gemini-flash-latest`
+alias (which resolved to `gemini-3.6-flash` when this was written)
+because the newest flagship model's free tier turned out to carry a
+20-requests-PER-DAY quota on this key -- unusable for ~240 real calls
+per confirmatory run. `gemini-2.5-flash-lite` is stable (not an alias
+that can silently repoint to a low-quota model) and has a free-tier
+daily quota this workload actually fits in.
 
 The API key is read from the `GEMINI_API_KEY` environment variable and is
 never read from, or written to, any file this repository commits. If the
@@ -34,10 +35,12 @@ from erp_agent_os.llm_client import ToolCall, ToolSpec
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_MODEL = "gemini-flash-latest"
+DEFAULT_MODEL = "gemini-2.5-flash-lite"
 DEFAULT_TEMPERATURE = 0.0  # low temperature: CLAUDE.md §23 ("temperatura baja")
 DEFAULT_MAX_RETRIES = 5
-DEFAULT_MIN_INTERVAL_SECONDS = 2.0
+# gemini-2.5-flash-lite's free tier is 10 requests PER MINUTE (not per
+# day, unlike Groq): 6s/call already clears it, 7s leaves margin.
+DEFAULT_MIN_INTERVAL_SECONDS = 7.0
 # Flash-tier Gemini models spend part of the output budget on internal
 # "thinking" tokens before the visible JSON answer; too small a budget
 # truncates the answer to nothing (observed: 100 tokens -> empty text).
