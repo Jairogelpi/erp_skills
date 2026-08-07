@@ -51,24 +51,39 @@ USD_PER_1K_TOKENS = 0.05
 OUTPUT_PATH = (
     Path(__file__).resolve().parent.parent / "data" / "experiment_results.json"
 )
-# Only used for --real-llm: lets a run interrupted by a quota limit or an
-# unrelated cut resume instead of re-spending tokens already paid for.
-# Delete this file to force a fresh run.
-CHECKPOINT_PATH = (
-    Path(__file__).resolve().parent.parent / "data" / "checkpoint_real_llm.jsonl"
-)
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
-def _select_llm(real_llm: bool):
+def _checkpoint_path(provider: str) -> Path:
+    # One checkpoint file per provider: resuming a Gemini run from a
+    # Groq checkpoint (or vice versa) would silently break D-03 (A/B/C
+    # must share one provider within a run). Delete the file to force a
+    # fresh run for that provider.
+    return DATA_DIR / f"checkpoint_real_llm_{provider}.jsonl"
+
+
+def _select_llm(real_llm: bool, provider: str):
     if not real_llm:
         return DeterministicStubClient()
+    if provider == "gemini":
+        from erp_agent_os.gemini_client import GeminiClient  # optional dep path
+
+        print(
+            "Real-LLM confirmatory run: this makes network calls against "
+            "your Gemini free-tier quota. System A and B each call the "
+            "model once per case (repetitions reuse the first call, see "
+            "CachingLLMClient); System C's retrieval does not call the LLM.",
+            file=sys.stderr,
+        )
+        return GeminiClient()
+
     from erp_agent_os.groq_client import GroqClient  # local import: optional dep path
 
     print(
         "Real-LLM confirmatory run: this makes network calls against your "
         "Groq free-tier quota. System A and B each call the model once per "
-        "case per repetition (up to 120 * 2 * 3 = 720 calls); System C's "
-        "retrieval does not call the LLM.",
+        "case (repetitions reuse the first call, see CachingLLMClient); "
+        "System C's retrieval does not call the LLM.",
         file=sys.stderr,
     )
     return GroqClient()
@@ -112,16 +127,24 @@ def _configure_logging(real_llm: bool) -> None:
     )
 
 
+def _provider_arg() -> str:
+    if "--provider" in sys.argv:
+        return sys.argv[sys.argv.index("--provider") + 1]
+    return "groq"
+
+
 def main() -> None:
     real_llm = "--real-llm" in sys.argv
+    provider = _provider_arg()
     _configure_logging(real_llm)
     cases = generate_cases()
     test_cases = [c for c in cases if c.split is DatasetSplit.FINAL_TEST]
 
+    checkpoint_path = _checkpoint_path(provider) if real_llm else None
     records, manifest = run_experiment(
         cases,
-        _select_llm(real_llm),
-        checkpoint_path=CHECKPOINT_PATH if real_llm else None,
+        _select_llm(real_llm, provider),
+        checkpoint_path=checkpoint_path,
     )
 
     per_system_records = defaultdict(list)
@@ -306,8 +329,8 @@ def main() -> None:
     # A completed run's checkpoint is spent; keeping it around would make
     # the *next* run silently resume stale cached calls instead of really
     # running.
-    if real_llm and CHECKPOINT_PATH.exists():
-        CHECKPOINT_PATH.unlink()
+    if checkpoint_path is not None and checkpoint_path.exists():
+        checkpoint_path.unlink()
     print(json.dumps(report, indent=2, ensure_ascii=False))
 
 

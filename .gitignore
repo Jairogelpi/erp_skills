@@ -47,7 +47,7 @@ secrets/
 credentials/
 
 # Resumable real-LLM experiment progress (spent/deleted on completion)
-data/checkpoint_real_llm.jsonl
+data/checkpoint_real_llm_*.jsonl
 
 # Local developer/runtime state
 .atl/

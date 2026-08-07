@@ -1,0 +1,203 @@
+"""Gemini-backed LLMClient (CLAUDE.md §18, D-03).
+
+Second real free-tier provider, alongside `groq_client.py`. CLAUDE.md
+does not mandate a specific commercial provider — D-03 only requires
+that A, B, and C share "el mismo modelo, proveedor, versión/
+configuración" within one run. Whichever provider a run uses, it is used
+identically across all three systems; a run's manifest records which one
+(see `ExperimentManifest.selector`).
+
+`gemini-flash-latest` is used rather than pinning a dated model name: it
+is Google's alias for its current best generally-available (non-preview)
+Flash model, so this client tracks whichever model that resolves to
+without needing an update when Google ships a new one. At the time this
+was written it resolved to `gemini-3.6-flash`
+(`response.model_version` confirms the resolved model on every call).
+
+The API key is read from the `GEMINI_API_KEY` environment variable and is
+never read from, or written to, any file this repository commits. If the
+variable is absent, constructing this client raises immediately rather
+than silently falling back to a stub.
+"""
+
+import json
+import logging
+import os
+import re
+import time
+from dataclasses import dataclass, replace
+
+from google import genai
+from google.genai import errors, types
+
+from erp_agent_os.llm_client import ToolCall, ToolSpec
+
+logger = logging.getLogger(__name__)
+
+DEFAULT_MODEL = "gemini-flash-latest"
+DEFAULT_TEMPERATURE = 0.0  # low temperature: CLAUDE.md §23 ("temperatura baja")
+DEFAULT_MAX_RETRIES = 5
+DEFAULT_MIN_INTERVAL_SECONDS = 2.0
+# Flash-tier Gemini models spend part of the output budget on internal
+# "thinking" tokens before the visible JSON answer; too small a budget
+# truncates the answer to nothing (observed: 100 tokens -> empty text).
+DEFAULT_MAX_OUTPUT_TOKENS = 500
+
+_RETRY_AFTER_RE = re.compile(r"retry in ([\d.]+)s", re.IGNORECASE)
+
+
+class MissingApiKeyError(RuntimeError):
+    """Raised when GEMINI_API_KEY is not set. Never falls back silently."""
+
+
+@dataclass(frozen=True)
+class GeminiConfig:
+    """Registered, reproducible provider configuration (CLAUDE.md D-03)."""
+
+    model: str = DEFAULT_MODEL
+    temperature: float = DEFAULT_TEMPERATURE
+    max_retries: int = DEFAULT_MAX_RETRIES
+    max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS
+    min_interval_seconds: float = DEFAULT_MIN_INTERVAL_SECONDS
+
+
+_SYSTEM_PROMPT = (
+    "Eres un selector de herramientas para un ERP. Dada una peticion en "
+    "espanol y una lista de herramientas disponibles, elige como maximo "
+    "una herramienta y propone sus argumentos. Responde EXCLUSIVAMENTE "
+    "con un objeto JSON de la forma "
+    '{"tool_name": "<nombre o null>", "arguments": {}}. '
+    "No inventes argumentos que no puedas inferir del texto: dejalos "
+    "fuera del objeto si no hay evidencia textual clara. No ejecutes "
+    "nada, no expliques tu razonamiento, no anadas texto fuera del JSON."
+)
+
+
+def _tool_menu(tools: list[ToolSpec]) -> str:
+    lines = [
+        f"- {t.name}: {t.description} (campos: {', '.join(t.required_arguments)})"
+        for t in tools
+    ]
+    return "\n".join(lines)
+
+
+class GeminiClient:
+    """Real LLMClient over the Gemini API. See module docstring for scope."""
+
+    def __init__(self, config: GeminiConfig | None = None) -> None:
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            raise MissingApiKeyError(
+                "GEMINI_API_KEY is not set. Get a free key at "
+                "https://aistudio.google.com/apikey and export it "
+                "(e.g. in a local .env file, never committed) before "
+                "constructing GeminiClient."
+            )
+        self._config = config or GeminiConfig()
+        self._client = genai.Client(api_key=api_key)
+        self._last_call_at: float | None = None
+
+    @property
+    def config(self) -> GeminiConfig:
+        return self._config
+
+    def _pace(self) -> None:
+        """Sleep so consecutive calls stay under the free-tier RPM limit."""
+        if self._last_call_at is not None:
+            elapsed = time.monotonic() - self._last_call_at
+            remaining = self._config.min_interval_seconds - elapsed
+            if remaining > 0:
+                time.sleep(remaining)
+        self._last_call_at = time.monotonic()
+
+    def propose_action(self, query_text: str, tools: list[ToolSpec]) -> ToolCall:
+        if not tools:
+            return ToolCall(None, {})
+
+        prompt = (
+            f"{_SYSTEM_PROMPT}\n\nPeticion: {query_text}\n\n"
+            f"Herramientas disponibles:\n{_tool_menu(tools)}"
+        )
+        config = types.GenerateContentConfig(
+            temperature=self._config.temperature,
+            max_output_tokens=self._config.max_output_tokens,
+            response_mime_type="application/json",
+        )
+
+        last_error: Exception | None = None
+        for attempt in range(self._config.max_retries):
+            self._pace()
+            logger.info(
+                "gemini call attempt=%d/%d query=%r",
+                attempt + 1,
+                self._config.max_retries,
+                query_text[:60],
+            )
+            call_started = time.monotonic()
+            try:
+                response = self._client.models.generate_content(
+                    model=self._config.model, contents=prompt, config=config
+                )
+                content = response.text or "{}"
+                usage = response.usage_metadata
+                logger.info("gemini call ok in %.2fs", time.monotonic() - call_started)
+                call = _parse_tool_call(content, tools)
+                if usage is None:
+                    return call
+                return replace(
+                    call,
+                    prompt_tokens=usage.prompt_token_count or 0,
+                    completion_tokens=usage.candidates_token_count or 0,
+                )
+            except Exception as exc:  # noqa: BLE001 - retry any transient failure
+                last_error = exc
+                if attempt < self._config.max_retries - 1:
+                    delay = _retry_delay(exc, attempt)
+                    logger.warning(
+                        "gemini call failed (%s: %s), retrying in %.1fs",
+                        type(exc).__name__,
+                        exc,
+                        delay,
+                    )
+                    time.sleep(delay)
+                else:
+                    logger.error(
+                        "gemini call failed (%s: %s), no attempts left",
+                        type(exc).__name__,
+                        exc,
+                    )
+
+        raise RuntimeError(
+            f"Gemini call failed after {self._config.max_retries} attempts"
+        ) from last_error
+
+
+def _retry_delay(exc: Exception, attempt: int) -> float:
+    """Honor the server's "Please retry in Xs" hint on 429s; else back off."""
+    if isinstance(exc, errors.ClientError) and exc.status == "RESOURCE_EXHAUSTED":
+        match = _RETRY_AFTER_RE.search(exc.message or "")
+        if match:
+            return float(match.group(1)) + 0.5
+    return float(2**attempt)
+
+
+def _parse_tool_call(content: str, tools: list[ToolSpec]) -> ToolCall:
+    """Structured-output parsing, never free-text execution (CLAUDE.md §23).
+
+    Malformed or hallucinated output degrades to ToolCall(None, {}) --
+    "no action" -- rather than raising or guessing.
+    """
+    try:
+        parsed = json.loads(content)
+    except json.JSONDecodeError:
+        return ToolCall(None, {})
+
+    tool_name = parsed.get("tool_name")
+    valid_names = {t.name for t in tools}
+    if tool_name not in valid_names:
+        return ToolCall(None, {})
+
+    arguments = parsed.get("arguments")
+    if not isinstance(arguments, dict):
+        arguments = {}
+    return ToolCall(tool_name, arguments)
