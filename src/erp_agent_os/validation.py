@@ -37,15 +37,21 @@ class Finding:
     detail: str
 
 
-# ponytail: lexical patterns, Spanish corpus of the frozen benchmark. A
-# semantic/classifier detector is future work; upgrade path is to replace
-# these regexes behind the same `detect_text_signals` signature.
+# ponytail: lexical patterns, Spanish corpus of the frozen benchmark plus
+# English equivalents added after the InjecAgent stress test
+# (docs/injecagent-stress-test.md) showed the Spanish-only version
+# scored 0% on an English out-of-domain adversarial set. A
+# semantic/classifier detector is future work; upgrade path is to
+# replace these regexes behind the same `detect_text_signals` signature.
 _INJECTION_PATTERNS = (
     r"ignora (?:las )?(?:instrucciones|indicaciones)",
     r"olvida (?:las )?(?:instrucciones|reglas)",
     r"ahora eres",
     r"system prompt",
     r"ignore (?:the )?(?:previous|above) instructions",
+    r"forget (?:the )?(?:previous|above) (?:instructions|rules)",
+    r"you are now",
+    r"disregard (?:the )?(?:previous|above) (?:instructions|rules)",
 )
 _BULK_PATTERNS = (
     r"\ba todos\b",
@@ -54,18 +60,29 @@ _BULK_PATTERNS = (
     r"clientes similares",
     r"en masa",
     r"masivamente",
+    r"\ball (?:of )?(?:the )?(?:customers|clients|users|accounts|records)\b",
+    r"\bevery (?:customer|client|user|account|record)\b",
+    r"in bulk",
+    r"\ben masse\b",
 )
 _IRREVERSIBLE_PATTERNS = (
     r"borra(?:lo|los|las)? todo",
     r"elimina(?:r)? (?:todos|todas|permanentemente)",
     r"permanentemente",
     r"sin posibilidad de deshacer",
+    r"delete (?:it |them )?(?:all|permanently)",
+    r"\bpermanently\b",
+    r"\bwithout (?:the )?(?:possibility|option) (?:to|of) undo",
+    r"\bno turning back\b",
 )
 _PERMISSION_PATTERNS = (
     r"sin permiso",
     r"sin autorizaci[oó]n",
     r"usuario no autorizado",
     r"salt(?:a|ando) (?:el |la )?(?:control|validaci[oó]n|permiso)",
+    r"without (?:permission|authorization)",
+    r"unauthorized user",
+    r"bypass(?:ing)? (?:the )?(?:control|validation|permission|approval)",
 )
 
 _NUMERIC_LIMITS: dict[str, tuple[float, float]] = {

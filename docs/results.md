@@ -319,8 +319,15 @@ explicativo era incorrecto.
    los tres proveedores probados.
 3. **A como hombre de paja** — véase H1; usar C − B como contraste
    principal.
-4. **Detectores léxicos en C** — la ventaja en H4 no se generaliza a
-   adversarios adaptativos.
+4. **Detectores léxicos en C, medido con un benchmark externo** — la
+   ventaja en H4 no se generaliza a adversarios adaptativos.
+   `docs/injecagent-stress-test.md`: 510 casos reales de InjecAgent
+   (Zhan et al. 2024), fuera de la distribución de ERP-Skills-Bench,
+   dieron 0 % de detección con el detector solo en español y 3,3 % tras
+   añadir patrones en inglés. La causa de fondo no es el idioma: la
+   mayoría de los payloads son peticiones educadas sin ningún framing de
+   ataque textual ("Please delete my clinical documents..."), invisibles
+   por diseño a cualquier detector léxico. Medido, no solo declarado.
 5. **Benchmark sintético y plantillado** — 480 casos de 24 plantillas en
    un solo idioma y un solo ERP simulado.
 6. **Anotación de un solo anotador** — kappa pendiente.

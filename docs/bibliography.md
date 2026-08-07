@@ -18,10 +18,38 @@ verificables.
   as Agents*. arXiv:2308.03688.
 - Li, M., Zhao, Y., Yu, B., et al. (2023). *API-Bank: A Comprehensive
   Benchmark for Tool-Augmented LLMs*. arXiv:2304.08244.
+- Yao, S., Shinn, N., Razavi, P., y Narasimhan, K. (2024). *τ-bench: A
+  Benchmark for Tool-Agent-User Interaction in Real-World Domains*.
+  arXiv:2406.12045.
 
-Uso en este trabajo: ambos justifican construir un benchmark propio con
-estados verificables en lugar de puntuar solo la salida textual, y
-motivan la métrica STSR (estado final correcto, no respuesta plausible).
+Uso en este trabajo: AgentBench y API-Bank justifican construir un
+benchmark propio con estados verificables en lugar de puntuar solo la
+salida textual, y motivan la métrica STSR (estado final correcto, no
+respuesta plausible). τ-bench es el pariente conceptual más cercano al
+Policy Engine de ERP Agent OS: mide si un agente sigue reglas de negocio
+explícitas (aerolínea, retail) en vez de solo completar la tarea, igual
+que STSR exige "permisos respetados" como conjunto propio, no implícito
+en el éxito. No cubre dominio ERP ni usa datos de este trabajo; se cita
+como posicionamiento frente al estado del arte, no como fuente de datos.
+
+## Seguridad y robustez adversarial de agentes
+
+- Zhan, Q., Liang, Z., Ying, Z., y Kang, D. (2024). *InjecAgent:
+  Benchmarking Indirect Prompt Injections in Tool-Integrated Large
+  Language Model Agents*. arXiv:2403.02691.
+- Andriushchenko, M., Souly, A., Dziemian, M., et al. (2024). *AgentHarm:
+  A Benchmark for Measuring Harmfulness of LLM Agents*.
+  arXiv:2410.09024.
+
+Uso en este trabajo: `docs/results.md` declara que la detección
+adversarial de `validation.py` es léxica y está ajustada al texto
+plantillado de ERP-Skills-Bench — "no se generaliza a adversarios
+adaptativos". InjecAgent (inyección indirecta vía datos de herramienta,
+el vector de amenaza más cercano al de este proyecto) se usó como
+prueba de estrés externa sobre el Policy Engine; ver `docs/injecagent-stress-test.md`
+para el resultado, reportado tal cual salió, favorable o no. AgentHarm
+se cita como referencia de diseño de benchmarks de daño en agentes, sin
+ejecución contra este sistema por presupuesto de tiempo del TFM.
 
 ## Recuperación semántica
 
