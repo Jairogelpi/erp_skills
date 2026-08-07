@@ -56,3 +56,50 @@ def test_experiment_is_deterministic_for_a_fixed_seed():
     assert [(r.request_id, r.system, r.decision) for r in first] == [
         (r.request_id, r.system, r.decision) for r in second
     ]
+
+
+def test_checkpoint_resume_reproduces_the_same_records_as_a_fresh_run(tmp_path):
+    baseline, _ = run_experiment(CASES, DeterministicStubClient(), seed=7)
+
+    checkpoint = tmp_path / "checkpoint.jsonl"
+    run_experiment(CASES, DeterministicStubClient(), seed=7, checkpoint_path=checkpoint)
+    all_lines = checkpoint.read_text(encoding="utf-8").splitlines()
+    assert len(all_lines) == 1080
+
+    # Simulate an interrupted run: only the first half survived.
+    checkpoint.write_text("\n".join(all_lines[:400]) + "\n", encoding="utf-8")
+
+    resumed, manifest = run_experiment(
+        CASES, DeterministicStubClient(), seed=7, checkpoint_path=checkpoint
+    )
+
+    assert manifest.n_observations == 1080
+    assert len(resumed) == 1080
+    resumed_sorted = sorted(
+        resumed, key=lambda r: (r.request_id, r.system, r.repetition)
+    )
+    baseline_sorted = sorted(
+        baseline, key=lambda r: (r.request_id, r.system, r.repetition)
+    )
+    assert [(r.request_id, r.system, r.decision) for r in resumed_sorted] == [
+        (r.request_id, r.system, r.decision) for r in baseline_sorted
+    ]
+    # Resuming completed the rest: the checkpoint file now has all 1.080.
+    assert len(checkpoint.read_text(encoding="utf-8").splitlines()) == 1080
+
+
+def test_repetitions_reuse_the_first_real_llm_call_for_the_same_case():
+    class _CountingStub(DeterministicStubClient):
+        def __init__(self):
+            self.calls = 0
+
+        def propose_action(self, query_text, tools):
+            self.calls += 1
+            return super().propose_action(query_text, tools)
+
+    llm = _CountingStub()
+    run_experiment(CASES, llm, seed=7)
+
+    # 120 cases, each queried once for A and once for B regardless of the
+    # 3 repetitions -- caching cuts real calls to a third.
+    assert llm.calls == 120 * 2

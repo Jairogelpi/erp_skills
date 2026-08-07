@@ -51,6 +51,12 @@ USD_PER_1K_TOKENS = 0.05
 OUTPUT_PATH = (
     Path(__file__).resolve().parent.parent / "data" / "experiment_results.json"
 )
+# Only used for --real-llm: lets a run interrupted by a quota limit or an
+# unrelated cut resume instead of re-spending tokens already paid for.
+# Delete this file to force a fresh run.
+CHECKPOINT_PATH = (
+    Path(__file__).resolve().parent.parent / "data" / "checkpoint_real_llm.jsonl"
+)
 
 
 def _select_llm(real_llm: bool):
@@ -112,7 +118,11 @@ def main() -> None:
     cases = generate_cases()
     test_cases = [c for c in cases if c.split is DatasetSplit.FINAL_TEST]
 
-    records, manifest = run_experiment(cases, _select_llm(real_llm))
+    records, manifest = run_experiment(
+        cases,
+        _select_llm(real_llm),
+        checkpoint_path=CHECKPOINT_PATH if real_llm else None,
+    )
 
     per_system_records = defaultdict(list)
     for record in records:
@@ -293,6 +303,11 @@ def main() -> None:
     OUTPUT_PATH.write_text(
         json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
     )
+    # A completed run's checkpoint is spent; keeping it around would make
+    # the *next* run silently resume stale cached calls instead of really
+    # running.
+    if real_llm and CHECKPOINT_PATH.exists():
+        CHECKPOINT_PATH.unlink()
     print(json.dumps(report, indent=2, ensure_ascii=False))
 
 

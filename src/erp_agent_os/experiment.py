@@ -16,10 +16,12 @@ records which selector was used so results can never be silently
 mistaken for the confirmatory run.
 """
 
+import json
 import logging
 import random
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any
 
 from erp_agent_os.adapters import FakeERPAdapter
@@ -28,7 +30,7 @@ from erp_agent_os.bench_intents import INTENTS_BY_ID
 from erp_agent_os.catalog import CATALOG, CATALOG_BY_ID
 from erp_agent_os.dataset import BenchmarkCase, DatasetSplit
 from erp_agent_os.handlers import HANDLERS, SKILL_MODELS
-from erp_agent_os.llm_client import LLMClient
+from erp_agent_os.llm_client import CachingLLMClient, LLMClient
 from erp_agent_os.metrics import ExecutionRecord
 from erp_agent_os.parser import structure_proposal
 from erp_agent_os.postconditions import build_checks
@@ -308,12 +310,47 @@ def _side_effect_free(
     )
 
 
+def _record_key(request_id: str, system: str, repetition: int) -> str:
+    return f"{request_id}|{system}|{repetition}"
+
+
+def _dump_record(record: ExecutionRecord) -> dict[str, Any]:
+    payload = asdict(record)
+    payload["ranked_skill_ids"] = list(record.ranked_skill_ids)
+    return payload
+
+
+def _load_record(payload: dict[str, Any]) -> ExecutionRecord:
+    payload = dict(payload)
+    payload["ranked_skill_ids"] = tuple(payload["ranked_skill_ids"])
+    return ExecutionRecord(**payload)
+
+
+def _load_checkpoint(checkpoint_path: Path) -> dict[str, ExecutionRecord]:
+    """Already-completed observations from a prior, interrupted run.
+
+    A real-LLM run can take an hour+ and cross a daily token quota or an
+    unrelated interruption; without this, restarting re-spends tokens
+    already paid for on the same 1.080 observations.
+    """
+    if not checkpoint_path.exists():
+        return {}
+    done: dict[str, ExecutionRecord] = {}
+    for line in checkpoint_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        done[row["key"]] = _load_record(row["record"])
+    return done
+
+
 def run_experiment(
     cases: Sequence[BenchmarkCase],
     llm: LLMClient,
     *,
     repetitions: int = REPETITIONS,
     seed: int = 20260805,
+    checkpoint_path: Path | None = None,
 ) -> tuple[list[ExecutionRecord], ExperimentManifest]:
     test_cases = [c for c in cases if c.split is DatasetSplit.FINAL_TEST]
     rng = random.Random(seed)
@@ -326,23 +363,59 @@ def run_experiment(
     ]
     rng.shuffle(plan)  # randomized order, CLAUDE.md §19
 
+    selector = type(llm).__name__
+    is_confirmatory = selector != "DeterministicStubClient"
+
+    # Repetitions of the same case ask the same query; with temperature=0
+    # (CLAUDE.md §23) two independent real runs already showed the result
+    # is reproducible (H3 = 1.0 both times). Only the first call per
+    # unique query is real; cached hits report 0 tokens (see
+    # CachingLLMClient) so H2/H8 never overcount actual spend.
+    cached_llm: LLMClient = CachingLLMClient(llm)
+
+    done = _load_checkpoint(checkpoint_path) if checkpoint_path else {}
+    if done:
+        logger.info(
+            "resuming from checkpoint: %d/%d already done", len(done), len(plan)
+        )
+
+    checkpoint_file = None
+    if checkpoint_path is not None:
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+        checkpoint_file = checkpoint_path.open("a", encoding="utf-8")
+
     runners = {"A": _run_system_a, "B": _run_system_b, "C": _run_system_c}
     total = len(plan)
     records = []
-    for i, (case, system, rep) in enumerate(plan, start=1):
-        logger.info(
-            "observation %d/%d: system=%s case=%s rep=%d",
-            i,
-            total,
-            system,
-            case.request_id,
-            rep,
-        )
-        records.append(runners[system](case, llm, rep))
+    try:
+        for i, (case, system, rep) in enumerate(plan, start=1):
+            key = _record_key(case.request_id, system, rep)
+            cached = done.get(key)
+            if cached is not None:
+                records.append(cached)
+                continue
+            logger.info(
+                "observation %d/%d: system=%s case=%s rep=%d",
+                i,
+                total,
+                system,
+                case.request_id,
+                rep,
+            )
+            record = runners[system](case, cached_llm, rep)
+            records.append(record)
+            if checkpoint_file is not None:
+                checkpoint_file.write(
+                    json.dumps({"key": key, "record": _dump_record(record)}) + "\n"
+                )
+                checkpoint_file.flush()
+    finally:
+        if checkpoint_file is not None:
+            checkpoint_file.close()
 
     manifest = ExperimentManifest(
-        selector=type(llm).__name__,
-        is_confirmatory=type(llm).__name__ != "DeterministicStubClient",
+        selector=selector,
+        is_confirmatory=is_confirmatory,
         n_cases=len(test_cases),
         n_systems=3,
         n_repetitions=repetitions,
