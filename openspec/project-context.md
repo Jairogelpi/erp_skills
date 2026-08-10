@@ -35,16 +35,17 @@ rather than from a stale plan.
 
 ## Current state
 
-**Delivered and tested** (35 modules, 274 tests, `ruff`/`mypy` clean, CI green):
+**Delivered and tested** (35 modules, 298 tests, `ruff`/`mypy` clean, CI green):
 
 | Layer | Modules |
 |---|---|
-| Deterministic core | `adapters`, `skills`, `policy`, `runtime`, `audit`, `validation` |
+| Deterministic core | `adapters` (incl. `ErpAdapter` Protocol), `skills`, `policy`, `runtime` (generic over adapter type), `audit`, `validation` |
 | Retrieval | `parser`, `retrieval`, `embeddings` |
 | Systems under comparison | `system_a`, `system_b`, `system_c`, `llm_client`, `groq_client`, `gemini_client`, `openrouter_client` |
 | Benchmark | `catalog`, `bench_intents`, `bench_generator`, `bench_runner`, `handlers` |
 | Measurement | `metrics`, `postconditions`, `statistics`, `agreement`, `experiment`, `freeze`, `traceability` |
 | Infrastructure | `api`, `approval`, `persistence` |
+| Post-core Odoo 19 | `odoo_client` (JSON-2 API adapter), `odoo_handlers` (2 skills mapped to real models) |
 
 **The confirmatory paired experiment has been run for real**: 1.080
 observations (120 frozen test cases × 3 systems × 3 repetitions),
@@ -86,6 +87,33 @@ same case from an in-process cache (temperature=0 makes this exact, per
 H3=1.0 in three independent real runs), cutting real calls for A+B from
 720 to ~240.
 
+**External adversarial stress test (InjecAgent).** The declared
+limitation "detectors are lexical, tuned to our own templated corpus"
+(`docs/results.md`, CLAUDE.md §36) was measured, not just asserted,
+against 510 real out-of-distribution cases (Zhan et al. 2024): 0.0%
+detection with the Spanish-only detector, 3.3% (17/510) after adding
+English patterns. Going bilingual did not close the gap — most
+InjecAgent payloads are polite direct requests with no attack-style
+framing at all, invisible to any lexical detector by construction, not
+a vocabulary gap. Full result in `docs/injecagent-stress-test.md`.
+
+**Odoo 19 post-core demo, both adapter-only and fully governed.**
+`odoo_client.py` (`Odoo19Adapter`) is a statically-typed drop-in for
+`FakeERPAdapter` (`ErpAdapter` Protocol in `adapters.py`; `Runtime`
+made `Generic[T]` after mypy caught a real `Callable` parameter-
+variance error handlers.py's FakeERP-typed handlers would otherwise
+have failed). Two live demos against a real Odoo.sh Development-branch
+instance (confirmed demo data, not a production clone, before any
+write): `scripts/odoo_demo.py` (adapter only: create→verify→update→
+independent re-read) and `scripts/odoo_governed_demo.py` (the *same*
+`Runtime`/`SystemC`/`ApprovalService`/`AuditStore` the confirmatory
+core runs 1.080 times, pointed at real Odoo — an R1 skill
+auto-executes, an R2 skill is blocked with `REQUIRE_APPROVAL` and
+proven via an independent Odoo read to leave the record untouched,
+then executes correctly once approved). Full audit trail captured.
+Only 2 of 12 catalog skills are mapped to real Odoo models — declared,
+not hidden. Details and both live results in `docs/odoo-demo.md`.
+
 ## What is deliberately not done
 
 - **The freeze manifest does not yet cover provider config** (model,
@@ -96,18 +124,25 @@ H3=1.0 in three independent real runs), cutting real calls for A+B from
   `temperature=0.0` (mandated by CLAUDE.md §23) makes it perfectly
   reproducible by design — confirmed across three independent real runs
   on three different providers, not just once.
-- **Second-annotator kappa pending.** The instrument exists and
+- **Second-annotator kappa pending.** The instrument exists
+  (`data/annotation_review_sheet.csv`, 96 stratified cases) and
   `scripts/compute_agreement.py` refuses to emit a number without human
-  annotation.
+  annotation — the human step itself has not happened yet.
 - **`SqlAuditStore` is not wired into the API** (API state is still
   process-local). pgvector is provisioned but unused — retrieval embeds
   in-process over 12 skills.
-- Odoo 19 adapter, Tableau dashboard, demo, video and the written
-  memoria are post-core or unstarted.
+- **Only 2 of 12 catalog skills mapped to real Odoo models**; no
+  graceful degradation if retrieval routes to one of the other 10 (would
+  raise `UnregisteredHandlerError`) — acceptable for a scoped demo, not
+  for a production integration.
+- Tableau dashboard, demo video, presentation and the written memoria
+  are post-core or unstarted.
 
 ## Defects found by self-audit (do not reintroduce)
 
-Nine rounds of self-audit found nine real defects — full detail in
+The 8 items below (some bundle more than one CLAUDE.md-numbered defect,
+e.g. #4 covers two separate mutation-testing survivors) summarize the
+self-audit history — full detail, with exact per-defect numbering, in
 `docs/audit.md` and the `CLAUDE.md` bitácora. The recurring shape: code
 that passed *silently*, never code that failed loudly.
 
@@ -131,11 +166,33 @@ that passed *silently*, never code that failed loudly.
    fixing #5, the confirmatory-branch text still literally said "Groq
    free tier" regardless of which provider actually ran — a run made
    with OpenRouterClient would have published a caveat naming Groq.
+7. **A `Callable` parameter-variance bug caught by mypy, not guessed.**
+   Retyping `Runtime`/`SystemC`/`postconditions.py` against a broad
+   `ErpAdapter` Protocol (so `Odoo19Adapter` could be a genuine typed
+   drop-in) initially fixed `Handler` to `Callable[[ErpAdapter], Any]`
+   — mypy then correctly rejected every handler in `handlers.py`
+   (typed for `FakeERPAdapter` specifically), since `Callable`
+   parameter types are contravariant: a function promising to accept
+   only `FakeERPAdapter` does not satisfy "accepts any `ErpAdapter`".
+   Fixed by making `Runtime` generic (`Generic[T]`), not by widening
+   the type or suppressing the error.
+8. **Two error classes with the same name, different identity.**
+   `odoo_client.py` originally defined its own `UnknownModelError`/
+   `UnknownRecordError`, distinct objects from `adapters.py`'s classes
+   of the same name. `Runtime.execute()`'s `except (UnknownModelError,
+   UnknownRecordError, KeyError)` imports those from `adapters.py`
+   specifically, so it would **not** have caught the Odoo versions — an
+   Odoo failure during a governed request would have crashed the whole
+   call instead of surfacing as a normal `handler_error`. Fixed by
+   re-exporting and raising the same classes; a test pins class
+   identity so this cannot silently regress.
 
-All nine were fixed; results did not change sign after any of them —
+All were fixed; results did not change sign after any of them —
 evidence the conclusions were robust, not that the fixes were needless.
-Mutation testing covers all 23 logic-bearing modules from before this
-session: 40 mutants injected, 40 killed.
+Mutation testing covers the 23 logic-bearing modules from before the
+Odoo/InjecAgent work: 40 mutants injected, 40 killed. **Not yet
+mutation-tested**: `odoo_client`, `odoo_handlers`, `gemini_client`,
+`openrouter_client`, `traceability` — declared gap, not claimed covered.
 
 **The lesson generalizes:** a green check that *cannot* fail is worse
 than no check, because it manufactures confidence. Every new guard must

@@ -59,8 +59,11 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Checkpoint/resume + call caching for real-LLM runs | `experiment.py`, `llm_client.CachingLLMClient` | ✅ |
 | Token instrumentation (H2) and traceability rubric (H7) | `metrics.py`, `traceability.py` | ✅ |
 | Confirmatory run with a real LLM (CLAUDE.md §19) | `scripts/run_experiment.py --real-llm --provider {groq,gemini,openrouter}` | ✅ executed, 1.080 observations |
+| External adversarial stress test (InjecAgent, out-of-distribution) | `scripts/injecagent_stress_test.py` | ✅ measured, 0%→3.3% (see below) |
+| **Odoo 19 adapter** (post-core, JSON-2 API, allowlisted, no delete) | `odoo_client.py` | ✅ live-verified |
+| Odoo 19 demo through the **full governed pipeline** (System C, real approval gate) | `odoo_handlers.py`, `scripts/odoo_governed_demo.py` | ✅ live-verified |
 
-274 tests, `ruff`/`mypy` clean, CI green.
+298 tests, `ruff`/`mypy` clean, CI green.
 
 ### Real LLM clients
 
@@ -136,6 +139,59 @@ baseline, not a property of "A" in the abstract.
 > sensitivity analysis, not measured spend; H3 cannot discriminate even
 > with a real LLM because `temperature=0.0` makes it perfectly
 > reproducible by design.
+
+### External adversarial stress test: InjecAgent
+
+`validation.py`'s lexical detectors are declared as "tuned to
+ERP-Skills-Bench's own templated Spanish text" — this was measured, not
+just asserted, against InjecAgent (Zhan et al. 2024), 510 real
+out-of-distribution indirect-injection cases in English:
+
+| Pass | Detector | Detection rate |
+|---|---|---|
+| 1 | Spanish-only | 0.0% |
+| 2 | Spanish + English patterns added | 3.3% (17/510) |
+
+Going bilingual multiplied detection, it did not close the gap: most
+InjecAgent payloads are polite, direct requests with no attack-style
+framing at all ("Please delete my clinical documents...") — invisible
+to any lexical detector by construction, not a vocabulary gap. Full
+result and honest interpretation in
+[`docs/injecagent-stress-test.md`](docs/injecagent-stress-test.md).
+
+```sh
+uv run python scripts/injecagent_stress_test.py
+```
+
+### Odoo 19 demo (post-core, real instance)
+
+`FakeERPAdapter` remains mandatory for the confirmatory experiment
+(CLAUDE.md §26/D-07); `odoo_client.py` is a post-core demonstration
+that the same skill contract executes against a real ERP. Two demos,
+both live-verified against a real Odoo.sh Development-branch instance
+(demo data, confirmed before writing anything — see
+[`docs/odoo-demo.md`](docs/odoo-demo.md) for the full safety story):
+
+1. **Adapter only** (`scripts/odoo_demo.py`): create → verify
+   postcondition → update → independent re-read, against real Odoo.
+2. **Full governed pipeline** (`scripts/odoo_governed_demo.py`): the
+   *same* `Runtime`/`SystemC`/`ApprovalService`/`AuditStore` classes
+   the confirmatory core runs 1.080 times, pointed at `Odoo19Adapter`
+   instead of `FakeERPAdapter`. An R1 skill auto-executes; an R2 skill
+   is blocked with `REQUIRE_APPROVAL` and proven — via an independent
+   Odoo read, not the system's own say-so — to leave Odoo untouched
+   until approval is granted, then executes correctly. Full audit
+   trail captured for all three steps.
+
+```sh
+cp .env.example .env   # fill in ODOO_URL / ODOO_DB / ODOO_API_KEY
+uv run python scripts/odoo_governed_demo.py
+```
+
+`Odoo19Adapter` is a **statically-typed** drop-in for `FakeERPAdapter`
+(`ErpAdapter` Protocol in `adapters.py`, `Runtime` generic over the
+adapter type) — not just duck-type-compatible at runtime. Only 2 of 12
+catalog skills are mapped to real Odoo models, declared as future work.
 
 ## Prerequisites
 

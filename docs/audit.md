@@ -1,8 +1,8 @@
 # Auditoría del instrumento de medida
 
 Este documento registra las auditorías hechas **sobre el propio aparato de
-evaluación**, no sobre el sistema evaluado. Existe porque nueve rondas
-sucesivas encontraron nueve defectos reales, y casi todos compartían la
+evaluación**, no sobre el sistema evaluado. Existe porque once rondas
+sucesivas encontraron once defectos reales, y casi todos compartían la
 misma forma: **código (o texto) que pasaba en silencio**, no código que
 fallaba a gritos.
 
@@ -27,11 +27,23 @@ este tipo de escrutinio.
 | 7 | **Bootstrap sin remuestreo** (mutation testing, ver abajo) | Mutante sobrevivió: el test aceptaba un IC degenerado `[x, x]` | IC publicable como un punto, no un intervalo |
 | 8 | **Caveat del manifiesto inconsistente con `is_confirmatory_run`**: la primera ejecución real (Groq) publicaba «NO es el protocolo confirmatorio» junto a `is_confirmatory_run: true` | Lectura de la salida de la propia ejecución antes de reportarla | Contradicción factual en el propio artefacto publicado |
 | 9 | **Caveat con el proveedor hardcodeado**: tras corregir el #8, el texto seguía diciendo literalmente «Groq free tier» sin importar qué proveedor se usara — la ejecución con OpenRouter habría publicado un caveat que nombraba a Groq | Lectura de la salida de la ejecución con OpenRouter | Atribución incorrecta del proveedor en el artefacto publicado |
+| 10 | **Error de varianza de `Callable` en el tipado**: al retipar `Runtime`/`SystemC` contra un `Protocol` `ErpAdapter` amplio para admitir `Odoo19Adapter`, mypy rechazó los handlers de `handlers.py` (tipados para `FakeERPAdapter` en concreto) — contravarianza correcta: un handler que solo promete aceptar `FakeERPAdapter` no satisface «acepta cualquier `ErpAdapter`» | `mypy src` con 3 errores reales, no un falso positivo | Se habría resuelto ensanchando el tipo o con `# type: ignore`, ocultando el problema en vez de corregirlo |
+| 11 | **Dos clases de error con el mismo nombre, distinta identidad**: `odoo_client.py` definía sus propias `UnknownModelError`/`UnknownRecordError`, objetos distintos de las de `adapters.py` que `Runtime.execute()` captura por identidad de clase — un fallo de Odoo durante una petición gobernada habría reventado toda la llamada en vez de reportarse como `handler_error` normal | Revisión del acoplamiento real entre `odoo_client.py` y `runtime.py` al conectar `Odoo19Adapter` a `Runtime` de verdad | Comportamiento observable distinto (excepción no capturada) solo visible al ejecutar contra un adaptador real, no contra `FakeERPAdapter` en los tests existentes |
 
-Las conclusiones del experimento **sobrevivieron a las nueve correcciones
+Las conclusiones del experimento **sobrevivieron a las once correcciones
 sin cambiar de signo**. Eso es evidencia de robustez, no de que las
-correcciones fueran innecesarias: una métrica (o un texto) que acierta
-por accidente sigue estando rota.
+correcciones fueran innecesarias: una métrica (o un texto, o un tipo)
+que acierta por accidente sigue estando rota.
+
+Los defectos 10 y 11 rompen el patrón de los nueve anteriores en otro
+sentido: no aparecieron auditando un resultado ya publicado, sino
+**construyendo la integración con Odoo real** — el sistema de tipos
+(mypy) y el acoplamiento entre módulos nuevos y existentes fueron los
+que los revelaron, no una relectura deliberada de una salida. Es una
+forma más de la misma lección: cualquier punto donde dos piezas del
+sistema se comunican por convención (mismo nombre de clase, mismo
+tipo esperado) en vez de por identidad compartida es un lugar donde
+algo puede fallar en silencio.
 
 Los defectos 8 y 9 rompen el patrón de los siete anteriores en un
 detalle: no estaban en la capa de *medición* sino en la capa de

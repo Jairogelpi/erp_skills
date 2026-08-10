@@ -8,7 +8,7 @@ que **no**.
 
 | Amenaza | Control implementado | Prueba | Estado |
 |---|---|---|---|
-| Prompt injection | Detección léxica en `validation.py`; deny antes del razonamiento de riesgo | `test_validation.py`, benchmark adversarial | ⚠️ **parcial** — léxico, ajustado al corpus plantillado |
+| Prompt injection | Detección léxica en `validation.py`; deny antes del razonamiento de riesgo | `test_validation.py`, benchmark adversarial, **prueba de estrés externa con InjecAgent** (`docs/injecagent-stress-test.md`) | ⚠️ **parcial, medido** — 0 % con detector solo en español, 3,3 % tras añadir inglés, sobre 510 casos reales fuera de distribución; el resto son peticiones sin framing de ataque textual, invisibles por diseño a un detector léxico |
 | Tool injection / skill no registrada | `Runtime` solo ejecuta handlers registrados; `UnregisteredHandlerError` | `test_runtime.py`, property test | ✅ |
 | Skill maliciosa | Ciclo de vida versionado; sin salto `DRAFT→ACTIVE`; R4 no registrable | `test_skills.py`, property test | ✅ |
 | Elevación de privilegios | Deny-by-default por rol; allowlist de roles por skill | `test_policy.py`, property test de monotonía | ✅ |
@@ -35,16 +35,22 @@ API es de demo), y cifrado en reposo.
 - Caché de idempotencia por proceso: no persiste entre reinicios.
 
 ### Validez externa
-- Un único ERP simulado (`FakeERPAdapter`), datos 100 % sintéticos, un
-  solo idioma (español), un solo dominio de 12 skills. No se extrapola a
-  despliegues reales ni a otros ERPs.
+- Un único ERP simulado (`FakeERPAdapter`) para el núcleo confirmatorio,
+  datos 100 % sintéticos, un solo idioma (español), un solo dominio de
+  12 skills. No se extrapola a despliegues reales ni a otros ERPs. Como
+  evidencia parcial, no como sustituto del experimento: `docs/odoo-demo.md`
+  documenta dos demos post-core contra una instancia Odoo 19 real
+  (adaptador aislado y pipeline de gobernanza completo), pero cubren
+  solo 2 de las 12 skills y no son estadísticas.
 
 ### Validez de constructo
 - **La más importante:** los detectores adversariales son **léxicos** y
   están ajustados al texto **plantillado** del benchmark. La tasa de
   detección medida es "detección de patrones conocidos", no robustez
   frente a un adversario adaptativo. Reportarla como lo segundo sería
-  deshonesto.
+  deshonesto. Medido con un benchmark externo (`docs/injecagent-stress-test.md`),
+  no solo declarado: 0 % → 3,3 % sobre 510 casos de InjecAgent fuera de
+  distribución.
 - La rúbrica de trazabilidad mide presencia de evidencia, no su calidad
   semántica.
 - STSR exige estado final correcto, lo que mitiga (no elimina) el riesgo
