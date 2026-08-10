@@ -16,32 +16,32 @@
     "stsr": {
       "A": 0.0,
       "B": 0.48333333333333334,
-      "C": 0.5583333333333333
+      "C": 0.6333333333333333
     },
     "C_minus_A": {
-      "point": 0.5583333333333333,
+      "point": 0.6333333333333333,
       "ci95": [
-        0.4666666666666667,
-        0.65
+        0.55,
+        0.7166666666666667
       ],
-      "mcnemar_p": 7.43329205436511e-16,
-      "holm_p": 1.486658410873022e-15,
-      "discordant_C_wins": 67,
+      "mcnemar_p": 7.759806482738948e-18,
+      "holm_p": 1.5519612965477897e-17,
+      "discordant_C_wins": 76,
       "discordant_A_wins": 0,
-      "odds_ratio": 135.0
+      "odds_ratio": 153.0
     },
     "C_minus_B": {
-      "point": 0.075,
+      "point": 0.15,
       "ci95": [
-        -0.025,
-        0.175
+        0.041666666666666664,
+        0.25833333333333336
       ],
-      "mcnemar_p": 0.21152242941072893,
-      "holm_p": 0.21152242941072893,
-      "odds_ratio": 1.5454545454545454
+      "mcnemar_p": 0.01620954140922544,
+      "holm_p": 0.01620954140922544,
+      "odds_ratio": 2.090909090909091
     },
     "cochran_q": {
-      "statistic": 95.59036144578313,
+      "statistic": 102.8695652173913,
       "df": 2
     },
     "non_inferiority_margin": -0.05,
@@ -53,16 +53,16 @@
       "A": {
         "n_executions": 360,
         "total_prompt_tokens": 58262,
-        "total_completion_tokens": 8364,
-        "total_tokens": 66626,
-        "mean_tokens_per_execution": 185.07222222222222
+        "total_completion_tokens": 8374,
+        "total_tokens": 66636,
+        "mean_tokens_per_execution": 185.1
       },
       "B": {
         "n_executions": 360,
         "total_prompt_tokens": 89102,
-        "total_completion_tokens": 6380,
-        "total_tokens": 95482,
-        "mean_tokens_per_execution": 265.22777777777776
+        "total_completion_tokens": 6395,
+        "total_tokens": 95497,
+        "mean_tokens_per_execution": 265.26944444444445
       },
       "C": {
         "n_executions": 360,
@@ -73,17 +73,17 @@
       }
     },
     "C_minus_B": {
-      "point": -197.60555555555553,
+      "point": -197.6472222222222,
       "ci95": [
-        -198.3138888888889,
-        -196.89722222222224
+        -198.34444444444443,
+        -196.95833333333334
       ]
     },
     "C_minus_A": {
-      "point": -117.45,
+      "point": -117.47777777777777,
       "ci95": [
-        -118.28611111111111,
-        -116.61944444444445
+        -118.30555555555556,
+        -116.65
       ]
     }
   },
@@ -91,8 +91,8 @@
     "caveat": "Sensitivity analysis with a declared, non-measured token price (CLAUDE.md section 20 limits H8 to this, not to observed savings). USD_PER_1K_TOKENS is a stand-in rate, not Groq's real (unpriced, free-tier) cost.",
     "usd_per_1k_tokens": 0.05,
     "inference_cost_usd": {
-      "A": 3.3313000000000006,
-      "B": 4.7741,
+      "A": 3.3318,
+      "B": 4.77485,
       "C": 1.2172
     }
   },
@@ -226,8 +226,8 @@
         },
         "crm": {
           "n": 90,
-          "successes": 36,
-          "stsr": 0.4
+          "successes": 63,
+          "stsr": 0.7
         },
         "inventory": {
           "n": 30,
@@ -314,8 +314,8 @@
         },
         "R2": {
           "n": 60,
-          "successes": 30,
-          "stsr": 0.5
+          "successes": 57,
+          "stsr": 0.95
         },
         "R3": {
           "n": 30,
@@ -362,18 +362,18 @@
       "C": {
         "ADVERSARIAL": {
           "n": 57,
-          "successes": 27,
-          "stsr": 0.47368421052631576
+          "successes": 30,
+          "stsr": 0.5263157894736842
         },
         "NOISE": {
           "n": 111,
-          "successes": 51,
-          "stsr": 0.4594594594594595
+          "successes": 54,
+          "stsr": 0.4864864864864865
         },
         "NORMAL": {
           "n": 192,
-          "successes": 123,
-          "stsr": 0.640625
+          "successes": 144,
+          "stsr": 0.75
         }
       }
     }
