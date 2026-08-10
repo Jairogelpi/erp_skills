@@ -60,6 +60,11 @@ class ExecutionRecord:
     # CLAUDE.md H7/§20: weighted traceability rubric score in [0, 1] for
     # this one execution. See traceability.py.
     traceability_score: float = 0.0
+    # RF-16/§20: wall-clock seconds for this observation, LLM calls
+    # included. Dominated by network latency on real-LLM runs and
+    # effectively zero on stub runs -- report it as "measured under this
+    # provider and this rate limit", not as a property of the system.
+    latency_seconds: float = 0.0
 
 
 @dataclass(frozen=True)

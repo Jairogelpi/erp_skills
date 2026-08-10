@@ -19,8 +19,9 @@ mistaken for the confirmatory run.
 import json
 import logging
 import random
+import time
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -468,7 +469,11 @@ def run_experiment(
                 case.request_id,
                 rep,
             )
+            # RF-16: measured once here rather than in each runner, so
+            # every system is timed at exactly the same boundary.
+            started = time.monotonic()
             record = runners[system](case, cached_llms[system], rep, real_parser)
+            record = replace(record, latency_seconds=time.monotonic() - started)
             records.append(record)
             if checkpoint_file is not None:
                 checkpoint_file.write(

@@ -33,6 +33,26 @@ class UnregisteredHandlerError(ValueError):
     """Raised when a skill's handler was never registered with the runtime."""
 
 
+def preview_mutation(skill: SkillDefinition, args: dict[str, Any]) -> dict[str, Any]:
+    """What a skill would change, described without executing it (RF-11).
+
+    CLAUDE.md §12 CU-01 step 8 and RF-11 ask the system to show a
+    preview of the mutation before it happens. This builds that preview
+    from the skill contract -- its module, operation, declared
+    postconditions and the arguments as validated -- so it is
+    adapter-agnostic and, crucially, touches no ERP at all.
+    """
+    return {
+        "skill_id": skill.skill_id,
+        "skill_version": skill.version,
+        "module": skill.module,
+        "operation": skill.operation,
+        "risk_class": skill.risk_class.value,
+        "arguments": dict(args),
+        "postconditions_to_verify": list(skill.postconditions),
+    }
+
+
 @dataclass(frozen=True)
 class ExecutionResult:
     decision: PolicyDecision
@@ -40,6 +60,9 @@ class ExecutionResult:
     idempotent_replay: bool
     postconditions_met: bool | None
     handler_error: str | None = None
+    # RF-11: populated only for SIMULATE, where the point is to show
+    # what would happen instead of doing it.
+    preview: dict[str, Any] | None = None
 
 
 class Runtime(Generic[T]):
@@ -70,7 +93,18 @@ class Runtime(Generic[T]):
             return ExecutionResult(outcome.decision, None, False, None)
 
         if outcome.decision is PolicyDecision.SIMULATE:
-            return ExecutionResult(outcome.decision, None, False, None)
+            # RF-11: show what *would* change. Derived from the skill
+            # contract and the normalized arguments, never by executing
+            # and rolling back: a rollback-based preview would need
+            # snapshot/restore, which `Odoo19Adapter` deliberately does
+            # not offer, and would briefly mutate a real ERP.
+            return ExecutionResult(
+                outcome.decision,
+                None,
+                False,
+                None,
+                preview=preview_mutation(skill, args),
+            )
 
         cached = self._idempotency_cache.get(idempotency_key)
         if cached is not None:
