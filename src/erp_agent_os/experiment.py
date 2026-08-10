@@ -68,6 +68,10 @@ class ExperimentManifest:
     n_systems: int
     n_repetitions: int
     seed: int
+    # True when every system extracted its arguments from the raw
+    # request text with the same LLM, instead of being handed
+    # `case.expected_arguments`. See `_resolve_arguments`.
+    real_parser: bool = False
 
     @property
     def n_observations(self) -> int:
@@ -97,8 +101,38 @@ def _fresh_erp(case: BenchmarkCase) -> FakeERPAdapter:
     return erp
 
 
+def _resolve_arguments(
+    case: BenchmarkCase, llm: LLMClient, required: list[str], real_parser: bool
+) -> tuple[dict[str, Any], int, int]:
+    """Arguments a system works from, plus the tokens they cost.
+
+    Default (`real_parser=False`): every system is handed
+    `case.expected_arguments` -- a perfect parse nobody paid for. That
+    keeps the frozen confirmatory run comparable to its published
+    numbers, but it flatters System C on H2: A and B spend tokens
+    selecting a tool while C spends none at all, so C looks free when a
+    real deployment would still need an LLM to read arguments out of
+    the request text.
+
+    With `real_parser=True`, all three systems pay the *same*
+    extraction cost, over the *same* field list, with the *same* prompt
+    (CLAUDE.md D-03: identical in everything comparable). The token
+    comparison then isolates exactly what the thesis claims -- that
+    retrieval replaces the tool-selection call -- instead of crediting
+    C with an argument parse it never performed.
+    """
+    if not real_parser:
+        return dict(case.expected_arguments), 0, 0
+    extraction = llm.extract_arguments(case.request_text, required)
+    return (
+        dict(extraction.arguments),
+        extraction.prompt_tokens,
+        extraction.completion_tokens,
+    )
+
+
 def _run_system_c(
-    case: BenchmarkCase, llm: LLMClient, repetition: int
+    case: BenchmarkCase, llm: LLMClient, repetition: int, real_parser: bool = False
 ) -> ExecutionRecord:
     erp = _fresh_erp(case)
     before = erp.snapshot()
@@ -111,8 +145,11 @@ def _run_system_c(
 
     intent = INTENTS_BY_ID[case.canonical_intent]
     required = CATALOG_BY_ID[intent.skill_id].input_schema["required"]
+    arguments, parse_in, parse_out = _resolve_arguments(
+        case, llm, required, real_parser
+    )
     proposal = structure_proposal(
-        case.canonical_intent, case.expected_arguments, required, confidence=0.9
+        case.canonical_intent, arguments, required, confidence=0.9
     )
     ranked = tuple(
         c.skill.skill_id for c in retriever.rank(case.request_text, role=ROLE)
@@ -153,18 +190,26 @@ def _run_system_c(
         final_state=_state_signature(erp),
         state_unchanged=_state_unchanged(before, erp),
         traceability_score=trace_score,
+        # C's retrieval is TF-IDF, so its only LLM cost is the shared
+        # argument parse -- zero unless `--real-parser` is on.
+        prompt_tokens=parse_in,
+        completion_tokens=parse_out,
     )
 
 
 def _run_system_b(
-    case: BenchmarkCase, llm: LLMClient, repetition: int
+    case: BenchmarkCase, llm: LLMClient, repetition: int, real_parser: bool = False
 ) -> ExecutionRecord:
     erp = _fresh_erp(case)
     before = erp.snapshot()
     intent = INTENTS_BY_ID[case.canonical_intent]
     model = SKILL_MODELS[intent.skill_id]
+    required = CATALOG_BY_ID[intent.skill_id].input_schema["required"]
+    arguments, parse_in, parse_out = _resolve_arguments(
+        case, llm, required, real_parser
+    )
     system = SystemB(erp, llm)
-    result = system.handle(case.request_text, case.expected_arguments)
+    result = system.handle(case.request_text, arguments)
 
     decision = "ALLOW" if result.error is None else "DENY"
     postconditions_met = None
@@ -186,8 +231,9 @@ def _run_system_b(
         ranked_skill_ids=(result.skill_id,) if result.skill_id else (),
         final_state=_state_signature(erp),
         state_unchanged=_state_unchanged(before, erp),
-        prompt_tokens=result.prompt_tokens,
-        completion_tokens=result.completion_tokens,
+        # Tool selection + (when enabled) the shared argument parse.
+        prompt_tokens=result.prompt_tokens + parse_in,
+        completion_tokens=result.completion_tokens + parse_out,
         traceability_score=score_ungoverned_execution(
             correlation_id=case.request_id,
             tool_or_skill_id=result.skill_id,
@@ -197,7 +243,7 @@ def _run_system_b(
 
 
 def _run_system_a(
-    case: BenchmarkCase, llm: LLMClient, repetition: int
+    case: BenchmarkCase, llm: LLMClient, repetition: int, real_parser: bool = False
 ) -> ExecutionRecord:
     erp = _fresh_erp(case)
     before = erp.snapshot()
@@ -205,14 +251,18 @@ def _run_system_a(
 
     intent = INTENTS_BY_ID[case.canonical_intent]
     model = SKILL_MODELS[intent.skill_id]
+    required = CATALOG_BY_ID[intent.skill_id].input_schema["required"]
+    arguments, parse_in, parse_out = _resolve_arguments(
+        case, llm, required, real_parser
+    )
     args = {
         "model": model,
-        "fields": dict(case.expected_arguments),
+        "fields": dict(arguments),
         "record_id": next(
             (
-                str(case.expected_arguments[f])
+                str(arguments[f])
                 for f in REFERENCE_FIELDS.get(intent.skill_id, [])
-                if case.expected_arguments.get(f)
+                if arguments.get(f)
             ),
             "",
         ),
@@ -248,8 +298,9 @@ def _run_system_a(
         ranked_skill_ids=(),
         final_state=_state_signature(erp),
         state_unchanged=_state_unchanged(before, erp),
-        prompt_tokens=result.prompt_tokens,
-        completion_tokens=result.completion_tokens,
+        # Tool selection + (when enabled) the shared argument parse.
+        prompt_tokens=result.prompt_tokens + parse_in,
+        completion_tokens=result.completion_tokens + parse_out,
         traceability_score=score_ungoverned_execution(
             correlation_id=case.request_id,
             tool_or_skill_id=result.tool_name,
@@ -351,6 +402,7 @@ def run_experiment(
     repetitions: int = REPETITIONS,
     seed: int = 20260805,
     checkpoint_path: Path | None = None,
+    real_parser: bool = False,
 ) -> tuple[list[ExecutionRecord], ExperimentManifest]:
     test_cases = [c for c in cases if c.split is DatasetSplit.FINAL_TEST]
     rng = random.Random(seed)
@@ -402,7 +454,7 @@ def run_experiment(
                 case.request_id,
                 rep,
             )
-            record = runners[system](case, cached_llm, rep)
+            record = runners[system](case, cached_llm, rep, real_parser)
             records.append(record)
             if checkpoint_file is not None:
                 checkpoint_file.write(
@@ -420,5 +472,6 @@ def run_experiment(
         n_systems=3,
         n_repetitions=repetitions,
         seed=seed,
+        real_parser=real_parser,
     )
     return records, manifest

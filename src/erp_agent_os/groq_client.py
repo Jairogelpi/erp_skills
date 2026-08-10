@@ -22,7 +22,14 @@ from dataclasses import dataclass, replace
 
 from groq import Groq, RateLimitError
 
-from erp_agent_os.llm_client import ToolCall, ToolSpec
+from erp_agent_os.llm_client import (
+    EXTRACTION_SYSTEM_PROMPT,
+    ArgumentExtraction,
+    ToolCall,
+    ToolSpec,
+    build_extraction_prompt,
+    parse_extraction,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -97,14 +104,8 @@ class GroqClient:
                 time.sleep(remaining)
         self._last_call_at = time.monotonic()
 
-    def propose_action(self, query_text: str, tools: list[ToolSpec]) -> ToolCall:
-        if not tools:
-            return ToolCall(None, {})
-
-        user_prompt = (
-            f"Peticion: {query_text}\n\nHerramientas disponibles:\n{_tool_menu(tools)}"
-        )
-
+    def _completion(self, system_prompt: str, user_prompt: str) -> tuple[str, int, int]:
+        """One retried, paced chat completion. Returns (content, in, out)."""
         last_error: Exception | None = None
         for attempt in range(self._config.max_retries):
             self._pace()
@@ -112,7 +113,7 @@ class GroqClient:
                 "groq call attempt=%d/%d query=%r",
                 attempt + 1,
                 self._config.max_retries,
-                query_text[:60],
+                user_prompt[:60],
             )
             call_started = time.monotonic()
             try:
@@ -122,21 +123,16 @@ class GroqClient:
                     max_tokens=300,
                     response_format={"type": "json_object"},
                     messages=[
-                        {"role": "system", "content": _SYSTEM_PROMPT},
+                        {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt},
                     ],
                 )
                 content = response.choices[0].message.content or "{}"
                 logger.info("groq call ok in %.2fs", time.monotonic() - call_started)
-                call = _parse_tool_call(content, tools)
                 usage = response.usage
                 if usage is None:
-                    return call
-                return replace(
-                    call,
-                    prompt_tokens=usage.prompt_tokens,
-                    completion_tokens=usage.completion_tokens,
-                )
+                    return content, 0, 0
+                return content, usage.prompt_tokens, usage.completion_tokens
             except Exception as exc:  # noqa: BLE001 - retry any transient failure
                 last_error = exc
                 if attempt < self._config.max_retries - 1:
@@ -158,6 +154,32 @@ class GroqClient:
         raise RuntimeError(
             f"Groq call failed after {self._config.max_retries} attempts"
         ) from last_error
+
+    def propose_action(self, query_text: str, tools: list[ToolSpec]) -> ToolCall:
+        if not tools:
+            return ToolCall(None, {})
+
+        content, prompt_tokens, completion_tokens = self._completion(
+            _SYSTEM_PROMPT,
+            f"Peticion: {query_text}\n\nHerramientas disponibles:\n{_tool_menu(tools)}",
+        )
+        return replace(
+            _parse_tool_call(content, tools),
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+        )
+
+    def extract_arguments(
+        self, query_text: str, fields: list[str]
+    ) -> ArgumentExtraction:
+        if not fields:
+            return ArgumentExtraction({})
+        content, prompt_tokens, completion_tokens = self._completion(
+            EXTRACTION_SYSTEM_PROMPT, build_extraction_prompt(query_text, fields)
+        )
+        return ArgumentExtraction(
+            parse_extraction(content, fields), prompt_tokens, completion_tokens
+        )
 
 
 def _retry_delay(exc: Exception, attempt: int) -> float:

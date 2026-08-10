@@ -31,7 +31,14 @@ from dataclasses import dataclass, replace
 from google import genai
 from google.genai import errors, types
 
-from erp_agent_os.llm_client import ToolCall, ToolSpec
+from erp_agent_os.llm_client import (
+    EXTRACTION_SYSTEM_PROMPT,
+    ArgumentExtraction,
+    ToolCall,
+    ToolSpec,
+    build_extraction_prompt,
+    parse_extraction,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -113,14 +120,8 @@ class GeminiClient:
                 time.sleep(remaining)
         self._last_call_at = time.monotonic()
 
-    def propose_action(self, query_text: str, tools: list[ToolSpec]) -> ToolCall:
-        if not tools:
-            return ToolCall(None, {})
-
-        prompt = (
-            f"{_SYSTEM_PROMPT}\n\nPeticion: {query_text}\n\n"
-            f"Herramientas disponibles:\n{_tool_menu(tools)}"
-        )
+    def _completion(self, prompt: str) -> tuple[str, int, int]:
+        """One retried, paced generate_content call. Returns (content, in, out)."""
         config = types.GenerateContentConfig(
             temperature=self._config.temperature,
             max_output_tokens=self._config.max_output_tokens,
@@ -134,7 +135,7 @@ class GeminiClient:
                 "gemini call attempt=%d/%d query=%r",
                 attempt + 1,
                 self._config.max_retries,
-                query_text[:60],
+                prompt[:60],
             )
             call_started = time.monotonic()
             try:
@@ -144,13 +145,12 @@ class GeminiClient:
                 content = response.text or "{}"
                 usage = response.usage_metadata
                 logger.info("gemini call ok in %.2fs", time.monotonic() - call_started)
-                call = _parse_tool_call(content, tools)
                 if usage is None:
-                    return call
-                return replace(
-                    call,
-                    prompt_tokens=usage.prompt_token_count or 0,
-                    completion_tokens=usage.candidates_token_count or 0,
+                    return content, 0, 0
+                return (
+                    content,
+                    usage.prompt_token_count or 0,
+                    usage.candidates_token_count or 0,
                 )
             except Exception as exc:  # noqa: BLE001 - retry any transient failure
                 last_error = exc
@@ -173,6 +173,33 @@ class GeminiClient:
         raise RuntimeError(
             f"Gemini call failed after {self._config.max_retries} attempts"
         ) from last_error
+
+    def propose_action(self, query_text: str, tools: list[ToolSpec]) -> ToolCall:
+        if not tools:
+            return ToolCall(None, {})
+
+        content, prompt_tokens, completion_tokens = self._completion(
+            f"{_SYSTEM_PROMPT}\n\nPeticion: {query_text}\n\n"
+            f"Herramientas disponibles:\n{_tool_menu(tools)}"
+        )
+        return replace(
+            _parse_tool_call(content, tools),
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+        )
+
+    def extract_arguments(
+        self, query_text: str, fields: list[str]
+    ) -> ArgumentExtraction:
+        if not fields:
+            return ArgumentExtraction({})
+        content, prompt_tokens, completion_tokens = self._completion(
+            f"{EXTRACTION_SYSTEM_PROMPT}\n\n"
+            f"{build_extraction_prompt(query_text, fields)}"
+        )
+        return ArgumentExtraction(
+            parse_extraction(content, fields), prompt_tokens, completion_tokens
+        )
 
 
 def _retry_delay(exc: Exception, attempt: int) -> float:

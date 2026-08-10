@@ -140,16 +140,38 @@ def _provider_arg() -> str:
 
 def main() -> None:
     real_llm = "--real-llm" in sys.argv
+    real_parser = "--real-parser" in sys.argv
     provider = _provider_arg()
+
+    if real_parser and not real_llm:
+        # DeterministicStubClient extracts nothing (it is not a language
+        # model), so this combination would score every system at zero
+        # and look like a catastrophic finding instead of a
+        # misconfiguration. Refuse rather than publish a meaningless run.
+        print(
+            "--real-parser requires --real-llm: the stub client cannot "
+            "extract arguments, so the run would be meaningless.",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+
     _configure_logging(real_llm)
     cases = generate_cases()
     test_cases = [c for c in cases if c.split is DatasetSplit.FINAL_TEST]
 
     checkpoint_path = _checkpoint_path(provider) if real_llm else None
+    if real_parser and checkpoint_path is not None:
+        # A parsed run is a different experiment from an unparsed one;
+        # resuming one from the other's checkpoint would silently mix
+        # two argument regimes in a single result.
+        checkpoint_path = checkpoint_path.with_name(
+            checkpoint_path.stem + "_parsed.jsonl"
+        )
     records, manifest = run_experiment(
         cases,
         _select_llm(real_llm, provider),
         checkpoint_path=checkpoint_path,
+        real_parser=real_parser,
     )
 
     per_system_records = defaultdict(list)
@@ -212,6 +234,15 @@ def main() -> None:
             "n_cases": manifest.n_cases,
             "n_repetitions": manifest.n_repetitions,
             "seed": manifest.seed,
+            "real_parser": manifest.real_parser,
+            "argument_regime": (
+                "LLM-extracted from request text, identical prompt and field "
+                "list for A/B/C (removes the perfect-parse bias that made "
+                "System C's token cost zero)"
+                if manifest.real_parser
+                else "ground-truth expected_arguments handed to every system "
+                "(perfect parse, unpaid: flatters System C on H2 tokens)"
+            ),
             "caveat": _manifest_caveat(manifest.is_confirmatory, manifest.selector),
         },
         "H1_stsr": {
@@ -327,8 +358,16 @@ def main() -> None:
         },
     }
 
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_PATH.write_text(
+    # A parsed run is a *different* experiment, not a newer version of
+    # the frozen one: it writes beside the confirmatory result instead
+    # of overwriting it, so both argument regimes stay comparable.
+    output_path = (
+        OUTPUT_PATH.with_name("experiment_results_real_parser.json")
+        if manifest.real_parser
+        else OUTPUT_PATH
+    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
         json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
     )
     # A completed run's checkpoint is spent; keeping it around would make

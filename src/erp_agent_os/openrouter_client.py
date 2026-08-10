@@ -25,7 +25,14 @@ from dataclasses import dataclass, replace
 
 import httpx
 
-from erp_agent_os.llm_client import ToolCall, ToolSpec
+from erp_agent_os.llm_client import (
+    EXTRACTION_SYSTEM_PROMPT,
+    ArgumentExtraction,
+    ToolCall,
+    ToolSpec,
+    build_extraction_prompt,
+    parse_extraction,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -113,23 +120,15 @@ class OpenRouterClient:
                 time.sleep(remaining)
         self._last_call_at = time.monotonic()
 
-    def propose_action(self, query_text: str, tools: list[ToolSpec]) -> ToolCall:
-        if not tools:
-            return ToolCall(None, {})
-
+    def _completion(self, system_prompt: str, user_prompt: str) -> tuple[str, int, int]:
+        """One retried, paced chat completion. Returns (content, in, out)."""
         payload = {
             "model": self._config.model,
             "temperature": self._config.temperature,
             "max_tokens": self._config.max_tokens,
             "messages": [
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": (
-                        f"Peticion: {query_text}\n\nHerramientas disponibles:"
-                        f"\n{_tool_menu(tools)}"
-                    ),
-                },
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
         }
 
@@ -140,7 +139,7 @@ class OpenRouterClient:
                 "openrouter call attempt=%d/%d query=%r",
                 attempt + 1,
                 self._config.max_retries,
-                query_text[:60],
+                user_prompt[:60],
             )
             call_started = time.monotonic()
             try:
@@ -152,11 +151,10 @@ class OpenRouterClient:
                 logger.info(
                     "openrouter call ok in %.2fs", time.monotonic() - call_started
                 )
-                call = _parse_tool_call(content, tools)
-                return replace(
-                    call,
-                    prompt_tokens=usage.get("prompt_tokens", 0),
-                    completion_tokens=usage.get("completion_tokens", 0),
+                return (
+                    content,
+                    usage.get("prompt_tokens", 0),
+                    usage.get("completion_tokens", 0),
                 )
             except Exception as exc:  # noqa: BLE001 - retry any transient failure
                 last_error = exc
@@ -179,6 +177,32 @@ class OpenRouterClient:
         raise RuntimeError(
             f"OpenRouter call failed after {self._config.max_retries} attempts"
         ) from last_error
+
+    def propose_action(self, query_text: str, tools: list[ToolSpec]) -> ToolCall:
+        if not tools:
+            return ToolCall(None, {})
+
+        content, prompt_tokens, completion_tokens = self._completion(
+            _SYSTEM_PROMPT,
+            f"Peticion: {query_text}\n\nHerramientas disponibles:\n{_tool_menu(tools)}",
+        )
+        return replace(
+            _parse_tool_call(content, tools),
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+        )
+
+    def extract_arguments(
+        self, query_text: str, fields: list[str]
+    ) -> ArgumentExtraction:
+        if not fields:
+            return ArgumentExtraction({})
+        content, prompt_tokens, completion_tokens = self._completion(
+            EXTRACTION_SYSTEM_PROMPT, build_extraction_prompt(query_text, fields)
+        )
+        return ArgumentExtraction(
+            parse_extraction(content, fields), prompt_tokens, completion_tokens
+        )
 
 
 def _retry_delay(exc: Exception, attempt: int) -> float:
