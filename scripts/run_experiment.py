@@ -26,6 +26,7 @@ from erp_agent_os.llm_client import DeterministicStubClient
 from erp_agent_os.metrics import (
     collapse_repetitions,
     collapse_tokens,
+    paraphrase_consistency,
     retrieval_metrics,
     security_metrics,
     segment_success,
@@ -62,7 +63,7 @@ def _checkpoint_path(provider: str) -> Path:
     return DATA_DIR / f"checkpoint_real_llm_{provider}.jsonl"
 
 
-def _select_llm(real_llm: bool, provider: str):
+def _select_llm(real_llm: bool, provider: str, temperature: float | None = None):
     if not real_llm:
         return DeterministicStubClient()
 
@@ -74,19 +75,48 @@ def _select_llm(real_llm: bool, provider: str):
         file=sys.stderr,
     )
     if provider == "gemini":
-        from erp_agent_os.gemini_client import GeminiClient  # optional dep path
+        from erp_agent_os.gemini_client import (  # optional dep path
+            GeminiClient,
+            GeminiConfig,
+        )
 
-        return GeminiClient()
+        if temperature is None:
+            return GeminiClient()
+        return GeminiClient(GeminiConfig(temperature=temperature))
     if provider == "openrouter":
         from erp_agent_os.openrouter_client import (  # optional dep path
             OpenRouterClient,
+            OpenRouterConfig,
         )
 
-        return OpenRouterClient()
+        if temperature is None:
+            return OpenRouterClient()
+        return OpenRouterClient(OpenRouterConfig(temperature=temperature))
 
-    from erp_agent_os.groq_client import GroqClient  # local import: optional dep path
+    from erp_agent_os.groq_client import (  # local import: optional dep path
+        GroqClient,
+        GroqConfig,
+    )
 
-    return GroqClient()
+    if temperature is None:
+        return GroqClient()
+    return GroqClient(GroqConfig(temperature=temperature))
+
+
+def _temperature_arg() -> float | None:
+    """`--temperature X` opts into the EXPLORATORY H3 arm.
+
+    CLAUDE.md §23 mandates a low temperature, and at 0.0 every system is
+    deterministic by construction: H3 (stability across repetitions)
+    comes out 1.000 for A, B and C and cannot discriminate. Raising the
+    temperature is the only way to let that hypothesis fail, so a run
+    that does it is **exploratory, never confirmatory** -- the manifest
+    records the temperature and marks it, and §19's frozen protocol is
+    unaffected because it keeps its own temperature-0 result.
+    """
+    if "--temperature" not in sys.argv:
+        return None
+    return float(sys.argv[sys.argv.index("--temperature") + 1])
 
 
 def _manifest_caveat(is_confirmatory: bool, selector: str) -> str:
@@ -142,6 +172,15 @@ def main() -> None:
     real_llm = "--real-llm" in sys.argv
     real_parser = "--real-parser" in sys.argv
     provider = _provider_arg()
+    temperature = _temperature_arg()
+
+    if temperature is not None and not real_llm:
+        print(
+            "--temperature requires --real-llm: the stub client has no "
+            "sampling temperature, so the run would be identical.",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
 
     if real_parser and not real_llm:
         # DeterministicStubClient extracts nothing (it is not a language
@@ -167,9 +206,14 @@ def main() -> None:
         checkpoint_path = checkpoint_path.with_name(
             checkpoint_path.stem + "_parsed.jsonl"
         )
+    if temperature is not None and checkpoint_path is not None:
+        # Same reasoning: a temperature arm is its own experiment.
+        checkpoint_path = checkpoint_path.with_name(
+            f"{checkpoint_path.stem}_t{temperature}.jsonl"
+        )
     records, manifest = run_experiment(
         cases,
-        _select_llm(real_llm, provider),
+        _select_llm(real_llm, provider, temperature),
         checkpoint_path=checkpoint_path,
         real_parser=real_parser,
     )
@@ -219,6 +263,10 @@ def main() -> None:
         s: retrieval_metrics(test_cases, per_system_records[s]) for s in ("A", "B", "C")
     }
     stab = {s: stability(per_system_records[s]) for s in ("A", "B", "C")}
+    paraphrase = {
+        s: paraphrase_consistency(test_cases, per_system_records[s])
+        for s in ("A", "B", "C")
+    }
 
     report = {
         "manifest": {
@@ -235,6 +283,8 @@ def main() -> None:
             "n_repetitions": manifest.n_repetitions,
             "seed": manifest.seed,
             "real_parser": manifest.real_parser,
+            "temperature": temperature,
+            "is_exploratory_temperature_arm": temperature is not None,
             "argument_regime": (
                 "LLM-extracted from request text, identical prompt and field "
                 "list for A/B/C (removes the perfect-parse bias that made "
@@ -307,6 +357,19 @@ def main() -> None:
             },
         },
         "H3_stability": stab,
+        "H3b_paraphrase_consistency": {
+            "note": (
+                "The variability H3 cannot measure. H3 repeats identical "
+                "text, which at the temperature=0 CLAUDE.md section 23 "
+                "mandates is 1.000 for every system by construction. This "
+                "measures whether different WORDINGS of the same intent "
+                "get the same handling -- which discriminates at "
+                "temperature 0 and is what actually matters in an ERP. "
+                "NOISE and ADVERSARIAL cases are excluded: they are meant "
+                "to be handled differently from their NORMAL siblings."
+            ),
+            "score": paraphrase,
+        },
         "H4_security": {
             s: {
                 "dangerous_total": m.dangerous_total,

@@ -16,7 +16,11 @@ from erp_agent_os.parser import IntentProposal
 from erp_agent_os.policy import decide
 from erp_agent_os.retrieval import TfidfRetriever, should_abstain
 from erp_agent_os.runtime import ExecutionResult, Runtime
-from erp_agent_os.validation import detect_text_signals, validate_arguments
+from erp_agent_os.validation import (
+    detect_text_signals,
+    normalize_arguments,
+    validate_arguments,
+)
 
 
 @dataclass(frozen=True)
@@ -71,8 +75,14 @@ class SystemC:
             self._approval and self._approval.is_valid(skill.skill_id)
         )
 
+        # Normalize before validating and before executing (CLAUDE.md
+        # §20, "entrada normalizada"): "27600 euros" is the right number
+        # carrying its unit, not a type error. Validation still sees --
+        # and rejects -- anything that is not a plain number.
+        arguments = normalize_arguments(skill, proposal.arguments)
+
         findings = detect_text_signals(query_text) + validate_arguments(
-            skill, proposal.arguments
+            skill, arguments
         )
 
         outcome = decide(
@@ -80,7 +90,7 @@ class SystemC:
         )
         execution = self._runtime.execute(
             skill,
-            proposal.arguments,
+            arguments,
             role,
             idempotency_key,
             approval_granted=approval_granted,

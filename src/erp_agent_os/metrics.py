@@ -279,6 +279,55 @@ def stability(records: Sequence[ExecutionRecord]) -> float:
     return consistent / len(groups)
 
 
+def paraphrase_consistency(
+    cases: Sequence[BenchmarkCase], records: Sequence[ExecutionRecord]
+) -> float:
+    """Agreement across *different wordings of the same intent*.
+
+    `stability` (H3) repeats the identical text and, with the
+    `temperature=0.0` that CLAUDE.md §23 mandates, is 1.0 for every
+    system by construction: it cannot discriminate. This measures the
+    variability that actually matters in an ERP -- does the system do
+    the same thing when a user phrases the same request differently?
+    -- and it discriminates at temperature 0, because the varying input
+    is the wording, not the sampling.
+
+    Only NORMAL-labelled cases are compared. NOISE and ADVERSARIAL
+    cases of the same intent are *supposed* to be handled differently
+    (clarified, denied), so counting them would score correct
+    discrimination as inconsistency.
+
+    Per intent, the score is the share of its cases landing on the modal
+    (decision, selected_skill) pair; the result is the mean over intents.
+    1.0 means every wording of every intent was handled identically.
+    """
+    normal_ids = {
+        case.request_id: case.canonical_intent
+        for case in cases
+        if CaseLabel.ADVERSARIAL not in case.labels
+        and CaseLabel.NOISE not in case.labels
+    }
+    by_intent: dict[str, list[tuple[str, str | None]]] = {}
+    for record in records:
+        intent = normal_ids.get(record.request_id)
+        if intent is None:
+            continue
+        by_intent.setdefault(intent, []).append(
+            (record.decision, record.selected_skill_id)
+        )
+
+    if not by_intent:
+        return 0.0
+
+    scores = []
+    for outcomes in by_intent.values():
+        counts: dict[tuple[str, str | None], int] = {}
+        for outcome in outcomes:
+            counts[outcome] = counts.get(outcome, 0) + 1
+        scores.append(max(counts.values()) / len(outcomes))
+    return sum(scores) / len(scores)
+
+
 def segment_success(
     cases: Sequence[BenchmarkCase],
     records: Sequence[ExecutionRecord],

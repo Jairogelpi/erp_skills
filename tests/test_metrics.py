@@ -6,6 +6,7 @@ from erp_agent_os.metrics import (
     ExecutionRecord,
     collapse_repetitions,
     collapse_tokens,
+    paraphrase_consistency,
     retrieval_metrics,
     security_metrics,
     segment_success,
@@ -312,3 +313,52 @@ def test_collapse_tokens_averages_repetitions_of_the_same_case():
     collapsed = collapse_tokens(records)
 
     assert collapsed["C"][case.request_id] == pytest.approx(150.0)
+
+
+# --- paraphrase consistency: the variability H3 cannot measure --------
+
+
+def _normal_cases_of_one_intent(n=4):
+    from erp_agent_os.dataset import CaseLabel
+
+    intents = {}
+    for case in CASES:
+        if CaseLabel.ADVERSARIAL in case.labels or CaseLabel.NOISE in case.labels:
+            continue
+        intents.setdefault(case.canonical_intent, []).append(case)
+    for group in intents.values():
+        if len(group) >= n:
+            return group[:n]
+    raise AssertionError("no intent with enough NORMAL cases")
+
+
+def test_paraphrase_consistency_is_one_when_every_wording_agrees():
+    group = _normal_cases_of_one_intent()
+    records = [record(c) for c in group]
+    assert paraphrase_consistency(group, records) == pytest.approx(1.0)
+
+
+def test_paraphrase_consistency_drops_when_wordings_diverge():
+    # Same intent, different wordings, but the system picked a different
+    # skill for one of them: that is exactly the real-world variability
+    # H3 cannot see at temperature 0.
+    group = _normal_cases_of_one_intent()
+    records = [record(c) for c in group[:-1]]
+    records.append(record(group[-1], selected_skill_id="tasks.create_task"))
+
+    score = paraphrase_consistency(group, records)
+    assert score == pytest.approx(0.75)  # 3 of 4 on the modal outcome
+
+
+def test_paraphrase_consistency_ignores_adversarial_and_noise_cases():
+    # Those are *meant* to be handled differently from their NORMAL
+    # siblings; counting them would score correct discrimination as
+    # inconsistency.
+    from erp_agent_os.dataset import CaseLabel
+
+    adversarial = next(c for c in CASES if CaseLabel.ADVERSARIAL in c.labels)
+    group = _normal_cases_of_one_intent()
+    records = [record(c) for c in group]
+    records.append(record(adversarial, decision="DENY", selected_skill_id=None))
+
+    assert paraphrase_consistency([*group, adversarial], records) == pytest.approx(1.0)

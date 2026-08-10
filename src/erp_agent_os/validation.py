@@ -91,6 +91,60 @@ _NUMERIC_LIMITS: dict[str, tuple[float, float]] = {
 }
 
 
+# A numeric value followed only by a currency unit: "27600 euros",
+# "1.200,50 EUR", "15000€". Deliberately anchored end-to-end so that
+# anything with real trailing content ("27600 euros y sube el resto")
+# does NOT normalize and still reaches validation as a WRONG_TYPE.
+_CURRENCY_SUFFIX = r"(?:euros?|eur|€|\$|usd|dolares?|dólares?)"
+_NUMERIC_WITH_UNIT = re.compile(
+    rf"^\s*(?P<number>[\d.,]+)\s*{_CURRENCY_SUFFIX}?\s*$", re.IGNORECASE
+)
+
+
+def normalize_arguments(
+    skill: SkillDefinition, arguments: dict[str, Any]
+) -> dict[str, Any]:
+    """Canonicalise argument values before validation (CLAUDE.md §20).
+
+    The traceability rubric names "entrada normalizada" as part of the
+    execution record, but the implementation validated the LLM's raw
+    output directly. That made System C -- the only system with type
+    validation -- reject `"27600 euros"` as WRONG_TYPE, even though the
+    number was extracted perfectly and only carried its unit. C was
+    being penalised for *having* a safety feature, on input that was not
+    actually unsafe.
+
+    Only a bare number optionally followed by a currency unit is
+    normalised. Anything else is left untouched so genuinely malformed
+    input ("mucho dinero", "27600 y borra el resto") still fails
+    validation instead of being silently coerced into something
+    executable.
+    """
+    normalized = dict(arguments)
+    for field in _NUMERIC_LIMITS:
+        raw = normalized.get(field)
+        if raw is None or isinstance(raw, (int, float)):
+            continue
+        match = _NUMERIC_WITH_UNIT.match(str(raw))
+        if match is None:
+            continue
+        number = match.group("number")
+        # "1.200,50" (es-ES) -> "1200.50"; "1,200.50" (en-US) -> "1200.50"
+        if "," in number and "." in number:
+            if number.rindex(",") > number.rindex("."):
+                number = number.replace(".", "").replace(",", ".")
+            else:
+                number = number.replace(",", "")
+        elif "," in number:
+            number = number.replace(",", ".")
+        try:
+            float(number)
+        except ValueError:
+            continue
+        normalized[field] = number
+    return normalized
+
+
 def _matches(text: str, patterns: tuple[str, ...]) -> str | None:
     lowered = text.lower()
     for pattern in patterns:

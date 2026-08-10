@@ -17,6 +17,7 @@ from erp_agent_os.adapters import FakeERPAdapter, UnknownModelError, UnknownReco
 from erp_agent_os.catalog import CATALOG, CATALOG_BY_ID
 from erp_agent_os.handlers import HANDLERS
 from erp_agent_os.llm_client import LLMClient, ToolSpec
+from erp_agent_os.validation import normalize_arguments
 
 TYPED_TOOLS: list[ToolSpec] = [
     ToolSpec(skill.skill_id, skill.description, skill.input_schema["required"])
@@ -45,6 +46,12 @@ class SystemB:
             return SystemBResult(None, None, "no matching tool", *tokens)
 
         skill = CATALOG_BY_ID[call.tool_name]
+        # CLAUDE.md §18 grants System B "esquemas y validaciones de
+        # tipo", so it gets the same input normalization as C. What
+        # separates them stays what §18 says it is: retrieval, risk
+        # tiering, approval and postcondition verification -- not who
+        # can parse "27600 euros".
+        arguments = normalize_arguments(skill, arguments)
         required = skill.input_schema["required"]
         missing = [
             field
