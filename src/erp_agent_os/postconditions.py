@@ -105,10 +105,19 @@ def _count_unchanged(model: str, before: dict[str, Any]) -> Check:
 
 
 def build_checks(
-    skill: SkillDefinition, arguments: dict[str, Any], before: dict[str, Any]
+    skill: SkillDefinition,
+    arguments: dict[str, Any],
+    before: dict[str, Any],
+    model: str | None = None,
 ) -> tuple[Check, ...]:
-    """Resolve a skill's declared postconditions into executable checks."""
-    model = SKILL_MODELS[skill.skill_id]
+    """Resolve a skill's declared postconditions into executable checks.
+
+    `model` defaults to the frozen catalog's mapping, which covers every
+    skill the experiment runs. It is overridable for a skill that is not
+    in that catalog -- a CU-02 proposal being tried in a sandbox, for
+    instance -- where looking it up would raise instead.
+    """
+    model = model or SKILL_MODELS[skill.skill_id]
     checks: list[Check] = []
 
     for name in skill.postconditions:

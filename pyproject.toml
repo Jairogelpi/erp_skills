@@ -19,6 +19,18 @@ dependencies = [
 ]
 
 [dependency-groups]
+# Figures only. Deliberately NOT a default dependency and NOT in
+# `dev`: installing matplotlib into the environment mypy analyses
+# triggers an internal mypy 1.15 crash ("unresolved placeholder
+# type" while serializing its cache) on this project's numpy
+# `follow_imports = "skip"` override. Keeping it in its own group
+# means CI (`uv sync --group dev`) type-checks the same environment
+# it always has, and figures are regenerated on demand with
+# `uv sync --group figures`.
+figures = [
+  "matplotlib>=3.11,<4",
+]
+
 dev = [
   "build==1.2.2.post1",
   "httpx==0.28.1",
