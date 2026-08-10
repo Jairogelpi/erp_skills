@@ -88,6 +88,35 @@ def test_checkpoint_resume_reproduces_the_same_records_as_a_fresh_run(tmp_path):
     assert len(checkpoint.read_text(encoding="utf-8").splitlines()) == 1080
 
 
+def test_each_system_pays_its_own_argument_extraction():
+    # Regression for a real measurement bug: a single CachingLLMClient
+    # was shared by A, B and C. Extraction is keyed on
+    # (query_text, fields) -- identical across the three systems for the
+    # same case -- so whichever system the randomized order ran first
+    # paid, and the other two were credited 0 tokens. Per-system token
+    # totals then measured execution order, not architecture.
+    class _ExtractingStub(DeterministicStubClient):
+        def extract_arguments(self, query_text, fields):
+            from erp_agent_os.llm_client import ArgumentExtraction
+
+            return ArgumentExtraction({f: "x" for f in fields}, 100, 10)
+
+    records, _ = run_experiment(
+        CASES, _ExtractingStub(), seed=7, real_parser=True, repetitions=2
+    )
+
+    per_system = {"A": 0, "B": 0, "C": 0}
+    for record in records:
+        per_system[record.system] += record.prompt_tokens
+
+    # Every system must have paid for extraction on every case. With the
+    # shared cache, two of the three came out at (or near) zero.
+    assert all(total > 0 for total in per_system.values()), per_system
+    # And each pays the same extraction bill: same cases, same fields,
+    # same prompt (CLAUDE.md D-03).
+    assert per_system["A"] == per_system["B"] == per_system["C"], per_system
+
+
 def test_repetitions_reuse_the_first_real_llm_call_for_the_same_case():
     class _CountingStub(DeterministicStubClient):
         def __init__(self):

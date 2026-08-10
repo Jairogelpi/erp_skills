@@ -423,7 +423,21 @@ def run_experiment(
     # is reproducible (H3 = 1.0 both times). Only the first call per
     # unique query is real; cached hits report 0 tokens (see
     # CachingLLMClient) so H2/H8 never overcount actual spend.
-    cached_llm: LLMClient = CachingLLMClient(llm)
+    #
+    # One cache PER SYSTEM, not one shared cache. Sharing it was a real
+    # measurement bug: argument extraction is keyed on
+    # (query_text, fields), which is identical for A, B and C on the same
+    # case, so whichever system the randomized order happened to run
+    # first paid for the extraction and the other two were credited zero
+    # tokens. Per-system token totals then measured execution order
+    # rather than architecture. In a real deployment a request reaches
+    # one system, and that system pays its own extraction; deduplicating
+    # across systems has no real-world counterpart, while deduplicating
+    # across a case's 3 repetitions removes a purely experimental
+    # artifact -- which is what this cache is for.
+    cached_llms: dict[str, LLMClient] = {
+        system: CachingLLMClient(llm) for system in ("A", "B", "C")
+    }
 
     done = _load_checkpoint(checkpoint_path) if checkpoint_path else {}
     if done:
@@ -454,7 +468,7 @@ def run_experiment(
                 case.request_id,
                 rep,
             )
-            record = runners[system](case, cached_llm, rep, real_parser)
+            record = runners[system](case, cached_llms[system], rep, real_parser)
             records.append(record)
             if checkpoint_file is not None:
                 checkpoint_file.write(
