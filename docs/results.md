@@ -1,9 +1,35 @@
 # Resultados experimentales
 
-Dos ejecuciones, mismo protocolo (`uv run python scripts/run_experiment.py
-[--real-llm --provider {groq,gemini,openrouter}]`): **1.080 ejecuciones**
-(120 casos de test congelado × 3 sistemas × 3 repeticiones), semilla
-`20260805`, estado de `FakeERPAdapter` reconstruido por observación.
+> ## ⚠️ Lee esto primero: el resultado principal cambió al quitar un sesgo
+>
+> Las ejecuciones 1 y 2 (abajo) entregaban a **los tres sistemas** los
+> argumentos ya extraídos (`case.expected_arguments`): un parseo
+> perfecto que nadie pagaba. Eso favorecía a System C, cuyo coste en
+> tokens salía **cero** porque su recuperación es TF-IDF y no
+> necesitaba el LLM para nada más.
+>
+> La **ejecución 3** elimina ese sesgo: los tres sistemas extraen los
+> argumentos del texto crudo con el mismo LLM, el mismo prompt y la
+> misma lista de campos. El resultado principal cambia:
+>
+> **La ventaja de C sobre B en éxito de tarea deja de ser
+> estadísticamente significativa** (C−B = +0,075, IC95 [−0,025,
+> +0,175], Holm *p* = 0,212).
+>
+> C mantiene intactas sus ventajas en **seguridad** (false allow 0,111
+> vs 0,889, 8×) y **trazabilidad** (0,82 vs 0,37), y además consume
+> **3,9× menos tokens** que B. La tesis defendible pasa a ser: *la
+> gobernanza compra seguridad, auditabilidad y ahorro de tokens **sin
+> coste en éxito de tarea***, no *"además gana en éxito de tarea"* —
+> que era lo que el parseo regalado sostenía.
+>
+> Detalle completo en [§ Ejecución 3](#ejecución-3-parseo-real-el-resultado-que-cambia-la-tesis).
+
+Tres ejecuciones, mismo protocolo (`uv run python scripts/run_experiment.py
+[--real-llm --real-parser --provider {groq,gemini,openrouter}]`):
+**1.080 ejecuciones** cada una (120 casos de test congelado × 3 sistemas
+× 3 repeticiones), semilla `20260805`, estado de `FakeERPAdapter`
+reconstruido por observación.
 
 1. **Ejecución confirmatoria real** (`data/experiment_results.json`,
    `manifest.selector: "OpenRouterClient"`, `is_confirmatory_run: true`)
@@ -15,6 +41,16 @@ Dos ejecuciones, mismo protocolo (`uv run python scripts/run_experiment.py
    compartido) — aísla gobernanza de calidad del modelo. Se conserva
    como contraste porque muestra cuánto de la ventaja de C sobrevive
    incluso cuando A/B tienen un selector perfecto.
+3. **Ejecución con parseo real**
+   (`data/experiment_results_real_parser.json`,
+   `manifest.selector: "GroqClient"`, `real_parser: true`) — los tres
+   sistemas extraen los argumentos del texto con el mismo LLM. Elimina
+   el sesgo del parseo regalado y **cambia el resultado principal**.
+   Usa Groq y no OpenRouter por una razón práctica declarada: OpenRouter
+   entraba en tormentas de 429 que hacían la corrida inviable
+   (~3 h con interrupciones); Groq la completó en ~50 min. Esto
+   introduce un confundido proveedor↔régimen frente a la ejecución 1,
+   que se acota en las amenazas a la validez.
 
 > ## Estado del protocolo confirmatorio de §19
 >
@@ -47,12 +83,24 @@ Dos ejecuciones, mismo protocolo (`uv run python scripts/run_experiment.py
 > consumo de tokens y variabilidad, manteniendo o mejorando la tasa de
 > éxito en automatizaciones ERP?
 
-**Respuesta, con un LLM real:** sí en errores de seguridad y éxito de
-tarea, incluso cuando el propio LLM mejora (B sube a 0,517 con este
-selector real frente a 0,333 con el stub, C sigue por encima); **sí
-medido por primera vez** en tokens (H2) — C consume 0 frente a ~200-230
-de A/B; H3 (estabilidad) resulta trivialmente 1,0 con temperatura 0, así
-que no discrimina aquí.
+**Respuesta, con LLM real y sin el sesgo del parseo regalado:**
+
+- **Errores de seguridad: sí, contundente.** C reduce el false allow de
+  0,889 a 0,111 (8×) y sube el recall de detección de 0,111 a 0,889,
+  de forma estable entre tres proveedores y ambos regímenes de parseo.
+- **Consumo de tokens: sí.** C usa 67,6 tok/ejecución frente a 265,2 de
+  B (−197,6, IC95 [−198,3, −196,9]): 3,9× más barato, porque sustituye
+  la llamada de selección de herramienta por recuperación TF-IDF.
+- **Variabilidad: no medible.** H3 sale 1,0 en los tres sistemas porque
+  §23 exige temperatura 0, que los hace deterministas por diseño.
+- **Éxito de tarea: se mantiene, no mejora.** Frente a B, C−B = +0,075
+  con IC95 [−0,025, +0,175] (*p* = 0,212): **no significativo**. Cumple
+  el margen de no inferioridad de −5 pp, pero la superioridad que
+  mostraban las ejecuciones con parseo perfecto no sobrevive.
+
+Es decir: la arquitectura gobernada **sí** reduce errores y tokens, y
+**mantiene** (no mejora) el éxito de tarea frente a un baseline de
+herramientas tipadas.
 
 ---
 
@@ -270,27 +318,103 @@ C es el único que ejecuta correctamente operaciones de alto riesgo.
 
 ---
 
+## Ejecución 3: parseo real, el resultado que cambia la tesis
+
+### El sesgo que se elimina
+
+Hasta aquí, los tres sistemas recibían `case.expected_arguments`: la
+lista de argumentos ya extraída y correcta. Nadie pagaba por ella. Eso
+tenía una consecuencia que inflaba a C de forma silenciosa: A y B
+gastaban tokens **solo** en elegir herramienta, y C —cuya recuperación
+es TF-IDF— **no gastaba ninguno**. C aparecía como gratis cuando un
+despliegue real seguiría necesitando un LLM para convertir *"Crea una
+oportunidad para Acme por 15000 euros"* en
+`{"customer_name": "Acme", "expected_revenue": 15000}`.
+
+Con `--real-parser`, los tres extraen los argumentos del texto crudo
+con **el mismo LLM, el mismo prompt y la misma lista de campos**
+(D-03). Las postcondiciones se siguen verificando contra la verdad de
+referencia, no contra lo que el LLM extrajo — que es la semántica
+correcta: mide si la tarea quedó bien hecha, no si el parser se
+autoconfirmó.
+
+### H1 (STSR): la ventaja sobre B desaparece
+
+| Sistema | Parseo perfecto | **Parseo real** |
+|---|---|---|
+| A | 0,000 | 0,000 |
+| B | 0,517 | 0,483 |
+| C | 0,700 | **0,558** |
+
+| Contraste | Parseo perfecto | **Parseo real** |
+|---|---|---|
+| C − A | +0,700 (*p* = 2,7×10⁻¹⁹) | **+0,558** IC95 [+0,467, +0,650], *p* = 1,5×10⁻¹⁵ |
+| C − B | +0,183 (*p* = 0,0077) | **+0,075** IC95 [**−0,025**, +0,175], *p* = **0,212** |
+
+**El intervalo de C−B cruza el cero.** Con parseo honesto, la ventaja
+de C sobre B en éxito de tarea **no es estadísticamente distinguible de
+cero** en este benchmark. C cae de 0,700 a 0,558 al tener que parsear
+de verdad; B apenas se mueve (0,517 → 0,483) porque ya hacía su propia
+selección de herramienta y no recibía esa ayuda extra.
+
+**H1 sigue aceptándose**, porque está formulada como **no
+inferioridad** con margen −5 pp (§6): el límite inferior del IC es
+−0,025, por encima de −0,05. C es no-inferior a B; ya no superior.
+
+### H2 (tokens): aquí C sí gana, y de forma contundente
+
+| Sistema | Tokens/ejecución | Total |
+|---|---|---|
+| A | 185,1 | 66.626 |
+| B | 265,2 | 95.482 |
+| C | **67,6** | **24.344** |
+
+C − B = **−197,6** tokens/ejecución, IC95 [−198,3, −196,9].
+C − A = −117,5, IC95 [−118,3, −116,6].
+
+La cuenta cuadra y explica el mecanismo: los tres pagan ~200 tokens por
+caso de extracción (cacheada entre las 3 repeticiones); A y B **además**
+pagan una llamada de selección de herramienta; C la sustituye por
+TF-IDF, que cuesta cero. **C es 3,9× más barato que B.**
+
+### H8 (coste, escenario declarado)
+
+Con la tarifa supuesta de 0,05 USD/1.000 tokens: A $3,33 · B $4,77 ·
+**C $1,22**.
+
+### Qué queda en pie, y cómo debe formularse
+
+> La gobernanza **no compra más éxito de tarea** frente a un baseline de
+> herramientas tipadas. Compra **seguridad (8×), trazabilidad (2,2×) y
+> ahorro de tokens (3,9×) sin coste medible en éxito de tarea.**
+
+Seguridad y trazabilidad son **idénticas** a las de la ejecución 1
+(false allow C = 0,111 vs 0,889 de A y B; trazabilidad C = 0,82 vs 0,36
+y 0,37): no dependían del parseo, porque provienen del policy engine y
+del almacén de auditoría, no de la calidad de los argumentos.
+
+---
+
 ## Hipótesis, estado final
 
 | H | Estado |
 |---|---|
-| H1 | **Confirmada**, C−A y C−B significativos en las tres ejecuciones reales probadas |
-| H2 | **Medida por primera vez**: C=0, A/B ~200-230 tokens/ejecución |
+| H1 | **Aceptada como no inferioridad, no como superioridad.** C−A significativo en las tres ejecuciones. C−B **deja de ser significativo** con parseo real (+0,075, *p* = 0,212); el margen de no inferioridad (−5 pp) se mantiene. |
+| H2 | **Confirmada con parseo honesto**: C 67,6 tok/ejec frente a B 265,2 (−197,6, IC95 [−198,3, −196,9]), 3,9× más barato |
 | H3 | **Nula por diseño**: temperatura=0 exigida por §23 impide discriminar |
-| H4 | **Confirmada**: C recall 0,889 estable entre proveedores; A/B varían según el LLM |
+| H4 | **Confirmada y robusta**: C recall 0,889 / false allow 0,111 estable entre proveedores y entre regímenes de parseo; A/B en 0,889 de false allow |
 | H5 | **Parcial**: C gana en Top-3/abstención; Top-1/exactitud selectiva dependen del LLM de A/B |
 | H6 | **Matizada**: el valor de abstenerse depende de qué tan bueno sea el selector alternativo |
-| H7 | **Medida por primera vez**: C=0,80 frente a A=0,19/B=0,36, brecha de gobernanza confirmada |
+| H7 | **Confirmada**: C=0,82 frente a A=0,36/B=0,37, invariante al régimen de parseo |
 | H8 | **Análisis de sensibilidad**, no ahorro medido, tal como exige §20 |
 
 ---
 
 ## Auditoría del propio instrumento de medida
 
-Nueve defectos encontrados y corregidos por auditoría propia a lo largo
+Doce defectos encontrados y corregidos por auditoría propia a lo largo
 del proyecto (detalle completo en `docs/audit.md` y la bitácora de
-`CLAUDE.md`). Los dos más recientes, ambos en la capa de *reporte*, no
-de medición:
+`CLAUDE.md`). Los tres más recientes:
 
 8. **Caveat del manifiesto inconsistente con `is_confirmatory_run`** en
    la primera ejecución real (Groq): el texto decía "NO es el protocolo
@@ -300,11 +424,23 @@ de medición:
    qué proveedor se usara — la ejecución con OpenRouter habría publicado
    un caveat que nombraba a Groq. Corregido pasando el selector real al
    texto en vez de un literal.
+12. **Caché de extracción compartido entre sistemas** (ejecución 3): un
+    único `CachingLLMClient` servía a A, B y C. La extracción se indexa
+    por `(texto, campos)`, idéntica para los tres en un mismo caso, así
+    que **pagaba el sistema que el orden aleatorio ejecutase primero** y
+    los otros dos se apuntaban cero tokens. Los totales por sistema
+    medían orden de ejecución, no arquitectura. Detectado al leer la
+    salida: C reportaba 21,2 tokens/ejecución, implausible para un
+    sistema que ahora paga una extracción completa. Corregido con un
+    caché por sistema; el test de regresión se verificó **reintroduciendo
+    el bug** (falla con A=3900, B=4700, C=3400 — desiguales; pasa con el
+    fix). Los tokens de la ejecución 3 que se reportan arriba son los
+    **posteriores** a la corrección.
 
-Ambos se encontraron **leyendo la salida de la propia ejecución antes de
-reportarla**, no por un test que fallara solo. Los resultados numéricos
-no cambiaron con ninguna de las dos correcciones — solo el texto
-explicativo era incorrecto.
+Los defectos 8, 9 y 12 se encontraron **leyendo la salida de la propia
+ejecución antes de reportarla**, no por un test que fallara solo. En 8 y
+9 solo el texto explicativo era incorrecto; en **12 los números sí eran
+incorrectos** y se rehízo la ejecución completa.
 
 ## Amenazas a la validez de estos resultados
 
@@ -318,7 +454,20 @@ explicativo era incorrecto.
    (recall 0,889, R2/R3 en 1,000/0,500) se mantuvieron estables entre
    los tres proveedores probados.
 3. **A como hombre de paja** — véase H1; usar C − B como contraste
-   principal.
+   principal. Y ese contraste, con parseo honesto, **no es
+   significativo en STSR**: la superioridad de C en éxito de tarea que
+   mostraban las ejecuciones 1 y 2 dependía del parseo regalado.
+3b. **Confundido proveedor ↔ régimen de parseo.** La ejecución con
+   parseo real usó Groq y la confirmatoria usó OpenRouter, porque
+   OpenRouter entraba en tormentas de 429 que hacían inviable la
+   corrida. Estrictamente, la diferencia entre ambas mezcla dos
+   variables. Mitigación parcial, no eliminación: las métricas de C
+   (false allow, trazabilidad) son idénticas entre las tres ejecuciones
+   y entre los tres proveedores probados, y B se mueve muy poco
+   (0,517 → 0,483); el desplome está concentrado en C (0,700 → 0,558),
+   que es exactamente el sistema al que el parseo regalado beneficiaba.
+   Una réplica con ambos regímenes en el mismo proveedor está
+   pendiente y declarada.
 4. **Detectores léxicos en C, medido con un benchmark externo** — la
    ventaja en H4 no se generaliza a adversarios adaptativos.
    `docs/injecagent-stress-test.md`: 510 casos reales de InjecAgent
@@ -346,7 +495,16 @@ uv run python scripts/run_experiment.py
 uv run python scripts/run_experiment.py --real-llm --provider groq
 uv run python scripts/run_experiment.py --real-llm --provider gemini
 uv run python scripts/run_experiment.py --real-llm --provider openrouter
+
+# parseo real: los tres sistemas extraen argumentos con el LLM.
+# Escribe en data/experiment_results_real_parser.json, no pisa el
+# resultado confirmatorio.
+uv run python scripts/run_experiment.py --real-llm --real-parser --provider groq
 ```
+
+`--real-parser` sin `--real-llm` se rechaza: el stub no extrae nada, así
+que la corrida puntuaría cero en los tres sistemas y parecería un
+hallazgo catastrófico en vez de una configuración mal puesta.
 
 Cada ejecución `--real-llm` usa un checkpoint propio por proveedor
 (`data/checkpoint_real_llm_<provider>.jsonl`, gitignorado) que permite

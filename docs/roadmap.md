@@ -45,9 +45,24 @@ Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLA
 | Trazabilidad media (H7) | 0,19 | 0,36 | **0,80** |
 | Top-1 recuperación | 0,000 | 0,890 | **0,780** |
 
-C−A = +0,700 IC95 [+0,617, +0,783], Holm *p* = 2,71×10⁻¹⁹, OR 169. C−B = +0,183 IC95 [+0,058, +0,308], Holm *p* = 7,65×10⁻³, OR 2,07 (el margen más estrecho medido hasta ahora — B mejora con cada selector real probado: 0,333 stub → 0,483 Groq → 0,517 OpenRouter). Q de Cochran = 109,46 (gl 2). H1 (no inferioridad, margen −5 pp) **se acepta**. C nunca llama al LLM (recuperación TF-IDF): sus métricas son idénticas en las tres ejecuciones reales probadas.
+C−A = +0,700 IC95 [+0,617, +0,783], Holm *p* = 2,71×10⁻¹⁹, OR 169. C−B = +0,183 IC95 [+0,058, +0,308], Holm *p* = 7,65×10⁻³, OR 2,07. Q de Cochran = 109,46 (gl 2). H1 (no inferioridad, margen −5 pp) **se acepta**.
 
-**Nueve defectos encontrados y corregidos por auditoría propia** (unidades 21–30, detalle completo en [`docs/audit.md`](audit.md)): fuga del test congelado; validador de fuga tautológico; dos conjuntos vacíos de STSR; pseudo-replicación; dos huecos en la suite estadística (mutation testing); caveat del manifiesto inconsistente con `is_confirmatory_run`; **caveat con el nombre del proveedor hardcodeado** ("Groq free tier" fijo en el texto aunque el selector real fuera otro — encontrado leyendo la salida de la corrida con OpenRouter). Las conclusiones **sobrevivieron a las nueve correcciones sin cambiar de signo**. Mutation testing acumulado: 40 mutantes, 40 muertos, cobertura de los 23 módulos con lógica de antes de esta sesión.
+> **⚠️ Esta ejecución entregaba a los tres sistemas un parseo perfecto de argumentos que nadie pagaba**, lo que inflaba a C (tokens = 0, porque su recuperación es TF-IDF y no necesitaba el LLM para nada). Ver la ejecución con `--real-parser` justo debajo: **el resultado principal cambia**.
+
+**Ejecución con parseo real** (`data/experiment_results_real_parser.json`, Groq, `real_parser: true`) — los tres sistemas extraen los argumentos del texto crudo con el mismo LLM, prompt y lista de campos:
+
+| Métrica | A | B | C |
+|---|---|---|---|
+| STSR | 0,000 | 0,483 | **0,558** |
+| Tokens medios/ejecución | 185,1 | 265,2 | **67,6** |
+| False allow rate | 0,889 | 0,889 | **0,111** |
+| Trazabilidad media | 0,356 | 0,374 | **0,820** |
+
+**C−B en STSR = +0,075 IC95 [−0,025, +0,175], Holm *p* = 0,212 — no significativo.** El IC cruza el cero: sin el parseo regalado, la superioridad de C sobre B en éxito de tarea no se sostiene. H1 **sigue aceptándose como no inferioridad** (límite inferior −0,025, por encima del margen de −5 pp), no como superioridad. En tokens sí gana con holgura: C−B = −197,6 IC95 [−198,3, −196,9], **3,9× más barato**. Seguridad y trazabilidad no cambian: provienen del policy engine y la auditoría, no de la calidad del parseo.
+
+**Tesis defendible, reformulada:** la gobernanza **no compra más éxito de tarea** frente a un baseline de herramientas tipadas; compra **8× menos ejecuciones inseguras, 2,2× más trazabilidad y 3,9× menos tokens, sin coste medible en éxito de tarea**.
+
+**Doce defectos encontrados y corregidos por auditoría propia** (unidades 21–31, detalle completo en [`docs/audit.md`](audit.md)): fuga del test congelado; validador de fuga tautológico; dos conjuntos vacíos de STSR; pseudo-replicación; dos huecos en la suite estadística (mutation testing); caveat del manifiesto inconsistente con `is_confirmatory_run`; caveat con el nombre del proveedor hardcodeado; error de varianza de `Callable` al retipar contra `ErpAdapter`; dos clases de error homónimas entre `odoo_client` y `adapters`; y **el #12, caché de extracción compartido entre A/B/C**, que hacía que los tokens por sistema midieran orden de ejecución. Once correcciones **no cambiaron el signo de ninguna conclusión**; la doceava **sí** — es la que reformuló la tesis. Mutation testing acumulado: 40 mutantes, 40 muertos, cobertura de los 23 módulos con lógica de antes de esta sesión.
 
 **Pendiente explícito:** H8 (coste) es análisis de sensibilidad declarado, no gasto medido (los proveedores usados son gratis de verdad); H3 no discriminable ni con LLM real en tres proveedores distintos (temperatura 0 exigida por §23 la vuelve determinista por diseño); congelación (`freeze_manifest.json`) sin extender a configuración del proveedor LLM; kappa de anotación pendiente (paso humano); memoria, demo, dashboard y vídeo sin empezar.
 

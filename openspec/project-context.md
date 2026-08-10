@@ -35,7 +35,7 @@ rather than from a stale plan.
 
 ## Current state
 
-**Delivered and tested** (35 modules, 298 tests, `ruff`/`mypy` clean, CI green):
+**Delivered and tested** (35 modules, 305 tests, `ruff`/`mypy` clean, CI green):
 
 | Layer | Modules |
 |---|---|
@@ -85,7 +85,39 @@ disabled for this session — or anything else) only costs the calls not
 yet checkpointed. `CachingLLMClient` serves repetitions 2 and 3 of the
 same case from an in-process cache (temperature=0 makes this exact, per
 H3=1.0 in three independent real runs), cutting real calls for A+B from
-720 to ~240.
+720 to ~240. **One cache per system, not one shared** — sharing it was
+defect #12 (see below).
+
+**⚠️ The headline result changed once the perfect-parse bias was
+removed.** Every run above handed all three systems
+`case.expected_arguments`: a correct argument parse nobody paid for.
+That silently flattered System C, whose retrieval is TF-IDF and which
+therefore consumed *zero* tokens. `--real-parser`
+(`data/experiment_results_real_parser.json`, Groq, `real_parser: true`)
+makes all three extract arguments from the raw text with the same LLM,
+prompt and field list:
+
+- **STSR**: A 0.000 / B 0.483 / **C 0.558** (C fell from 0.700).
+- **C − B = +0.075, CI95 [−0.025, +0.175], Holm *p* = 0.212 — NOT
+  significant.** The CI crosses zero. H1 still holds as *non-inferiority*
+  (lower bound −0.025 > −5 pp margin), not as superiority.
+- **Tokens**: A 185.1 / B 265.2 / **C 67.6** per execution;
+  C − B = −197.6, CI95 [−198.3, −196.9]. C is **3.9× cheaper**: all
+  three pay the same extraction, A and B *additionally* pay an LLM
+  tool-selection call that C replaces with TF-IDF.
+- Safety (false allow 0.111 vs 0.889) and traceability (0.82 vs 0.37)
+  are **unchanged** — they come from the policy engine and audit store,
+  not from argument quality.
+
+**The defensible claim is therefore narrower than the earlier runs
+suggested**: governance does not buy more task success over a
+typed-tools baseline; it buys 8× fewer unsafe executions, 2.2× better
+traceability and 3.9× fewer tokens at no measurable cost in task
+success. Declared confound: the parsed run used Groq while the
+confirmatory used OpenRouter (OpenRouter's 429 storms made it
+unworkable), so provider and parsing regime are not fully separated —
+mitigated but not eliminated by C's metrics being invariant across all
+three providers.
 
 **External adversarial stress test (InjecAgent).** The declared
 limitation "detectors are lexical, tuned to our own templated corpus"
@@ -176,6 +208,18 @@ that passed *silently*, never code that failed loudly.
    only `FakeERPAdapter` does not satisfy "accepts any `ErpAdapter`".
    Fixed by making `Runtime` generic (`Generic[T]`), not by widening
    the type or suppressing the error.
+9. **A shared extraction cache that made token totals meaningless.**
+   `run_experiment` built one `CachingLLMClient` for all three systems.
+   Argument extraction keys on `(query_text, fields)` — identical across
+   A, B and C for the same case — so whichever system the *randomized*
+   order ran first paid, and the other two were credited zero tokens.
+   Per-system token totals measured execution order, not architecture.
+   Caught by reading the output: C reported 21.2 tokens/execution, far
+   too low for a system now paying a full extraction. Fixed with one
+   cache per system; the regression test was verified by reintroducing
+   the bug (fails with A=3900 B=4700 C=3400, unequal and order-dependent).
+   Unlike defects #5 and #6, this one **did** change published numbers —
+   the run was redone.
 8. **Two error classes with the same name, different identity.**
    `odoo_client.py` originally defined its own `UnknownModelError`/
    `UnknownRecordError`, distinct objects from `adapters.py`'s classes

@@ -63,7 +63,7 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | **Odoo 19 adapter** (post-core, JSON-2 API, allowlisted, no delete) | `odoo_client.py` | ✅ live-verified |
 | Odoo 19 demo through the **full governed pipeline** (System C, real approval gate) | `odoo_handlers.py`, `scripts/odoo_governed_demo.py` | ✅ live-verified |
 
-298 tests, `ruff`/`mypy` clean, CI green.
+305 tests, `ruff`/`mypy` clean, CI green.
 
 ### Real LLM clients
 
@@ -114,20 +114,41 @@ Full analysis — including the stub-selector baseline kept for comparison
 - **C − B** = +0.183, 95% CI [+0.058, +0.308], Holm *p* = 7.65×10⁻³, OR 2.07
 - Cochran's Q = 109.46 (df 2). **H1 (non-inferiority, −5 pp margin): accepted.**
 - **Inference unit is the case (n = 120), not the execution.** Repetitions of a case are not independent; using all 360 per system would be pseudo-replication, narrowing every CI by ≈√3.
-- System C never calls the LLM (its retrieval is TF-IDF) — its metrics are
-  byte-identical across every real-LLM run tried, by architecture, not by
-  accident. B keeps improving as selector quality improves (STSR
-  0.333→0.483→0.517 across stub→Groq→OpenRouter): C − B narrows with each
-  better selector but stayed significant in all three.
-- H2 and H7 have real numbers for the first time this run: C consumes 0
-  tokens (no LLM call) and scores 0.80/1.0 on the traceability rubric
-  versus 0.19/0.36 for A/B, which structurally lack a policy engine,
-  versioned skills, and an audit store.
 
-C cuts the false-allow rate to **0.111**, well below B's 0.889. A's
-false-allow rate varies sharply by provider (0.889 with Groq, 0.333 here)
-— a real, disclosed sensitivity to which LLM sits behind the ungoverned
-baseline, not a property of "A" in the abstract.
+> **⚠️ This run handed every system a perfect, unpaid argument parse.**
+> Removing that bias changes the headline result — see the next section.
+> These numbers remain valid for what they measure (tool selection with
+> arguments given), but the C − B superiority they show does not survive
+> honest parsing.
+
+### The result that changed: honest argument parsing
+
+`--real-parser` makes all three systems extract arguments from the raw
+request text with the same LLM, same prompt, same field list, instead of
+being handed `case.expected_arguments` for free. Full analysis in
+[`docs/results.md`](docs/results.md); raw output in
+`data/experiment_results_real_parser.json`.
+
+| Metric | A | B | **C** |
+|---|---|---|---|
+| STSR | 0.000 | 0.483 | **0.558** |
+| Mean tokens/execution | 185.1 | 265.2 | **67.6** |
+| False allow rate | 0.889 | 0.889 | **0.111** |
+| Traceability (0–1) | 0.356 | 0.374 | **0.820** |
+
+- **C − B on STSR = +0.075, 95% CI [−0.025, +0.175], Holm *p* = 0.212 — not significant.** The CI crosses zero. C fell 0.700 → 0.558 once it had to parse for real; B barely moved (0.517 → 0.483) because it already did its own tool selection. **H1 still holds as non-inferiority** (CI lower bound −0.025 is above the −5 pp margin), but not as superiority.
+- **C − B on tokens = −197.6, 95% CI [−198.3, −196.9]** — C is **3.9× cheaper**. All three pay the same extraction; A and B *additionally* pay an LLM tool-selection call, which C replaces with TF-IDF retrieval at zero cost.
+- Safety and traceability are **unchanged** across all runs: they come from the policy engine and audit store, not from argument quality.
+
+**The defensible claim, restated honestly:**
+
+> Governance does **not** buy more task success over a typed-tools
+> baseline. It buys **8× fewer unsafe executions, 2.2× better
+> traceability, and 3.9× fewer tokens — at no measurable cost in task
+> success.**
+
+That is a narrower claim than the perfect-parse runs suggested, and the
+one the evidence actually supports.
 
 > **⚠️ Scope.** Free-tier model (`openai/gpt-oss-20b:free`), not a
 > frontier/production model — disclosed, not hidden. The freeze manifest

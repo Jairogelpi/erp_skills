@@ -1,10 +1,15 @@
 # Auditoría del instrumento de medida
 
 Este documento registra las auditorías hechas **sobre el propio aparato de
-evaluación**, no sobre el sistema evaluado. Existe porque once rondas
-sucesivas encontraron once defectos reales, y casi todos compartían la
+evaluación**, no sobre el sistema evaluado. Existe porque doce rondas
+sucesivas encontraron doce defectos reales, y casi todos compartían la
 misma forma: **código (o texto) que pasaba en silencio**, no código que
 fallaba a gritos.
+
+**El defecto #12 es el más consecuente de todos**: fue el único que, al
+corregirse, **cambió un resultado publicado** — y con él, la tesis
+defendible del TFM. Los once anteriores dejaron las conclusiones
+intactas.
 
 ## Por qué importa para el TFM
 
@@ -29,11 +34,19 @@ este tipo de escrutinio.
 | 9 | **Caveat con el proveedor hardcodeado**: tras corregir el #8, el texto seguía diciendo literalmente «Groq free tier» sin importar qué proveedor se usara — la ejecución con OpenRouter habría publicado un caveat que nombraba a Groq | Lectura de la salida de la ejecución con OpenRouter | Atribución incorrecta del proveedor en el artefacto publicado |
 | 10 | **Error de varianza de `Callable` en el tipado**: al retipar `Runtime`/`SystemC` contra un `Protocol` `ErpAdapter` amplio para admitir `Odoo19Adapter`, mypy rechazó los handlers de `handlers.py` (tipados para `FakeERPAdapter` en concreto) — contravarianza correcta: un handler que solo promete aceptar `FakeERPAdapter` no satisface «acepta cualquier `ErpAdapter`» | `mypy src` con 3 errores reales, no un falso positivo | Se habría resuelto ensanchando el tipo o con `# type: ignore`, ocultando el problema en vez de corregirlo |
 | 11 | **Dos clases de error con el mismo nombre, distinta identidad**: `odoo_client.py` definía sus propias `UnknownModelError`/`UnknownRecordError`, objetos distintos de las de `adapters.py` que `Runtime.execute()` captura por identidad de clase — un fallo de Odoo durante una petición gobernada habría reventado toda la llamada en vez de reportarse como `handler_error` normal | Revisión del acoplamiento real entre `odoo_client.py` y `runtime.py` al conectar `Odoo19Adapter` a `Runtime` de verdad | Comportamiento observable distinto (excepción no capturada) solo visible al ejecutar contra un adaptador real, no contra `FakeERPAdapter` en los tests existentes |
+| **12** | **Caché de extracción compartido entre A/B/C**: un solo `CachingLLMClient` para los tres sistemas. La extracción de argumentos se indexa por `(texto, campos)`, idéntica para los tres en un mismo caso, así que pagaba el sistema que el **orden aleatorio** ejecutase primero y los otros dos se apuntaban cero tokens | Lectura de la salida: C reportaba 21,2 tokens/ejecución, implausible para un sistema que ahora paga una extracción completa | **Los totales de tokens por sistema medían orden de ejecución, no arquitectura.** Único defecto que cambió números publicados: se rehízo la ejecución completa |
 
-Las conclusiones del experimento **sobrevivieron a las once correcciones
-sin cambiar de signo**. Eso es evidencia de robustez, no de que las
-correcciones fueran innecesarias: una métrica (o un texto, o un tipo)
-que acierta por accidente sigue estando rota.
+Las conclusiones del experimento **sobrevivieron a once de las doce
+correcciones sin cambiar de signo**. La excepción es el **#12**, que no
+solo corrigió los tokens: al rehacer la ejecución con la atribución
+correcta y sin el sesgo del parseo perfecto, **la superioridad de C
+sobre B en STSR dejó de ser significativa** (+0,075, IC95 [−0,025,
++0,175], *p* = 0,212). Ver `docs/results.md` § Ejecución 3.
+
+Que once correcciones no cambiaran el signo es evidencia de robustez;
+que la doceava sí lo cambiara es evidencia de que la auditoría servía
+para algo. Una métrica que acierta por accidente sigue estando rota — y
+a veces, al arreglarla, deja de acertar.
 
 Los defectos 10 y 11 rompen el patrón de los nueve anteriores en otro
 sentido: no aparecieron auditando un resultado ya publicado, sino
