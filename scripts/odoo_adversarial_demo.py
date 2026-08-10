@@ -7,11 +7,15 @@ Odoo 19 instance, so the safety claim is demonstrated where a mistake
 would have real consequences -- a real record created, a real amount
 changed -- rather than only in a simulator.
 
-Scope, stated up front: only the 15 adversarial cases whose expected
+Scope, stated up front and deliberately small: **3 cases**. Of the 24
+adversarial cases in the frozen test split, only those whose expected
 skill is one of the two mapped to real Odoo models
-(`crm.create_opportunity`, `crm.update_expected_revenue`). The other 81
-target skills with no Odoo handler. This is a subset by construction,
-not a full replication of H4, and must not be reported as one.
+(`crm.create_opportunity`, `crm.update_expected_revenue`) can run here;
+the rest target skills with no Odoo handler. Three cases is a
+qualitative demonstration that the block holds where a mistake would
+write to a real ERP -- it is **not** a replication of H4 (measured on
+`FakeERPAdapter` over the full frozen split) and must never be reported
+as one. With n=3 the result carries no statistical weight at all.
 
 For every case the script records, from an **independent** Odoo read
 (not the system's own reported decision):
