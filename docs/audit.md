@@ -1,15 +1,17 @@
 # Auditoría del instrumento de medida
 
 Este documento registra las auditorías hechas **sobre el propio aparato de
-evaluación**, no sobre el sistema evaluado. Existe porque doce rondas
-sucesivas encontraron doce defectos reales, y casi todos compartían la
+evaluación**, no sobre el sistema evaluado. Existe porque trece rondas
+sucesivas encontraron trece defectos reales, y casi todos compartían la
 misma forma: **código (o texto) que pasaba en silencio**, no código que
 fallaba a gritos.
 
-**El defecto #12 es el más consecuente de todos**: fue el único que, al
-corregirse, **cambió un resultado publicado** — y con él, la tesis
-defendible del TFM. Los once anteriores dejaron las conclusiones
-intactas.
+**Los defectos #12 y #13 son los más consecuentes**: son los únicos que,
+al corregirse, **cambiaron un resultado publicado** — y ambos en la
+misma métrica, el contraste C−B. Los once anteriores dejaron las
+conclusiones intactas. El #13 además no lo encontré yo: lo destapó una
+pregunta del usuario ("¿no estaremos haciendo algo mal?") sobre un
+resultado que yo había aceptado como válido.
 
 ## Por qué importa para el TFM
 
@@ -34,19 +36,40 @@ este tipo de escrutinio.
 | 9 | **Caveat con el proveedor hardcodeado**: tras corregir el #8, el texto seguía diciendo literalmente «Groq free tier» sin importar qué proveedor se usara — la ejecución con OpenRouter habría publicado un caveat que nombraba a Groq | Lectura de la salida de la ejecución con OpenRouter | Atribución incorrecta del proveedor en el artefacto publicado |
 | 10 | **Error de varianza de `Callable` en el tipado**: al retipar `Runtime`/`SystemC` contra un `Protocol` `ErpAdapter` amplio para admitir `Odoo19Adapter`, mypy rechazó los handlers de `handlers.py` (tipados para `FakeERPAdapter` en concreto) — contravarianza correcta: un handler que solo promete aceptar `FakeERPAdapter` no satisface «acepta cualquier `ErpAdapter`» | `mypy src` con 3 errores reales, no un falso positivo | Se habría resuelto ensanchando el tipo o con `# type: ignore`, ocultando el problema en vez de corregirlo |
 | 11 | **Dos clases de error con el mismo nombre, distinta identidad**: `odoo_client.py` definía sus propias `UnknownModelError`/`UnknownRecordError`, objetos distintos de las de `adapters.py` que `Runtime.execute()` captura por identidad de clase — un fallo de Odoo durante una petición gobernada habría reventado toda la llamada en vez de reportarse como `handler_error` normal | Revisión del acoplamiento real entre `odoo_client.py` y `runtime.py` al conectar `Odoo19Adapter` a `Runtime` de verdad | Comportamiento observable distinto (excepción no capturada) solo visible al ejecutar contra un adaptador real, no contra `FakeERPAdapter` en los tests existentes |
-| **12** | **Caché de extracción compartido entre A/B/C**: un solo `CachingLLMClient` para los tres sistemas. La extracción de argumentos se indexa por `(texto, campos)`, idéntica para los tres en un mismo caso, así que pagaba el sistema que el **orden aleatorio** ejecutase primero y los otros dos se apuntaban cero tokens | Lectura de la salida: C reportaba 21,2 tokens/ejecución, implausible para un sistema que ahora paga una extracción completa | **Los totales de tokens por sistema medían orden de ejecución, no arquitectura.** Único defecto que cambió números publicados: se rehízo la ejecución completa |
+| **12** | **Caché de extracción compartido entre A/B/C**: un solo `CachingLLMClient` para los tres sistemas. La extracción de argumentos se indexa por `(texto, campos)`, idéntica para los tres en un mismo caso, así que pagaba el sistema que el **orden aleatorio** ejecutase primero y los otros dos se apuntaban cero tokens | Lectura de la salida: C reportaba 21,2 tokens/ejecución, implausible para un sistema que ahora paga una extracción completa | **Los totales de tokens por sistema medían orden de ejecución, no arquitectura.** Se rehízo la ejecución completa |
+| **13** | **Normalización ausente en la ruta de argumentos reales**: con parseo real, el LLM devuelve `'27600 euros'` para un campo numérico. El validador lo marcaba `WRONG_TYPE` y la política denegaba. **Penalizaba solo a C**, porque solo C valida tipos antes de ejecutar — A ni mira, y B fallaba después por otra vía. El "castigo por gobernanza" que se estaba midiendo era en realidad una unidad monetaria sin normalizar | Pregunta del usuario sobre un resultado no significativo que yo había dado por bueno; al mirar caso a caso, los fallos de C eran todos del mismo tipo | **Se estaba atribuyendo a la arquitectura un fallo de preprocesado.** Corregido con `validation.normalize_arguments()`: un número seguido opcionalmente de unidad monetaria normaliza; cualquier otra cosa pasa tal cual y **sigue fallando la validación**, para no convertir el normalizador en un colador |
 
-Las conclusiones del experimento **sobrevivieron a once de las doce
-correcciones sin cambiar de signo**. La excepción es el **#12**, que no
-solo corrigió los tokens: al rehacer la ejecución con la atribución
-correcta y sin el sesgo del parseo perfecto, **la superioridad de C
-sobre B en STSR dejó de ser significativa** (+0,075, IC95 [−0,025,
-+0,175], *p* = 0,212). Ver `docs/results.md` § Ejecución 3.
+Las conclusiones del experimento **sobrevivieron a once de las trece
+correcciones sin cambiar de signo**. Las dos excepciones son el **#12**
+y el **#13**, y afectan al mismo contraste en direcciones opuestas:
+
+1. Corregir el #12 (y quitar a la vez el sesgo del parseo perfecto)
+   hizo que **C−B dejara de ser significativo**: +0,075, IC95 [−0,025,
+   +0,175], *p* = 0,212.
+2. Corregir el #13 lo **devolvió a significativo**, pero por la razón
+   correcta: +0,150, IC95 [+0,042, +0,258], *p* = 0,0162.
+
+El orden importa para la honestidad del relato. El resultado no
+significativo **se publicó y se defendió** mientras se creía correcto;
+no se archivó a la espera de que mejorara. Y la corrección que lo
+cambió no se buscó para mejorar el número: se buscó porque el usuario
+preguntó si el instrumento estaba bien, y el instrumento no lo estaba.
 
 Que once correcciones no cambiaran el signo es evidencia de robustez;
-que la doceava sí lo cambiara es evidencia de que la auditoría servía
-para algo. Una métrica que acierta por accidente sigue estando rota — y
-a veces, al arreglarla, deja de acertar.
+que dos sí lo cambiaran es evidencia de que la auditoría servía para
+algo. Una métrica que acierta por accidente sigue estando rota — y a
+veces, al arreglarla, deja de acertar antes de volver a acertar por el
+motivo correcto.
+
+### Nota de método: quién encuentra qué
+
+De los trece defectos, doce salieron de auditorías que yo mismo lancé
+sobre mi propio trabajo. **El #13 lo destapó una pregunta escéptica del
+usuario sobre un resultado que yo ya había aceptado.** Es el patrón
+esperable: la auditoría propia es buena encontrando código que se
+contradice consigo mismo, y mala encontrando código que hace
+exactamente lo que yo creía que debía hacer. Para eso hace falta
+alguien que dude del supuesto, no de la implementación.
 
 Los defectos 10 y 11 rompen el patrón de los nueve anteriores en otro
 sentido: no aparecieron auditando un resultado ya publicado, sino

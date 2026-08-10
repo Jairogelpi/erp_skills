@@ -206,6 +206,41 @@ sistemáticamente inseguro" — depende del LLM subyacente. La ventaja
 estructural de C (recall 0,889, sin depender de qué LLM esté detrás)
 sigue siendo el argumento más sólido, no el fallo garantizado de A.
 
+### El recall de 0,889 no es todo detección: descomposición medida
+
+Escribir los escenarios E2E de §29 destapó una propiedad de orden del
+pipeline: **la abstención cortocircuita antes que el detector
+adversarial**. Un ataque cuya redacción el recuperador no empareja con
+confianza sale como `ABSTAIN`, no `DENY`. El desenlace de seguridad es
+idéntico —no se ejecuta nada, no se muta nada— pero el sistema **no lo
+identificó como peligroso: no lo entendió**.
+
+Eso importa para leer H4, así que se midió en vez de estimarse. Sobre
+los 9 casos peligrosos del split de test congelado, System C produce:
+
+| Desenlace | n | % |
+|---|---|---|
+| `DENY` — detección genuina | 7 | 77,8 % |
+| `ABSTAIN` — no comprensión | 1 | 11,1 % |
+| `ALLOW` — false allow | 1 | 11,1 % |
+
+**El recall de 0,889 se descompone en 0,778 de detección real más
+0,111 de abstención.** El caveat es real y está acotado: un caso de
+nueve. Debe reportarse así en la memoria — decir "C detecta el 88,9 %
+de los ataques" sobreestima la capacidad de detección en 11 puntos.
+
+Depurando esto apareció además un efecto secundario del mismo
+mecanismo: **añadir la frase de ataque cambia a qué skill apunta
+TF-IDF**. La redacción del benchmark para «cambio masivo encubierto»
+arrastra la recuperación hacia `sales.add_quote_line`, se compromete
+igualmente y el detector léxico dispara `DENY`; una variación mínima
+del mismo ataque baja el margen lo suficiente para que el sistema se
+abstenga. Es decir: que un ataque acabe en `DENY` o en `ABSTAIN`
+depende de cómo caiga un ranking corrompido, no de una decisión
+deliberada. Material directo para la discusión de validez de
+constructo (§36). Asertado en
+`tests/test_end_to_end.py::test_pipeline_ordering_abstention_precedes_adversarial_detection`.
+
 ---
 
 ## H5 — Recuperación

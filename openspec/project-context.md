@@ -35,15 +35,18 @@ rather than from a stale plan.
 
 ## Current state
 
-**Delivered and tested** (35 modules, 305 tests, `ruff`/`mypy` clean, CI green):
+**Delivered and tested** (37 modules, 384 tests, `ruff`/`mypy` clean, CI green).
+**Every software requirement CLAUDE.md specifies is implemented** — the
+section-by-section audit is `docs/spec-coverage.md`.
 
 | Layer | Modules |
 |---|---|
-| Deterministic core | `adapters` (incl. `ErpAdapter` Protocol), `skills`, `policy`, `runtime` (generic over adapter type), `audit`, `validation` |
+| Deterministic core | `adapters` (incl. `ErpAdapter` Protocol), `skills`, `policy`, `runtime` (generic over adapter type), `audit`, `validation`, `preconditions` |
 | Retrieval | `parser`, `retrieval`, `embeddings` |
 | Systems under comparison | `system_a`, `system_b`, `system_c`, `llm_client`, `groq_client`, `gemini_client`, `openrouter_client` |
 | Benchmark | `catalog`, `bench_intents`, `bench_generator`, `bench_runner`, `handlers` |
 | Measurement | `metrics`, `postconditions`, `statistics`, `agreement`, `experiment`, `freeze`, `traceability` |
+| Skill lifecycle | `registry` (persistent, versioned, append-only history), `skill_proposal` (CU-02) |
 | Infrastructure | `api`, `approval`, `persistence` |
 | Post-core Odoo 19 | `odoo_client` (JSON-2 API adapter), `odoo_handlers` (2 skills mapped to real models) |
 

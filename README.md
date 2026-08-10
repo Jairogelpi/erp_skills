@@ -62,8 +62,21 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | External adversarial stress test (InjecAgent, out-of-distribution) | `scripts/injecagent_stress_test.py` | ✅ measured, 0%→3.3% (see below) |
 | **Odoo 19 adapter** (post-core, JSON-2 API, allowlisted, no delete) | `odoo_client.py` | ✅ live-verified |
 | Odoo 19 demo through the **full governed pipeline** (System C, real approval gate) | `odoo_handlers.py`, `scripts/odoo_governed_demo.py` | ✅ live-verified |
+| Persistent skill registry: versions, states, append-only transition history | `registry.py` | ✅ |
+| Skill proposal: validate → sandbox → **human approval** → activate | `skill_proposal.py` | ✅ demo capability, outside the experiment by §15 |
+| Executable business preconditions | `preconditions.py` | ⚠️ mechanism ready; frozen catalog declares none, on purpose |
+| Mutation preview on `SIMULATE` | `runtime.preview_mutation` | ✅ |
+| Retriever comparison: TF-IDF vs embeddings vs hybrid (§22) | `scripts/compare_retrievers.py` | ✅ TF-IDF wins on both splits |
+| 12 end-to-end scenarios + 4 contract-test suites (§29) | `tests/test_end_to_end.py`, `tests/test_contracts.py` | ✅ |
+| Six-scenario deterministic demo (§38) | `scripts/demo.py` | ✅ self-verifying |
+| Results export (CSV) and reproducible figures (§31) | `scripts/export_results.py`, `scripts/make_figures.py` | ✅ Tableau workbook itself is manual |
 
-305 tests, `ruff`/`mypy` clean, CI green.
+384 tests, `ruff`/`mypy` clean, CI green.
+
+Every software requirement CLAUDE.md specifies is implemented; the
+section-by-section audit lives in
+[`docs/spec-coverage.md`](docs/spec-coverage.md), including the five
+things that remain and why none of them is code.
 
 ### Real LLM clients
 
@@ -264,6 +277,10 @@ make validate-dataset     # runs the catalog/intents/generator test suites
 make benchmark-smoke      # regenerates data/bench_v1.jsonl + the wiring report
 make verify-freeze        # fails if the frozen test split or catalog drifted
 make experiment           # runs the 1.080-execution paired A/B/C experiment
+make demo                 # the six §38 scenarios, deterministic, no network
+make compare-retrievers   # the §22 TF-IDF / embeddings / hybrid comparison
+make export-results       # CSV tables for the results chapter / dashboard
+make figures              # reproducible PNG+SVG figures (needs the figures group)
 make build                # builds sdist + wheel
 ```
 
@@ -284,6 +301,22 @@ Ruff is the formatter and linter; mypy is static type checking only (not a
 formatter). mypy is configured to skip re-checking `torch`/`transformers`/
 `sentence_transformers` internals — without that override a full run took minutes
 instead of seconds.
+
+`make figures` needs matplotlib, which lives in its own `figures` dependency
+group rather than in the defaults:
+
+```sh
+uv sync --group figures && make figures
+uv sync --frozen --group dev        # restore the environment CI type-checks
+```
+
+That separation is not stylistic. Installing matplotlib into the environment
+mypy analyses makes mypy 1.15 crash with an internal error (`unresolved
+placeholder type None` while serializing its cache) against this project's
+numpy `follow_imports = "skip"` override — reproduced by bisection, and gone
+once matplotlib is uninstalled. Keeping it out of `dev` means CI type-checks
+the same environment it always has. The committed figures under
+`reports/figures/` are the deliverable either way.
 
 ## Run the API locally
 
