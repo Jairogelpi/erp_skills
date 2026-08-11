@@ -15,6 +15,7 @@ que **falta**, sin redondear a favor.
 | §17 | 480 casos, splits 240/120/120, 30 % ruido, 20 % adversarial | `bench_generator.py`; conteos exactos por test; fuga verificada ausente |
 | §18 | Sistemas A / B / C | `system_a.py`, `system_b.py`, `system_c.py` |
 | §19 | 1.080 observaciones emparejadas, orden aleatorizado, estado restaurado, congelación | `experiment.py`, `freeze.py`, `make verify-freeze` en CI |
+| §19 (congelación completa) | Test, dataset, catálogo, semilla, **prompts y configuración de proveedor** | `freeze.py` schema 1.1: `prompt_hash` + `provider_config_hash`; deriva probada cambiando modelo, temperatura y prompt (`tests/test_freeze.py`) |
 | §20 | STSR, false allow, recuperación, estabilidad, tokens, trazabilidad, reutilización | `metrics.py`, `traceability.py` |
 | §21 | McNemar, Q de Cochran, bootstrap, Holm, tamaños de efecto | `statistics.py`, verificado contra valores críticos conocidos |
 | §22 | **Comparación TF-IDF / embeddings / híbrido** | `scripts/compare_retrievers.py`, `docs/retriever-comparison.md` |
@@ -43,7 +44,6 @@ que **falta**, sin redondear a favor.
 | RF-16 | Latencia ✅, tokens ✅, errores ✅. **Coste real y tiempo de revisión humana no**: el coste es análisis de sensibilidad (§20 lo permite explícitamente) y el tiempo de revisión requeriría usuarios reales, excluidos por §11. |
 | RF-18 | CSV ✅. **Parquet solo si `pandas`+`pyarrow` están instalados**, y no se han añadido como dependencia: RF-18 dice "CSV **o** Parquet" y §27 cierra con la regla de no introducir dependencias sin necesidad demostrada. |
 | §31 | Los **insumos** del dashboard existen: tablas CSV (`export_results.py`) y cinco figuras reproducibles PNG/SVG (`make_figures.py`). **El workbook de Tableau en sí es trabajo manual** que este repositorio no puede generar. |
-| §19 | La congelación (`data/freeze_manifest.json`) cubre split de test, dataset, catálogo y semilla, pero **no la configuración del proveedor LLM** (modelo, temperatura, reintentos). Limitación declarada desde que existe el primer cliente real. |
 | §6 H3 | El brazo exploratorio de temperatura está **implementado** (`--temperature`) pero **no ejecutado**: con temperatura 0, que §23 exige, H3 sale 1,000 en los tres sistemas por construcción. `metrics.paraphrase_consistency` (H3b) sí discrimina y está probado, pero la corrida con LLM real que lo mediría tampoco se ha lanzado. |
 | §26 | El **demo adversarial contra Odoo real** (`scripts/odoo_adversarial_demo.py`) está escrito pero **bloqueado**: el usuario de API de la instancia no pertenece al grupo Sales, así que `crm.lead` devuelve `AccessError`. Irónicamente, es el principio de mínimo privilegio funcionando. |
 | §17/§21 | **Kappa de anotación pendiente.** El instrumento existe (`data/annotation_review_sheet.csv`, 96 casos estratificados) y `scripts/compute_agreement.py` se niega a emitir un número sin anotación humana. Es un paso humano, no automatizable. |

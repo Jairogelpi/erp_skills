@@ -31,6 +31,23 @@ EXTRACTION_SYSTEM_PROMPT = (
 )
 
 
+# Likewise shared: the tool-selection instruction every real provider
+# sends. It lived copy-pasted in each client, which made D-03's "same
+# prompt for A/B/C" a convention three files had to keep agreeing on by
+# hand. Defining it once makes the requirement structural, and lets
+# `freeze.py` hash one artefact instead of three that could drift apart.
+SELECTION_SYSTEM_PROMPT = (
+    "Eres un selector de herramientas para un ERP. Dada una peticion en "
+    "espanol y una lista de herramientas disponibles, elige como maximo "
+    "una herramienta y propone sus argumentos. Responde EXCLUSIVAMENTE "
+    "con un objeto JSON de la forma "
+    '{"tool_name": "<nombre o null>", "arguments": {}}. '
+    "No inventes argumentos que no puedas inferir del texto: dejalos "
+    "fuera del objeto si no hay evidencia textual clara. No ejecutes "
+    "nada, no expliques tu razonamiento, no anadas texto fuera del JSON."
+)
+
+
 def build_extraction_prompt(query_text: str, fields: list[str]) -> str:
     return f"Peticion: {query_text}\n\nCampos a extraer: {', '.join(fields)}"
 

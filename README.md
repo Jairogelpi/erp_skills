@@ -166,8 +166,11 @@ one the evidence actually supports.
 
 > **⚠️ Scope.** Free-tier model (`openai/gpt-oss-20b:free`), not a
 > frontier/production model — disclosed, not hidden. The freeze manifest
-> does not yet cover provider config (model, temperature, retries), a
-> disclosed trade-off. Other limits in [`docs/results.md`](docs/results.md):
+> (schema 1.1) now covers prompts and provider config (model,
+> temperature, retries, timeout, token cap) alongside the test split,
+> dataset, catalog and seed; the run above predates that extension, so
+> its provider config is recorded but was not hash-enforced at the time.
+> Other limits in [`docs/results.md`](docs/results.md):
 > A scores 0 on STSR largely by construction (generic CRUD cannot encode
 > postconditions), so **C − B is the informative contrast**; the
 > adversarial detectors are lexical; H8 (cost) is a declared-rate

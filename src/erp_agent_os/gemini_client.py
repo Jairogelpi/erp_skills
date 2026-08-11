@@ -33,6 +33,7 @@ from google.genai import errors, types
 
 from erp_agent_os.llm_client import (
     EXTRACTION_SYSTEM_PROMPT,
+    SELECTION_SYSTEM_PROMPT,
     ArgumentExtraction,
     ToolCall,
     ToolSpec,
@@ -71,16 +72,7 @@ class GeminiConfig:
     min_interval_seconds: float = DEFAULT_MIN_INTERVAL_SECONDS
 
 
-_SYSTEM_PROMPT = (
-    "Eres un selector de herramientas para un ERP. Dada una peticion en "
-    "espanol y una lista de herramientas disponibles, elige como maximo "
-    "una herramienta y propone sus argumentos. Responde EXCLUSIVAMENTE "
-    "con un objeto JSON de la forma "
-    '{"tool_name": "<nombre o null>", "arguments": {}}. '
-    "No inventes argumentos que no puedas inferir del texto: dejalos "
-    "fuera del objeto si no hay evidencia textual clara. No ejecutes "
-    "nada, no expliques tu razonamiento, no anadas texto fuera del JSON."
-)
+_SYSTEM_PROMPT = SELECTION_SYSTEM_PROMPT
 
 
 def _tool_menu(tools: list[ToolSpec]) -> str:
