@@ -130,10 +130,10 @@ Full analysis — including the stub-selector baseline kept for comparison
 - **Inference unit is the case (n = 120), not the execution.** Repetitions of a case are not independent; using all 360 per system would be pseudo-replication, narrowing every CI by ≈√3.
 
 > **⚠️ This run handed every system a perfect, unpaid argument parse.**
-> Removing that bias changes the headline result — see the next section.
+> Removing that bias shrinks the headline result — see the next section.
 > These numbers remain valid for what they measure (tool selection with
-> arguments given), but the C − B superiority they show does not survive
-> honest parsing.
+> arguments given), but the C − B margin they show is inflated by help
+> that C benefited from most.
 
 ### The result that changed: honest argument parsing
 
@@ -145,24 +145,35 @@ being handed `case.expected_arguments` for free. Full analysis in
 
 | Metric | A | B | **C** |
 |---|---|---|---|
-| STSR | 0.000 | 0.483 | **0.558** |
-| Mean tokens/execution | 185.1 | 265.2 | **67.6** |
+| STSR | 0.000 | 0.483 | **0.633** |
+| Mean tokens/execution | 185.1 | 265.3 | **67.6** |
 | False allow rate | 0.889 | 0.889 | **0.111** |
 | Traceability (0–1) | 0.356 | 0.374 | **0.820** |
 
-- **C − B on STSR = +0.075, 95% CI [−0.025, +0.175], Holm *p* = 0.212 — not significant.** The CI crosses zero. C fell 0.700 → 0.558 once it had to parse for real; B barely moved (0.517 → 0.483) because it already did its own tool selection. **H1 still holds as non-inferiority** (CI lower bound −0.025 is above the −5 pp margin), but not as superiority.
+- **C − B on STSR = +0.150, 95% CI [+0.042, +0.258], Holm *p* = 0.016.** Significant, and a *smaller* effect than the +0.183 the free parse produced. C fell 0.700 → 0.633 once it had to parse for real; B barely moved (0.517 → 0.483) because it already did its own tool selection. H1 holds both as non-inferiority and, here, as superiority.
 - **C − B on tokens = −197.6, 95% CI [−198.3, −196.9]** — C is **3.9× cheaper**. All three pay the same extraction; A and B *additionally* pay an LLM tool-selection call, which C replaces with TF-IDF retrieval at zero cost.
 - Safety and traceability are **unchanged** across all runs: they come from the policy engine and audit store, not from argument quality.
 
-**The defensible claim, restated honestly:**
+> **The first honest-parse run scored C at 0.558 with C − B not
+> significant (*p* = 0.212), and it was published that way.** A skeptical
+> question about the instrument found the cause: the LLM extracted
+> `'27600 euros'` for a numeric field and the type validator rejected it
+> — a failure that penalised **only** C, the only system that validates
+> types before executing. A deliberately narrow currency-unit normaliser
+> (anything else still fails) fixed it, wired into B as well as C. The
+> superseded numbers are kept in [`docs/results.md`](docs/results.md)
+> because how they changed is the methodological point.
 
-> Governance does **not** buy more task success over a typed-tools
-> baseline. It buys **8× fewer unsafe executions, 2.2× better
-> traceability, and 3.9× fewer tokens — at no measurable cost in task
-> success.**
+**The defensible claim:**
 
-That is a narrower claim than the perfect-parse runs suggested, and the
-one the evidence actually supports.
+> Over a typed-tools baseline running the same LLM, governance buys
+> **8× fewer unsafe executions, 2.2× better traceability and 3.9× fewer
+> tokens**, plus a **small but significant** gain in task success
+> (+15.0 pp).
+
+That is narrower than the perfect-parse runs suggested (+18.3 pp) and
+stronger than the un-normalised run (not significant). It is what the
+evidence supports today.
 
 > **⚠️ Scope.** Free-tier model (`openai/gpt-oss-20b:free`), not a
 > frontier/production model — disclosed, not hidden. The freeze manifest
@@ -417,7 +428,9 @@ tests/                 pytest suite, one file per module, 100+ tests
 scripts/                export_bench_v1.py, run_bench_wiring_report.py
 data/                   generated benchmark + wiring report (regenerable, not
                         hand-edited)
-docs/                   dataset-card.md, roadmap.md, development-assistance.md
+docs/                   memoria.md (TFM draft, built from the real results),
+                        results.md, dataset-card.md, audit.md, threat-model.md,
+                        spec-coverage.md, roadmap.md, and the per-study pages
 openspec/changes/       SDD trail: proposal/spec/design/tasks/apply-progress
                         per work unit, with TDD evidence and disclosed budget
                         exceptions where a unit exceeded the 400-line review

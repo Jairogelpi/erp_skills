@@ -1,29 +1,41 @@
 # Resultados experimentales
 
-> ## ⚠️ Lee esto primero: el resultado principal cambió al quitar un sesgo
+> ## ⚠️ Lee esto primero: cuál es el resultado vigente
 >
-> Las ejecuciones 1 y 2 (abajo) entregaban a **los tres sistemas** los
+> Hay **cuatro ejecuciones** documentadas aquí. La vigente es la
+> **ejecución 4**; las anteriores se conservan porque el motivo por el
+> que quedaron superadas es material metodológico, no ruido.
+>
+> Las ejecuciones 1 y 2 entregaban a **los tres sistemas** los
 > argumentos ya extraídos (`case.expected_arguments`): un parseo
-> perfecto que nadie pagaba. Eso favorecía a System C, cuyo coste en
-> tokens salía **cero** porque su recuperación es TF-IDF y no
-> necesitaba el LLM para nada más.
+> perfecto que nadie pagaba, que favorecía a System C — su coste en
+> tokens salía **cero**, porque su recuperación es TF-IDF.
 >
-> La **ejecución 3** elimina ese sesgo: los tres sistemas extraen los
-> argumentos del texto crudo con el mismo LLM, el mismo prompt y la
-> misma lista de campos. El resultado principal cambia:
+> La **ejecución 3** eliminó ese sesgo (los tres extraen del texto crudo
+> con el mismo LLM y el mismo prompt) y el resultado se volvió no
+> significativo: C−B = +0,075, *p* = 0,212. Se publicó así.
 >
-> **La ventaja de C sobre B en éxito de tarea deja de ser
-> estadísticamente significativa** (C−B = +0,075, IC95 [−0,025,
-> +0,175], Holm *p* = 0,212).
+> La **ejecución 4** corrige un segundo sesgo, este **contra** C: el LLM
+> extraía `'27600 euros'` para un campo numérico y el validador lo
+> rechazaba por tipo — un fallo que solo penaliza al sistema que valida
+> antes de ejecutar. Con normalización de unidad monetaria (deliberadamente
+> estrecha) el resultado vigente es:
 >
-> C mantiene intactas sus ventajas en **seguridad** (false allow 0,111
-> vs 0,889, 8×) y **trazabilidad** (0,82 vs 0,37), y además consume
-> **3,9× menos tokens** que B. La tesis defendible pasa a ser: *la
-> gobernanza compra seguridad, auditabilidad y ahorro de tokens **sin
-> coste en éxito de tarea***, no *"además gana en éxito de tarea"* —
-> que era lo que el parseo regalado sostenía.
+> | | A | B | **C** |
+> |---|---|---|---|
+> | STSR | 0,000 | 0,483 | **0,633** |
+> | False allow | 0,889 | 0,889 | **0,111** |
+> | Tokens/ejecución | 185,1 | 265,3 | **67,6** |
+> | Trazabilidad | 0,356 | 0,374 | **0,820** |
 >
-> Detalle completo en [§ Ejecución 3](#ejecución-3-parseo-real-el-resultado-que-cambia-la-tesis).
+> **C − B = +0,150, IC95 [+0,042, +0,258], Holm *p* = 0,016.**
+>
+> Tesis defendible: la gobernanza compra **8× menos ejecuciones
+> inseguras, 2,2× más trazabilidad y 3,9× menos tokens**, con una
+> ventaja **pequeña pero significativa** en éxito de tarea — más
+> estrecha que la que sostenía el parseo regalado (+0,183).
+>
+> Detalle en [§ Ejecución 4](#ejecución-4-normalización-de-argumentos-el-resultado-vigente).
 
 Tres ejecuciones, mismo protocolo (`uv run python scripts/run_experiment.py
 [--real-llm --real-parser --provider {groq,gemini,openrouter}]`):
@@ -70,9 +82,14 @@ reconstruido por observación.
 > **OpenRouter**. Es la que se reporta aquí como la vigente; los números
 > de la corrida Groq anterior (sin H2/H7) quedan superados, no se citan.
 >
-> La congelación (`data/freeze_manifest.json`) todavía no cubre la
-> configuración del proveedor (modelo, temperatura, reintentos) — es
-> una limitación abierta, no un descuido.
+> La congelación (`data/freeze_manifest.json`, schema 1.1) **ya cubre**
+> prompts y configuración de proveedor (modelo, temperatura,
+> reintentos, timeout, tope de tokens) además de split, dataset,
+> catálogo y semilla. Matiz honesto: las ejecuciones reportadas aquí son
+> **anteriores** a esa extensión, así que su configuración queda
+> registrada en el manifiesto de cada corrida pero no estaba
+> hash-verificada en el momento de ejecutarse. Cualquier réplica futura
+> sí lo estará.
 
 ---
 
@@ -93,14 +110,15 @@ reconstruido por observación.
   la llamada de selección de herramienta por recuperación TF-IDF.
 - **Variabilidad: no medible.** H3 sale 1,0 en los tres sistemas porque
   §23 exige temperatura 0, que los hace deterministas por diseño.
-- **Éxito de tarea: se mantiene, no mejora.** Frente a B, C−B = +0,075
-  con IC95 [−0,025, +0,175] (*p* = 0,212): **no significativo**. Cumple
-  el margen de no inferioridad de −5 pp, pero la superioridad que
-  mostraban las ejecuciones con parseo perfecto no sobrevive.
+- **Éxito de tarea: mejora, pero poco.** Frente a B, C−B = +0,150 con
+  IC95 [+0,042, +0,258] (*p* = 0,016): significativo, y un efecto menor
+  que el +0,183 que sostenía el parseo regalado. Cumple también el
+  margen de no inferioridad de −5 pp.
 
-Es decir: la arquitectura gobernada **sí** reduce errores y tokens, y
-**mantiene** (no mejora) el éxito de tarea frente a un baseline de
-herramientas tipadas.
+Es decir: la arquitectura gobernada **sí** reduce errores de seguridad
+y tokens de forma contundente, y mejora el éxito de tarea de forma
+**modesta** frente a un baseline de herramientas tipadas con el mismo
+LLM.
 
 ---
 
@@ -355,6 +373,17 @@ C es el único que ejecuta correctamente operaciones de alto riesgo.
 
 ## Ejecución 3: parseo real, el resultado que cambia la tesis
 
+> **Superada por la ejecución 4.** Las cifras de esta sección se
+> conservan porque **se publicaron y se defendieron mientras se creían
+> correctas**, y porque el motivo por el que dejaron de serlo es
+> material metodológico. Contenían un sesgo asimétrico contra C
+> (defecto #13, `docs/audit.md`): el LLM extraía `'27600 euros'` para un
+> campo numérico y el validador lo marcaba `WRONG_TYPE`. Ese fallo
+> **solo penalizaba a C**, porque solo C valida tipos antes de ejecutar.
+> Lo que se estaba midiendo como "castigo por gobernanza" era una unidad
+> monetaria sin normalizar. Los números vigentes están en
+> [§ Ejecución 4](#ejecución-4-normalización-de-argumentos-el-resultado-vigente).
+
 ### El sesgo que se elimina
 
 Hasta aquí, los tres sistemas recibían `case.expected_arguments`: la
@@ -430,11 +459,106 @@ del almacén de auditoría, no de la calidad de los argumentos.
 
 ---
 
+## Ejecución 4: normalización de argumentos, el resultado vigente
+
+`data/experiment_results_real_parser.json` · `manifest.selector:
+"GroqClient"` · `real_parser: true` · `is_confirmatory_run: true`
+
+### Cómo se encontró el defecto que la motiva
+
+Ante el resultado no significativo de la ejecución 3, el autor preguntó
+si el instrumento estaba bien: *"¿estás seguro de que el de C no empeora
+tampoco mejora? ¿no estaremos haciendo algo mal?"*. Al revisar caso por
+caso los fallos de C, todos tenían la misma forma: el LLM extraía
+`'27600 euros'` para un campo numérico, el validador lo marcaba
+`WRONG_TYPE` y la política denegaba.
+
+Ese fallo **penalizaba únicamente a C**, porque solo C valida tipos
+antes de ejecutar; A no mira nada y B fallaba después por otra vía. Es
+decir, la ejecución 3 medía como "castigo por gobernanza" lo que era una
+unidad monetaria sin normalizar.
+
+`validation.normalize_arguments()` lo corrige y es deliberadamente
+**estrecho**: un número seguido opcionalmente de unidad monetaria
+(`euros|eur|€|$|usd|dolares`) normaliza; **cualquier otra cosa pasa tal
+cual y sigue fallando la validación**. Un normalizador permisivo habría
+convertido el validador en un colador e inflado a C por el motivo
+contrario. Se cableó a `system_c.py` **y** a `system_b.py`, no solo al
+sistema que se beneficia.
+
+### H1 (STSR)
+
+| Sistema | Ejec. 1 (parseo regalado) | Ejec. 3 (parseo real) | **Ejec. 4 (vigente)** |
+|---|---|---|---|
+| A | 0,000 | 0,000 | **0,000** |
+| B | 0,517 | 0,483 | **0,483** |
+| C | 0,700 | 0,558 | **0,633** |
+
+| Contraste (ejec. 4) | Diferencia | IC 95 % | Holm *p* | Odds ratio |
+|---|---|---|---|---|
+| C − A | **+0,633** | [+0,550, +0,717] | 1,55 × 10⁻¹⁷ | 153,0 |
+| C − B | **+0,150** | [+0,042, +0,258] | **0,0162** | 2,09 |
+
+Q de Cochran = 102,87 (gl = 2). **C−B vuelve a ser significativo, pero
+ahora por el motivo correcto:** el IC ya no cruza el cero y el efecto
+es menor que el que sostenía el parseo regalado (+0,183). H1 se acepta
+como no inferioridad (margen −5 pp) y además, en esta ejecución, como
+superioridad frente a B.
+
+### H2 (tokens), H4 (seguridad), H7 (trazabilidad)
+
+Sin cambios respecto a la ejecución 3 — la normalización actúa después
+de la extracción, así que no altera lo que se paga ni cómo decide la
+política:
+
+| Métrica | A | B | **C** |
+|---|---|---|---|
+| Tokens/ejecución | 185,1 | 265,3 | **67,6** (3,9× menos que B) |
+| Tokens totales | 66.636 | 95.497 | **24.344** |
+| False allow rate | 0,889 | 0,889 | **0,111** (8×) |
+| Recall de detección | 0,111 | 0,111 | **0,889** |
+| Trazabilidad (rúbrica) | 0,356 | 0,374 | **0,820** (2,2×) |
+| Coste modelado (0,05 USD/1k tok) | $3,33 | $4,77 | **$1,22** |
+
+Recuperación (H5): C Top-1 = 0,780, Top-3 = 0,941, MRR = 0,855,
+cobertura 0,907, abstención 0,093, exactitud selectiva 0,785. B alcanza
+Top-1 = 0,898 sin abstenerse nunca — su selector real es bueno, y ese
+es justamente el motivo por el que C−B es el contraste informativo y
+no C−A.
+
+### Honestidad sobre el orden de los hechos
+
+El resultado **no significativo de la ejecución 3 se publicó y se
+defendió** mientras se creía correcto; no se guardó esperando a que
+mejorase. Y la corrección que lo cambió **no se buscó para mejorarlo**:
+se buscó porque el autor dudó del instrumento, y el instrumento estaba
+mal. De trece defectos encontrados en el proyecto, doce salieron de
+auditorías propias; **este lo destapó una pregunta escéptica sobre un
+resultado ya aceptado** — el patrón esperable, porque la autoauditoría
+encuentra bien el código que se contradice consigo mismo y mal el que
+hace exactamente lo que uno creía que debía hacer.
+
+### Formulación defendible, tras la ejecución 4
+
+> Frente a un baseline de herramientas tipadas con el mismo LLM, la
+> arquitectura gobernada compra **8× menos ejecuciones inseguras, 2,2×
+> más trazabilidad y 3,9× menos tokens**, con una ventaja **pequeña
+> pero significativa** en éxito de tarea (+15,0 pp, IC95 [+4,2, +25,8],
+> *p* = 0,016).
+
+Es una afirmación más estrecha que la de las ejecuciones con parseo
+regalado (+18,3 pp) y más fuerte que la de la ejecución 3 (no
+significativa). Es la que la evidencia soporta hoy.
+
+---
+
 ## Hipótesis, estado final
+
+*(Estado tras la ejecución 4, la vigente.)*
 
 | H | Estado |
 |---|---|
-| H1 | **Aceptada como no inferioridad, no como superioridad.** C−A significativo en las tres ejecuciones. C−B **deja de ser significativo** con parseo real (+0,075, *p* = 0,212); el margen de no inferioridad (−5 pp) se mantiene. |
+| H1 | **Aceptada.** C−A significativo en las cuatro ejecuciones. C−B = +0,150, IC95 [+0,042, +0,258], *p* = 0,016: significativo, con un efecto **menor** que el que sostenía el parseo regalado (+0,183) y sin el sesgo que hundía a C en la ejecución 3 (+0,075, no significativo). Se cumple además el margen de no inferioridad (−5 pp). |
 | H2 | **Confirmada con parseo honesto**: C 67,6 tok/ejec frente a B 265,2 (−197,6, IC95 [−198,3, −196,9]), 3,9× más barato |
 | H3 | **Nula por diseño**: temperatura=0 exigida por §23 impide discriminar |
 | H4 | **Confirmada y robusta**: C recall 0,889 / false allow 0,111 estable entre proveedores y entre regímenes de parseo; A/B en 0,889 de false allow |
