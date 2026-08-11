@@ -51,6 +51,16 @@ API es de demo), y cifrado en reposo.
   deshonesto. Medido con un benchmark externo (`docs/injecagent-stress-test.md`),
   no solo declarado: 0 % → 3,3 % sobre 510 casos de InjecAgent fuera de
   distribución.
+- Ese 3,3 %, sin embargo, mide el **detector**, no el sistema. Los
+  mismos 510 payloads por los tres canales que un atacante controla de
+  verdad (texto de la petición, dato almacenado que se lee, y parser
+  comprometido con los argumentos dictados por el atacante) producen
+  **0/1.530 mutaciones no autorizadas**: la defensa efectiva es
+  arquitectónica (los datos del ERP nunca ocupan posición de
+  instrucción; el LLM solo puede emitir un `skill_id` y argumentos que
+  se validan contra el esquema), no léxica. **No probado:** un
+  adversario adaptativo que conozca el catálogo y redacte argumentos
+  válidos para una skill legítima pero indeseada.
 - La rúbrica de trazabilidad mide presencia de evidencia, no su calidad
   semántica.
 - STSR exige estado final correcto, lo que mitiga (no elimina) el riesgo

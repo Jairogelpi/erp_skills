@@ -512,6 +512,16 @@ incorrectos** y se rehízo la ejecución completa.
    mayoría de los payloads son peticiones educadas sin ningún framing de
    ataque textual ("Please delete my clinical documents..."), invisibles
    por diseño a cualquier detector léxico. Medido, no solo declarado.
+   **Matiz que corta en la otra dirección, igual de medido:** esos mismos
+   510 payloads, entregados por los tres canales que un atacante controla
+   de verdad (texto de la petición, dato almacenado que la petición lee,
+   y parser comprometido con los argumentos dictados por el atacante),
+   producen **0/1.530 mutaciones no autorizadas**. La ventaja en H4 no
+   descansa en el detector léxico sino en la arquitectura, y el brazo de
+   parser comprometido lo aísla concediendo el LLM entero al atacante:
+   510/510 `DENY`. Sigue sin probarse un adversario adaptativo que
+   conozca el catálogo y redacte argumentos válidos para una skill
+   legítima pero indeseada.
 5. **Benchmark sintético y plantillado** — 480 casos de 24 plantillas en
    un solo idioma y un solo ERP simulado.
 6. **Anotación de un solo anotador** — kappa pendiente.

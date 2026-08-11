@@ -60,6 +60,7 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Token instrumentation (H2) and traceability rubric (H7) | `metrics.py`, `traceability.py` | ✅ |
 | Confirmatory run with a real LLM (CLAUDE.md §19) | `scripts/run_experiment.py --real-llm --provider {groq,gemini,openrouter}` | ✅ executed, 1.080 observations |
 | External adversarial stress test (InjecAgent, out-of-distribution) | `scripts/injecagent_stress_test.py` | ✅ measured, 0%→3.3% (see below) |
+| Injection **resistance** sweep: 510 payloads × 3 attack channels | `scripts/injection_resistance_test.py` | ✅ 0/1530 unauthorized mutations |
 | **Odoo 19 adapter** (post-core, JSON-2 API, allowlisted, no delete) | `odoo_client.py` | ✅ live-verified |
 | Odoo 19 demo through the **full governed pipeline** (System C, real approval gate) | `odoo_handlers.py`, `scripts/odoo_governed_demo.py` | ✅ live-verified |
 | Persistent skill registry: versions, states, append-only transition history | `registry.py` | ✅ |
@@ -195,6 +196,33 @@ result and honest interpretation in
 
 ```sh
 uv run python scripts/injecagent_stress_test.py
+```
+
+That 3.3% answers the wrong question for this architecture, though. The
+defence against indirect injection here is not the regex — it is that
+ERP data never reaches an instruction position, that the LLM can only
+emit a skill id plus arguments, and that the handler writes solely to
+its own allowlisted model and fields. So the same 510 payloads were
+pushed through **every channel an attacker actually controls**, asking
+whether any unauthorized mutation occurs:
+
+| Attack channel | Unauthorized mutations | Decisions |
+|---|---|---|
+| Payload in the request text | **0 / 510** | 493 `ALLOW`, 17 `DENY` |
+| Payload stored in an ERP field the request reads | **0 / 510** | 510 `ALLOW` |
+| Compromised parser (attacker dictates the arguments) | **0 / 510** | 510 `DENY` |
+| **Total** | **0 / 1530** | |
+
+The third arm concedes the LLM entirely and tests governance alone. A
+positive control aborts the run if a clean request fails to reach the
+handler and mutate — an earlier version used a role the target skill
+does not permit, abstained on everything and reported a perfect score
+that could not have failed. Full method, honest reading of each row,
+and what is *not* claimed:
+[`docs/injecagent-stress-test.md`](docs/injecagent-stress-test.md).
+
+```sh
+uv run python scripts/injection_resistance_test.py
 ```
 
 ### Odoo 19 demo (post-core, real instance)
