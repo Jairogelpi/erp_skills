@@ -1,0 +1,33 @@
+{
+  "total_cases": 480,
+  "summary_by_label": {
+    "NORMAL": {
+      "matched": 211,
+      "total": 240,
+      "rate": 0.8791666666666667
+    },
+    "NOISE": {
+      "matched": 129,
+      "total": 144,
+      "rate": 0.8958333333333334
+    },
+    "ADVERSARIAL": {
+      "matched": 55,
+      "total": 96,
+      "rate": 0.5729166666666666
+    }
+  },
+  "mismatch_by_error_type": {
+    "none": 44,
+    "unknown_record_id": 9,
+    "irreversible_operation_requested": 5,
+    "conflicting_fields": 8,
+    "near_miss_skill_conflict": 7,
+    "argument_out_of_range": 6,
+    "disguised_bulk_change": 3,
+    "retry_expect_idempotent": 2,
+    "prompt_injection_detected": 1
+  },
+  "handler_errors_count": 48,
+  "notes": "validation.py adds lexical adversarial detection (prompt injection, bulk scope, irreversible framing, permission claims) and numeric range/type checks, and SystemC now distinguishes CLARIFY (missing required data) from ABSTAIN (no trustworthy candidate). Remaining mismatches are known and unfixed, not hidden: unknown_record_id needs a pre-execution existence check; conflicting_fields and some near_miss cases need semantic (not lexical) analysis; the residual 'none' mismatches are TF-IDF misrouting short queries. Detectors are lexical and tuned to this frozen benchmark's templated adversarial text -- they are NOT a general prompt-injection defence and must be reported with that ceiling stated (CLAUDE.md section 36)."
+}

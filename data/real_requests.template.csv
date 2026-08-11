@@ -1,0 +1,3 @@
+request_text,expected_skill,notas
+"Aqui va la peticion TAL CUAL la escribio o la dijo la persona. Con sus faltas, sus abreviaturas y su vaguedad. NO la reescribas con el vocabulario del catalogo: eso destruiria la medicion.",crm.create_opportunity,"Borra esta fila de ejemplo"
+"Si ninguna skill del catalogo encaja, deja expected_skill VACIO. El sistema deberia abstenerse, y eso tambien se mide.",,"Borra esta fila de ejemplo"

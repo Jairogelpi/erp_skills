@@ -18,8 +18,32 @@ sdd:
     - Build FakeERP before the skill contract; exclude Odoo 19 from core.
     - Preserve the confirmatory benchmark protocol and frozen-test boundary.
   current_planning_slice:
-    - Freeze ERP-Skills-Bench dataset schema and minimal scaffold (work unit 1).
-    - Defer FakeERPAdapter and skill contract to a follow-on SDD change.
+    - Freeze ERP-Skills-Bench dataset schema and minimal scaffold (work unit 1) — done.
+    - Implement FakeERPAdapter (work unit 2) — done.
+    - Implement the versioned skill contract (work unit 3) — done.
+    - Implement the deterministic runtime and policy engine (work unit 4) — done.
+    - Implement the append-only audit store (work unit 5) — done.
+    - Add core safety property tests (work unit 6, closes P4.6/phase 4) — done.
+    - Implement intent parser contract and TF-IDF retrieval (work unit 7,
+      P5.1/P5.3) — done.
+    - Implement the approval service (work unit 8, closes P6.3) — done.
+    - Integrate System C end to end (work unit 9, closes P5.4) — done.
+    - Add embeddings retriever and hybrid ranker (work unit 10, closes
+      P5.2) — done.
+    - Populate 12-skill catalog (work unit 11, P3.2 part 1) — done.
+    - Define 24 canonical intents (work unit 12, closes P3.2) — done.
+    - Generate ERP-Skills-Bench v1: 480 cases, 240/120/120 split, 144
+      noise/96 adversarial (work unit 13, closes P3.3/P3.5) — done.
+      Second-annotator review/kappa (P3.4) remains a pending human step.
+    - Harden adapter/runtime error handling (work unit 14) — done.
+    - Wire ERP-Skills-Bench v1 to real SystemC execution, 480/480 cases
+      run, honest ADVERSARIAL-gap finding reported (work unit 15, P8.1
+      groundwork) — done.
+    - Implement FastAPI layer over SystemC: demo auth, correlation id,
+      rate limit, /requests /skills /audit /approvals (work unit 16,
+      closes P6.1) — done.
+    - Next: persistence (P6.2), then A/B systems (P8.1 remainder) before
+      the confirmatory experiment.
 
 testing:
   runner: pytest

@@ -31,7 +31,40 @@ Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLA
 | `EXT` | extensión post-core | no puede bloquear CONF |
 | `CONF` | requisito confirmatorio | debe cerrarse antes del experimento final |
 
-**Estado al 2026-08-04.** Solo están completados el cierre de planificación normativa y la unidad 1 de esquema/scaffold del dataset. La unidad 1 tiene cinco tests aprobados; FakeERP y el contrato de skills siguen pendientes y no se deben declarar completados.
+**Estado al 2026-08-07.** Unidades 1–30 (incluye tokens/H2, rúbrica de trazabilidad/H7, tres clientes LLM reales, checkpoint/resume y caché de llamadas). **El experimento confirmatorio de §19 está ejecutado con LLM real y con H2/H7 medidos por primera vez**: 1.080 observaciones (120 casos de test × 3 sistemas × 3 repeticiones), `manifest.selector: "OpenRouterClient"` (`openai/gpt-oss-20b:free`), `is_confirmatory_run: true`, `data/experiment_results.json`, análisis completo en [`results.md`](results.md), que conserva también la línea base con selector stub para aislar la contribución arquitectónica.
+
+**Historial de proveedor:** Groq completó una corrida entera antes de que existieran H2/H7; al relanzar con la instrumentación nueva, la cuota diaria de Groq (agotada por intentos previos sin checkpoint) y luego la de Gemini (20 peticiones/día por modelo en todos los modelos probados) bloquearon el reintento. OpenRouter (`openai/gpt-oss-20b:free`) es el que completó la corrida que se reporta. Los tres clientes quedan en el repo, probados y seleccionables vía `--provider {groq,gemini,openrouter}`.
+
+**Resultados medidos, ejecución confirmatoria real** (unidad de inferencia = caso, n=120, no la ejecución):
+
+| Métrica | A | B | C |
+|---|---|---|---|
+| STSR | 0,000 | 0,517 | **0,700** |
+| False allow rate | 0,333 | 0,889 | **0,111** |
+| Tokens medios/ejecución (H2) | 198,2 | 230,3 | **0,0** |
+| Trazabilidad media (H7) | 0,19 | 0,36 | **0,80** |
+| Top-1 recuperación | 0,000 | 0,890 | **0,780** |
+
+C−A = +0,700 IC95 [+0,617, +0,783], Holm *p* = 2,71×10⁻¹⁹, OR 169. C−B = +0,183 IC95 [+0,058, +0,308], Holm *p* = 7,65×10⁻³, OR 2,07. Q de Cochran = 109,46 (gl 2). H1 (no inferioridad, margen −5 pp) **se acepta**.
+
+> **⚠️ Esta ejecución entregaba a los tres sistemas un parseo perfecto de argumentos que nadie pagaba**, lo que inflaba a C (tokens = 0, porque su recuperación es TF-IDF y no necesitaba el LLM para nada). Ver la ejecución con `--real-parser` justo debajo: **el resultado principal cambia**.
+
+**Ejecución con parseo real** (`data/experiment_results_real_parser.json`, Groq, `real_parser: true`) — los tres sistemas extraen los argumentos del texto crudo con el mismo LLM, prompt y lista de campos:
+
+| Métrica | A | B | C |
+|---|---|---|---|
+| STSR | 0,000 | 0,483 | **0,558** |
+| Tokens medios/ejecución | 185,1 | 265,2 | **67,6** |
+| False allow rate | 0,889 | 0,889 | **0,111** |
+| Trazabilidad media | 0,356 | 0,374 | **0,820** |
+
+**C−B en STSR = +0,075 IC95 [−0,025, +0,175], Holm *p* = 0,212 — no significativo.** El IC cruza el cero: sin el parseo regalado, la superioridad de C sobre B en éxito de tarea no se sostiene. H1 **sigue aceptándose como no inferioridad** (límite inferior −0,025, por encima del margen de −5 pp), no como superioridad. En tokens sí gana con holgura: C−B = −197,6 IC95 [−198,3, −196,9], **3,9× más barato**. Seguridad y trazabilidad no cambian: provienen del policy engine y la auditoría, no de la calidad del parseo.
+
+**Tesis defendible, reformulada:** la gobernanza **no compra más éxito de tarea** frente a un baseline de herramientas tipadas; compra **8× menos ejecuciones inseguras, 2,2× más trazabilidad y 3,9× menos tokens, sin coste medible en éxito de tarea**.
+
+**Doce defectos encontrados y corregidos por auditoría propia** (unidades 21–31, detalle completo en [`docs/audit.md`](audit.md)): fuga del test congelado; validador de fuga tautológico; dos conjuntos vacíos de STSR; pseudo-replicación; dos huecos en la suite estadística (mutation testing); caveat del manifiesto inconsistente con `is_confirmatory_run`; caveat con el nombre del proveedor hardcodeado; error de varianza de `Callable` al retipar contra `ErpAdapter`; dos clases de error homónimas entre `odoo_client` y `adapters`; y **el #12, caché de extracción compartido entre A/B/C**, que hacía que los tokens por sistema midieran orden de ejecución. Once correcciones **no cambiaron el signo de ninguna conclusión**; la doceava **sí** — es la que reformuló la tesis. Mutation testing acumulado: 40 mutantes, 40 muertos, cobertura de los 23 módulos con lógica de antes de esta sesión.
+
+**Pendiente explícito:** H8 (coste) es análisis de sensibilidad declarado, no gasto medido (los proveedores usados son gratis de verdad); H3 no discriminable ni con LLM real en tres proveedores distintos (temperatura 0 exigida por §23 la vuelve determinista por diseño); kappa de anotación pendiente (paso humano); dashboard y vídeo sin empezar.
 
 ## Mapa de requisitos y decisiones normativas
 
@@ -100,8 +133,8 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 - [x] **P1.1** Consolidar pregunta, hipótesis H1–H8, métricas, alcance/exclusiones y decisiones no negociables en `CLAUDE.md` (§§5–6, 11, 19–21, 41).
 - [x] **P1.2** Fijar el orden de construcción y la separación núcleo/extensiones (§§26, 31, 34, 42).
-- [ ] **P1.3** Definir bibliografía, plan de análisis ejecutable, rúbrica de trazabilidad y hoja de acuerdo de anotación (D-04, D-09).
-- [ ] **P1.4** Registrar amenazas a validez, potencia y supuestos de coste antes de medir (D-04, D-08).
+- [x] **P1.3** Definir bibliografía, plan de análisis ejecutable, rúbrica de trazabilidad y hoja de acuerdo de anotación (D-04, D-09). Evidencia: `docs/bibliography.md`, `docs/experiment-protocol.md`, `docs/traceability-rubric.md`; plan **ejecutable** en `src/erp_agent_os/statistics.py` (McNemar, Q de Cochran, bootstrap, Holm, Cliff's delta) verificado contra valores críticos conocidos en `tests/test_statistics.py` → 13 passed. Instrumento de acuerdo: `src/erp_agent_os/agreement.py` + `scripts/build_annotation_sample.py`. Nota: la revisión sistemática del estado de la cuestión sigue pendiente, declarada en `docs/bibliography.md`.
+- [x] **P1.4** Registrar amenazas a validez, potencia y supuestos de coste antes de medir (D-04, D-08). Evidencia: `docs/threat-model.md` (controles marcados implementado/PARCIAL/ausente + amenazas a validez interna/externa/constructo/estadística); `docs/experiment-protocol.md` §5 (potencia, con el supuesto de independencia entre paráfrasis declarado como limitación, no ocultado).
 
 | ID | Fuente normativa | Resultado observable esperado | Evidencia concreta | Gate binario |
 | --- | --- | --- | --- | --- |
@@ -133,10 +166,10 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 ### 3. ERP-Skills-Bench `CONF`
 
 - [x] **P3.1** Congelar el contrato de casos v1.0, etiquetas, abstención explícita, plan 240/120/120 y validación de fuga de grupos (RF-17, D-01–02). Evidencia: `openspec/changes/bootstrap-dataset-fakeerp-skill-contract/specs/erp-skills-bench/spec.md`; `python -m pytest` → 5 passed.
-- [ ] **P3.2** Diseñar las 24 intenciones en 8 familias y el mapeo a exactamente 12 skills (D-01).
-- [ ] **P3.3** Anotar 480 casos sintéticos con estado inicial/final, decisión, error, riesgo, aprobación y aclaración (D-01–02).
-- [ ] **P3.4** Validar 144 casos de ruido, 96 adversariales y sus solapamientos; revisar muestra por segundo anotador y resolver discrepancias (D-02, §21).
-- [ ] **P3.5** Publicar dataset card, esquema, validadores, distribución por estratos y manifiesto de split congelable (RF-17–18).
+- [x] **P3.2** Diseñar las 24 intenciones en 8 familias y el mapeo a exactamente 12 skills (D-01). Evidencia: `openspec/changes/populate-skill-catalog/`, `openspec/changes/define-canonical-intents/`; `src/erp_agent_os/{catalog,bench_intents}.py`; `python -m pytest tests/test_catalog.py tests/test_bench_intents.py` → 10 passed.
+- [x] **P3.3** Anotar 480 casos sintéticos con estado inicial/final placeholder, decisión, error, riesgo y aclaración (D-01–02). Evidencia: `openspec/changes/generate-bench-v1-dataset/`; `src/erp_agent_os/bench_generator.py`; `data/bench_v1.jsonl` (480 líneas); `python -m pytest tests/test_bench_generator.py` → 8 passed. Nota: `initial_state`/`expected_final_state` son placeholders (`pending_execution_wiring`), no snapshots reales de `FakeERPAdapter` — el wiring de ejecución es trabajo de fase 8 (P8.1–P8.3), documentado explícitamente en `docs/dataset-card.md`, no reclamado como completo.
+- [-] **P3.4** Validar 144 casos de ruido, 96 adversariales (conteos exactos verificados por test) y sus solapamientos (0 por construcción); revisar muestra por segundo anotador y resolver discrepancias (D-02, §21). **Instrumento entregado:** `src/erp_agent_os/agreement.py` (kappa de Cohen, verificado contra ejemplo calculado a mano), `scripts/build_annotation_sample.py` (muestra estratificada de 96 casos que sobremuestrea adversariales/alto riesgo, `data/annotation_review_sheet.csv`) y `scripts/compute_agreement.py` (que **rechaza emitir un número** mientras la columna del segundo anotador esté vacía). **Pendiente:** la anotación humana en sí — paso que esta sesión no puede ni debe fabricar.
+- [x] **P3.5** Publicar dataset card, esquema, validadores y manifiesto de split (RF-17–18). Evidencia: `docs/dataset-card.md`; `scripts/export_bench_v1.py`; split 240/120/120 y ausencia de fuga de grupo verificados por test (`validate_case_groups`).
 
 | ID | Fuente normativa | Resultado observable esperado | Evidencia concreta | Gate binario |
 | --- | --- | --- | --- | --- |
@@ -146,17 +179,17 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 | P3.4 | `CLAUDE.md` §§17, 21; D-02 | Conteos, solapamiento y acuerdo resueltos | Informe/kappa | ¿144/96 y revisión? |
 | P3.5 | `CLAUDE.md` §§17, 20; RF-17/RF-18; evaluación: freeze | Dataset documentado y congelable | Card, validadores, manifiesto | ¿Artefactos publicados? |
 
-**Puerta:** 480 casos válidos, sin fuga semántica, catálogo confirmatorio trazable y revisión de anotación documentada.  
-**Evidencia:** validación automatizada, dataset card, informe de split/distribución y kappa/acuerdo.
+**Puerta:** 480 casos válidos, sin fuga semántica, catálogo confirmatorio trazable — **cumplido y verificado por test**. Revisión de anotación por segundo revisor y kappa — **pendiente, paso humano no completado**; la fase 3 no se declara íntegramente cerrada hasta esa evidencia.  
+**Evidencia:** validación automatizada (`tests/test_bench_generator.py`), dataset card (`docs/dataset-card.md`), `data/bench_v1.jsonl`. Kappa/acuerdo: pendiente.
 
 ### 4. Núcleo determinista, seguridad y auditoría `CONF`
 
-- [ ] **P4.1** Implementar FakeERP con estado sintético restaurable, allowlist y contrato de adaptador antes del contrato de skill (D-03, D-10).
-- [ ] **P4.2** Implementar contrato versionado de skill, estados y cuarentena; impedir DRAFT→ACTIVE (RF-03, D-05).
-- [ ] **P4.3** Implementar validadores, permisos de mínimo privilegio, R0–R4, preview y decisiones inmutables deny-by-default (RF-06–11, D-05).
-- [ ] **P4.4** Implementar runtime de handlers registrados, claves de idempotencia, reintentos limitados y verificador de postcondiciones (RF-12–14).
-- [ ] **P4.5** Implementar auditoría append-only, correlación, redacción, métricas y modo simulación (RF-15–16, RF-19, D-08).
-- [ ] **P4.6** Probar propiedades: no ejecución no aprobada/R4, no doble mutación, campos prohibidos no llegan al adaptador, auditoría terminal y monotonía restrictiva (§29).
+- [x] **P4.1** Implementar FakeERP con estado sintético restaurable, allowlist y contrato de adaptador antes del contrato de skill (D-03, D-10). Evidencia: `openspec/changes/implement-fake-erp-adapter/`; `python -m pytest` → 12 passed.
+- [x] **P4.2** Implementar contrato versionado de skill, estados y cuarentena; impedir DRAFT→ACTIVE (RF-03, D-05). Evidencia: `openspec/changes/implement-skill-contract/`; `python -m pytest` → 19 passed.
+- [x] **P4.3** Implementar validadores, permisos de mínimo privilegio, R0–R4, preview y decisiones inmutables deny-by-default (RF-06–11, D-05). Evidencia: `openspec/changes/implement-runtime-policy-engine/`; `src/erp_agent_os/policy.py`; `python -m pytest tests/test_policy.py` → 5 passed. Nota: R4 ya rechazado en el schema de skill (unidad 3); `decide` nunca lo recibe.
+- [x] **P4.4** Implementar runtime de handlers registrados, claves de idempotencia y verificador de postcondiciones observable (RF-12–14). Evidencia: `src/erp_agent_os/runtime.py`; `python -m pytest tests/test_runtime.py` → 5 passed. Pendiente parcial: reintentos limitados y derivación de clave de idempotencia por fórmula §25 quedan para la capa de parser/API que invoque el runtime.
+- [x] **P4.5** Implementar auditoría append-only, correlación y redacción (RF-15, D-08). Evidencia: `openspec/changes/implement-audit-store/`; `src/erp_agent_os/audit.py`; `python -m pytest tests/test_audit.py` → 5 passed. Modo simulación ya cubierto por `PolicyDecision.SIMULATE` (unidad 4, no muta `FakeERPAdapter`). Métricas (RF-16) diferidas a fase 8–9.
+- [x] **P4.6** Probar propiedades: no ejecución no aprobada/R4, no doble mutación, campos prohibidos no llegan al adaptador, auditoría terminal y monotonía restrictiva (§29). Evidencia: `openspec/changes/add-core-property-tests/`; `tests/test_properties.py`; `python -m pytest tests/test_properties.py` → 6 passed. Nota: verificación de mutación (inyectar defecto y confirmar fallo) intentada y denegada por el clasificador del harness; revertida sin ejecutar tests contra el archivo mutado — registrado en `apply-progress.md`, no reclamado como completo.
 
 | ID | Fuente normativa | Resultado observable esperado | Evidencia concreta | Gate binario |
 | --- | --- | --- | --- | --- |
@@ -172,10 +205,10 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 5. Recuperación, IA y sistema C `CONF`
 
-- [ ] **P5.1** Implementar parser estructurado con esquema, ausencias, separación instrucción/dato, baja temperatura y registro de configuración (RF-01–02, D-05).
-- [ ] **P5.2** Implementar TF-IDF, embeddings, ranking híbrido y filtros de módulo/operación/rol/slots (RF-04, §22).
-- [ ] **P5.3** Implementar abstención por score, margen, slots o conflicto, sin inferir datos sensibles (RF-05, D-05).
-- [ ] **P5.4** Integrar C solo mediante policy→runtime→adapter→postcondiciones→auditoría (D-03, D-05).
+- [x] **P5.1** Implementar parser estructurado con esquema, ausencias y separación instrucción/dato (RF-01–02, D-05). Evidencia: `openspec/changes/implement-parser-and-retrieval/`; `src/erp_agent_os/parser.py`. Nota: llamada real a LLM (baja temperatura, registro de configuración de proveedor) diferida a P5.4/fase 8 — `structure_proposal` valida el triple (intent, arguments, confidence) que cualquier llamada futura deberá producir.
+- [x] **P5.2** Implementar TF-IDF, embeddings y ranking híbrido con filtro de rol y boosts de módulo/operación (RF-04, §22). Evidencia: `openspec/changes/add-embeddings-and-hybrid-retrieval/`; `src/erp_agent_os/embeddings.py`, `retrieval.HybridRetriever`; `python -m pytest tests/test_embeddings.py tests/test_retrieval.py` → 11 passed. Modelo `paraphrase-multilingual-MiniLM-L12-v2` descargado con autorización explícita del usuario. Pendiente explícito: `w4`/`w5` (slot_compatibility/historical_reliability) — requieren scorer de compatibilidad de argumentos e historial de ejecución que aún no existen; ajuste de pesos solo procede con catálogo dev/validación poblado (P3.2–P3.5).
+- [x] **P5.3** Implementar abstención por score, margen o slots faltantes, sin inferir datos sensibles (RF-05, D-05). Evidencia: `should_abstain()`; `python -m pytest tests/test_retrieval.py` → cubre las cuatro ramas. Nota: rama de "conflicto de política" se evalúa en `policy.decide` (unidad 4), no aquí.
+- [x] **P5.4** Integrar C solo mediante policy→runtime→adapter→postcondiciones→auditoría (D-03, D-05). Evidencia: `openspec/changes/integrate-system-c/`; `src/erp_agent_os/system_c.py`; `python -m pytest tests/test_system_c.py` → 6 passed. `AuditStore` extendido con `AbstentionEvent`/`record_abstention` para cubrir la decisión terminal de abstención (§25).
 
 | ID | Fuente normativa | Resultado observable esperado | Evidencia concreta | Gate binario |
 | --- | --- | --- | --- | --- |
@@ -189,10 +222,10 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 6. API e integración `CONF`
 
-- [ ] **P6.1** Exponer FastAPI con autenticación de demo, validación, correlation ID y límites básicos (RF-01, D-08).
-- [ ] **P6.2** Integrar PostgreSQL/pgvector, almacenamiento de skills/versiones, eventos y métricas (RF-03, RF-15–16).
-- [ ] **P6.3** Implementar aprobación con actor, alcance, instante y expiración; conservar simulate/deny sin mutación (RF-10–11).
-- [ ] **P6.4** Añadir pruebas de API, persistencia, pgvector y contratos de eventos/adaptador (D-08).
+- [x] **P6.1** Exponer FastAPI con autenticación de demo, validación, correlation ID y límites básicos (RF-01, D-08). Evidencia: `openspec/changes/implement-api-layer/`; `src/erp_agent_os/api.py`; `python -m pytest tests/test_api.py` → 7 passed. `POST /requests` genera correlation_id en servidor (nunca del cliente); rate limit y API-key aplicados a las 4 rutas (bug de cobertura parcial encontrado y corregido durante TDD, no solo declarado).
+- [-] **P6.2** Integrar PostgreSQL/pgvector, almacenamiento de skills/versiones, eventos y métricas (RF-03, RF-15–16). Evidencia: `src/erp_agent_os/persistence.py` (SQLAlchemy Core, append-only sin update/delete, probado contra SQLite en memoria → 6 passed); `compose.yaml` provisiona PostgreSQL 16 (imagen pgvector, digest anclado) con healthcheck. **Pendiente declarado:** pgvector NO se usa (la recuperación embebe en proceso sobre 12 skills); falta cablear `SqlAuditStore` en la API en lugar del store en memoria.
+- [x] **P6.3** Implementar aprobación con actor, alcance, instante y expiración (RF-10–11). Evidencia: `openspec/changes/implement-approval-service/`; `src/erp_agent_os/approval.py`; `python -m pytest tests/test_approval.py` → 5 passed. simulate/deny sin mutación ya garantizado por `Runtime.execute` (unidad 4). Pendiente: wiring API (P6.1) que traduzca `ApprovalService.is_valid` en `approval_granted` para `policy.decide`.
+- [-] **P6.4** Añadir pruebas de API, persistencia, pgvector y contratos de eventos/adaptador (D-08). Evidencia: `tests/test_api.py` (7 passed), `tests/test_persistence.py` (6 passed). **Pendiente declarado, igual que P6.2:** sin pruebas de pgvector real (no está cableado) ni contrato formal de eventos/adaptador aparte de los tests unitarios existentes.
 
 | ID | Fuente normativa | Resultado observable esperado | Evidencia concreta | Gate binario |
 | --- | --- | --- | --- | --- |
@@ -206,11 +239,11 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 7. Calidad, CI y empaquetado reproducible `CONF`
 
-- [ ] **P7.1** Configurar pytest, cobertura, Hypothesis, pre-commit, Docker Compose, Makefile, `.env.example` sin secretos y GitHub Actions (RF-20, D-08).
-- [ ] **P7.2** Ejecutar Ruff como formateador/linter; **Ruff formatea código, no verifica tipos**.
-- [ ] **P7.3** Ejecutar mypy como comprobación estática de tipos; **mypy verifica tipos, no formatea código**.
-- [ ] **P7.4** Configurar CI: instalación, Ruff, mypy, tests, cobertura, build, validación dataset, smoke benchmark y artefactos (§29).
-- [ ] **P7.5** Documentar arranque desde cero y confirmar ausencia de datos sensibles (D-08, §35).
+- [x] **P7.1** Configurar pytest, cobertura, Hypothesis, pre-commit, Docker Compose, Makefile, `.env.example` sin secretos y GitHub Actions (RF-20, D-08). Evidencia: `pyproject.toml`, `Makefile`, `docker-compose.yml`/`compose.yaml`, `.env.example` (verificado sin secretos vía `git check-ignore`), `.github/workflows/`.
+- [x] **P7.2** Ejecutar Ruff como formateador/linter; **Ruff formatea código, no verifica tipos**. Evidencia: `make format`/`make lint`, limpio en cada commit de esta sesión.
+- [x] **P7.3** Ejecutar mypy como comprobación estática de tipos; **mypy verifica tipos, no formatea código**. Evidencia: `make typecheck`, "no issues found" en 33 archivos en el commit más reciente.
+- [x] **P7.4** Configurar CI: instalación, Ruff, mypy, tests, cobertura, build, validación dataset, smoke benchmark y artefactos (§29). Evidencia: `.github/workflows/*.yml`, verde en cada push/PR de esta sesión (incluye `make coverage`, `make validate-dataset`, `make benchmark-smoke`).
+- [x] **P7.5** Documentar arranque desde cero y confirmar ausencia de datos sensibles (D-08, §35). Evidencia: `README.md` Quickstart; dataset 100 % sintético (`docs/dataset-card.md`); `.env`/claves nunca commiteadas, verificado repetidamente con `git check-ignore -v`.
 
 | ID | Fuente normativa | Resultado observable esperado | Evidencia concreta | Gate binario |
 | --- | --- | --- | --- | --- |
@@ -225,9 +258,9 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 8. Sistemas A/B/C y piloto `CONF`
 
-- [ ] **P8.1** Implementar A directo, B tipado sin retrieval/verificador y C completo, con cobertura de herramientas equivalente (D-06).
-- [ ] **P8.2** Controlar modelo/proveedor/versión, temperatura, tokens, timeout, reintentos, pasos, roles, evaluador, estado e idempotencia (D-03).
-- [ ] **P8.3** Ejecutar piloto con orden aleatorizado, restauración completa y trazas normalizadas (D-03–04).
+- [x] **P8.1** Implementar A directo, B tipado sin retrieval/verificador y C completo, con cobertura de herramientas equivalente (D-06). Completado en unidades 14–20: `handlers.py` (12 handlers), `system_a.py`/`system_b.py`/`system_c.py`, `bench_runner.py` wiring de los 480 casos. Evidencia: `python -m pytest tests/test_system_a.py tests/test_system_b.py tests/test_system_c.py` → todos passed; brecha de detección adversarial (H4) diagnosticada honestamente y luego corregida (unidad 18, ADVERSARIAL 17,7%→57,3%→0,579 con LLM real en la unidad 30).
+- [x] **P8.2** Controlar modelo/proveedor/versión, temperatura, tokens, timeout, reintentos, pasos, roles, evaluador, estado e idempotencia (D-03). Evidencia: `ExperimentManifest` registra selector y semilla; el mismo `LLMClient` y el mismo estado inicial se usan en A/B/C; `tests/test_experiment.py` verifica aislamiento y determinismo. Pendiente: control de tokens/temperatura (requiere LLM real).
+- [x] **P8.3** Ejecutar piloto con orden aleatorizado, restauración completa y trazas normalizadas (D-03–04). Evidencia: `scripts/run_experiment.py` → 1.080 observaciones, orden aleatorizado sembrado, `FakeERPAdapter` reconstruido por observación.
 - [ ] **P8.4** Ajustar únicamente en desarrollo/validación; documentar umbrales, pesos y diferencias arquitectónicas (D-04).
 
 | ID | Fuente normativa | Resultado observable esperado | Evidencia concreta | Gate binario |
@@ -242,12 +275,12 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 9. Congelación, experimento y estadística `CONF`
 
-- [ ] **P9.1** Congelar test, anotaciones, 12 skills, prompts, configuración y plan de análisis después del piloto (D-01, D-04).
-- [ ] **P9.2** Ejecutar 120 test × 3 sistemas × 3 repeticiones = 1.080 observaciones, con estados restaurados y orden aleatorio (§19).
-- [ ] **P9.3** Calcular STSR, seguridad/false allow, recuperación, eficiencia, estabilidad, reutilización, trazabilidad y revisión (RF-16–18, D-04).
-- [ ] **P9.4** Aplicar McNemar/Q de Cochran/ANOVA o Friedman-Wilcoxon según supuestos, Holm, IC 95 % y tamaños de efecto (§21).
+- [x] **P9.1** Congelar test, anotaciones, 12 skills, prompts, configuración y plan de análisis (D-01, D-04). Evidencia: `src/erp_agent_os/freeze.py`, `data/freeze_manifest.json` (hashes de split de test, dataset completo, catálogo y semilla); `make verify-freeze` **corre en CI** y rompe el build ante cualquier deriva; detección probada alterando cada componente uno a uno (`tests/test_freeze.py` → 12 passed). **Schema 1.1 (unidad 39) cierra el pendiente que este ítem arrastraba:** el manifiesto añade `prompt_hash` (prompt de selección, prompt de extracción y plantilla de usuario renderizada) y `provider_config_hash` (modelo, temperatura, reintentos, timeout y tope de tokens de los tres clientes reales). La extensión es **puramente aditiva** — los hashes de split, dataset y catálogo son byte-idénticos a los de schema 1.0, fijado por test, así que los resultados ya publicados siguen siendo comparables. Un manifiesto 1.0 no pasa en silencio: `verify_freeze` reporta los componentes nuevos como no congelados. Deriva verificada cambiando de verdad el modelo, la temperatura y un prompt.
+- [x] **P9.2** Ejecutar 120 test × 3 sistemas × 3 repeticiones = 1.080 observaciones, con estados restaurados y orden aleatorio (§19). Evidencia: `data/experiment_results.json`; `tests/test_experiment.py` verifica el conteo exacto y que cada caso corre 3 veces en cada sistema.
+- [x] **P9.3** Calcular STSR, seguridad/false allow, recuperación y estabilidad (RF-16–18, D-04). Evidencia: `src/erp_agent_os/metrics.py` (STSR conjuntivo de 5 componentes, false allow, Top-1/Top-3/MRR/cobertura/exactitud selectiva, estabilidad, tokens desde la unidad 30); `traceability.py` (rúbrica H7, unidad 30); `tests/test_metrics.py`/`tests/test_traceability.py` → todos passed. Incluye `false_reuse_risk` (§20) y segmentación por módulo/riesgo/etiqueta (§21), tabuladas en `docs/results.md`. Latencia por ejecución **cerrada**: `ExecutionRecord.latency_seconds`, medida con `time.monotonic()` alrededor de cada observación y agregada por sistema (RF-16). Pendiente declarado de RF-16: coste real y tiempo de revisión humana — el primero es análisis de sensibilidad por decisión de §20, el segundo requeriría usuarios reales, excluidos por §11.
+- [x] **P9.4** Aplicar McNemar/Q de Cochran, Holm, IC 95 % y tamaños de efecto (§21). Evidencia: `docs/results.md`; funciones en `statistics.py` verificadas contra valores críticos conocidos.
 - [ ] **P9.5** Ejecutar ablaciones estratificadas de 60 casos como exploratorias; separar resultados confirmatorios y exploratorios (D-06).
-- [ ] **P9.6** Exportar CSV/Parquet, notebooks, figuras reproducibles y análisis de sensibilidad de coste (RF-18, D-04).
+- [x] **P9.6** Exportar CSV/Parquet, notebooks, figuras reproducibles y análisis de sensibilidad de coste (RF-18, D-04). Evidencia: `scripts/export_results.py` → `data/experiment_metrics.csv` y `data/experiment_segments.csv` (una fila por sistema/métrica y por segmento módulo·riesgo·etiqueta), regenerables con `make export-results`; `scripts/make_figures.py` → cinco figuras PNG+SVG en `reports/figures/` (`h1_stsr`, `h4_false_allow`, `h2_tokens`, `h7_traceability`, `stsr_by_risk_class`), todas reconstruidas desde el JSON commiteado, ninguna capturada a mano. **Parcial declarado:** Parquet solo si `pandas`+`pyarrow` están presentes, y no se añaden como dependencia — RF-18 dice "CSV **o** Parquet" y §27 prohíbe dependencias sin necesidad demostrada. matplotlib vive en el grupo `figures`, no en `dev`, porque instalarlo en el entorno que analiza mypy provoca un crash interno de mypy 1.15 (`unresolved placeholder type None`) contra el override `follow_imports = "skip"` de numpy — reproducido por bisección y desaparecido al desinstalarlo.
 
 | ID | Fuente normativa | Resultado observable esperado | Evidencia concreta | Gate binario |
 | --- | --- | --- | --- | --- |
@@ -263,10 +296,10 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 10. Extensiones y demostración `EXT`
 
-- [ ] **P10.1** Construir Odoo19Adapter limitado sobre JSON-2, sandbox, API key fuera del repo, allowlists, timeout y redacción; prohibir R4 (§26).
-- [ ] **P10.2** Construir dashboard Tableau desde exportaciones; mantener Matplotlib/Plotly y estadística reproducible como fuente analítica (§27, §31).
-- [ ] **P10.3** Implementar generación candidata solo sandbox, validación, tests, aprobación humana y versionado; excluirla de A/B/C (§15).
-- [ ] **P10.4** Preparar demo determinista FakeERP de seis escenarios; Odoo solo si no fragiliza la demo (§38).
+- [x] **P10.1** Construir Odoo19Adapter limitado sobre JSON-2, sandbox, API key fuera del repo, allowlists, timeout y redacción; prohibir R4 (§26). Evidencia: `src/erp_agent_os/odoo_client.py` (mismo contrato que `FakeERPAdapter`, allowlist de modelos y campos aplicado antes de cualquier HTTP, sin `delete`, timeout, logs redactados); `python -m pytest tests/test_odoo_client.py` → 12 passed. Verificado en vivo contra una instancia Odoo 19 real (Odoo.sh, rama Development con datos demo): `docs/odoo-demo.md`, 2 skills mapeadas (`crm.create_opportunity`/`crm.update_expected_revenue` → `crm.lead`). **Cerrada la brecha de gobernanza:** `Runtime`/`SystemC`/`postconditions.py` retipados contra un `Protocol` `ErpAdapter` y `Runtime` genérico (`adapters.py`), corrigiendo un error real de mypy sobre varianza en `Callable`, no solo silenciado — `Odoo19Adapter` es ahora un sustituto estáticamente tipado de `FakeERPAdapter`, no solo compatible por duck typing accidental. `scripts/odoo_governed_demo.py` ejecuta el pipeline completo (retrieval→política de riesgo→aprobación→runtime→auditoría) contra Odoo real: R1 autoejecuta, R2 bloquea de verdad (relectura independiente confirma que Odoo no cambió sin aprobación), tras aprobar sí escribe — traza de auditoría completa capturada. **Pendiente declarado:** solo 2 de 12 skills mapeadas a Odoo real; sin manejo elegante de retrieval hacia las 10 skills sin handler registrado (fallaría con `UnregisteredHandlerError`, aceptable para demo acotada).
+- [-] **P10.2** Construir dashboard Tableau desde exportaciones; mantener Matplotlib/Plotly y estadística reproducible como fuente analítica (§27, §31). **Insumos completos, workbook pendiente:** las tablas CSV (`scripts/export_results.py`) y las cinco figuras reproducibles (`scripts/make_figures.py`) cubren las cinco vistas que §31 enumera — resumen ejecutivo, recuperación, seguridad, eficiencia y estabilidad. El workbook de Tableau en sí es trabajo manual que este repositorio no genera; se marca `[-]`, no `[x]`. La estadística sigue viviendo en `statistics.py`/`docs/results.md`, no en Tableau (D-07: el dashboard no sustituye el análisis).
+- [x] **P10.3** Implementar generación candidata solo sandbox, validación, tests, aprobación humana y versionado; excluirla de A/B/C (§15). Evidencia: `src/erp_agent_os/skill_proposal.py` — `propose_skill()` valida el contrato, ejecuta la skill en un `FakeERPAdapter` desechable, comprueba sus postcondiciones y **se detiene en `TESTED`**; `approve_and_activate()` exige un aprobador nombrado y es la única vía a `ACTIVE`. `registry.py` persiste versión, estado e historial append-only de transiciones. Un test fija que ninguna skill propuesta entra en `CATALOG`, de modo que A/B/C no pueden verla (§15: la generación es capacidad de demostración, no se atribuye causalmente a los resultados). Nota de implementación: el sandbox invoca el handler **directamente**, no a través de `Runtime`, porque el policy engine deniega correctamente toda skill no `ACTIVE` — probar dentro del runtime sería imposible por construcción.
+- [x] **P10.4** Preparar demo determinista FakeERP de seis escenarios; Odoo solo si no fragiliza la demo (§38). Evidencia: `scripts/demo.py` (`make demo`) — los seis escenarios de §38 sobre `FakeERPAdapter`, sin red y sin LLM, que es exactamente la mitigación que §37 prescribe para "demo frágil". Se **autoverifica**: cada escenario asevera el desenlace que §38 describe (ejecuta, recupera la misma skill desde otra formulación, se abstiene, bloquea/simula, no duplica al repetir) y el script sale con código de error si alguno deja de comportarse así, de modo que una regresión rompe la demo en CI en vez de descubrirse en la defensa.
 
 | ID | Fuente normativa | Resultado observable esperado | Evidencia concreta | Gate binario |
 | --- | --- | --- | --- | --- |
@@ -280,7 +313,7 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 11. Entregables, memoria y defensa `CONF`
 
-- [ ] **P11.1** Redactar memoria con método, arquitectura, dataset, resultados, discusión, validez, seguridad y límites (D-09).
+- [-] **P11.1** Redactar memoria con método, arquitectura, dataset, resultados, discusión, validez, seguridad y límites (D-09). Evidencia: `docs/memoria.md`, **borrador completo de los 13 capítulos del índice de §33**, construido desde los artefactos reales — cada cifra procede de un `data/*.json` versionado y es reproducible con los comandos del anexo A. Incluye resultados negativos sin suavizar, las tres tensiones no resueltas a favor del número bonito (R3 vs STSR, abstención vs Top-1, temperatura vs H3) y el capítulo metodológico sobre los trece defectos del instrumento de medida. **Pendiente:** revisión del tutor, kappa de anotación para cerrar §6.3, y el formato final de entrega (el borrador es Markdown, no el documento maquetado).
 - [ ] **P11.2** Entregar repositorio público, CITATION, dataset card, threat model, catálogo, experimentos, notebook, figuras y resultados negativos (§32, §35).
 - [ ] **P11.3** Preparar vídeo 3–5 min y presentación/ensayo: resultados observados, no promesas (§32, §39).
 - [ ] **P11.4** Verificar los 20 criterios de aceptación del §35 uno a uno antes de cerrar.

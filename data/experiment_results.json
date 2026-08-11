@@ -1,0 +1,428 @@
+{
+  "manifest": {
+    "selector": "OpenRouterClient",
+    "is_confirmatory_run": true,
+    "n_observations": 1080,
+    "n_inference_units": 120,
+    "inference_note": "Repetitions are collapsed per case before any paired test. Using all 1.080 executions as independent observations would be pseudo-replication.",
+    "n_cases": 120,
+    "n_repetitions": 3,
+    "seed": 20260805,
+    "caveat": "Real LLM selector (OpenRouterClient, free tier) shared identically across A/B/C, per CLAUDE.md D-03. This IS the section 19 confirmatory protocol. Declared limitation: a free-tier model, not a frontier/production model -- see the memoria for the disclosure this requires."
+  },
+  "H1_stsr": {
+    "stsr": {
+      "A": 0.0,
+      "B": 0.5166666666666667,
+      "C": 0.7
+    },
+    "C_minus_A": {
+      "point": 0.7,
+      "ci95": [
+        0.6166666666666667,
+        0.7833333333333333
+      ],
+      "mcnemar_p": 1.3526945495274315e-19,
+      "holm_p": 2.705389099054863e-19,
+      "discordant_C_wins": 84,
+      "discordant_A_wins": 0,
+      "odds_ratio": 169.0
+    },
+    "C_minus_B": {
+      "point": 0.18333333333333332,
+      "ci95": [
+        0.058333333333333334,
+        0.30833333333333335
+      ],
+      "mcnemar_p": 0.00765310645483938,
+      "holm_p": 0.00765310645483938,
+      "odds_ratio": 2.073170731707317
+    },
+    "cochran_q": {
+      "statistic": 109.46153846153847,
+      "df": 2
+    },
+    "non_inferiority_margin": -0.05,
+    "H1_supported": true
+  },
+  "H2_tokens": {
+    "note": "Mean total tokens per case (repetitions collapsed, same unit as H1). 0 for any system/run using a client that made no real LLM call -- System C never does; A/B are 0 under the stub-selector run and real under --real-llm.",
+    "totals": {
+      "A": {
+        "n_executions": 360,
+        "total_prompt_tokens": 35610,
+        "total_completion_tokens": 35754,
+        "total_tokens": 71364,
+        "mean_tokens_per_execution": 198.23333333333332
+      },
+      "B": {
+        "n_executions": 360,
+        "total_prompt_tokens": 64890,
+        "total_completion_tokens": 18035,
+        "total_tokens": 82925,
+        "mean_tokens_per_execution": 230.34722222222223
+      },
+      "C": {
+        "n_executions": 360,
+        "total_prompt_tokens": 0,
+        "total_completion_tokens": 0,
+        "total_tokens": 0,
+        "mean_tokens_per_execution": 0.0
+      }
+    },
+    "C_minus_B": {
+      "point": -230.34722222222223,
+      "ci95": [
+        -235.05555555555557,
+        -225.95555555555558
+      ]
+    },
+    "C_minus_A": {
+      "point": -198.23333333333332,
+      "ci95": [
+        -204.25277777777777,
+        -192.1638888888889
+      ]
+    }
+  },
+  "H8_cost_sensitivity": {
+    "caveat": "Sensitivity analysis with a declared, non-measured token price (CLAUDE.md section 20 limits H8 to this, not to observed savings). USD_PER_1K_TOKENS is a stand-in rate, not Groq's real (unpriced, free-tier) cost.",
+    "usd_per_1k_tokens": 0.05,
+    "inference_cost_usd": {
+      "A": 3.5682000000000005,
+      "B": 4.14625,
+      "C": 0.0
+    }
+  },
+  "H3_stability": {
+    "A": 1.0,
+    "B": 1.0,
+    "C": 1.0
+  },
+  "H4_security": {
+    "A": {
+      "dangerous_total": 27,
+      "false_allow": 9,
+      "false_allow_rate": 0.3333333333333333,
+      "false_block_rate": 0.46846846846846846,
+      "detection_recall": 0.6666666666666666,
+      "detection_precision": 0.10344827586206896
+    },
+    "B": {
+      "dangerous_total": 27,
+      "false_allow": 24,
+      "false_allow_rate": 0.8888888888888888,
+      "false_block_rate": 0.018018018018018018,
+      "detection_recall": 0.1111111111111111,
+      "detection_precision": 0.3333333333333333
+    },
+    "C": {
+      "dangerous_total": 27,
+      "false_allow": 3,
+      "false_allow_rate": 0.1111111111111111,
+      "false_block_rate": 0.07207207207207207,
+      "detection_recall": 0.8888888888888888,
+      "detection_precision": 0.5
+    }
+  },
+  "segmentation": {
+    "module": {
+      "A": {
+        "billing": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "contacts": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "crm": {
+          "n": 90,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "inventory": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "product": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "purchasing": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "sales": {
+          "n": 90,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "tasks": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        }
+      },
+      "B": {
+        "billing": {
+          "n": 30,
+          "successes": 18,
+          "stsr": 0.6
+        },
+        "contacts": {
+          "n": 30,
+          "successes": 30,
+          "stsr": 1.0
+        },
+        "crm": {
+          "n": 90,
+          "successes": 48,
+          "stsr": 0.5333333333333333
+        },
+        "inventory": {
+          "n": 30,
+          "successes": 18,
+          "stsr": 0.6
+        },
+        "product": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "purchasing": {
+          "n": 30,
+          "successes": 27,
+          "stsr": 0.9
+        },
+        "sales": {
+          "n": 90,
+          "successes": 18,
+          "stsr": 0.2
+        },
+        "tasks": {
+          "n": 30,
+          "successes": 27,
+          "stsr": 0.9
+        }
+      },
+      "C": {
+        "billing": {
+          "n": 30,
+          "successes": 27,
+          "stsr": 0.9
+        },
+        "contacts": {
+          "n": 30,
+          "successes": 15,
+          "stsr": 0.5
+        },
+        "crm": {
+          "n": 90,
+          "successes": 69,
+          "stsr": 0.7666666666666667
+        },
+        "inventory": {
+          "n": 30,
+          "successes": 27,
+          "stsr": 0.9
+        },
+        "product": {
+          "n": 30,
+          "successes": 30,
+          "stsr": 1.0
+        },
+        "purchasing": {
+          "n": 30,
+          "successes": 27,
+          "stsr": 0.9
+        },
+        "sales": {
+          "n": 90,
+          "successes": 45,
+          "stsr": 0.5
+        },
+        "tasks": {
+          "n": 30,
+          "successes": 12,
+          "stsr": 0.4
+        }
+      }
+    },
+    "risk_class": {
+      "A": {
+        "R0": {
+          "n": 90,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "R1": {
+          "n": 180,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "R2": {
+          "n": 60,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "R3": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        }
+      },
+      "B": {
+        "R0": {
+          "n": 90,
+          "successes": 72,
+          "stsr": 0.8
+        },
+        "R1": {
+          "n": 180,
+          "successes": 114,
+          "stsr": 0.6333333333333333
+        },
+        "R2": {
+          "n": 60,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "R3": {
+          "n": 30,
+          "successes": 0,
+          "stsr": 0.0
+        }
+      },
+      "C": {
+        "R0": {
+          "n": 90,
+          "successes": 63,
+          "stsr": 0.7
+        },
+        "R1": {
+          "n": 180,
+          "successes": 114,
+          "stsr": 0.6333333333333333
+        },
+        "R2": {
+          "n": 60,
+          "successes": 60,
+          "stsr": 1.0
+        },
+        "R3": {
+          "n": 30,
+          "successes": 15,
+          "stsr": 0.5
+        }
+      }
+    },
+    "label": {
+      "A": {
+        "ADVERSARIAL": {
+          "n": 57,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "NOISE": {
+          "n": 111,
+          "successes": 0,
+          "stsr": 0.0
+        },
+        "NORMAL": {
+          "n": 192,
+          "successes": 0,
+          "stsr": 0.0
+        }
+      },
+      "B": {
+        "ADVERSARIAL": {
+          "n": 57,
+          "successes": 9,
+          "stsr": 0.15789473684210525
+        },
+        "NOISE": {
+          "n": 111,
+          "successes": 45,
+          "stsr": 0.40540540540540543
+        },
+        "NORMAL": {
+          "n": 192,
+          "successes": 132,
+          "stsr": 0.6875
+        }
+      },
+      "C": {
+        "ADVERSARIAL": {
+          "n": 57,
+          "successes": 33,
+          "stsr": 0.5789473684210527
+        },
+        "NOISE": {
+          "n": 111,
+          "successes": 75,
+          "stsr": 0.6756756756756757
+        },
+        "NORMAL": {
+          "n": 192,
+          "successes": 144,
+          "stsr": 0.75
+        }
+      }
+    }
+  },
+  "H5_retrieval": {
+    "A": {
+      "n": 354,
+      "top1": 0.0,
+      "top3": 0.0,
+      "mrr": 0.0,
+      "coverage": 1.0,
+      "abstention_rate": 0.0,
+      "selective_accuracy": 0.3050847457627119,
+      "false_reuse_risk": 0.6949152542372882
+    },
+    "B": {
+      "n": 354,
+      "top1": 0.8898305084745762,
+      "top3": 0.8898305084745762,
+      "mrr": 0.8898305084745762,
+      "coverage": 1.0,
+      "abstention_rate": 0.0,
+      "selective_accuracy": 0.8898305084745762,
+      "false_reuse_risk": 0.11016949152542373
+    },
+    "C": {
+      "n": 354,
+      "top1": 0.7796610169491526,
+      "top3": 0.940677966101695,
+      "mrr": 0.8550590652285569,
+      "coverage": 0.847457627118644,
+      "abstention_rate": 0.15254237288135594,
+      "selective_accuracy": 0.78,
+      "false_reuse_risk": 0.22
+    }
+  },
+  "H7_traceability": {
+    "note": "Weighted rubric (docs/traceability-rubric.md), scored per execution from real audit evidence, not log volume. A/B score low on policy_decision/skill_version_and_key/postcondition_or_block_evidence by construction -- they have no policy engine, no versioned skill, no audit store (CLAUDE.md section 18).",
+    "weights": {
+      "request_identity": 0.1,
+      "interpretation": 0.15,
+      "candidate_or_abstention": 0.15,
+      "policy_decision": 0.15,
+      "skill_version_and_key": 0.15,
+      "result_and_effects": 0.15,
+      "postcondition_or_block_evidence": 0.15
+    },
+    "mean_score": {
+      "A": 0.19,
+      "B": 0.35875,
+      "C": 0.8025
+    }
+  }
+}

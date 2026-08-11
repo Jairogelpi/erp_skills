@@ -1,0 +1,87 @@
+{
+  "tuning_discipline": "CLAUDE.md §22: weights are tuned on development and validation only. FINAL_TEST is reported only for an already-chosen configuration (§19 freeze); selecting by test score would be tuning on test.",
+  "included_test_split": false,
+  "results": {
+    "development": {
+      "tfidf": {
+        "n": 240,
+        "top1": 0.7666666666666667,
+        "top3": 0.9166666666666666,
+        "mrr": 0.8434866522366522,
+        "coverage": 0.9958333333333333,
+        "abstention_rate": 0.004166666666666667,
+        "selective_accuracy": 0.7698744769874477,
+        "false_reuse_risk": 0.2301255230125523
+      },
+      "embeddings": {
+        "n": 240,
+        "top1": 0.7125,
+        "top3": 0.875,
+        "mrr": 0.8084607984607983,
+        "coverage": 0.9958333333333333,
+        "abstention_rate": 0.004166666666666667,
+        "selective_accuracy": 0.7154811715481172,
+        "false_reuse_risk": 0.28451882845188287
+      },
+      "hybrid": {
+        "n": 240,
+        "top1": 0.7125,
+        "top3": 0.8791666666666667,
+        "mrr": 0.8105441317941317,
+        "coverage": 1.0,
+        "abstention_rate": 0.0,
+        "selective_accuracy": 0.7125,
+        "false_reuse_risk": 0.2875
+      }
+    },
+    "validation": {
+      "tfidf": {
+        "n": 120,
+        "top1": 0.7333333333333333,
+        "top3": 0.9166666666666666,
+        "mrr": 0.8204834054834056,
+        "coverage": 1.0,
+        "abstention_rate": 0.0,
+        "selective_accuracy": 0.7333333333333333,
+        "false_reuse_risk": 0.26666666666666666
+      },
+      "embeddings": {
+        "n": 120,
+        "top1": 0.6583333333333333,
+        "top3": 0.8583333333333333,
+        "mrr": 0.7640145502645502,
+        "coverage": 0.975,
+        "abstention_rate": 0.025,
+        "selective_accuracy": 0.6752136752136753,
+        "false_reuse_risk": 0.3247863247863248
+      },
+      "hybrid": {
+        "n": 120,
+        "top1": 0.675,
+        "top3": 0.8833333333333333,
+        "mrr": 0.7848478835978836,
+        "coverage": 1.0,
+        "abstention_rate": 0.0,
+        "selective_accuracy": 0.675,
+        "false_reuse_risk": 0.325
+      }
+    }
+  },
+  "tuned_abstention": {
+    "tfidf": {
+      "threshold": 0.2,
+      "margin": 0.0,
+      "development_top1": 0.7666666666666667
+    },
+    "embeddings": {
+      "threshold": 0.2,
+      "margin": 0.0,
+      "development_top1": 0.7125
+    },
+    "hybrid": {
+      "threshold": 0.1,
+      "margin": 0.0,
+      "development_top1": 0.7125
+    }
+  }
+}

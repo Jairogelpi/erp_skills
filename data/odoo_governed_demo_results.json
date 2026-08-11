@@ -1,0 +1,91 @@
+{
+  "target": "real Odoo 19 (Development branch, demo data), full System C pipeline",
+  "all_checks_passed": true,
+  "steps": [
+    {
+      "step": "1_create_opportunity_R1",
+      "query": "Crea una oportunidad para Odoo Demo Corp por 15000 euros.",
+      "decision": "ALLOW",
+      "opportunity_id": "47"
+    },
+    {
+      "step": "1b_odoo_state_after_create",
+      "record": {
+        "expected_revenue": 15000.0,
+        "name": "Oportunidad: Odoo Demo Corp",
+        "partner_name": "Odoo Demo Corp",
+        "type": "opportunity"
+      }
+    },
+    {
+      "step": "2_update_without_approval_R2",
+      "query": "Actualiza el importe esperado de la oportunidad 47 a 27000.",
+      "decision": "REQUIRE_APPROVAL",
+      "odoo_left_untouched": true,
+      "odoo_state": {
+        "expected_revenue": 15000.0,
+        "name": "Oportunidad: Odoo Demo Corp",
+        "partner_name": "Odoo Demo Corp",
+        "type": "opportunity"
+      }
+    },
+    {
+      "step": "3_update_with_approval_R2",
+      "decision": "ALLOW",
+      "odoo_state_after": {
+        "expected_revenue": 27000.0,
+        "name": "Oportunidad: Odoo Demo Corp",
+        "partner_name": "Odoo Demo Corp",
+        "type": "opportunity"
+      },
+      "revenue_correctly_updated": true
+    }
+  ],
+  "full_audit_trail": [
+    {
+      "correlation_id": "demo-r1",
+      "skill_id": "crm.create_opportunity",
+      "skill_version": "1.0.0",
+      "role": "erp_user",
+      "decision": "ALLOW",
+      "risk_score": 0.2,
+      "reasons": [
+        "low risk"
+      ],
+      "idempotency_key": "demo-r1-key",
+      "idempotent_replay": false,
+      "postconditions_met": null,
+      "output": "47"
+    },
+    {
+      "correlation_id": "demo-r2-blocked",
+      "skill_id": "crm.update_expected_revenue",
+      "skill_version": "1.0.0",
+      "role": "erp_user",
+      "decision": "REQUIRE_APPROVAL",
+      "risk_score": 0.5,
+      "reasons": [
+        "R2 requires approval"
+      ],
+      "idempotency_key": "demo-r2-key-1",
+      "idempotent_replay": false,
+      "postconditions_met": null,
+      "output": null
+    },
+    {
+      "correlation_id": "demo-r2-approved",
+      "skill_id": "crm.update_expected_revenue",
+      "skill_version": "1.0.0",
+      "role": "erp_user",
+      "decision": "ALLOW",
+      "risk_score": 0.5,
+      "reasons": [
+        "approved"
+      ],
+      "idempotency_key": "demo-r2-key-2",
+      "idempotent_replay": false,
+      "postconditions_met": null,
+      "output": "47"
+    }
+  ]
+}

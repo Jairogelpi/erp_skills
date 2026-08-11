@@ -1,4 +1,3 @@
----
 # Invoke with: docker compose --env-file config/development.defaults <command>
 services:
   development:
@@ -7,5 +6,35 @@ services:
       dockerfile: Dockerfile
     environment:
       ERP_AGENT_OS_MODE: ${ERP_AGENT_OS_MODE:-development}
+      ERP_AGENT_OS_DATABASE_URL: >-
+        postgresql+psycopg://${POSTGRES_USER:-erp}:${POSTGRES_PASSWORD:-erp_dev_only}@db:5432/${POSTGRES_DB:-erp_agent_os}
     ports:
       - "${ERP_AGENT_OS_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    # pgvector/pgvector:pg16 (Postgres 16 + the pgvector extension). The
+    # extension is not used yet -- retrieval embeds in-process over a
+    # 12-skill catalog (see persistence.py) -- but pinning the image now
+    # keeps the deployment target stable if that changes.
+    # Digest retrieved from Docker Hub 2026-08-05; verify with
+    # `docker buildx imagetools inspect pgvector/pgvector:pg16`.
+    image: pgvector/pgvector:pg16@sha256:a36250871de0833b8757561c72f2477ef1ddd1101afa4e617fb552e0de514c6b
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-erp}
+      # Development-only default. Never a production credential; supply a
+      # real value via --env-file in any non-local environment.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-erp_dev_only}
+      POSTGRES_DB: ${POSTGRES_DB:-erp_agent_os}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-erp}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

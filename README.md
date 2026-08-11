@@ -1,25 +1,358 @@
-# ERP Agent OS (`erp_skills`)
+# ERP Agent OS
 
-> **Foundation status:** this repository currently provides a deterministic Python
-> quality baseline and its existing synthetic dataset scaffold. FakeERP, skills,
-> and the application runtime are **not delivered**. After the dataset work,
-> FakeERP remains the next required implementation step before any skill contract.
+**Diseño y evaluación experimental de un sistema para recuperar, verificar y ejecutar skills reutilizables en procesos ERP mediante agentes de inteligencia artificial.**
+
+Trabajo Fin de Máster — Jairo Gelpi Moreno · Máster en Data Science, IA y Big Data · Curso 2025–2026.
 
 The public repository identity is **`erp_skills`**; the Python distribution name is
-**`erp-agent-os`**. Committed material is synthetic-only: do not add private data,
-real ERP credentials, tokens, secrets, or local environment files.
+**`erp-agent-os`**. Committed material is synthetic-only: no private data, real ERP
+credentials, tokens, secrets, or local environment files are ever tracked.
+
+---
+
+## What this is
+
+ERP Agent OS separates the *probabilistic* interpretation of a natural-language ERP
+request (intent, entities, arguments) from the *deterministic* authorization and
+execution of that request (schema/risk validation, policy decision, idempotent
+execution, postcondition verification, append-only audit). The full normative
+specification — research question, hypotheses H1–H8, architecture, risk taxonomy,
+benchmark protocol, and statistical plan — lives in [`CLAUDE.md`](CLAUDE.md); this
+README covers how to run and verify what is built.
+
+```text
+request → Intent Parser → Skill Retriever → Policy Engine → Runtime → FakeERP
+                              │                                  │
+                        Confidence Gate                  Postcondition Verifier
+                              │                                  │
+                         abstain/clarify                   Audit Store
+```
+
+## What's implemented
+
+| Component | Module | Status |
+|---|---|---|
+| Deterministic ERP adapter (snapshot/restore, allowlisted) | `adapters.py` | ✅ |
+| Versioned skill contract + lifecycle | `skills.py` | ✅ |
+| Deny-by-default policy engine (R0–R4) | `policy.py` | ✅ |
+| Runtime (registered handlers, idempotency, caught handler errors) | `runtime.py` | ✅ |
+| Append-only audit store (redaction, abstention events) | `audit.py` | ✅ |
+| Structured intent proposal | `parser.py` | ✅ |
+| TF-IDF + embeddings + hybrid retrieval, abstention | `retrieval.py`, `embeddings.py` | ✅ |
+| Approval service (actor/scope/expiry) | `approval.py` | ✅ |
+| **System C** — governed pipeline, end to end | `system_c.py` | ✅ |
+| **System B** — typed tools, no retrieval/risk/approval | `system_b.py` | ✅ |
+| **System A** — direct agent, ungoverned | `system_a.py` | ✅ |
+| Pre-execution validation + adversarial detection | `validation.py` | ⚠️ lexical only |
+| 12-skill catalog (8 families) | `catalog.py` | ✅ |
+| 24 canonical intents | `bench_intents.py` | ✅ |
+| ERP-Skills-Bench v1 — 480 generated, executed cases | `bench_generator.py`, `bench_runner.py` | ✅ |
+| FastAPI layer (demo auth, correlation id, rate limit) | `api.py` | ✅ |
+| Durable audit/approval storage (SQLAlchemy, Postgres in compose) | `persistence.py` | ⚠️ not wired into the API yet |
+| Executable statistical plan (McNemar, Cochran Q, bootstrap, Holm) | `statistics.py` | ✅ |
+| Metrics: STSR, false allow, Top-1/Top-3/MRR, stability | `metrics.py` | ✅ |
+| Executable postconditions (verification engine) | `postconditions.py` | ✅ |
+| Paired A/B/C experiment runner (1.080 observations) | `experiment.py` | ✅ |
+| Freeze manifest + drift detection (CI-enforced) | `freeze.py` | ✅ |
+| Inter-annotator agreement instrument (Cohen's kappa) | `agreement.py` | ⚠️ human annotation pending |
+| Real LLM clients for A/B/C (Groq, Gemini, OpenRouter — all free tier) | `groq_client.py`, `gemini_client.py`, `openrouter_client.py` | ✅ |
+| Checkpoint/resume + call caching for real-LLM runs | `experiment.py`, `llm_client.CachingLLMClient` | ✅ |
+| Token instrumentation (H2) and traceability rubric (H7) | `metrics.py`, `traceability.py` | ✅ |
+| Confirmatory run with a real LLM (CLAUDE.md §19) | `scripts/run_experiment.py --real-llm --provider {groq,gemini,openrouter}` | ✅ executed, 1.080 observations |
+| External adversarial stress test (InjecAgent, out-of-distribution) | `scripts/injecagent_stress_test.py` | ✅ measured, 0%→3.3% (see below) |
+| Injection **resistance** sweep: 510 payloads × 3 attack channels | `scripts/injection_resistance_test.py` | ✅ 0/1530 unauthorized mutations |
+| **Odoo 19 adapter** (post-core, JSON-2 API, allowlisted, no delete) | `odoo_client.py` | ✅ live-verified |
+| Odoo 19 demo through the **full governed pipeline** (System C, real approval gate) | `odoo_handlers.py`, `scripts/odoo_governed_demo.py` | ✅ live-verified |
+| Persistent skill registry: versions, states, append-only transition history | `registry.py` | ✅ |
+| Skill proposal: validate → sandbox → **human approval** → activate | `skill_proposal.py` | ✅ demo capability, outside the experiment by §15 |
+| Executable business preconditions | `preconditions.py` | ⚠️ mechanism ready; frozen catalog declares none, on purpose |
+| Mutation preview on `SIMULATE` | `runtime.preview_mutation` | ✅ |
+| Retriever comparison: TF-IDF vs embeddings vs hybrid (§22) | `scripts/compare_retrievers.py` | ✅ TF-IDF wins on both splits |
+| 12 end-to-end scenarios + 4 contract-test suites (§29) | `tests/test_end_to_end.py`, `tests/test_contracts.py` | ✅ |
+| Six-scenario deterministic demo (§38) | `scripts/demo.py` | ✅ self-verifying |
+| Results export (CSV) and reproducible figures (§31) | `scripts/export_results.py`, `scripts/make_figures.py` | ✅ Tableau workbook itself is manual |
+
+384 tests, `ruff`/`mypy` clean, CI green.
+
+Every software requirement CLAUDE.md specifies is implemented; the
+section-by-section audit lives in
+[`docs/spec-coverage.md`](docs/spec-coverage.md), including the five
+things that remain and why none of them is code.
+
+### Real LLM clients
+
+Three interchangeable `LLMClient` implementations exist —
+`groq_client.py`, `gemini_client.py`, `openrouter_client.py` — because
+free-tier quotas turned out to be the practical bottleneck, not the
+architecture: Groq's daily token quota got exhausted by earlier
+interrupted runs, and every Gemini model tested on this project's key
+carried a 20-requests-per-day cap. CLAUDE.md D-03 requires A, B, and C to
+share the same model/provider/config *within one run* — it does not
+mandate a specific provider. The confirmatory run reported below used
+OpenRouter (`openai/gpt-oss-20b:free`).
+
+```sh
+cp .env.example .env   # fill in GROQ_API_KEY / GEMINI_API_KEY / OPENROUTER_API_KEY
+uv run python scripts/run_experiment.py --real-llm --provider openrouter
+```
+
+Without `--real-llm` the experiment uses `DeterministicStubClient`
+(architecture-isolation baseline, `is_confirmatory_run: false`); both
+manifests state the flag explicitly so results can never be silently
+misread as the other kind. Each `--real-llm` run checkpoints progress
+per-provider (`data/checkpoint_real_llm_<provider>.jsonl`, gitignored)
+and reuses one real call across a case's 3 repetitions
+(`CachingLLMClient`) instead of calling the LLM 3×, since
+`temperature=0.0` was empirically confirmed reproducible across three
+independent real runs (H3 = 1.0 every time).
+
+### Measured result: the confirmatory A/B/C experiment (real LLM)
+
+**1.080 executions** (120 frozen-test cases × 3 systems × 3 repetitions),
+randomized order, `FakeERPAdapter` rebuilt per observation, A/B/C sharing
+one real OpenRouter selector (`openai/gpt-oss-20b:free`, temperature 0).
+Full analysis — including the stub-selector baseline kept for comparison
+— in [`docs/results.md`](docs/results.md); raw output in
+`data/experiment_results.json` (`is_confirmatory_run: true`).
+
+| Metric | A (ungoverned) | B (typed only) | **C (ERP Agent OS)** |
+|---|---|---|---|
+| **STSR** (primary endpoint) | 0.000 | 0.517 | **0.700** |
+| **False allow rate** (critical) | 0.333 | 0.889 | **0.111** |
+| Mean tokens/execution (H2) | 198.2 | 230.3 | **0.0** |
+| Traceability score, 0–1 (H7) | 0.19 | 0.36 | **0.80** |
+| Retrieval Top-1 | 0.000 | 0.890 | **0.780** |
+| Retrieval Top-3 / MRR | — | 0.890 | **0.941 / 0.855** |
+
+- **C − A** = +0.700, 95% CI [+0.617, +0.783], Holm *p* = 2.71×10⁻¹⁹, OR 169
+- **C − B** = +0.183, 95% CI [+0.058, +0.308], Holm *p* = 7.65×10⁻³, OR 2.07
+- Cochran's Q = 109.46 (df 2). **H1 (non-inferiority, −5 pp margin): accepted.**
+- **Inference unit is the case (n = 120), not the execution.** Repetitions of a case are not independent; using all 360 per system would be pseudo-replication, narrowing every CI by ≈√3.
+
+> **⚠️ This run handed every system a perfect, unpaid argument parse.**
+> Removing that bias shrinks the headline result — see the next section.
+> These numbers remain valid for what they measure (tool selection with
+> arguments given), but the C − B margin they show is inflated by help
+> that C benefited from most.
+
+### The result that changed: honest argument parsing
+
+`--real-parser` makes all three systems extract arguments from the raw
+request text with the same LLM, same prompt, same field list, instead of
+being handed `case.expected_arguments` for free. Full analysis in
+[`docs/results.md`](docs/results.md); raw output in
+`data/experiment_results_real_parser.json`.
+
+| Metric | A | B | **C** |
+|---|---|---|---|
+| STSR | 0.000 | 0.483 | **0.633** |
+| Mean tokens/execution | 185.1 | 265.3 | **67.6** |
+| False allow rate | 0.889 | 0.889 | **0.111** |
+| Traceability (0–1) | 0.356 | 0.374 | **0.820** |
+
+- **C − B on STSR = +0.150, 95% CI [+0.042, +0.258], Holm *p* = 0.016.** Significant, and a *smaller* effect than the +0.183 the free parse produced. C fell 0.700 → 0.633 once it had to parse for real; B barely moved (0.517 → 0.483) because it already did its own tool selection. H1 holds both as non-inferiority and, here, as superiority.
+- **C − B on tokens = −197.6, 95% CI [−198.3, −196.9]** — C is **3.9× cheaper**. All three pay the same extraction; A and B *additionally* pay an LLM tool-selection call, which C replaces with TF-IDF retrieval at zero cost.
+- Safety and traceability are **unchanged** across all runs: they come from the policy engine and audit store, not from argument quality.
+
+> **The first honest-parse run scored C at 0.558 with C − B not
+> significant (*p* = 0.212), and it was published that way.** A skeptical
+> question about the instrument found the cause: the LLM extracted
+> `'27600 euros'` for a numeric field and the type validator rejected it
+> — a failure that penalised **only** C, the only system that validates
+> types before executing. A deliberately narrow currency-unit normaliser
+> (anything else still fails) fixed it, wired into B as well as C. The
+> superseded numbers are kept in [`docs/results.md`](docs/results.md)
+> because how they changed is the methodological point.
+
+**Replication that isolates the provider from the parsing regime.** The
+two regimes had been run on different providers (OpenRouter for given
+arguments, Groq for real parsing), so their difference mixed two
+variables — the sharpest internal-validity threat in the project. Rerunning
+the *given-arguments* regime **on Groq** holds the provider fixed:
+
+| | Groq, args given | Groq, real parse | Δ |
+|---|---|---|---|
+| STSR B | 0.492 | 0.483 | **−0.008** |
+| STSR C | 0.700 | 0.633 | **−0.067** |
+| C − B | +0.208 (*p* = 0.0015) | +0.150 (*p* = 0.016) | −0.058 |
+
+The drop is **the regime, not the model**: C loses 6.7 points to honest
+parsing, B loses 0.8. An unplanned consistency check falls out of it —
+the per-system token increase from parsing is +67.68 (A), +67.67 (B),
++67.62 (C), i.e. all three pay the *same* extraction, and C's **entire**
+token spend under real parsing is that extraction and nothing else,
+which is exactly the mechanism the thesis claims.
+
+Declared residue: A's false allow *does* depend on the provider (0.333 on
+OpenRouter, 0.889 on both Groq runs) while C's is 0.111 everywhere — an
+ungoverned agent's safety depends on which model it draws; the governed
+one's depends on none.
+
+**The defensible claim:**
+
+> Over a typed-tools baseline running the same LLM, governance buys
+> **8× fewer unsafe executions, 2.2× better traceability and 3.9× fewer
+> tokens**, plus a **small but significant** gain in task success
+> (+15.0 pp).
+
+That is narrower than the perfect-parse runs suggested (+18.3 pp) and
+stronger than the un-normalised run (not significant). It is what the
+evidence supports today.
+
+> **⚠️ Scope.** Free-tier model (`openai/gpt-oss-20b:free`), not a
+> frontier/production model — disclosed, not hidden. The freeze manifest
+> (schema 1.1) now covers prompts and provider config (model,
+> temperature, retries, timeout, token cap) alongside the test split,
+> dataset, catalog and seed; the run above predates that extension, so
+> its provider config is recorded but was not hash-enforced at the time.
+> Other limits in [`docs/results.md`](docs/results.md):
+> A scores 0 on STSR largely by construction (generic CRUD cannot encode
+> postconditions), so **C − B is the informative contrast**; the
+> adversarial detectors are lexical; H8 (cost) is a declared-rate
+> sensitivity analysis, not measured spend; H3 cannot discriminate even
+> with a real LLM because `temperature=0.0` makes it perfectly
+> reproducible by design.
+
+### External adversarial stress test: InjecAgent
+
+`validation.py`'s lexical detectors are declared as "tuned to
+ERP-Skills-Bench's own templated Spanish text" — this was measured, not
+just asserted, against InjecAgent (Zhan et al. 2024), 510 real
+out-of-distribution indirect-injection cases in English:
+
+| Pass | Detector | Detection rate |
+|---|---|---|
+| 1 | Spanish-only | 0.0% |
+| 2 | Spanish + English patterns added | 3.3% (17/510) |
+
+Going bilingual multiplied detection, it did not close the gap: most
+InjecAgent payloads are polite, direct requests with no attack-style
+framing at all ("Please delete my clinical documents...") — invisible
+to any lexical detector by construction, not a vocabulary gap. Full
+result and honest interpretation in
+[`docs/injecagent-stress-test.md`](docs/injecagent-stress-test.md).
+
+```sh
+uv run python scripts/injecagent_stress_test.py
+```
+
+That 3.3% answers the wrong question for this architecture, though. The
+defence against indirect injection here is not the regex — it is that
+ERP data never reaches an instruction position, that the LLM can only
+emit a skill id plus arguments, and that the handler writes solely to
+its own allowlisted model and fields. So the same 510 payloads were
+pushed through **every channel an attacker actually controls**, asking
+whether any unauthorized mutation occurs:
+
+| Attack channel | Unauthorized mutations | Decisions |
+|---|---|---|
+| Payload in the request text | **0 / 510** | 493 `ALLOW`, 17 `DENY` |
+| Payload stored in an ERP field the request reads | **0 / 510** | 510 `ALLOW` |
+| Compromised parser (attacker dictates the arguments) | **0 / 510** | 510 `DENY` |
+| **Total** | **0 / 1530** | |
+
+The third arm concedes the LLM entirely and tests governance alone. A
+positive control aborts the run if a clean request fails to reach the
+handler and mutate — an earlier version used a role the target skill
+does not permit, abstained on everything and reported a perfect score
+that could not have failed. Full method, honest reading of each row,
+and what is *not* claimed:
+[`docs/injecagent-stress-test.md`](docs/injecagent-stress-test.md).
+
+```sh
+uv run python scripts/injection_resistance_test.py
+```
+
+### Odoo 19 demo (post-core, real instance)
+
+`FakeERPAdapter` remains mandatory for the confirmatory experiment
+(CLAUDE.md §26/D-07); `odoo_client.py` is a post-core demonstration
+that the same skill contract executes against a real ERP. Two demos,
+both live-verified against a real Odoo.sh Development-branch instance
+(demo data, confirmed before writing anything — see
+[`docs/odoo-demo.md`](docs/odoo-demo.md) for the full safety story):
+
+1. **Adapter only** (`scripts/odoo_demo.py`): create → verify
+   postcondition → update → independent re-read, against real Odoo.
+2. **Full governed pipeline** (`scripts/odoo_governed_demo.py`): the
+   *same* `Runtime`/`SystemC`/`ApprovalService`/`AuditStore` classes
+   the confirmatory core runs 1.080 times, pointed at `Odoo19Adapter`
+   instead of `FakeERPAdapter`. An R1 skill auto-executes; an R2 skill
+   is blocked with `REQUIRE_APPROVAL` and proven — via an independent
+   Odoo read, not the system's own say-so — to leave Odoo untouched
+   until approval is granted, then executes correctly. Full audit
+   trail captured for all three steps.
+
+```sh
+cp .env.example .env   # fill in ODOO_URL / ODOO_DB / ODOO_API_KEY
+uv run python scripts/odoo_governed_demo.py
+```
+
+`Odoo19Adapter` is a **statically-typed** drop-in for `FakeERPAdapter`
+(`ErpAdapter` Protocol in `adapters.py`, `Runtime` generic over the
+adapter type) — not just duck-type-compatible at runtime. Only 2 of 12
+catalog skills are mapped to real Odoo models, declared as future work.
+
+### From results to a product
+
+[`docs/product-viability.md`](docs/product-viability.md) separates the
+evidence that would survive a customer conversation from the evidence
+that would not — because they are not the same set, and conflating them
+would produce false commercial claims.
+
+**Survives:** no unauthorized mutation through any attack channel
+(0/1530, including the arm that hands the attacker the whole LLM); one
+fewer LLM call per request, shown by arithmetic; a decision that is
+invariant to the provider while an ungoverned agent's is not; a real
+Odoo block verified by independent re-read; traceability 0.820.
+
+**Does not survive:** lexical attack detection (3.3% out of distribution,
+and 8 of the 9 dangerous test cases are caught by patterns written
+against that same corpus); "8× safer" without its interval (n = 9, CI
+[0.020, 0.435]); the task-success edge (+15 pp, modest); any savings
+figure (H8 is a declared-rate sensitivity analysis, not measured spend).
+
+The design consequence: a product built on this cannot lean on the
+system *understanding* better, only on it *constraining* better — which
+places it as a control plane beneath any agent, not as a competing
+agent.
 
 ## Prerequisites
 
-- CPython 3.12 (supported range: `>=3.12,<3.13`)
+- CPython 3.12 (`>=3.12,<3.13`)
 - [uv](https://docs.astral.sh/uv/) to install the reviewed lock and run tools
 - A POSIX-compatible shell and GNU-compatible `make` for the Make targets below
-  (on Windows, use a compatible shell/Make or run the shown `uv run` command).
-- Docker Engine with Docker Compose v2 for the optional container workflow.
+  (on Windows: Git Bash, WSL, or run the underlying `uv run` commands directly)
+- Docker Engine with Docker Compose v2 for the optional container workflow
+
+## Quickstart
+
+```sh
+git clone https://github.com/Jairogelpi/erp_skills.git
+cd erp_skills
+uv lock --check
+uv sync --frozen --group dev
+make test
+```
+
+The first `uv sync` downloads `sentence-transformers`'s dependency tree (torch,
+transformers, ~700MB) — needed for the embeddings retriever. This is a one-time
+cost per environment.
+
+**Cold-start verification (acceptance criterion 12).** Done from a fresh clone,
+not asserted: `git clone` → `uv sync` → **393 tests pass** → `freeze_protocol.py
+--verify` intact → `run_experiment.py` reproduces the published architecture-only
+numbers exactly (A 0.000 / B 0.333 / C 0.700).
+
+> **Windows: clone into a short path.** The deepest tracked path is 119
+> characters (`openspec/changes/…/project-local-ponytail-codebase-memory-mcp/spec.md`).
+> Cloning under an already-deep directory exceeds Windows' 260-character limit and
+> git fails checkout with `Filename too long`. Either clone near the drive root or
+> enable long paths once: `git config --global core.longpaths true`.
 
 ## Reproducible local workflow
 
-Use the committed lock; do not replace it with an ad-hoc, unpinned install:
+Use the committed lock; never replace it with an ad-hoc, unpinned install:
 
 ```sh
 uv lock --check
@@ -27,33 +360,92 @@ uv sync --frozen --group dev
 ```
 
 `uv sync --frozen --group dev` fails if the lock and metadata disagree rather than
-silently resolving a different dependency set. To update tooling intentionally,
-change an explicitly pinned declaration in `pyproject.toml`, regenerate `uv.lock`
-with uv, review its resolved versions and artifact hashes, then rerun every check.
-No normal setup path uses `latest`.
+silently resolving a different dependency set. To update a dependency intentionally:
+change its pinned declaration in `pyproject.toml`, regenerate `uv.lock` with `uv
+lock`, review the resolved versions/hashes, then rerun every check below. No normal
+path uses `latest`.
 
 ## Quality commands
 
 ```sh
-make format        # Ruff applies formatting
-make format-check  # Ruff verifies formatting
-make lint          # Ruff lints
-make typecheck     # mypy performs static type checking only
-make test          # pytest runs tests
-make coverage      # pytest reports package coverage
-make build         # builds the distribution
+make format           # Ruff applies formatting
+make format-check      # Ruff verifies formatting
+make lint               # Ruff lints
+make typecheck           # mypy performs static type checking only
+make test                 # pytest runs the full suite
+make coverage             # pytest reports package coverage
+make validate-dataset     # runs the catalog/intents/generator test suites
+make benchmark-smoke      # regenerates data/bench_v1.jsonl + the wiring report
+make verify-freeze        # fails if the frozen test split or catalog drifted
+make experiment           # runs the 1.080-execution paired A/B/C experiment
+make demo                 # the six §38 scenarios, deterministic, no network
+make compare-retrievers   # the §22 TF-IDF / embeddings / hybrid comparison
+make export-results       # CSV tables for the results chapter / dashboard
+make figures              # reproducible PNG+SVG figures (needs the figures group)
+make build                # builds sdist + wheel
 ```
 
-Ruff is the repository formatter and linter. mypy is used only for static type
-checking; it is not a formatter. Generated environments, caches, coverage, build
-outputs, real `.env` files, credentials, and local MCP state are ignored by policy.
-Ignore rules prevent ordinary accidental inclusion but do not remove a secret already
-tracked elsewhere.
+## Second-annotator review (pending human step)
 
-## Container first-clone workflow
+```sh
+uv run python scripts/build_annotation_sample.py   # blank review sheet, 96 cases
+# a second annotator fills the `annotator2_decision` column, then:
+uv run python scripts/compute_agreement.py         # Cohen's kappa
+```
 
-After the locked local setup, a Docker-capable environment can use the canonical,
-repository-relative Compose path:
+The sample is deterministic and stratified so adversarial/high-risk cases are
+over-represented. `compute_agreement.py` **refuses to print a number** while the
+second-annotator column is empty — this step is honestly pending (CLAUDE.md
+§17/§21, roadmap P3.4), not silently skipped.
+
+Ruff is the formatter and linter; mypy is static type checking only (not a
+formatter). mypy is configured to skip re-checking `torch`/`transformers`/
+`sentence_transformers` internals — without that override a full run took minutes
+instead of seconds.
+
+`make figures` needs matplotlib, which lives in its own `figures` dependency
+group rather than in the defaults:
+
+```sh
+uv sync --group figures && make figures
+uv sync --frozen --group dev        # restore the environment CI type-checks
+```
+
+That separation is not stylistic. Installing matplotlib into the environment
+mypy analyses makes mypy 1.15 crash with an internal error (`unresolved
+placeholder type None` while serializing its cache) against this project's
+numpy `follow_imports = "skip"` override — reproduced by bisection, and gone
+once matplotlib is uninstalled. Keeping it out of `dev` means CI type-checks
+the same environment it always has. The committed figures under
+`reports/figures/` are the deliverable either way.
+
+## Run the API locally
+
+```sh
+uv run uvicorn erp_agent_os.api:app --reload
+```
+
+```sh
+curl -H "X-API-Key: demo-key" http://127.0.0.1:8000/skills
+```
+
+The demo API key is a placeholder constant in `api.py`, explicitly not a production
+credential (CLAUDE.md §14: "autenticación para la demo"). State is in-memory only —
+restarting the process clears audit history and approvals; see `docs/roadmap.md` for
+the persistence gap (P6.2).
+
+## Regenerate the benchmark
+
+```sh
+uv run python scripts/export_bench_v1.py            # data/bench_v1.jsonl (480 cases)
+uv run python scripts/run_bench_wiring_report.py     # data/bench_v1_wiring_report.json
+```
+
+Both are deterministic (fixed seed) — re-running overwrites with byte-identical
+content. See [`docs/dataset-card.md`](docs/dataset-card.md) for composition, split
+methodology, and honest findings from wiring the dataset to real execution.
+
+## Container workflow
 
 ```sh
 make compose-config
@@ -63,46 +455,61 @@ make down
 ```
 
 `make up` runs `docker compose --env-file config/development.defaults up --build`.
-The repository-relative `config/development.defaults` contains only the inert defaults
-`ERP_AGENT_OS_MODE=development` and `ERP_AGENT_OS_PORT=8000`; it needs no
-host-specific path, real `.env`, or secret. The development container runs a bounded
-readiness message, not an application server. It uses
+`config/development.defaults` contains only inert defaults
+(`ERP_AGENT_OS_MODE=development`, `ERP_AGENT_OS_PORT=8000`) — no secret, no
+host-specific path. The container currently runs a bounded readiness message, not the
+FastAPI server; wiring `uvicorn` into the container image is future work. Pinned base
+image:
 `python:3.12-slim@sha256:9e869b0816f5537709825b49e62dc86d1c2691eff19b05c1d4dc3a07992cc052`
-(tag/digest retrieved 2026-08-05). Verify the source pin with
-`docker buildx imagetools inspect python:3.12-slim`.
+(retrieved 2026-08-05) — verify with `docker buildx imagetools inspect python:3.12-slim`.
 
-Docker Compose and GNU Make are unavailable on this workstation, so Compose
-configuration, image build, `make up`, and `make down` are deferred to a
-Docker-capable CI or reviewer environment; they are not locally passed.
+## CI/CD
 
-## CI scope
+[![CI](https://github.com/Jairogelpi/erp_skills/actions/workflows/ci.yml/badge.svg)](https://github.com/Jairogelpi/erp_skills/actions/workflows/ci.yml)
 
-The Linux Python 3.12 workflow installs pinned `uv` via immutable
-`astral-sh/setup-uv` revision
-`d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86` (v5.4.2), validates the committed lock,
-and runs only the implemented formatting, lint, type-check, coverage, and build
-commands. Dataset validation, benchmark smoke, and artifact production remain
-additive CLAUDE.md §29 checks and are not claimed as complete.
+The Linux/Python 3.12 workflow (`.github/workflows/ci.yml`), on every push and pull
+request: installs the locked toolchain via pinned `astral-sh/setup-uv`, validates
+`uv.lock` against `pyproject.toml`, then runs format-check, lint, typecheck,
+coverage, **dataset validation**, **benchmark smoke** (regenerates and uploads
+`data/bench_v1.jsonl` + the wiring report as build artifacts), and a package build.
+Every third-party GitHub Action is pinned to an immutable commit SHA, not a mutable
+tag. Pushing a `v*` tag (`.github/workflows/release.yml`) runs the same checks and,
+on success, attaches the built wheel/sdist to a GitHub Release — it does not publish
+to PyPI or a container registry.
 
-## Releases
+## Repository layout
 
-Pushing a semantic version tag such as `v0.1.0` runs the same locked Python 3.12
-quality, test, and build checks as CI. On success, GitHub creates a release for
-that tag and attaches the wheel and source distribution from `dist/`; it does not
-publish to PyPI or a container registry.
+```text
+src/erp_agent_os/     application code (adapters, skills, policy, runtime, audit,
+                       parser, retrieval, systems A/B/C, catalog, benchmark
+                       generator/runner, handlers, API)
+tests/                 pytest suite, one file per module, 100+ tests
+scripts/                export_bench_v1.py, run_bench_wiring_report.py
+data/                   generated benchmark + wiring report (regenerable, not
+                        hand-edited)
+docs/                   memoria.md (TFM draft, built from the real results),
+                        results.md, dataset-card.md, audit.md, threat-model.md,
+                        spec-coverage.md, product-viability.md, roadmap.md,
+                        and the per-study pages
+openspec/changes/       SDD trail: proposal/spec/design/tasks/apply-progress
+                        per work unit, with TDD evidence and disclosed budget
+                        exceptions where a unit exceeded the 400-line review
+                        target
+CLAUDE.md               the normative specification and the append-only
+                        bitácora operativa (build log)
+```
 
 ## Optional developer assistance
 
 [Ponytail](.ponytail/UPSTREAM.md) is vendored with immutable provenance and a
-SHA-256 manifest. Optional Codebase Memory MCP setup is documented in
-[development assistance](docs/development-assistance.md). It is local,
-token-free, read-mostly assistance—not an application runtime dependency—and
-cannot be enabled until this checkout has Git initialized.
+SHA-256 manifest. Codebase Memory MCP setup and the always-index convention are
+documented in [`docs/development-assistance.md`](docs/development-assistance.md).
+Both are local, read-mostly assistance — not application runtime dependencies.
 
-## Scope and portability
+## Scope and non-negotiables
 
-This Unit 2 foundation is portable across supported Python 3.12 environments with
-uv. The Make targets need a POSIX-compatible shell/Make; native Windows Make is not
-claimed without validation. This unit neither initializes Git nor commits, publishes,
-configures remotes, or creates application capabilities. FakeERP, skills, and runtime
-remain undelivered.
+Full detail in [`CLAUDE.md`](CLAUDE.md#41-decisiones-no-negociables). In short:
+`FakeERPAdapter` is the confirmatory core (Odoo 19 is a post-core extension);
+R4-risk operations are unconditionally denied; skills are versioned with an
+enforced lifecycle (no direct `DRAFT → ACTIVE`); the test split freezes before the
+confirmatory experiment; synthetic data only, no secrets ever committed.

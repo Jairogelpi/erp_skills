@@ -7,12 +7,36 @@ name = "erp-agent-os"
 version = "0.1.0"
 description = "Deterministic, synthetic-only ERP Agent OS foundations"
 readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Jairo Gelpi Moreno" }]
 requires-python = ">=3.12,<3.13"
-dependencies = ["pydantic>=2,<3"]
+dependencies = [
+  "pydantic>=2,<3",
+  "sentence-transformers==5.6.1",
+  "fastapi==0.121.2",
+  "uvicorn==0.38.0",
+  "sqlalchemy==2.0.51",
+  "groq==0.37.1",
+  "google-genai>=2.17.0",
+]
 
 [dependency-groups]
+# Figures only. Deliberately NOT a default dependency and NOT in
+# `dev`: installing matplotlib into the environment mypy analyses
+# triggers an internal mypy 1.15 crash ("unresolved placeholder
+# type" while serializing its cache) on this project's numpy
+# `follow_imports = "skip"` override. Keeping it in its own group
+# means CI (`uv sync --group dev`) type-checks the same environment
+# it always has, and figures are regenerated on demand with
+# `uv sync --group figures`.
+figures = [
+  "matplotlib>=3.11,<4",
+]
+
 dev = [
   "build==1.2.2.post1",
+  "httpx==0.28.1",
+  "hypothesis==6.123.7",
   "mypy==1.15.0",
   "pytest==8.3.5",
   "pytest-cov==6.0.0",
@@ -45,3 +69,9 @@ select = ["E", "F", "I"]
 [tool.mypy]
 python_version = "3.12"
 files = ["src"]
+follow_imports = "silent"
+
+[[tool.mypy.overrides]]
+module = ["sentence_transformers.*", "torch.*", "transformers.*", "numpy.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
