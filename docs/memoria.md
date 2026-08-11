@@ -495,6 +495,7 @@ reintento, mismo evaluador determinista.
 | 2 | Stub determinista | Parseo regalado | Arquitectura-solo: aísla gobernanza de calidad del modelo |
 | 3 | Groq (`llama-3.1-8b-instant`) | Parseo real | Elimina el sesgo del parseo regalado |
 | 4 | Groq | Parseo real + normalización | **Vigente** |
+| 5 | Groq | Parseo regalado | **Réplica que separa proveedor de régimen** |
 
 **Por qué cambia el proveedor entre corridas.** La cuota diaria gratuita
 de Groq se agotó durante la instrumentación de tokens; Gemini resultó
@@ -503,7 +504,9 @@ completó la corrida 1 pero entraba en tormentas de 429 que hacían la
 corrida 3 inviable (~3 h con interrupciones frente a ~50 min con Groq).
 D-03 exige que A/B/C compartan proveedor **dentro** de una corrida, no
 un proveedor concreto entre corridas. El confundido proveedor↔régimen
-que esto introduce se acota en §9.4.
+que esto introducía se **resolvió con la ejecución 5** (§8.10), que
+repite el régimen de argumentos dados con Groq para dejar el proveedor
+fijo.
 
 ### 7.3 Dos sesgos corregidos antes de publicar cifras
 
@@ -721,7 +724,38 @@ Es una demostración **cualitativa** con 2 de las 12 skills mapeadas a
 modelos reales; no sustituye ni replica el experimento confirmatorio, y
 así se declara.
 
-### 8.9 Estado final de las hipótesis
+### 8.9 Réplica que separa proveedor de régimen de argumentos
+
+La comparación entre regímenes estaba confundida con el proveedor: la
+corrida de argumentos dados usó OpenRouter y la de parseo real, Groq.
+La ejecución 5 repite **argumentos dados con Groq**, dejando el
+proveedor fijo:
+
+| | Groq, argumentos dados | Groq, parseo real | Δ |
+|---|---|---|---|
+| STSR B | 0,492 | 0,483 | **−0,008** |
+| STSR C | 0,700 | 0,633 | **−0,067** |
+| C − B | +0,208 (*p* = 0,0015) | +0,150 (*p* = 0,016) | −0,058 |
+
+Con el proveedor constante, **C cae 6,7 puntos al parsear de verdad y B
+solo 0,8**. El efecto es del régimen de argumentos, no del modelo: el
+parseo regalado beneficiaba a C desproporcionadamente. La amenaza a la
+validez interna más seria del trabajo queda así medida en lugar de
+argumentada.
+
+**Verificación interna no planeada, que el diseño supera.** El
+incremento de tokens al pasar a parseo real es +67,68 (A), +67,67 (B) y
++67,62 (C): los tres pagan **la misma** extracción, como exige D-03. Y
+el gasto **total** de C con parseo real (67,62) es exactamente esa
+extracción y nada más — no hay llamada de selección de herramienta, que
+es precisamente el mecanismo que la tesis afirma.
+
+**Residuo declarado.** El *false allow* de A sí depende del proveedor
+(0,333 con OpenRouter, 0,889 en las dos corridas Groq), mientras que el
+de C es 0,111 en todas. La seguridad de un agente sin gobernanza depende
+de qué modelo le toque; la de la arquitectura gobernada, de ninguno.
+
+### 8.10 Estado final de las hipótesis
 
 | H | Estado |
 |---|---|
@@ -787,13 +821,12 @@ mejor; dice qué se compra y qué se paga.
 
 ### 9.4 Amenazas a la validez
 
-**Interna.** El confundido proveedor↔régimen de parseo entre corridas
-(Groq en la 3–4, OpenRouter en la 1) no queda del todo separado.
-Mitigación parcial, no eliminación: las métricas de C son invariantes
-entre los tres proveedores probados y B se mueve poco, mientras que el
-desplome se concentra en C —justo el sistema al que el parseo regalado
-beneficiaba—. Una réplica de ambos regímenes en el mismo proveedor queda
-pendiente y declarada.
+**Interna.** El confundido proveedor↔régimen de parseo (Groq en las
+corridas 3–4, OpenRouter en la 1) **queda resuelto** por la ejecución 5
+(§8.9): con el proveedor fijo, C cae 6,7 puntos al parsear de verdad y B
+solo 0,8, de modo que el efecto es atribuible al régimen y no al modelo.
+Residuo declarado: el *false allow* de A depende del proveedor (0,333
+con OpenRouter, 0,889 con Groq), aunque el de C es invariante.
 
 **Externa.** Benchmark sintético y plantillado, un solo idioma, un solo
 ERP simulado, modelos de nivel gratuito (no frontera). Las dos demos
@@ -1034,6 +1067,7 @@ make figures
 | `data/freeze_manifest.json` | Hashes del protocolo congelado (schema 1.1) |
 | `data/experiment_results.json` | Corrida confirmatoria (OpenRouter, parseo regalado) |
 | `data/experiment_results_real_parser.json` | **Corrida vigente** (Groq, parseo real + normalización) |
+| `data/experiment_results_groq_given_args.json` | Réplica que separa proveedor de régimen (Groq, argumentos dados) |
 | `data/retriever_comparison.json` | TF-IDF vs embeddings vs híbrido |
 | `data/injecagent_stress_test_results.json` | Detección léxica, 510 payloads |
 | `data/injection_resistance_results.json` | Resistencia por canal, 1.530 casos |
@@ -1055,6 +1089,5 @@ especificación normativa).
 
 1. **Kappa de anotación** — instrumento generado, paso humano pendiente.
 2. **Workbook de Tableau** — insumos generados, montaje manual.
-3. **Réplica de regímenes de parseo en un mismo proveedor.**
-4. **Ejecución del brazo de temperatura y medición de H3b con LLM real.**
-5. **Vídeo de competición y presentación de defensa.**
+3. **Ejecución del brazo de temperatura y medición de H3b con LLM real.**
+4. **Vídeo de competición y presentación de defensa.**

@@ -164,6 +164,30 @@ being handed `case.expected_arguments` for free. Full analysis in
 > superseded numbers are kept in [`docs/results.md`](docs/results.md)
 > because how they changed is the methodological point.
 
+**Replication that isolates the provider from the parsing regime.** The
+two regimes had been run on different providers (OpenRouter for given
+arguments, Groq for real parsing), so their difference mixed two
+variables — the sharpest internal-validity threat in the project. Rerunning
+the *given-arguments* regime **on Groq** holds the provider fixed:
+
+| | Groq, args given | Groq, real parse | Δ |
+|---|---|---|---|
+| STSR B | 0.492 | 0.483 | **−0.008** |
+| STSR C | 0.700 | 0.633 | **−0.067** |
+| C − B | +0.208 (*p* = 0.0015) | +0.150 (*p* = 0.016) | −0.058 |
+
+The drop is **the regime, not the model**: C loses 6.7 points to honest
+parsing, B loses 0.8. An unplanned consistency check falls out of it —
+the per-system token increase from parsing is +67.68 (A), +67.67 (B),
++67.62 (C), i.e. all three pay the *same* extraction, and C's **entire**
+token spend under real parsing is that extraction and nothing else,
+which is exactly the mechanism the thesis claims.
+
+Declared residue: A's false allow *does* depend on the provider (0.333 on
+OpenRouter, 0.889 on both Groq runs) while C's is 0.111 everywhere — an
+ungoverned agent's safety depends on which model it draws; the governed
+one's depends on none.
+
 **The defensible claim:**
 
 > Over a typed-tools baseline running the same LLM, governance buys

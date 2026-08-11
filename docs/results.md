@@ -552,6 +552,76 @@ significativa). Es la que la evidencia soporta hoy.
 
 ---
 
+## Ejecución 5: la réplica que separa proveedor de régimen de argumentos
+
+`data/experiment_results_groq_given_args.json` · `manifest.selector:
+"GroqClient"` · `real_parser: false`
+
+### El agujero que cierra
+
+Hasta aquí, la comparación entre regímenes de argumentos estaba
+**confundida con el proveedor**: la ejecución 1 (argumentos dados) usó
+OpenRouter y las 3–4 (parseo real) usaron Groq. Atribuir la caída de C
+al parseo honesto era plausible pero no estaba separado del cambio de
+modelo. Era la amenaza a la validez interna más atacable del trabajo.
+
+Esta ejecución repite el régimen de **argumentos dados con Groq**, el
+mismo proveedor y configuración que las ejecuciones 3 y 4. Con el
+proveedor fijo, la única variable que cambia es el régimen.
+
+### Resultado: el efecto es del régimen, no del proveedor
+
+| | Groq, argumentos dados | Groq, parseo real | Δ |
+|---|---|---|---|
+| STSR A | 0,000 | 0,000 | 0,000 |
+| STSR B | 0,492 | 0,483 | **−0,008** |
+| STSR C | 0,700 | 0,633 | **−0,067** |
+| C − B | +0,208 [+0,092, +0,325] *p* = 0,0015 | +0,150 [+0,042, +0,258] *p* = 0,016 | −0,058 |
+
+Con el proveedor constante: **C cae 6,7 puntos al tener que parsear de
+verdad y B apenas 0,8**. Es exactamente el patrón que se había
+declarado como hipótesis para acotar el confundido, ahora **medido en
+lugar de argumentado**. El parseo regalado beneficiaba a C
+desproporcionadamente, y esa era la causa real de la diferencia entre
+ejecuciones, no el cambio Groq↔OpenRouter.
+
+C−B sigue siendo significativo en ambos regímenes; el efecto honesto es
+menor (+0,150 frente a +0,208).
+
+### Verificación interna del coste en tokens
+
+| Sistema | Argumentos dados | Parseo real | Incremento |
+|---|---|---|---|
+| A | 117,42 | 185,10 | **+67,68** |
+| B | 197,60 | 265,27 | **+67,67** |
+| C | **0,00** | **67,62** | **+67,62** |
+
+Los tres pagan **el mismo** incremento por extraer argumentos (67,6
+tokens), como exige D-03. Y el gasto **total** de C con parseo real
+(67,62) es exactamente esa extracción **y nada más**: no hay llamada de
+selección de herramienta, que es precisamente el mecanismo que la tesis
+afirma. Es una comprobación de consistencia que no estaba planeada y
+que el diseño supera.
+
+### Sensibilidad al proveedor, ahora acotada
+
+| | OpenRouter (ejec. 1) | Groq (ejec. 5) |
+|---|---|---|
+| STSR B | 0,517 | 0,492 |
+| STSR C | 0,700 | 0,700 |
+| False allow A | **0,333** | **0,889** |
+| False allow B / C | 0,889 / 0,111 | 0,889 / 0,111 |
+
+Con el mismo régimen y distinto proveedor: **C es invariante** (no llama
+al LLM), B se mueve 2,5 puntos, y el *false allow* de A oscila mucho
+(0,333 vs 0,889). Ese último dato importa y se reporta sin suavizar: la
+seguridad de un agente **sin gobernanza** depende fuertemente de qué
+modelo le toque, mientras que la de C no depende de ninguno. Las dos
+corridas Groq coinciden en 0,889 para A, lo que confirma que la
+oscilación es del proveedor y no ruido de una corrida.
+
+---
+
 ## Hipótesis, estado final
 
 *(Estado tras la ejecución 4, la vigente.)*
@@ -613,20 +683,21 @@ incorrectos** y se rehízo la ejecución completa.
    (recall 0,889, R2/R3 en 1,000/0,500) se mantuvieron estables entre
    los tres proveedores probados.
 3. **A como hombre de paja** — véase H1; usar C − B como contraste
-   principal. Y ese contraste, con parseo honesto, **no es
-   significativo en STSR**: la superioridad de C en éxito de tarea que
-   mostraban las ejecuciones 1 y 2 dependía del parseo regalado.
-3b. **Confundido proveedor ↔ régimen de parseo.** La ejecución con
-   parseo real usó Groq y la confirmatoria usó OpenRouter, porque
-   OpenRouter entraba en tormentas de 429 que hacían inviable la
-   corrida. Estrictamente, la diferencia entre ambas mezcla dos
-   variables. Mitigación parcial, no eliminación: las métricas de C
-   (false allow, trazabilidad) son idénticas entre las tres ejecuciones
-   y entre los tres proveedores probados, y B se mueve muy poco
-   (0,517 → 0,483); el desplome está concentrado en C (0,700 → 0,558),
-   que es exactamente el sistema al que el parseo regalado beneficiaba.
-   Una réplica con ambos regímenes en el mismo proveedor está
-   pendiente y declarada.
+   principal. Y ese contraste, con parseo honesto, es **menor** que el
+   que mostraban las ejecuciones 1 y 2: parte de la superioridad de C en
+   éxito de tarea dependía del parseo regalado.
+3b. **Confundido proveedor ↔ régimen de parseo: RESUELTO** (ejecución 5).
+   Era la amenaza más seria: la corrida con parseo real usó Groq y la
+   confirmatoria OpenRouter, así que su diferencia mezclaba dos
+   variables. La ejecución 5 repite el régimen de argumentos dados **con
+   Groq**, dejando el proveedor fijo. Resultado: al pasar a parseo real,
+   C cae 0,700 → 0,633 (−6,7 pp) y B solo 0,492 → 0,483 (−0,8 pp). El
+   efecto es **del régimen, no del proveedor**, exactamente como se
+   había argumentado — pero ahora medido. Queda un residuo declarado:
+   el *false allow* de A sí depende del proveedor (0,333 con OpenRouter,
+   0,889 en las dos corridas Groq), lo que dice que la seguridad de un
+   agente sin gobernanza depende de qué modelo le toque, mientras que la
+   de C no depende de ninguno.
 4. **Detectores léxicos en C, medido con un benchmark externo** — la
    ventaja en H4 no se generaliza a adversarios adaptativos.
    `docs/injecagent-stress-test.md`: 510 casos reales de InjecAgent
