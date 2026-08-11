@@ -35,7 +35,7 @@ from erp_agent_os.audit import AuditStore
 from erp_agent_os.bench_generator import generate_cases
 from erp_agent_os.catalog import CATALOG, CATALOG_BY_ID
 from erp_agent_os.dataset import CaseLabel, DatasetSplit
-from erp_agent_os.odoo_client import Odoo19Adapter
+from erp_agent_os.odoo_client import Odoo19Adapter, require_development_instance
 from erp_agent_os.odoo_handlers import CRM_LEAD_FIELDS
 from erp_agent_os.parser import structure_proposal
 from erp_agent_os.retrieval import TfidfRetriever
@@ -104,6 +104,9 @@ def _positive_control(erp: Odoo19Adapter) -> dict[str, object]:
 
 
 def main() -> None:
+    # Refuses production and staging before a single write leaves
+    # this process (see require_development_instance for why).
+    require_development_instance()
     erp = Odoo19Adapter(allowed_fields={"crm.lead": CRM_LEAD_FIELDS})
     control = _positive_control(erp)
 

@@ -15,7 +15,7 @@ import json
 import sys
 from pathlib import Path
 
-from erp_agent_os.odoo_client import Odoo19Adapter
+from erp_agent_os.odoo_client import Odoo19Adapter, require_development_instance
 from erp_agent_os.odoo_handlers import (
     CRM_LEAD_FIELDS,
     crm_create_opportunity,
@@ -27,6 +27,9 @@ OUTPUT_PATH = Path(__file__).resolve().parent.parent / "data" / "odoo_demo_resul
 
 
 def main() -> None:
+    # Refuses production and staging before a single write leaves
+    # this process (see require_development_instance for why).
+    require_development_instance()
     erp = Odoo19Adapter(allowed_fields={"crm.lead": CRM_LEAD_FIELDS})
 
     steps = []

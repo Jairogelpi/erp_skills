@@ -167,3 +167,42 @@ def test_unknown_model_and_record_errors_are_the_same_classes_runtime_catches():
     adapter._client.post = MagicMock(return_value=_fake_response([]))
     with pytest.raises(AdaptersUnknownRecordError):
         adapter.get("res.partner", "999")
+
+
+def test_write_demos_refuse_production_and_staging(monkeypatch):
+    # Not hypothetical: this project's dev machine has ODOO_URL set to
+    # the business's *production* instance as a persistent user-level
+    # environment variable, and the adapter reads os.environ directly.
+    # A demo run with no arguments would have written test opportunities
+    # into a live ERP.
+    from erp_agent_os.odoo_client import (
+        NotADevelopmentInstanceError,
+        require_development_instance,
+    )
+
+    dev = "https://esenssi-aromas-dev-pruebas-limpio-36154343.dev.odoo.com"
+    assert require_development_instance(dev) == dev
+
+    for refused in (
+        "https://esenssi-aromas.odoo.com",  # production
+        # Odoo.sh staging lives under .dev.odoo.com but is a clone of
+        # production data, so it must be refused too.
+        "https://esenssi-aromas-staging-35351235.dev.odoo.com",
+        "",
+    ):
+        with pytest.raises(NotADevelopmentInstanceError):
+            require_development_instance(refused)
+
+
+def test_guard_falls_back_to_the_environment_when_no_url_is_passed(monkeypatch):
+    from erp_agent_os.odoo_client import (
+        NotADevelopmentInstanceError,
+        require_development_instance,
+    )
+
+    monkeypatch.setenv("ODOO_URL", "https://esenssi-aromas.odoo.com")
+    with pytest.raises(NotADevelopmentInstanceError):
+        require_development_instance()
+
+    monkeypatch.setenv("ODOO_URL", "https://x-1234.dev.odoo.com")
+    assert require_development_instance() == "https://x-1234.dev.odoo.com"

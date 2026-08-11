@@ -223,3 +223,44 @@ dice de sí mismo. No vale: **n=3 no tiene ningún peso estadístico**.
 H4 se mide sobre el split completo con `FakeERPAdapter`; esto es una
 demostración cualitativa, y presentarla como replicación de H4 sería
 deshonesto.
+
+### Reejecución con control positivo (11-ago)
+
+La primera versión de esta demo tenía un hueco del que este proyecto ya
+tiene historial: **no comprobaba que escribir fuera posible**. Con una
+credencial incapaz de escribir en `crm.lead` —el estado exacto en el
+que estuvo esta integración durante días, con el usuario de API fuera
+del grupo Sales— el resultado habría sido un impecable "0 escrituras en
+casos bloqueados" que **no podía fallar**.
+
+`_positive_control()` lo cierra: antes de medir nada, una petición
+limpia debe llegar al handler y **crear un registro real** en Odoo, o el
+script aborta con `SystemExit` y no publica cifras. En la reejecución:
+
+```
+positive control: benign request -> ALLOW, created ['45'] in Odoo
+```
+
+Con ese control en pie, los tres casos adversariales vuelven a dar
+3/3 bloqueados y 0 escrituras, verificado por relectura independiente.
+
+### Guardián de instancia: producción y staging se rechazan
+
+Al preparar la reejecución apareció un riesgo real, no hipotético: la
+máquina de desarrollo tiene `ODOO_URL` apuntando a la instancia de
+**producción** del negocio como variable de entorno **persistente de
+usuario**, y el adaptador lee `os.environ` directamente. Un `.env` local
+con la rama de desarrollo **no la pisa**: cualquier demo lanzada sin
+argumentos habría escrito oportunidades de prueba en el ERP vivo.
+
+`require_development_instance()` (en `odoo_client.py`) se llama al
+principio de las tres demos y rechaza:
+
+- cualquier host que no sea `*.dev.odoo.com` — es decir, producción;
+- cualquier host con `staging`, que en Odoo.sh vive bajo `.dev.odoo.com`
+  pero es **un clon de los datos de producción**;
+- `ODOO_URL` sin definir.
+
+Probado en ambos sentidos (`tests/test_odoo_client.py`): rechaza
+producción, staging y ausencia de variable; acepta la rama de
+desarrollo.

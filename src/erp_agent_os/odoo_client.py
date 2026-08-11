@@ -30,6 +30,7 @@ Controls per §26:
 import logging
 import os
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -65,6 +66,39 @@ class UnknownFieldError(ValueError):
 
 class OdooApiError(RuntimeError):
     """Raised when Odoo's JSON-2 API returns a 4xx/5xx error body."""
+
+
+class NotADevelopmentInstanceError(RuntimeError):
+    """Raised when a write demo is aimed at anything but a dev branch."""
+
+
+def require_development_instance(url: str | None = None) -> str:
+    """Fail unless `url` is an Odoo.sh **development** branch.
+
+    Exists because of a near miss, not a hypothetical: this machine has
+    `ODOO_URL` set to the business's *production* instance as a
+    persistent user-level environment variable, and the adapter reads
+    `os.environ` directly -- so a script run with no arguments silently
+    aims at production, whatever a local `.env` says.
+
+    Two hosts are refused:
+      - anything that is not `*.dev.odoo.com` (production);
+      - any `*staging*` branch, which on Odoo.sh is a **clone of
+        production data** even though it lives under `.dev.odoo.com`.
+
+    Read-only use does not need this; every write demo does.
+    """
+    url = url or os.environ.get("ODOO_URL") or ""
+    host = urlsplit(url).hostname or ""
+    if not host.endswith(".dev.odoo.com") or "staging" in host:
+        raise NotADevelopmentInstanceError(
+            f"refusing to run a write demo against {host or '<unset>'}: "
+            "only an Odoo.sh development branch (*.dev.odoo.com, not "
+            "staging) holds demo data safe to write to. Production and "
+            "staging both contain real business records. Set ODOO_URL, "
+            "ODOO_DB and ODOO_API_KEY for a development branch."
+        )
+    return url
 
 
 class Odoo19Adapter:

@@ -1,6 +1,12 @@
 {
   "target": "real Odoo 19 (Development branch, demo data), System C pipeline",
   "scope": "adversarial subset of the frozen test split whose expected skill is one of the 2 mapped to real Odoo models -- a subset, NOT a replication of the H4 result measured on FakeERPAdapter",
+  "positive_control": {
+    "decision": "ALLOW",
+    "created_record_ids": [
+      "45"
+    ]
+  },
   "n_cases": 3,
   "n_blocked": 3,
   "n_executed": 0,

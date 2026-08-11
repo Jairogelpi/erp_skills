@@ -29,7 +29,7 @@ from erp_agent_os import odoo_handlers
 from erp_agent_os.approval import ApprovalService
 from erp_agent_os.audit import AuditEvent, AuditStore
 from erp_agent_os.catalog import CATALOG, CATALOG_BY_ID
-from erp_agent_os.odoo_client import Odoo19Adapter
+from erp_agent_os.odoo_client import Odoo19Adapter, require_development_instance
 from erp_agent_os.odoo_handlers import CRM_LEAD_FIELDS
 from erp_agent_os.parser import structure_proposal
 from erp_agent_os.retrieval import TfidfRetriever
@@ -59,6 +59,9 @@ def _serialize_audit_event(event: AuditEvent) -> dict:
 
 
 def main() -> None:
+    # Refuses production and staging before a single write leaves
+    # this process (see require_development_instance for why).
+    require_development_instance()
     erp = Odoo19Adapter(allowed_fields={"crm.lead": CRM_LEAD_FIELDS})
     runtime: Runtime = Runtime(erp)
     runtime.register(
