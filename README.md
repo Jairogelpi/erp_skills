@@ -291,6 +291,17 @@ The first `uv sync` downloads `sentence-transformers`'s dependency tree (torch,
 transformers, ~700MB) — needed for the embeddings retriever. This is a one-time
 cost per environment.
 
+**Cold-start verification (acceptance criterion 12).** Done from a fresh clone,
+not asserted: `git clone` → `uv sync` → **393 tests pass** → `freeze_protocol.py
+--verify` intact → `run_experiment.py` reproduces the published architecture-only
+numbers exactly (A 0.000 / B 0.333 / C 0.700).
+
+> **Windows: clone into a short path.** The deepest tracked path is 119
+> characters (`openspec/changes/…/project-local-ponytail-codebase-memory-mcp/spec.md`).
+> Cloning under an already-deep directory exceeds Windows' 260-character limit and
+> git fails checkout with `Filename too long`. Either clone near the drive root or
+> enable long paths once: `git config --global core.longpaths true`.
+
 ## Reproducible local workflow
 
 Use the committed lock; never replace it with an ad-hoc, unpinned install:

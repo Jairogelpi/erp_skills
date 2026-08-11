@@ -168,6 +168,19 @@ def _provider_arg() -> str:
     return "groq"
 
 
+def _output_arg() -> Path | None:
+    """Explicit destination, so a run cannot silently replace another.
+
+    Needed for the replication that separates provider from argument
+    regime: an unparsed Groq run would otherwise overwrite the published
+    OpenRouter confirmatory result, which is a *different* experiment,
+    not a newer version of the same one.
+    """
+    if "--output" in sys.argv:
+        return Path(sys.argv[sys.argv.index("--output") + 1])
+    return None
+
+
 def main() -> None:
     real_llm = "--real-llm" in sys.argv
     real_parser = "--real-parser" in sys.argv
@@ -424,7 +437,7 @@ def main() -> None:
     # A parsed run is a *different* experiment, not a newer version of
     # the frozen one: it writes beside the confirmatory result instead
     # of overwriting it, so both argument regimes stay comparable.
-    output_path = (
+    output_path = _output_arg() or (
         OUTPUT_PATH.with_name("experiment_results_real_parser.json")
         if manifest.real_parser
         else OUTPUT_PATH
