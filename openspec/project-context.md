@@ -50,15 +50,20 @@ section-by-section audit is `docs/spec-coverage.md`.
 | Infrastructure | `api`, `approval`, `persistence` |
 | Post-core Odoo 19 | `odoo_client` (JSON-2 API adapter), `odoo_handlers` (2 skills mapped to real models) |
 
-**The confirmatory paired experiment has been run for real**: 1.080
-observations (120 frozen test cases × 3 systems × 3 repetitions),
-inference unit = case (n=120), `manifest.selector: "OpenRouterClient"`
-(`openai/gpt-oss-20b:free`), `is_confirmatory_run: true`. Results in
-`data/experiment_results.json`, full analysis in `docs/results.md`. STSR
-A 0.000 / B 0.517 / C 0.700; false allow rate A 0.333 / B 0.889 / C
-0.111; C−A +0.700 CI95[+0.617,+0.783] Holm *p*=2.71e-19 OR=169; C−B
-+0.183 CI95[+0.058,+0.308] Holm *p*=7.65e-3 OR=2.07; Cochran's
-Q=109.46 (df 2). H2 (tokens) and H7 (traceability) are populated with
+**The confirmatory paired experiment has been run for real, five
+times**: 1.080 observations each (120 frozen test cases × 3 systems × 3
+repetitions), inference unit = case (n=120). **The current run** is
+`data/experiment_results_real_parser.json` (Groq, real argument parsing
+plus currency normalization): STSR A 0.000 / B 0.483 / **C 0.633**;
+C−B **+0.150** CI95[+0.042,+0.258] Holm *p*=0.016 OR=2.09; C−A +0.633
+CI95[+0.550,+0.717] *p*=1.55e-17; Cochran's Q=102.87 (df 2). False
+allow A 0.889 / B 0.889 / **C 0.111**; tokens/execution A 185.1 /
+B 265.3 / **C 67.6**; traceability A 0.356 / B 0.374 / **C 0.820**. The
+earlier OpenRouter run (C 0.700, C−B +0.183) handed every system a free
+argument parse and is kept in `docs/results.md` as a superseded
+contrast, not as the headline. A fifth run replays the given-arguments
+regime **on Groq**, which resolved the provider↔regime confound: with
+the provider fixed, C loses 6.7 points to honest parsing and B only 0.8. H2 (tokens) and H7 (traceability) are populated with
 real numbers for the first time: mean tokens/execution A=198 B=230 C=0;
 mean traceability score A=0.19 B=0.36 C=0.80. System C never calls the
 LLM (TF-IDF retrieval), so its metrics are byte-identical across every
@@ -151,8 +156,11 @@ not hidden. Details and both live results in `docs/odoo-demo.md`.
 
 ## What is deliberately not done
 
-- **The freeze manifest does not yet cover provider config** (model,
-  temperature, retries) — a disclosed trade-off, not an oversight.
+- **The freeze manifest (schema 1.1) now covers prompts and provider
+  config** (model, temperature, retries, timeout, token cap) alongside
+  the test split, dataset, catalog and seed, CI-enforced. Caveat: the
+  reported runs predate that extension, so their provider config is
+  recorded in each run manifest but was not hash-enforced at the time.
 - **H8 (cost)** is a declared-rate sensitivity analysis per CLAUDE.md
   §20, not measured spend (the providers used are genuinely free).
   **H3 cannot discriminate** even with a real LLM, because
@@ -170,14 +178,31 @@ not hidden. Details and both live results in `docs/odoo-demo.md`.
   graceful degradation if retrieval routes to one of the other 10 (would
   raise `UnregisteredHandlerError`) — acceptable for a scoped demo, not
   for a production integration.
-- Tableau dashboard, demo video, presentation and the written memoria
-  are post-core or unstarted.
+- **Retrieval does not survive real user text** — measured, not feared
+  (`docs/product-viability.md` §7.2–7.4). On 120 colloquial requests,
+  TF-IDF over the catalog's one-line descriptions scores 0.455 Top-1
+  held-out versus 0.733 on the benchmark. The cause is the thin
+  descriptions, not the algorithm: enriched routing text
+  (`data/skill_profiles.json`, outside the frozen catalog) reaches 0.886
+  at zero token cost, above an LLM router's 0.818 (which costs 592
+  tokens/request). Consequence recorded as threat 3c in
+  `docs/results.md`: **C's +15 pp STSR edge over B cannot be claimed to
+  transfer** outside the templated corpus. The frozen experiment is
+  untouched.
+- **The 120 real requests come from one author in one sitting with the
+  catalog visible**, so enrichment is shown to generalize within that
+  author's style only. Collecting requests from several people who have
+  never seen the catalog is the missing generalization test.
+- Tableau dashboard, demo video and presentation are unstarted; the
+  written memoria exists as a complete draft in `docs/memoria.md`.
 
 ## Defects found by self-audit (do not reintroduce)
 
-The 8 items below (some bundle more than one CLAUDE.md-numbered defect,
+The items below (some bundle more than one CLAUDE.md-numbered defect,
 e.g. #4 covers two separate mutation-testing survivors) summarize the
-self-audit history — full detail, with exact per-defect numbering, in
+self-audit history — **fifteen defects total, thirteen from my own
+audits and two surfaced by the user's skeptical questions about results
+I had already accepted** — full detail, with exact per-defect numbering, in
 `docs/audit.md` and the `CLAUDE.md` bitácora. The recurring shape: code
 that passed *silently*, never code that failed loudly.
 

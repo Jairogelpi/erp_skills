@@ -50,7 +50,7 @@ tokens por ejecución (3,9× menos que B).
 La conclusión defendible es más estrecha que la intuición de partida: la
 gobernanza compra sobre todo **seguridad, auditabilidad y ahorro de
 tokens**, y mejora el éxito de tarea de forma **modesta pero
-significativa**. El trabajo documenta además trece defectos encontrados
+significativa**. El trabajo documenta además quince defectos encontrados
 en su propio instrumento de medida —dos de ellos en la capa estadística
 que produce los números publicados— y el patrón metodológico que
 explica dónde se concentran.
@@ -128,7 +128,7 @@ las políticas del runtime.
    errores prevenidos, necesidad de revisión, capacidad de auditoría y
    coste modelado, con supuestos declarados.
 6. **Metodológica sobre el propio proceso.** Un registro auditado de
-   trece defectos hallados en el instrumento de medida y el patrón que
+   quince defectos hallados en el instrumento de medida y el patrón que
    los explica (§9.5), utilizable como material sobre validez de
    constructo.
 
@@ -917,6 +917,8 @@ medida. Los más graves:
 | — | Bootstrap sin remuestreo | IC degenerado que el test aceptaba |
 | #12 | Caché de LLM compartida entre sistemas | Los totales de tokens medían el orden de ejecución |
 | #13 | Falta de normalización de argumentos | Sesgo asimétrico **contra** C |
+| #14 | Los 9 casos `argument_out_of_range` del dataset, mal etiquetados | Un caso benigno cuenta como peligroso y contamina H4 |
+| #15 | Denominador equivocado en el arnés de validación de producto | Habría reportado un derrumbe de −0,466 cuando el real es −0,352 |
 
 Dos patrones, ambos utilizables como material metodológico:
 
@@ -938,12 +940,22 @@ conclusión por aserciones de mecanismo: valor exacto del estadístico,
 anchura de intervalo no degenerada y proporcional al error estándar
 teórico.
 
-**Tercero, y el más incómodo: de trece defectos, doce salieron de
-auditorías propias; el decimotercero lo destapó una pregunta escéptica
-sobre un resultado que ya había sido aceptado y publicado.** Es el
-patrón esperable: la autoauditoría encuentra bien el código que se
-contradice consigo mismo, y mal el código que hace exactamente lo que su
-autor creía que debía hacer.
+**Tercero, y el más incómodo: de quince defectos, trece salieron de
+auditorías propias; dos los destapó una pregunta escéptica sobre
+resultados que ya habían sido aceptados y publicados** (el #13, sobre un
+resultado no significativo dado por bueno, y el #14, al preguntar si la
+métrica de seguridad tenía sesgo). Es el patrón esperable: la
+autoauditoría encuentra bien el código que se contradice consigo mismo,
+y mal el código que hace exactamente lo que su autor creía que debía
+hacer. Para eso hace falta alguien que dude del supuesto, no de la
+implementación.
+
+Un matiz sobre el #14 que merece registrarse: al corregirlo, el
+resultado **mejoraría** para la tesis (el *false allow* de C pasaría de
+0,111 a 0,000). Aun así el dataset no se corrigió, porque está congelado
+y ese es exactamente el cambio post-hoc que la congelación existe para
+impedir. Se publicó como análisis de sensibilidad junto a la cifra
+contaminada.
 
 ### 9.6 Resultados negativos, reportados como tales
 
@@ -1021,10 +1033,33 @@ cualquier cifra de ahorro (H8 es sensibilidad, no gasto medido).
 La consecuencia es de diseño, no solo de discurso: **el producto no
 puede apoyarse en que el sistema entienda mejor, sino en que restrinja
 mejor**. Eso lo sitúa como plano de control bajo cualquier agente, no
-como agente competidor. Los tres huecos que decidirían su viabilidad
-—coste de añadir una skill, tiempo humano por abstención, y recuperación
-sobre texto real no plantillado— **no están medidos en este trabajo** y
-se declaran como validación de producto pendiente.
+como agente competidor.
+
+De los tres huecos que decidirían su viabilidad, **el tercero sí se
+midió** y su respuesta cambió el diseño propuesto. Sobre 120 peticiones
+en registro coloquial, partidas en mitad de calibración y mitad
+held-out:
+
+| Diseño de enrutado | Top-1 held-out | Rechaza bien | Tokens |
+|---|---|---|---|
+| TF-IDF con descripciones del catálogo | 0,455 | 0,062 | 0 |
+| TF-IDF con descripciones **enriquecidas** | **0,886** | 0,000 | 0 |
+| Router LLM (el del sistema B) | 0,818 | 0,250 | 592 |
+| Filtro de dominio + TF-IDF enriquecido | 0,864 | 0,250 | **0** |
+
+La lectura es que **el cuello de botella no era el algoritmo de
+recuperación sino la descripción de una línea por skill**. Enriquecerla
+con sinónimos y formulaciones reales iguala o supera al router LLM sin
+gastar un token, lo que preserva la ventaja arquitectónica en lugar de
+devolverla. Consecuencia concreta para el producto: el alta de una skill
+debe pedir sinónimos y ejemplos de uso reales como **campo del
+contrato**, no una frase descriptiva.
+
+Los otros dos huecos —coste de añadir una skill y tiempo humano por
+abstención— **siguen sin medir**, y se declaran como validación de
+producto pendiente. El detalle completo, con intervalos y con lo que
+estos números no permiten afirmar, está en
+[`docs/product-viability.md`](product-viability.md) §7.
 
 ---
 
@@ -1073,13 +1108,23 @@ de H3 porque la temperatura exigida por la norma la vuelve trivial.
 
 ### 11.3 Trabajo futuro
 
-Réplica de ambos regímenes de parseo en un mismo proveedor; ejecución
-del brazo exploratorio de temperatura y de la medición de H3b con LLM
-real; poblado de precondiciones del catálogo con su propia corrida;
-detección semántica de intención frente a la petición original, que es
-lo que el resultado de InjecAgent señala como límite estructural del
-enfoque léxico; mapeo del resto del catálogo a modelos reales de Odoo;
-kappa de anotación; evaluación con anotadores y usuarios reales.
+Ejecución del brazo exploratorio de temperatura y de la medición de H3b
+con LLM real; poblado de precondiciones del catálogo con su propia
+corrida; detección semántica de intención frente a la petición original,
+que es lo que el resultado de InjecAgent señala como límite estructural
+del enfoque léxico; mapeo del resto del catálogo a modelos reales de
+Odoo; kappa de anotación; evaluación con anotadores y usuarios reales.
+(La réplica de ambos regímenes de parseo en un mismo proveedor, que
+figuraba aquí, **se ejecutó**: §7.2 y §9.4.)
+
+**La línea más prometedora, y la que este trabajo deja abierta con
+evidencia preliminar a favor:** convertir la descripción de la skill en
+un artefacto de primera clase del contrato —sinónimos, formulaciones
+reales, ejemplos de uso— en lugar de una frase de una línea. La medición
+de §10.1 sugiere que ahí está la mayor parte de la brecha de enrutado
+con texto real, y que cerrarla **no cuesta tokens**. Queda por
+demostrar con peticiones de autores distintos, que es la prueba de
+generalización que el corpus disponible no permite hacer.
 
 ### 11.4 Cierre
 
@@ -1087,7 +1132,7 @@ El valor de este trabajo no está en presentar ERP Agent OS como solución
 universal, sino en haber medido honestamente qué compra y qué cuesta
 gobernar a un agente en un dominio transaccional — incluyendo las tres
 ocasiones en que la medición honesta produjo un resultado **peor** que
-la intuición de partida, y el registro de los trece defectos que hubo
+la intuición de partida, y el registro de los quince defectos que hubo
 que corregir en el propio instrumento antes de poder confiar en él.
 
 ---
@@ -1162,7 +1207,12 @@ make figures
 | `data/injection_resistance_results.json` | Resistencia por canal, 1.530 casos |
 | `data/odoo_governed_demo_results.json` | Pipeline gobernado contra Odoo real |
 | `data/odoo_adversarial_results.json` | Casos adversariales contra Odoo real |
+| `data/real_requests_eval.json` | Recuperadores sobre 120 peticiones reales (validación de producto) |
+| `data/real_requests_llm_eval.json` | Router LLM sobre las mismas peticiones, 120 llamadas reales |
+| `data/router_designs_eval.json` | Cinco diseños de enrutado, calibrados en dev y juzgados held-out |
+| `data/skill_profiles.json` | Descripciones enriquecidas, **fuera** del catálogo congelado |
 | `data/annotation_review_sheet.csv` | Muestra estratificada para el segundo anotador (**pendiente**) |
+| `data/real_requests.csv` | Peticiones reales — **gitignorado**, puede contener datos de clientes |
 
 ### Anexo C. Documentación técnica complementaria
 
@@ -1170,7 +1220,7 @@ make figures
 `docs/dataset-card.md`, `docs/experiment-protocol.md`,
 `docs/threat-model.md`, `docs/traceability-rubric.md`,
 `docs/retriever-comparison.md`, `docs/injecagent-stress-test.md`,
-`docs/odoo-demo.md`, `docs/audit.md` (registro completo de los catorce
+`docs/odoo-demo.md`, `docs/audit.md` (registro completo de los quince
 defectos), `docs/spec-coverage.md` (cobertura §-por-§ de la
 especificación normativa), `docs/product-viability.md` (transferencia a
 producto: qué afirmación comercial sostiene cada número y cuál no).

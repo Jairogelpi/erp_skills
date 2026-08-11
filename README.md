@@ -317,6 +317,59 @@ system *understanding* better, only on it *constraining* better — which
 places it as a control plane beneath any agent, not as a competing
 agent.
 
+#### Retrieval does not survive real text — and why that turned out fixable
+
+120 colloquial requests (84 covered by the catalog, 36 not), split
+50/50: enrichment written and thresholds swept on the **dev** half only,
+every number below from the **held-out** half.
+
+| Router design | Top-1 | Correct refusal | Tokens |
+|---|---|---|---|
+| TF-IDF, catalog descriptions (today's C) | 0.455 | 0.062 | **0** |
+| TF-IDF, **enriched** descriptions | **0.886** | 0.000 | **0** |
+| LLM router (today's B) | 0.818 | 0.250 | 592 |
+| Domain gate + enriched TF-IDF | 0.864 | 0.250 | **0** |
+
+Three findings, in the order they were established:
+
+1. **TF-IDF collapses on real text** — 0.733 on the benchmark, 0.381
+   overall on real requests. The benchmark win was an artefact of
+   templated phrasing, where request and skill description share
+   vocabulary because both came from the same hand.
+2. **The LLM router holds up better at routing and much worse at
+   silence** — it commits to some skill on 83% of requests no skill
+   covers, versus TF-IDF's 61%. In an ERP that is the dangerous
+   direction of error.
+3. **The bottleneck was the one-line description, not the algorithm.**
+   Enriching it with synonyms and real phrasings (in
+   `data/skill_profiles.json` — the frozen catalog is never touched)
+   beats the LLM router at **zero token cost**, preserving the
+   architecture's one-fewer-call advantage instead of giving it back.
+
+An unplanned consistency check fell out of it: a selection call measured
+live costs **591.7** tokens; derived independently from the frozen
+experiment (197.6 tokens/execution × 3 cached repetitions) it is
+**592.8** — 0.2% apart.
+
+**Consequence for the thesis, stated plainly:** because routing is the
+entrance to C's whole pipeline, its +15 pp STSR edge over B **cannot be
+claimed to transfer** outside the templated corpus. The frozen
+experiment's numbers are correct for what they measured, and §36 already
+declared this limitation — this confirms it rather than contradicting
+it. What does transfer is the governance layer: safety, auditability and
+token cost do not depend on the router.
+
+**Caveats that travel with these numbers:** the intervals overlap
+(n = 44 answerable held-out), and all 120 requests were written by one
+person in one sitting with the catalog visible — so enrichment is shown
+to generalize *within that author's style*, not across users.
+
+```sh
+uv run python scripts/eval_real_requests.py       # retrievers on real text
+uv run python scripts/eval_real_requests_llm.py   # LLM router, real calls
+uv run python scripts/eval_router_designs.py      # five designs, dev/held-out
+```
+
 ## Prerequisites
 
 - CPython 3.12 (`>=3.12,<3.13`)

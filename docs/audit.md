@@ -2,7 +2,7 @@
 
 Este documento registra las auditorías hechas **sobre el propio aparato de
 evaluación**, no sobre el sistema evaluado. Existe porque trece rondas
-sucesivas encontraron trece defectos reales, y casi todos compartían la
+sucesivas encontraron quince defectos reales, y casi todos compartían la
 misma forma: **código (o texto) que pasaba en silencio**, no código que
 fallaba a gritos.
 
@@ -67,13 +67,21 @@ motivo correcto.
 
 ### Nota de método: quién encuentra qué
 
-De los trece defectos, doce salieron de auditorías que yo mismo lancé
-sobre mi propio trabajo. **El #13 lo destapó una pregunta escéptica del
-usuario sobre un resultado que yo ya había aceptado.** Es el patrón
-esperable: la auditoría propia es buena encontrando código que se
+De los quince defectos, trece salieron de auditorías que yo mismo lancé
+sobre mi propio trabajo. **Dos los destapó una pregunta escéptica del
+usuario sobre resultados que yo ya había aceptado**: el #13 (un
+resultado no significativo dado por bueno) y el #14 (al preguntar si la
+métrica de seguridad tenía sesgo). Es el patrón esperable: la auditoría propia es buena encontrando código que se
 contradice consigo mismo, y mala encontrando código que hace
 exactamente lo que yo creía que debía hacer. Para eso hace falta
 alguien que dude del supuesto, no de la implementación.
+
+El #15 añade un matiz que conviene registrar: estaba en código escrito
+**el mismo día**, en un arnés de validación de producto, y lo delató un
+número demasiado redondo al leer la salida antes de reportarla. Sugiere
+que el riesgo no baja con la familiaridad del código —era mío y
+recentísimo— sino con la costumbre de desconfiar del resultado antes de
+publicarlo.
 
 Los defectos 10 y 11 rompen el patrón de los nueve anteriores en otro
 sentido: no aparecieron auditando un resultado ya publicado, sino

@@ -118,3 +118,37 @@ uv run python scripts/compare_retrievers.py --test    # añade FINAL_TEST
 
 Determinista salvo por el modelo de embeddings, que se descarga en la
 primera ejecución. Salida completa en `data/retriever_comparison.json`.
+
+---
+
+## Actualización posterior: este resultado no sobrevive al texto real
+
+**Lo de arriba sigue siendo cierto para lo que midió** —ERP-Skills-Bench,
+splits de desarrollo y validación— pero una prueba posterior con
+peticiones reales lo acota severamente
+(`docs/product-viability.md` §7.2–7.4):
+
+| | Benchmark (validación) | Texto real |
+|---|---|---|
+| TF-IDF | 0,733 | **0,381** |
+| Embeddings | 0,658 | 0,381 |
+| Híbrido | 0,675 | 0,274 |
+
+La victoria de TF-IDF **era un artefacto del corpus plantillado**, donde
+la petición y la descripción de la skill comparten vocabulario porque
+ambas salen de la misma mano. Con texto de usuario esa señal desaparece
+y la ventaja se evapora.
+
+**Y el diagnóstico fino invierte la conclusión otra vez:** el problema
+no es TF-IDF como técnica, sino las **descripciones de una línea** del
+catálogo. Con descripciones enriquecidas (sinónimos y formulaciones
+reales, en `data/skill_profiles.json`, sin tocar el catálogo congelado),
+TF-IDF pasa de 0,455 a **0,886** de Top-1 en una mitad held-out — por
+encima de un router basado en LLM, y a coste cero de tokens.
+
+**Qué significa para esta página:** la comparación entre recuperadores
+sigue siendo válida y sigue justificando la elección hecha en el
+experimento confirmatorio, pero **no debe citarse como evidencia de que
+TF-IDF sea el mejor recuperador en general**. Es el mejor sobre este
+corpus, con estas descripciones. Cambiar cualquiera de las dos cosas
+cambia el resultado.

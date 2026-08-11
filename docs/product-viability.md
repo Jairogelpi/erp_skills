@@ -90,7 +90,7 @@ aburrido ya empezado, que un genérico no hará.
 | Multi-tenant, autenticación real, `SqlAuditStore` cableado a la API | Medio | Hoy la API usa clave de demo y almacén en memoria |
 | UX de aprobación y de aclaración | **Alto** | **9,3 %** de peticiones abstienen y rebotan a un humano; esa cifra decide la adopción |
 | Auditoría a prueba de manipulación (hash encadenado) | Bajo | Hoy es append-only **por superficie pública**, no criptográficamente. Sube mucho el valor si se vende cumplimiento |
-| Reevaluar recuperación con texto real | Bajo | **Hacer antes de prometer nada**: TF-IDF ganó sobre texto plantillado (`docs/retriever-comparison.md`) y ahí puede derrumbarse |
+| ~~Reevaluar recuperación con texto real~~ | **Hecho** | Medido en §7.2–7.4: TF-IDF se derrumbó (0,733 → 0,381) y la causa resultó ser las descripciones de una línea, no la técnica. Sustituido por un hueco nuevo: **el alta de skill debe pedir sinónimos y ejemplos reales**, no una frase — deja de ser un fichero suelto y pasa a ser un campo del contrato |
 
 ---
 
@@ -102,10 +102,14 @@ aburrido ya empezado, que un genérico no hará.
    producto; 10 minutos es un juguete. Ninguna de las dos cosas se ha
    medido: `docs/spec-coverage.md` declara el tiempo de revisión humana
    fuera de alcance por §11.
-3. **Top-1 de recuperación con peticiones reales**, no plantilladas.
+3. ~~**Top-1 de recuperación con peticiones reales**, no plantilladas.~~
+   **MEDIDO** (§7.2–7.4): el diseño actual da 0,455 en held-out; con
+   descripciones enriquecidas, 0,886 a coste cero de tokens. La
+   respuesta es «sirve, pero no con las descripciones del catálogo».
 
-Ninguno de los tres está medido en este TFM. Son trabajo de validación
-de producto, no de investigación, y se declaran como tales.
+Los números 1 y 2 siguen sin medir: son trabajo de validación de
+producto, no de investigación, y se declaran como tales. El 3 está
+respondido y su respuesta cambió el diseño propuesto.
 
 ---
 
