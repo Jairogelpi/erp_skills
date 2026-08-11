@@ -51,6 +51,24 @@ para el resultado, reportado tal cual salió, favorable o no. AgentHarm
 se cita como referencia de diseño de benchmarks de daño en agentes, sin
 ejecución contra este sistema por presupuesto de tiempo del TFM.
 
+## Corpus multiautor de intenciones
+
+- FitzGerald, J., Hench, C., Peris, C., et al. (2022). *MASSIVE: A
+  1M-Example Multilingual Natural Language Understanding Dataset with 51
+  Typologically-Diverse Languages*. arXiv:2204.08582. Datos bajo
+  CC-BY-4.0.
+
+Uso en este trabajo: la partición española `es-ES` (16.521 frases, 60
+intenciones, **20 crowdworkers identificados**) aporta lo único que
+ERP-Skills-Bench y el corpus de peticiones reales no pueden aportar —
+**diversidad de autores identificable**— y permite partir por persona en
+vez de por frase. Se usa exclusivamente en la validación de producto
+(`docs/product-viability.md` §7.5) para comprobar si el efecto de
+enriquecer las descripciones de skill generaliza a autores que nunca
+vieron el catálogo. No participa en el experimento confirmatorio ni en
+ninguna hipótesis del TFM, y su dominio (calendario, correo, listas) no
+es ERP: prueba el mecanismo, no el producto.
+
 ## Recuperación semántica
 
 - Reimers, N., y Gurevych, I. (2019). *Sentence-BERT: Sentence Embeddings

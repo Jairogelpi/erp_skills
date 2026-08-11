@@ -428,3 +428,74 @@ llamada menos** en vez de devolverla.
   partida, no un valor de producción.
 - **Nada de esto toca el experimento congelado del TFM**, que sigue
   midiendo lo que decía medir con las descripciones originales.
+
+### 7.5 ¿Generaliza el enriquecimiento a autores que nunca vieron el catálogo?
+
+§7.4 llevaba un caveat que ningún reanálisis podía quitar: **las 120
+peticiones las escribió una sola persona, en una sesión, con el catálogo
+delante**. El enriquecimiento solo estaba demostrado *dentro del estilo
+de ese autor*.
+
+Se cierra tomando prestado un corpus que tiene lo que al nuestro le
+falta: muchos autores, identificados. **MASSIVE** (Amazon, 2022,
+CC-BY-4.0), partición española `es-ES`: 16.521 frases, 60 intenciones,
+**20 crowdworkers identificados**. El diseño replica el montaje ERP:
+
+- **catálogo**: las 10 intenciones de los escenarios calendar / email /
+  lists, como sustituto de un catálogo de negocio pequeño;
+- **fuera de catálogo**: las otras 50, donde lo correcto es «esto no lo
+  hago yo»;
+- **autores partidos en dos mitades disjuntas**: el enriquecimiento se
+  construye solo con frases de los autores dev, y **todo lo reportado
+  procede de autores held-out**. Ninguna persona aparece en los dos
+  lados.
+
+El enriquecimiento se construye **mecánicamente** —añadir *k* frases de
+ejemplo reales a la descripción— en vez de a mano. Eso quita el juicio
+del autor del resultado y responde a la pregunta de producto: **¿cuántos
+ejemplos por skill hacen falta?**
+
+**Resultado (autores held-out: 2.493 frases del catálogo, 1.500 fuera):**
+
+| k ejemplos | Enrutado sin puerta | Umbral (calibrado en dev) | Top-1 con puerta | Rechaza bien | Global |
+|---|---|---|---|---|---|
+| 0 (descripción fina) | **0,365** | 0,55 | 0,176 | 0,897 | 0,447 |
+| 1 | 0,426 | 0,53 | 0,169 | 0,976 | 0,472 |
+| 3 | 0,525 | 0,43 | 0,293 | 0,947 | 0,539 |
+| 5 | 0,591 | 0,38 | 0,354 | 0,885 | 0,553 |
+| 10 | **0,634** | 0,36 | 0,402 | 0,861 | 0,575 |
+| 20 | 0,629 | 0,32 | 0,428 | 0,842 | **0,583** |
+
+**1. El efecto generaliza entre autores disjuntos.** La precisión de
+enrutado sube de 0,365 a **0,634** (+0,269, un 74 % relativo) sin que
+ninguna de las personas cuyas frases se evalúan haya aportado un solo
+ejemplo. El hallazgo de §7.4 no era un artefacto de tener un único
+autor.
+
+**2. Saturación en torno a 10 ejemplos por skill.** k=10 da 0,634 y
+k=20 da 0,629 — dentro del ruido. Es la respuesta operativa a «cuánto
+hay que recoger»: **unas diez formulaciones reales por skill**, no
+cientos. Eso convierte el enriquecimiento en una tarea de horas, no de
+semanas.
+
+**3. Detalle accionable que solo aparece al calibrar honestamente:** el
+umbral óptimo **baja** al enriquecer (0,55 → 0,32), porque las
+descripciones más ricas suben la puntuación de todo. Un umbral fijo
+—como el 0,15 del pipeline actual— quedaría mal puesto en cuanto se
+cambien las descripciones. **La puerta hay que recalibrarla cada vez que
+cambia el catálogo**, y eso debe ser parte del flujo de alta de skill,
+no una constante en el código.
+
+### Lo que este experimento NO demuestra
+
+- **No es dominio ERP.** Calendario, correo y listas. Prueba el
+  **mecanismo** (descripción fina → enrutado pobre; ejemplos reales →
+  mejor), no el producto.
+- **Los niveles absolutos son bajos** (0,634 de enrutado): frases muy
+  cortas y ambiguas, y 50 intenciones fuera de catálogo compitiendo. No
+  son cifras utilizables en producción, y no se presentan como tales:
+  lo que se mide es el **delta**.
+- **El enriquecimiento aquí es mecánico** (pegar frases de ejemplo) y en
+  §7.4 era manual (sinónimos escritos). Son dos operacionalizaciones
+  distintas de la misma idea; coinciden en dirección, no son
+  comparables en magnitud.

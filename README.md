@@ -368,7 +368,21 @@ to generalize *within that author's style*, not across users.
 uv run python scripts/eval_real_requests.py       # retrievers on real text
 uv run python scripts/eval_real_requests_llm.py   # LLM router, real calls
 uv run python scripts/eval_router_designs.py      # five designs, dev/held-out
+uv run python scripts/eval_enrichment_across_authors.py  # 20 authors, split by person
 ```
+
+**Does the enrichment generalize to authors who never saw the catalog?**
+Our 120 requests came from one person, so the corpus could not answer
+that. MASSIVE es-ES (Amazon, CC-BY-4.0: 16,521 utterances, 60 intents,
+**20 identified crowdworkers**) can: splitting **by person**, building
+enrichment only from one half's utterances and scoring only the other
+half's, routing accuracy rises **0.365 → 0.634** with ten examples per
+intent, and saturates there (k=20 gives 0.629). Two operational
+consequences: about **ten real phrasings per skill** is enough, and the
+optimal abstention threshold **falls** as descriptions get richer
+(0.55 → 0.32) — so a hard-coded threshold silently mis-sets the gate
+whenever the catalog changes. That corpus is calendar/email/lists, not
+ERP: it tests the mechanism, not the product.
 
 ## Prerequisites
 

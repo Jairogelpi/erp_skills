@@ -1055,6 +1055,20 @@ devolverla. Consecuencia concreta para el producto: el alta de una skill
 debe pedir sinónimos y ejemplos de uso reales como **campo del
 contrato**, no una frase descriptiva.
 
+**El hallazgo se verificó además con autores distintos**, que es la
+prueba que el corpus propio no permitía hacer. Sobre MASSIVE es-ES
+(Amazon, CC-BY-4.0: 16.521 frases, 60 intenciones, **20 crowdworkers
+identificados**), partiendo por persona y no por frase —el
+enriquecimiento se construye solo con frases de la mitad de los autores
+y se evalúa solo sobre la otra mitad, sin solape— la precisión de
+enrutado sube de **0,365 a 0,634** con diez ejemplos por intención, y
+satura ahí (k=20 da 0,629). Dos consecuencias operativas: bastan **unas
+diez formulaciones reales por skill**, y el umbral de abstención óptimo
+**baja** al enriquecer (0,55 → 0,32), de modo que una constante fija
+queda mal puesta en cuanto cambian las descripciones. El dominio de ese
+corpus no es ERP, así que la prueba es del **mecanismo**, no del
+producto.
+
 Los otros dos huecos —coste de añadir una skill y tiempo humano por
 abstención— **siguen sin medir**, y se declaran como validación de
 producto pendiente. El detalle completo, con intervalos y con lo que

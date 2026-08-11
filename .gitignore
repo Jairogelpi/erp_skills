@@ -77,3 +77,7 @@ Desktop.ini
 # Real user requests may contain customer names, phone numbers or amounts:
 # the aggregate eval output is safe to commit, the raw input is not.
 data/real_requests.csv
+
+# MASSIVE es-ES (12 MB, CC-BY-4.0): redownloaded by the script on demand,
+# too large to version and not ours to redistribute.
+data/massive_es.jsonl
