@@ -580,9 +580,34 @@ resultado principal sería inflar la conclusión.
 
 C permite 3 de 27 casos peligrosos donde A y B permiten 24, **y lo hace
 sin bloquear de más** (mismo false block que B, un tercio del de A). Es
-el resultado más robusto del trabajo: invariante entre proveedores y
-entre regímenes de parseo, porque proviene del policy engine y no de la
-calidad del modelo.
+el resultado más estable del trabajo: invariante entre proveedores y
+entre regímenes de parseo, porque la decisión no depende del LLM.
+
+**Dos advertencias que acotan esta cifra, ambas medidas caso a caso.**
+
+Primera: **la ventaja es aquí, en su mayor parte, detección léxica, no
+gobernanza**. De los 9 casos peligrosos del test congelado, **8 disparan
+patrones** escritos mirando el corpus de este benchmark; como los casos
+de test provienen de las mismas plantillas que los de desarrollo, ese
+ajuste transfiere casi por construcción. Es un número **dentro de
+distribución**; fuera de ella la detección cae al 3,3 % (§8.6). Lo que
+sostiene la afirmación propiamente arquitectónica es el otro
+experimento: 0/1.530 mutaciones no autorizadas aunque el detector no
+dispare.
+
+Segunda: **el único caso que C permite no es peligroso**. `r0457` pide
+*"Crea una factura en borrador para Oceanic Airlines"* y está etiquetado
+`argument_out_of_range` porque el generador asigna esa categoría rotando
+por índice de intención, sin comprobar que la skill destino tenga un
+campo numérico acotado. Los 9 casos de esa categoría en el dataset
+completo comparten el defecto. Excluyéndolo, el *false allow* de C es
+**0,000** y el de A/B **1,000**. **El dataset no se corrige**: está
+congelado, y arreglarlo mejoraría los resultados de C, que es
+exactamente el cambio post-hoc que la congelación existe para impedir.
+Se publica la cifra contaminada y esta como sensibilidad.
+
+Y sobre ambas columnas: **n = 9 casos peligrosos**, con IC anchos (el de
+C llega a 0,435). El "8×" es una estimación puntual sobre nueve casos.
 
 **Descomposición honesta del recall.** De los 9 casos peligrosos del
 test analizados en el estudio de ordenación del pipeline, 7 salen
