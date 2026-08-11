@@ -1,0 +1,502 @@
+{
+  "source": "real_requests.csv",
+  "provider": "GroqClient",
+  "question": "does the LLM router survive real text where TF-IDF did not? If it also collapses, the catalog is the problem; if it holds, TF-IDF is, and C's edge over B does not transfer.",
+  "n_answerable": 84,
+  "n_out_of_catalog": 36,
+  "llm_top1": 0.75,
+  "llm_top1_ci95": [
+    0.648,
+    0.83
+  ],
+  "llm_out_of_catalog_correct_refusal": 0.167,
+  "comparison": {
+    "llm_benchmark_top1": 0.898,
+    "llm_real_minus_benchmark": -0.148,
+    "tfidf_real_top1": 0.381,
+    "llm_real_minus_tfidf_real": 0.369,
+    "tfidf_real_out_of_catalog_abstention": 0.389
+  },
+  "details": [
+    {
+      "expected": "crm.update_expected_revenue",
+      "chosen": "crm.update_expected_revenue"
+    },
+    {
+      "expected": null,
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": null,
+      "chosen": null
+    },
+    {
+      "expected": null,
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": null,
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": "sales.create_quote_draft",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": null,
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": null,
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": null,
+      "chosen": null
+    },
+    {
+      "expected": null,
+      "chosen": "purchasing.create_purchase_draft"
+    },
+    {
+      "expected": "sales.confirm_order",
+      "chosen": "sales.confirm_order"
+    },
+    {
+      "expected": "billing.create_draft_invoice",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": null,
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "sales.create_quote_draft",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "crm.detect_duplicate_contact",
+      "chosen": "crm.detect_duplicate_contact"
+    },
+    {
+      "expected": "product.update_field",
+      "chosen": "inventory.check_availability"
+    },
+    {
+      "expected": "billing.create_draft_invoice",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": null,
+      "chosen": null
+    },
+    {
+      "expected": "purchasing.create_purchase_draft",
+      "chosen": "purchasing.create_purchase_draft"
+    },
+    {
+      "expected": "inventory.check_availability",
+      "chosen": "inventory.check_availability"
+    },
+    {
+      "expected": "crm.update_expected_revenue",
+      "chosen": "crm.update_expected_revenue"
+    },
+    {
+      "expected": "product.update_field",
+      "chosen": "product.update_field"
+    },
+    {
+      "expected": null,
+      "chosen": "sales.add_quote_line"
+    },
+    {
+      "expected": null,
+      "chosen": "inventory.check_availability"
+    },
+    {
+      "expected": "crm.update_expected_revenue",
+      "chosen": "crm.update_expected_revenue"
+    },
+    {
+      "expected": "crm.create_opportunity",
+      "chosen": "crm.create_opportunity"
+    },
+    {
+      "expected": "billing.create_draft_invoice",
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": "tasks.create_task",
+      "chosen": "tasks.create_task"
+    },
+    {
+      "expected": "contacts.search_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "billing.create_draft_invoice",
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": "contacts.search_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "purchasing.create_purchase_draft",
+      "chosen": "purchasing.create_purchase_draft"
+    },
+    {
+      "expected": "sales.add_quote_line",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "purchasing.create_purchase_draft",
+      "chosen": "purchasing.create_purchase_draft"
+    },
+    {
+      "expected": "inventory.check_availability",
+      "chosen": "inventory.check_availability"
+    },
+    {
+      "expected": "sales.add_quote_line",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "inventory.check_availability",
+      "chosen": "inventory.check_availability"
+    },
+    {
+      "expected": "sales.create_quote_draft",
+      "chosen": "crm.create_opportunity"
+    },
+    {
+      "expected": "product.update_field",
+      "chosen": "product.update_field"
+    },
+    {
+      "expected": "sales.add_quote_line",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "product.update_field",
+      "chosen": "product.update_field"
+    },
+    {
+      "expected": "purchasing.create_purchase_draft",
+      "chosen": "purchasing.create_purchase_draft"
+    },
+    {
+      "expected": "tasks.create_task",
+      "chosen": "tasks.create_task"
+    },
+    {
+      "expected": "contacts.search_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "inventory.check_availability",
+      "chosen": "inventory.check_availability"
+    },
+    {
+      "expected": "inventory.check_availability",
+      "chosen": "sales.add_quote_line"
+    },
+    {
+      "expected": "contacts.search_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "sales.add_quote_line",
+      "chosen": "sales.add_quote_line"
+    },
+    {
+      "expected": null,
+      "chosen": "purchasing.create_purchase_draft"
+    },
+    {
+      "expected": null,
+      "chosen": null
+    },
+    {
+      "expected": "contacts.search_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "crm.create_opportunity",
+      "chosen": "crm.create_opportunity"
+    },
+    {
+      "expected": "product.update_field",
+      "chosen": "product.update_field"
+    },
+    {
+      "expected": null,
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": "crm.detect_duplicate_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "purchasing.create_purchase_draft",
+      "chosen": "purchasing.create_purchase_draft"
+    },
+    {
+      "expected": null,
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": "sales.confirm_order",
+      "chosen": "sales.confirm_order"
+    },
+    {
+      "expected": "crm.create_opportunity",
+      "chosen": "crm.create_opportunity"
+    },
+    {
+      "expected": null,
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": "tasks.create_task",
+      "chosen": "tasks.create_task"
+    },
+    {
+      "expected": "tasks.create_task",
+      "chosen": "tasks.create_task"
+    },
+    {
+      "expected": "sales.add_quote_line",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "sales.confirm_order",
+      "chosen": "sales.confirm_order"
+    },
+    {
+      "expected": "sales.add_quote_line",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "crm.update_expected_revenue",
+      "chosen": "crm.update_expected_revenue"
+    },
+    {
+      "expected": "tasks.create_task",
+      "chosen": "tasks.create_task"
+    },
+    {
+      "expected": "crm.detect_duplicate_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "product.update_field",
+      "chosen": "product.update_field"
+    },
+    {
+      "expected": "crm.create_opportunity",
+      "chosen": "crm.create_opportunity"
+    },
+    {
+      "expected": "sales.create_quote_draft",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "sales.confirm_order",
+      "chosen": "sales.confirm_order"
+    },
+    {
+      "expected": "sales.confirm_order",
+      "chosen": "sales.confirm_order"
+    },
+    {
+      "expected": "crm.update_expected_revenue",
+      "chosen": "crm.update_expected_revenue"
+    },
+    {
+      "expected": "sales.confirm_order",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": null,
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": null,
+      "chosen": null
+    },
+    {
+      "expected": null,
+      "chosen": null
+    },
+    {
+      "expected": null,
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "crm.detect_duplicate_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": null,
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "sales.confirm_order",
+      "chosen": "sales.confirm_order"
+    },
+    {
+      "expected": null,
+      "chosen": "inventory.check_availability"
+    },
+    {
+      "expected": "crm.detect_duplicate_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "crm.create_opportunity",
+      "chosen": "crm.create_opportunity"
+    },
+    {
+      "expected": null,
+      "chosen": "sales.confirm_order"
+    },
+    {
+      "expected": null,
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "product.update_field",
+      "chosen": "product.update_field"
+    },
+    {
+      "expected": null,
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "purchasing.create_purchase_draft",
+      "chosen": "purchasing.create_purchase_draft"
+    },
+    {
+      "expected": null,
+      "chosen": "purchasing.create_purchase_draft"
+    },
+    {
+      "expected": null,
+      "chosen": "purchasing.create_purchase_draft"
+    },
+    {
+      "expected": "billing.create_draft_invoice",
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": null,
+      "chosen": "tasks.create_task"
+    },
+    {
+      "expected": "contacts.search_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "tasks.create_task",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": null,
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "billing.create_draft_invoice",
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": "inventory.check_availability",
+      "chosen": "inventory.check_availability"
+    },
+    {
+      "expected": "sales.create_quote_draft",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "contacts.search_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": null,
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": null,
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": "crm.create_opportunity",
+      "chosen": "crm.create_opportunity"
+    },
+    {
+      "expected": "purchasing.create_purchase_draft",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "tasks.create_task",
+      "chosen": "tasks.create_task"
+    },
+    {
+      "expected": "crm.update_expected_revenue",
+      "chosen": "crm.update_expected_revenue"
+    },
+    {
+      "expected": "inventory.check_availability",
+      "chosen": "inventory.check_availability"
+    },
+    {
+      "expected": null,
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": null,
+      "chosen": "sales.confirm_order"
+    },
+    {
+      "expected": "crm.update_expected_revenue",
+      "chosen": "crm.update_expected_revenue"
+    },
+    {
+      "expected": null,
+      "chosen": "billing.create_draft_invoice"
+    },
+    {
+      "expected": "crm.detect_duplicate_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "sales.create_quote_draft",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "sales.create_quote_draft",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "sales.add_quote_line",
+      "chosen": "sales.add_quote_line"
+    },
+    {
+      "expected": null,
+      "chosen": "inventory.check_availability"
+    },
+    {
+      "expected": "crm.create_opportunity",
+      "chosen": "sales.create_quote_draft"
+    },
+    {
+      "expected": "crm.detect_duplicate_contact",
+      "chosen": "contacts.search_contact"
+    },
+    {
+      "expected": "billing.create_draft_invoice",
+      "chosen": "sales.create_quote_draft"
+    }
+  ]
+}

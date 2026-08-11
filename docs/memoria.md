@@ -858,6 +858,26 @@ ERP simulado, modelos de nivel gratuito (no frontera). Las dos demos
 contra Odoo real son evidencia parcial de transferencia, no
 sustitutivo.
 
+**La limitación externa más grave, ahora medida y no solo declarada.**
+Se evaluaron 120 peticiones en registro coloquial, ajenas al generador
+del benchmark. El recuperador TF-IDF de C cae de 0,733 a **0,381** de
+Top-1; el selector LLM que usa B —mismo prompt, mismas herramientas,
+mismo proveedor— cae solo de 0,898 a **0,750**. Como el enrutado es la
+entrada de todo el pipeline de C, **la ventaja de +15 pp en STSR sobre B
+no puede sostenerse fuera del corpus plantillado**: con texto real cabe
+esperar que se estreche o se invierta. Los números del experimento
+congelado siguen siendo correctos para lo que midieron; lo que esta
+medición acota es hasta dónde se pueden extrapolar.
+
+El mismo experimento arroja un matiz que corta en dirección contraria:
+en las 36 peticiones que **ninguna** skill cubre, el selector LLM se
+compromete con una herramienta en 30 (83 %) frente a 22 de TF-IDF
+(61 %). El LLM enruta mejor y **se calla mucho peor**, que en un ERP es
+la dirección peligrosa del error. De ahí que la capa de gobernanza
+—validación de esquema, permisos, riesgo y postcondiciones, ninguno de
+los cuales depende del router— resulte **más** necesaria, no menos, si
+se sustituye la recuperación léxica por un router basado en LLM.
+
 **De constructo.** Los detectores adversariales son léxicos y están
 ajustados al texto del benchmark: medido con InjecAgent, 3,3 % de
 detección fuera de distribución. La rúbrica de trazabilidad mide

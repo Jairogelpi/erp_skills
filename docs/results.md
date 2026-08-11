@@ -755,6 +755,25 @@ incorrectos** y se rehízo la ejecución completa.
    0,889 en las dos corridas Groq), lo que dice que la seguridad de un
    agente sin gobernanza depende de qué modelo le toque, mientras que la
    de C no depende de ninguno.
+3c. **La ventaja de C sobre B en STSR NO transfiere a texto real, medido.**
+   Es la amenaza más grave a la validez externa del resultado principal,
+   y ahora está cuantificada (`docs/product-viability.md` §7.2–7.3).
+   Sobre 120 peticiones en registro coloquial, el recuperador TF-IDF de
+   C cae de 0,733 a **0,381** de Top-1, mientras que el selector LLM que
+   usa B —mismo prompt, mismas herramientas, mismo proveedor— solo cae
+   de 0,898 a **0,750**. Como el enrutado es la entrada de todo el
+   pipeline de C, su +15 pp de STSR sobre B **no puede sostenerse fuera
+   del corpus plantillado**; con texto real cabe esperar que se estreche
+   o se invierta. **El experimento congelado no se toca:** sus números
+   son correctos para lo que midieron, y §36 ya declaraba esta
+   limitación — esto la confirma en vez de contradecirla.
+   Matiz que corta en dirección contraria y que también se mide: en las
+   36 peticiones que **ninguna** skill cubre, el selector LLM se
+   compromete con una herramienta en 30 (83 %) frente a 22 de TF-IDF
+   (61 %). El LLM enruta mejor y **se calla mucho peor**, que en un ERP
+   es la dirección peligrosa del error. La consecuencia es que la capa
+   de gobernanza —validación de esquema, permisos, postcondiciones, que
+   no dependen del router— importa **más**, no menos, con un router LLM.
 4. **Detectores léxicos en C, medido con un benchmark externo** — la
    ventaja en H4 no se generaliza a adversarios adaptativos.
    `docs/injecagent-stress-test.md`: 510 casos reales de InjecAgent

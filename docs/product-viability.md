@@ -305,3 +305,58 @@ o delegar la selección al LLM —que es justo lo que hace el sistema B, con
 Top-1 de 0,898 en el benchmark— asumiendo el coste en tokens que la tesis
 ahorraba. **Ese trade-off ahora es medible y hay que medirlo antes de
 elegir.**
+
+### 7.3 La pregunta que quedaba: ¿es TF-IDF o es el catálogo?
+
+Si el selector LLM también se derrumbaba con texto real, el problema
+sería el catálogo de 12 skills y la comparación C vs B del TFM se
+mantendría intacta. Si aguantaba, el problema es TF-IDF y hay que decir
+que la ventaja de C sobre B **no transfiere**.
+
+Se midió: el mismo `TYPED_TOOLS` y el mismo prompt que usa el sistema B
+en el experimento emparejado, sobre las mismas 120 peticiones, con Groq
+real (`data/real_requests_llm_eval.json`).
+
+| | TF-IDF | Selector LLM |
+|---|---|---|
+| Top-1 (84 contestables) | 0,381 | **0,750** [0,648, 0,830] |
+| Caída respecto a su propio benchmark | −0,352 (0,733) | **−0,148** (0,898) |
+| Rechaza bien lo que no cubre (36 casos) | **0,389** | 0,167 |
+| Compromiso erróneo fuera de catálogo | 22/36 = 0,611 | **30/36 = 0,833** |
+| Global (acierto + silencio correcto), 120 | 46/120 = 0,383 | **69/120 = 0,575** |
+
+**Respuesta: es TF-IDF.** El selector LLM pierde 15 puntos con texto
+real; TF-IDF pierde 35. No es que las peticiones reales sean
+intrínsecamente difíciles: es que la similitud léxica sobre
+descripciones de skill deja de funcionar cuando el usuario no habla como
+el catálogo.
+
+### Pero el LLM gana enrutando y pierde callándose
+
+En las 36 peticiones que **ninguna** skill cubre, el LLM inventa una
+herramienta en **30**. Enruta «cuándo cobramos la factura de El Corte
+Inglés» a `billing.create_draft_invoice` (9 veces elige esa),
+«dame de baja al usuario de pedro» a `contacts.search_contact` (8 veces
+esa). TF-IDF también falla ahí, pero menos (22 de 36).
+
+En un ERP esa es **la dirección peligrosa del error**: no enrutar mal
+entre dos skills parecidas, sino ejecutar algo cuando la respuesta
+correcta era «esto no lo hago yo».
+
+### Lo que esto implica para el producto, y no es lo que parecía
+
+La conclusión no es «cambia TF-IDF por el LLM y listo». Es que **cada
+componente falla en un eje distinto y ninguno de los dos es aceptable
+solo**:
+
+- el LLM enruta casi el doble de bien, pero se calla cinco veces menos;
+- TF-IDF se calla más, pero se equivoca al enrutar el 62 % de las veces.
+
+El diseño que la evidencia sugiere es **combinarlos**: selector LLM para
+enrutar, más una comprobación independiente de que la petición
+**pertenece al dominio** antes de dejarle elegir. Y sobre todo: con un
+router LLM que se compromete en el 83 % de lo que no cubre, **la capa de
+gobernanza pasa a importar más, no menos** — es lo único que queda entre
+un enrutado inventado y una escritura en el ERP. La validación de
+esquema, los permisos por rol y las postcondiciones no dependen del
+router y siguen intactas.
