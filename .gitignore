@@ -73,3 +73,7 @@ Desktop.ini
 !.ponytail/LICENSE
 !README.md
 !docs/
+
+# Real user requests may contain customer names, phone numbers or amounts:
+# the aggregate eval output is safe to commit, the raw input is not.
+data/real_requests.csv

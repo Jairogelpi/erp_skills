@@ -7,6 +7,8 @@ name = "erp-agent-os"
 version = "0.1.0"
 description = "Deterministic, synthetic-only ERP Agent OS foundations"
 readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Jairo Gelpi Moreno" }]
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "pydantic>=2,<3",

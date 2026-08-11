@@ -116,3 +116,50 @@ de producto, no de investigación, y se declaran como tales.
 > aunque el modelo falle o esté comprometido, con una llamada al LLM
 > menos por petición y con una traza que permite reconstruir cada
 > decisión. Eso —y no el éxito de tarea— es lo que sostiene un producto.
+
+---
+
+## 7. Arnés para medir el número 3, ya construido
+
+`scripts/eval_real_requests.py` evalúa los tres recuperadores sobre un
+CSV de peticiones **reales** y compara el resultado con la referencia
+del benchmark (Top-1 en validación: TF-IDF 0,733 · embeddings 0,658 ·
+híbrido 0,675). Reutiliza **el mismo código de métricas** que
+`compare_retrievers.py`, no una copia — una segunda implementación
+derivaría y los dos números dejarían de ser comparables, que es
+justamente lo que se quiere medir.
+
+```sh
+cp data/real_requests.template.csv data/real_requests.csv
+# rellenar con peticiones reales, verbatim
+uv run python scripts/eval_real_requests.py
+```
+
+Tres decisiones de diseño que existen para que el número no mienta:
+
+- **Un id de skill mal escrito aborta el script**, en vez de contar como
+  fallo de recuperación y deprimir la puntuación en silencio.
+- **Avisa explícitamente por debajo de 30 peticiones**: con menos, el
+  intervalo es tan ancho que la respuesta honesta es «aún no se sabe».
+- **`data/real_requests.csv` está gitignorado**: puede contener nombres
+  de clientes, teléfonos e importes. La salida agregada
+  (`data/real_requests_eval.json`) no contiene texto de peticiones y sí
+  es publicable.
+
+### Qué NO sirve como fuente de peticiones
+
+Se descartó explícitamente usar el historial local de conversaciones con
+un asistente de IA. Dos motivos, y el segundo es el que importa:
+
+1. Contiene credenciales, datos financieros y conversaciones ajenas al
+   proyecto.
+2. **No es la población que se quiere medir.** Son instrucciones de
+   programación dirigidas a un asistente técnico, no peticiones ERP
+   escritas por personal de operaciones. Medir sobre esa muestra daría
+   un número real, reproducible y **sin ningún significado** — la misma
+   familia de error que este proyecto lleva catorce defectos corrigiendo:
+   una medición que no puede fallar porque no mide lo que dice medir.
+
+La fuente válida es la aburrida: pedir a 5–10 personas que escriban cómo
+pedirían de verdad las cosas que hacen a diario, o recoger peticiones de
+un canal real (correo, chat interno, partes de trabajo).
