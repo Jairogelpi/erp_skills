@@ -1,0 +1,97 @@
+{
+  "discipline": "profiles written from the dev half only; gate threshold swept on dev only; every decision number below is held-out",
+  "n_dev": 60,
+  "n_held_out": 60,
+  "domain_gate_threshold_from_dev": 0.22,
+  "dev": [
+    {
+      "design": "D1 TF-IDF catalogo (C actual)",
+      "n_answerable": 40,
+      "n_out_of_catalog": 20,
+      "top1": 0.45,
+      "correct_refusal": 0.1,
+      "overall": 0.333
+    },
+    {
+      "design": "D2 TF-IDF enriquecido",
+      "n_answerable": 40,
+      "n_out_of_catalog": 20,
+      "top1": 0.9,
+      "correct_refusal": 0.05,
+      "overall": 0.617
+    },
+    {
+      "design": "D3 router LLM (B actual)",
+      "n_answerable": 40,
+      "n_out_of_catalog": 20,
+      "top1": 0.675,
+      "correct_refusal": 0.1,
+      "overall": 0.483
+    },
+    {
+      "design": "D4 filtro dominio + router LLM",
+      "n_answerable": 40,
+      "n_out_of_catalog": 20,
+      "top1": 0.625,
+      "correct_refusal": 0.35,
+      "overall": 0.533
+    },
+    {
+      "design": "D5 filtro dominio + TF-IDF enriq.",
+      "n_answerable": 40,
+      "n_out_of_catalog": 20,
+      "top1": 0.9,
+      "correct_refusal": 0.35,
+      "overall": 0.717
+    }
+  ],
+  "held_out": [
+    {
+      "design": "D1 TF-IDF catalogo (C actual)",
+      "n_answerable": 44,
+      "n_out_of_catalog": 16,
+      "top1": 0.455,
+      "correct_refusal": 0.062,
+      "overall": 0.35
+    },
+    {
+      "design": "D2 TF-IDF enriquecido",
+      "n_answerable": 44,
+      "n_out_of_catalog": 16,
+      "top1": 0.886,
+      "correct_refusal": 0.0,
+      "overall": 0.65
+    },
+    {
+      "design": "D3 router LLM (B actual)",
+      "n_answerable": 44,
+      "n_out_of_catalog": 16,
+      "top1": 0.818,
+      "correct_refusal": 0.25,
+      "overall": 0.667
+    },
+    {
+      "design": "D4 filtro dominio + router LLM",
+      "n_answerable": 44,
+      "n_out_of_catalog": 16,
+      "top1": 0.795,
+      "correct_refusal": 0.375,
+      "overall": 0.683
+    },
+    {
+      "design": "D5 filtro dominio + TF-IDF enriq.",
+      "n_answerable": 44,
+      "n_out_of_catalog": 16,
+      "top1": 0.864,
+      "correct_refusal": 0.25,
+      "overall": 0.7
+    }
+  ],
+  "token_cost": {
+    "n_sampled": 15,
+    "provider": "GroqClient",
+    "mean_prompt_tokens": 553.5,
+    "mean_completion_tokens": 38.3,
+    "mean_total_tokens_per_selection": 591.7
+  }
+}

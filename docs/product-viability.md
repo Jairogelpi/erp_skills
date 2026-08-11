@@ -360,3 +360,67 @@ gobernanza pasa a importar más, no menos** — es lo único que queda entre
 un enrutado inventado y una escritura en el ERP. La validación de
 esquema, los permisos por rol y las postcondiciones no dependen del
 router y siguen intactas.
+
+### 7.4 Los tres siguientes pasos, medidos: no era TF-IDF, eran las descripciones
+
+Los tres pendientes de §7.3 son el mismo experimento, así que se
+ejecutaron juntos (`scripts/eval_router_designs.py`).
+
+**Disciplina.** Las 120 peticiones se parten 50/50 por sha256 del texto.
+Los perfiles enriquecidos se escribieron leyendo **solo la mitad dev**;
+el umbral del filtro de dominio se barrió **solo en dev**. Todo lo que
+se reporta para decidir es **held-out**. El catálogo congelado no se
+toca: el enriquecimiento vive en `data/skill_profiles.json`, usado solo
+aquí.
+
+**Held-out (60 peticiones: 44 contestables, 16 fuera de catálogo):**
+
+| Diseño | Top-1 (IC95) | Rechaza bien (IC95) | Global | Tokens |
+|---|---|---|---|---|
+| D1 TF-IDF catálogo (C actual) | 0,455 [0,317, 0,599] | 0,062 [0,011, 0,283] | 0,350 | **0** |
+| D2 TF-IDF **enriquecido** | **0,886** [0,760, 0,950] | 0,000 [0,000, 0,194] | 0,650 | **0** |
+| D3 router LLM (B actual) | 0,818 [0,680, 0,905] | 0,250 [0,102, 0,495] | 0,667 | 592 |
+| D4 filtro dominio + router LLM | 0,795 [0,655, 0,888] | **0,375** [0,185, 0,614] | 0,683 | 592 |
+| D5 filtro dominio + TF-IDF enriq. | 0,864 [0,733, 0,936] | 0,250 [0,102, 0,495] | **0,700** | **0** |
+
+**1. El diagnóstico anterior era incompleto.** §7.3 concluyó «es TF-IDF».
+Con más precisión: **no era la técnica, eran las descripciones de una
+línea del catálogo**. Enriquecerlas con sinónimos y formas reales de
+decir lo mismo lleva a TF-IDF de 0,455 a **0,886** en held-out — por
+encima del router LLM (0,818) — **sin gastar un solo token**.
+
+**2. El filtro de dominio funciona, y hace falta.** El enriquecimiento
+tiene un efecto secundario: al hacer que todo se parezca a algo, D2 deja
+de abstenerse por completo (0,000). Anteponer un umbral calibrado en dev
+(0,22) recupera la abstención (0,250) a cambio de 2 puntos de Top-1, y
+da el mejor resultado global de los cinco. Para el router LLM sube el
+rechazo correcto de 0,250 a 0,375.
+
+**3. El coste de sustituir el router está medido: 592 tokens por
+petición.** Y hay una comprobación independiente que salió sola: el
+experimento congelado da 197,6 tokens/ejecución para la llamada de
+selección de B, y con 3 repeticiones cacheadas por caso eso implica
+197,6 × 3 = **592,8** tokens por llamada real. La medición directa sobre
+texto real da **591,7**. Dos vías independientes, 0,2 % de diferencia.
+
+**La conclusión de producto se invierte respecto a §7.3:** no hay que
+elegir entre enrutar bien y ahorrar tokens. Escribir descripciones
+decentes —trabajo humano, una vez por skill— da enrutado igual o mejor
+que el LLM a coste cero, y **preserva la ventaja arquitectónica de una
+llamada menos** en vez de devolverla.
+
+### Lo que estos números NO permiten afirmar
+
+- **Los intervalos se solapan.** D2 (0,886), D5 (0,864) y D3 (0,818) no
+  son distinguibles con n = 44 contestables. Lo que sí es una diferencia
+  dura y no estadística: D2 y D5 cuestan **0 tokens** y D3 cuesta 592.
+- **El held-out no es independiente de verdad.** Las 120 peticiones las
+  escribió una sola persona en una sesión, con el catálogo delante. Que
+  el enriquecimiento generalice de una mitad a la otra dice que
+  generaliza **dentro del estilo de ese autor**, no que vaya a funcionar
+  con usuarios distintos. La prueba que falta es enriquecer con las
+  peticiones de unas personas y evaluar con las de otras.
+- **El umbral 0,22 está calibrado sobre 60 peticiones.** Es un punto de
+  partida, no un valor de producción.
+- **Nada de esto toca el experimento congelado del TFM**, que sigue
+  midiendo lo que decía medir con las descripciones originales.

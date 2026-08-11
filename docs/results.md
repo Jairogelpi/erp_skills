@@ -774,6 +774,17 @@ incorrectos** y se rehízo la ejecución completa.
    es la dirección peligrosa del error. La consecuencia es que la capa
    de gobernanza —validación de esquema, permisos, postcondiciones, que
    no dependen del router— importa **más**, no menos, con un router LLM.
+   **Refinamiento posterior, medido** (`docs/product-viability.md` §7.4):
+   el problema no es TF-IDF como técnica sino las **descripciones de una
+   línea** del catálogo congelado. Enriquecerlas con sinónimos y formas
+   reales de decir lo mismo —sin tocar el catálogo, en un fichero
+   aparte— lleva a TF-IDF de 0,455 a **0,886** de Top-1 en una mitad
+   held-out, por encima del router LLM (0,818) y **a coste cero de
+   tokens**. Es decir: la brecha de enrutado con texto real parece
+   corregible sin renunciar a la ventaja arquitectónica, aunque los
+   intervalos con n = 44 se solapan y el corpus procede de un solo autor.
+   No modifica ningún número del experimento congelado, que midió el
+   catálogo tal como estaba.
 4. **Detectores léxicos en C, medido con un benchmark externo** — la
    ventaja en H4 no se generaliza a adversarios adaptativos.
    `docs/injecagent-stress-test.md`: 510 casos reales de InjecAgent

@@ -1,0 +1,18 @@
+{
+  "_purpose": "Enriched routing text per skill: synonyms and real phrasings, used ONLY by the product-validation harness. The frozen catalog (catalog.py) is NOT touched -- its hash is part of data/freeze_manifest.json and changing it would invalidate every published experimental result.",
+  "_discipline": "Written by reading ONLY the DEV half of data/real_requests.csv (deterministic 50/50 split by sha256 of the request text). The HELD-OUT half was never inspected while writing this file, so the evaluation on it is honest.",
+  "profiles": {
+    "crm.create_opportunity": "crear oportunidad comercial nueva, apuntar un posible negocio, registrar interes de un cliente potencial, meter como oportunidad, dar de alta una operacion en el embudo, anotar que quieren algo por un importe aproximado",
+    "crm.update_expected_revenue": "cambiar el importe esperado de una oportunidad existente, ponerla en otra cantidad, actualizar los ingresos previstos, corregir la valoracion del negocio, al final son otros euros, subir o bajar la cifra de la operacion",
+    "crm.detect_duplicate_contact": "revisar si un contacto esta duplicado o repetido, buscar clientes que aparecen dos veces, comprobar duplicados por telefono o correo, mirar si tenemos a alguien repetido en la base de clientes",
+    "contacts.search_contact": "buscar un contacto por nombre, correo o telefono, encontrar los datos de contacto de alguien, saber cual era el email de una persona, quien era el contacto de una empresa, localizar a alguien en la agenda",
+    "sales.create_quote_draft": "preparar una oferta o presupuesto nuevo en borrador para un cliente, hacer una propuesta economica sin confirmar, crear un presupuesto de venta provisional",
+    "sales.add_quote_line": "anadir una linea de producto, servicio o concepto a un presupuesto que ya existe, meter tambien otra partida en la oferta, incluir unidades adicionales en la propuesta, sumar un concepto al presupuesto",
+    "sales.confirm_order": "confirmar un pedido de venta, dar por aceptada una oferta y pasarla a pedido, cerrar la operacion porque el cliente ya dio el ok o esta firmada, validar el presupuesto aprobado",
+    "purchasing.create_purchase_draft": "crear un pedido de compra a un proveedor en borrador, hacer una compra sin confirmar, preparar un aprovisionamiento pendiente de validar, encargar material a un suministrador",
+    "product.update_field": "cambiar el precio de venta o la descripcion de un producto del catalogo, ponerlo a otro importe, corregir el nombre o el texto de un articulo, actualizar la ficha del producto",
+    "inventory.check_availability": "consultar el stock disponible de un producto, saber cuantas unidades quedan, comprobar si hay existencias suficientes para servir un pedido, mirar si podemos servir una cantidad con lo que hay en almacen",
+    "tasks.create_task": "crear una tarea interna de seguimiento, apuntar algo pendiente para hacer, poner un recordatorio de trabajo para alguien, anotar que hay que llamar o revisar algo un dia concreto",
+    "billing.create_draft_invoice": "crear una factura en estado borrador o provisional para un cliente, preparar un borrador de factura a partir de un pedido, hacer una factura sin emitir todavia"
+  }
+}

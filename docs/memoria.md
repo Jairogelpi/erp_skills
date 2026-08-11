@@ -869,6 +869,20 @@ esperar que se estreche o se invierta. Los números del experimento
 congelado siguen siendo correctos para lo que midieron; lo que esta
 medición acota es hasta dónde se pueden extrapolar.
 
+**Refinamiento posterior, que acota la gravedad de la limitación.** Un
+tercer experimento (`docs/product-viability.md` §7.4, con mitad de
+calibración y mitad held-out) muestra que la causa no es TF-IDF como
+técnica sino las **descripciones de una línea** del catálogo:
+enriquecerlas con sinónimos y formulaciones reales —en un fichero
+aparte, sin tocar el catálogo congelado— lleva el Top-1 de 0,455 a
+**0,886** en la mitad held-out, por encima del router LLM (0,818) y sin
+coste alguno en tokens. La brecha de enrutado con texto real es, por
+tanto, plausiblemente **corregible sin renunciar a la ventaja
+arquitectónica**. Con n = 44 los intervalos se solapan y el corpus
+procede de un solo autor, así que es una indicación fuerte y no una
+demostración. Ninguno de los números del experimento congelado cambia:
+midió el catálogo tal como estaba.
+
 El mismo experimento arroja un matiz que corta en dirección contraria:
 en las 36 peticiones que **ninguna** skill cubre, el selector LLM se
 compromete con una herramienta en 30 (83 %) frente a 22 de TF-IDF
