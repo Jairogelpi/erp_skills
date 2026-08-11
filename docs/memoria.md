@@ -962,6 +962,36 @@ ejecuciones inseguras), y capacidad de auditoría que permite reconstruir
 por qué se tomó cada decisión. No se presenta como ahorro medido ni como
 satisfacción de usuario, que no se han observado.
 
+### 10.1 Transferencia a producto: qué sostiene la evidencia
+
+El análisis completo está en
+[`docs/product-viability.md`](product-viability.md). Su tesis central es
+que **la evidencia que aguanta ante un tribunal y la que aguanta ante un
+cliente no son la misma**, y que confundirlas produciría afirmaciones
+comerciales falsas.
+
+**Sostiene un producto:** que ninguna inyección consiga una mutación no
+autorizada por ninguno de los tres canales de ataque (0/1.530, incluido
+el brazo que concede el LLM entero al atacante); que la arquitectura
+elimine una llamada al LLM por petición, demostrado por aritmética; que
+la decisión sea invariante al proveedor mientras la de un agente sin
+gobernanza no lo es; que el bloqueo se sostenga contra un ERP real
+verificado por relectura independiente; y la trazabilidad de 0,820.
+
+**No sostiene nada comercial:** la detección léxica de ataques (3,3 %
+fuera de distribución, y 8 de 9 casos del test bloqueados por patrones
+escritos sobre ese mismo corpus), el «8×» sin su intervalo (n = 9, IC
+[0,020, 0,435]), la ventaja de éxito de tarea (+15 pp, modesta), y
+cualquier cifra de ahorro (H8 es sensibilidad, no gasto medido).
+
+La consecuencia es de diseño, no solo de discurso: **el producto no
+puede apoyarse en que el sistema entienda mejor, sino en que restrinja
+mejor**. Eso lo sitúa como plano de control bajo cualquier agente, no
+como agente competidor. Los tres huecos que decidirían su viabilidad
+—coste de añadir una skill, tiempo humano por abstención, y recuperación
+sobre texto real no plantillado— **no están medidos en este trabajo** y
+se declaran como validación de producto pendiente.
+
 ---
 
 ## 11. Conclusiones
@@ -1102,13 +1132,14 @@ make figures
 
 ### Anexo C. Documentación técnica complementaria
 
-`docs/results.md` (resultados completos con las cuatro corridas),
+`docs/results.md` (resultados completos con las cinco corridas),
 `docs/dataset-card.md`, `docs/experiment-protocol.md`,
 `docs/threat-model.md`, `docs/traceability-rubric.md`,
 `docs/retriever-comparison.md`, `docs/injecagent-stress-test.md`,
-`docs/odoo-demo.md`, `docs/audit.md` (registro completo de los trece
+`docs/odoo-demo.md`, `docs/audit.md` (registro completo de los catorce
 defectos), `docs/spec-coverage.md` (cobertura §-por-§ de la
-especificación normativa).
+especificación normativa), `docs/product-viability.md` (transferencia a
+producto: qué afirmación comercial sostiene cada número y cuál no).
 
 ### Anexo D. Trabajo pendiente declarado
 

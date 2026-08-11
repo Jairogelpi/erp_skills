@@ -293,6 +293,30 @@ uv run python scripts/odoo_governed_demo.py
 adapter type) — not just duck-type-compatible at runtime. Only 2 of 12
 catalog skills are mapped to real Odoo models, declared as future work.
 
+### From results to a product
+
+[`docs/product-viability.md`](docs/product-viability.md) separates the
+evidence that would survive a customer conversation from the evidence
+that would not — because they are not the same set, and conflating them
+would produce false commercial claims.
+
+**Survives:** no unauthorized mutation through any attack channel
+(0/1530, including the arm that hands the attacker the whole LLM); one
+fewer LLM call per request, shown by arithmetic; a decision that is
+invariant to the provider while an ungoverned agent's is not; a real
+Odoo block verified by independent re-read; traceability 0.820.
+
+**Does not survive:** lexical attack detection (3.3% out of distribution,
+and 8 of the 9 dangerous test cases are caught by patterns written
+against that same corpus); "8× safer" without its interval (n = 9, CI
+[0.020, 0.435]); the task-success edge (+15 pp, modest); any savings
+figure (H8 is a declared-rate sensitivity analysis, not measured spend).
+
+The design consequence: a product built on this cannot lean on the
+system *understanding* better, only on it *constraining* better — which
+places it as a control plane beneath any agent, not as a competing
+agent.
+
 ## Prerequisites
 
 - CPython 3.12 (`>=3.12,<3.13`)
@@ -465,7 +489,8 @@ data/                   generated benchmark + wiring report (regenerable, not
                         hand-edited)
 docs/                   memoria.md (TFM draft, built from the real results),
                         results.md, dataset-card.md, audit.md, threat-model.md,
-                        spec-coverage.md, roadmap.md, and the per-study pages
+                        spec-coverage.md, product-viability.md, roadmap.md,
+                        and the per-study pages
 openspec/changes/       SDD trail: proposal/spec/design/tasks/apply-progress
                         per work unit, with TDD evidence and disclosed budget
                         exceptions where a unit exceeded the 400-line review
