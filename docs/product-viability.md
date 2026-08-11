@@ -163,3 +163,72 @@ un asistente de IA. Dos motivos, y el segundo es el que importa:
 La fuente válida es la aburrida: pedir a 5–10 personas que escriban cómo
 pedirían de verdad las cosas que hacen a diario, o recoger peticiones de
 un canal real (correo, chat interno, partes de trabajo).
+
+### 7.1 Cómo debe ser el CSV, y cómo recogerlo
+
+**Formato.** UTF-8, cabecera obligatoria, una petición por fila:
+
+```csv
+request_text,expected_skill,notas
+"apunta que los de Marisqueria El Puerto quieren algo para el catering de navidad, unos 4 mil",crm.create_opportunity,"comercial, whatsapp"
+"mira si queda stock del difusor de bambu",inventory.check_availability,"tienda"
+"cambiale el precio al ambientador de lavanda a 12,90",product.update_field,"tienda"
+"pon 3 unidades mas en el presupuesto de Hotel Miramar",sales.add_quote_line,"oficina"
+"cuando cobramos la factura de El Corte Ingles?",,"ninguna skill cubre cobros"
+```
+
+- `request_text` — **verbatim**. Con faltas, abreviaturas, sin acentos,
+  a medias. Si la limpias, mides otra cosa.
+- `expected_skill` — uno de los 12 ids de abajo, o **vacío** si ninguna
+  encaja. Las filas vacías no son descartes: miden si el sistema se
+  abstiene cuando debe.
+- `notas` — libre, el script la ignora. Útil para saber de dónde salió
+  cada fila.
+- Comillas dobles si el texto lleva comas. Guardar como CSV UTF-8, no
+  como XLSX.
+
+**Los 12 ids del catálogo** (para anotar `expected_skill`):
+
+| id | qué hace |
+|---|---|
+| `crm.create_opportunity` | Crea una oportunidad comercial |
+| `crm.update_expected_revenue` | Cambia el importe esperado de una oportunidad |
+| `crm.detect_duplicate_contact` | Detecta contactos duplicados |
+| `contacts.search_contact` | Busca un contacto por nombre, email o teléfono |
+| `sales.create_quote_draft` | Crea un presupuesto en borrador |
+| `sales.add_quote_line` | Añade línea de producto/cantidad a un presupuesto |
+| `sales.confirm_order` | Confirma un pedido de venta |
+| `purchasing.create_purchase_draft` | Crea un pedido de compra en borrador |
+| `product.update_field` | Cambia precio o descripción de un producto |
+| `inventory.check_availability` | Consulta stock de un producto |
+| `tasks.create_task` | Crea una tarea interna |
+| `billing.create_draft_invoice` | Crea una factura en borrador |
+
+**Cuántas.** El script avisa por debajo de 30. Objetivo **100–200**: con
+120 peticiones, un Top-1 de 0,70 lleva un IC95 de aproximadamente
+±0,08, suficiente para distinguir «aguanta» de «se derrumba».
+
+**Composición.** Que se parezca a la realidad, no a un examen fácil:
+
+- **~70 %** peticiones que alguna de las 12 skills sí cubre;
+- **~30 %** que ninguna cubre (`expected_skill` vacío) — cobros,
+  devoluciones, nóminas, informes, cualquier cosa fuera del catálogo.
+  Sin estas filas no se puede medir el riesgo de reutilización errónea,
+  que es el fallo que de verdad hace daño en producción.
+
+**La regla que decide si la medición vale:**
+
+> **Quien escribe las peticiones NO debe haber visto el catálogo.**
+
+Si la persona conoce las 12 skills, formulará hacia ellas sin darse
+cuenta y el Top-1 saldrá inflado — se estaría remidiendo el sesgo de
+plantilla que este experimento existe para detectar. La consigna a dar
+es genérica: *«imagina que puedes pedirle cosas del ERP escribiendo un
+mensaje: escribe 15 que pedirías en una semana normal, tal como las
+dirías»*. La anotación de `expected_skill` la hace después alguien que
+sí conoce el catálogo.
+
+**Fuentes válidas**, por orden de calidad: peticiones ya existentes en
+un canal real (correo interno, WhatsApp de trabajo, partes, tickets) >
+5–10 personas escribiendo 15 cada una a ciegas > una sola persona
+inventando 100, que es la peor y la más tentadora.

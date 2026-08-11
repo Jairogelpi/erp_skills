@@ -1,3 +1,4 @@
 request_text,expected_skill,notas
-"Aqui va la peticion TAL CUAL la escribio o la dijo la persona. Con sus faltas, sus abreviaturas y su vaguedad. NO la reescribas con el vocabulario del catalogo: eso destruiria la medicion.",crm.create_opportunity,"Borra esta fila de ejemplo"
-"Si ninguna skill del catalogo encaja, deja expected_skill VACIO. El sistema deberia abstenerse, y eso tambien se mide.",,"Borra esta fila de ejemplo"
+"BORRA ESTAS 3 FILAS DE EJEMPLO. Escribe la peticion TAL CUAL la dijo o escribio la persona: con sus faltas, sus abreviaturas y su vaguedad. NO la reescribas con el vocabulario del catalogo.",crm.create_opportunity,"quien la dijo / de donde salio"
+"Si ninguna de las 12 skills encaja, deja expected_skill VACIO: el sistema deberia abstenerse, y eso tambien se mide.",,"la columna notas la ignora el script"
+"apunta que los de Marisqueria El Puerto quieren algo para el catering de navidad, unos 4 mil",crm.create_opportunity,"ejemplo de registro real, coloquial"
