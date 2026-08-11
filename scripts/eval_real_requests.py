@@ -150,33 +150,70 @@ def main() -> None:
         "retrievers": {},
     }
 
+    # Two populations, measured separately. Mixing them was a real defect
+    # in the first version of this script: requests that no skill covers
+    # can never contribute to Top-1, so including them in its denominator
+    # caps the metric at n_expected/n and makes the benchmark comparison
+    # meaningless (the benchmark corpus is almost entirely answerable).
+    answerable = [c for c in cases if c.expected_skill]
+    out_of_catalog = [c for c in cases if not c.expected_skill]
+
     for name, retriever in comparison._build_retrievers().items():
-        rankings = comparison._rank_all(retriever, cases)
         metrics = comparison._evaluate(
-            rankings, cases, threshold=args.threshold, margin=args.margin
+            comparison._rank_all(retriever, answerable),
+            answerable,
+            threshold=args.threshold,
+            margin=args.margin,
         )
         top1 = float(metrics["top1"])
-        low, high = _wilson(top1 * len(cases), len(cases))
-        baseline = BENCHMARK_VALIDATION_TOP1.get(name)
+        low, high = _wilson(top1 * len(answerable), len(answerable))
         metrics["top1_ci95"] = [round(low, 3), round(high, 3)]
+        baseline = BENCHMARK_VALIDATION_TOP1.get(name)
         if baseline is not None:
             metrics["top1_vs_benchmark"] = round(top1 - baseline, 3)
+
+        # The failure that actually hurts in production: committing to
+        # some skill when the right answer was "I do not handle this".
+        if out_of_catalog:
+            rankings = comparison._rank_all(retriever, out_of_catalog)
+            abstained = sum(
+                1
+                for ranked in rankings
+                if comparison.should_abstain(
+                    ranked, [], threshold=args.threshold, margin=args.margin
+                )
+            )
+            metrics["out_of_catalog_n"] = len(out_of_catalog)
+            metrics["out_of_catalog_correct_abstention"] = round(
+                abstained / len(out_of_catalog), 3
+            )
         report["retrievers"][name] = metrics
 
     OUTPUT_PATH.write_text(
         json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
-    print(f"{len(cases)} peticiones reales ({n_expected} con skill esperada)\n")
-    print(f"{'recuperador':14} {'Top-1':>7} {'IC95':>16} {'vs bench':>9} {'Top-3':>7}")
+    print(
+        f"{len(cases)} peticiones reales: {n_expected} contestables por el "
+        f"catalogo, {n_abstain} fuera de el\n"
+    )
+    print("Sobre las CONTESTABLES (comparable con el benchmark):")
+    header = f"  {'recuperador':12} {'Top-1':>7} {'IC95':>16}"
+    print(f"{header} {'vs bench':>9} {'sel.acc':>8}")
     for name, m in report["retrievers"].items():
         ci = m["top1_ci95"]
         delta = m.get("top1_vs_benchmark")
         delta_text = f"{delta:+.3f}" if delta is not None else "--"
         print(
-            f"{name:14} {m['top1']:>7.3f} "
-            f"[{ci[0]:.3f}, {ci[1]:.3f}] {delta_text:>9} {m['top3']:>7.3f}"
+            f"  {name:12} {m['top1']:>7.3f} "
+            f"[{ci[0]:.3f}, {ci[1]:.3f}] {delta_text:>9} "
+            f"{m['selective_accuracy']:>8.3f}"
         )
+    if n_abstain:
+        print("\nSobre las FUERA DE CATALOGO (deberia abstenerse en todas):")
+        for name, m in report["retrievers"].items():
+            rate = m.get("out_of_catalog_correct_abstention", 0.0)
+            print(f"  {name:12} se abstiene bien en {rate:.3f}")
 
     if len(cases) < MIN_USEFUL_SAMPLE:
         print(

@@ -232,3 +232,76 @@ sí conoce el catálogo.
 un canal real (correo interno, WhatsApp de trabajo, partes, tickets) >
 5–10 personas escribiendo 15 cada una a ciegas > una sola persona
 inventando 100, que es la peor y la más tentadora.
+
+### 7.2 Resultado medido: la recuperación NO sobrevive al texto real
+
+120 peticiones en registro coloquial (84 cubiertas por el catálogo, 36
+fuera de él), evaluadas con la regla de abstención del pipeline
+gobernado (umbral 0,15, margen 0,05).
+
+**Sobre las 84 contestables** — directamente comparable con el
+benchmark, misma métrica y mismo código:
+
+| Recuperador | Top-1 real | IC95 | Benchmark (validación) | Caída |
+|---|---|---|---|---|
+| **TF-IDF** | **0,381** | [0,284, 0,488] | 0,733 | **−0,352** |
+| Embeddings | 0,381 | [0,284, 0,488] | 0,658 | −0,277 |
+| Híbrido | 0,274 | [0,190, 0,377] | 0,675 | −0,401 |
+
+**Sobre las 36 fuera de catálogo** — donde lo correcto es abstenerse
+siempre:
+
+| Recuperador | Se abstiene bien | Exactitud selectiva |
+|---|---|---|
+| TF-IDF | **0,389** | 0,542 |
+| Embeddings | 0,556 | 0,681 |
+| Híbrido | **0,750** | 0,742 |
+
+### Qué significa esto, sin suavizar
+
+**1. El resultado de `docs/retriever-comparison.md` era un artefacto del
+corpus plantillado.** TF-IDF ganaba porque la petición y la descripción
+de la skill compartían vocabulario. Con texto real esa ventaja
+desaparece: empata con embeddings y **pierde claramente en las dos
+métricas que importan en producción** —saber cuándo callarse y acertar
+cuando habla—. En texto real, TF-IDF se lanza a elegir una skill en el
+**61 %** de las peticiones que ninguna skill cubre.
+
+**2. El orden se invierte.** Por exactitud selectiva y por abstención
+correcta: **híbrido > embeddings > TF-IDF**, exactamente al revés que en
+el benchmark. El híbrido acierta el 74 % de las veces que se
+compromete... pero solo se compromete en el 37 % de los casos: dos de
+cada tres peticiones reales rebotarían a un humano.
+
+**3. Ninguna de las tres configuraciones actuales es utilizable en
+producto tal cual.** Con la mejor combinación disponible hoy, la mayoría
+de las peticiones reales acaban en skill equivocada o en abstención.
+
+**4. La muestra es optimista, y aun así se derrumba.** El fichero tiene
+exactamente 7 peticiones por skill, lo que revela que quien las escribió
+**tenía el catálogo delante** — el sesgo que §7.1 advierte que infla el
+resultado. Que colapse *pese a* ese sesgo hace el hallazgo más fuerte,
+no más débil. Con peticiones recogidas a ciegas de tráfico real cabe
+esperar algo igual o peor.
+
+### Qué NO significa
+
+No invalida el TFM. Las conclusiones del trabajo son sobre **gobernanza
+frente a ausencia de gobernanza** en su propio benchmark, y la limitación
+del corpus plantillado ya estaba declarada en §36 y en
+`docs/retriever-comparison.md`. Esto la **confirma empíricamente**, que
+es distinto de contradecirla. Las propiedades que sostienen el producto
+—resistencia a inyección, una llamada al LLM menos, invariancia al
+proveedor, trazabilidad— no dependen del recuperador.
+
+### Consecuencia para el producto
+
+La recuperación por similitud léxica sobre descripciones de skill **no
+es el diseño correcto** para texto real. Antes de construir producto hay
+que resolver el enrutado, y las opciones razonables son: clasificación
+de intención entrenada sobre peticiones reales, recuperación con
+descripciones enriquecidas (sinónimos, ejemplos de uso reales por skill),
+o delegar la selección al LLM —que es justo lo que hace el sistema B, con
+Top-1 de 0,898 en el benchmark— asumiendo el coste en tokens que la tesis
+ahorraba. **Ese trade-off ahora es medible y hay que medirlo antes de
+elegir.**
