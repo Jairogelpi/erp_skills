@@ -315,7 +315,7 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 - [-] **P11.1** Redactar memoria con método, arquitectura, dataset, resultados, discusión, validez, seguridad y límites (D-09). Evidencia: `docs/memoria.md`, **borrador completo de los 13 capítulos del índice de §33**, construido desde los artefactos reales — cada cifra procede de un `data/*.json` versionado y es reproducible con los comandos del anexo A. Incluye resultados negativos sin suavizar, las tres tensiones no resueltas a favor del número bonito (R3 vs STSR, abstención vs Top-1, temperatura vs H3) y el capítulo metodológico sobre los trece defectos del instrumento de medida. **Pendiente:** revisión del tutor, kappa de anotación para cerrar §6.3, y el formato final de entrega (el borrador es Markdown, no el documento maquetado).
 - [ ] **P11.2** Entregar repositorio público, CITATION, dataset card, threat model, catálogo, experimentos, notebook, figuras y resultados negativos (§32, §35).
-- [ ] **P11.3** Preparar vídeo 3–5 min y presentación/ensayo: resultados observados, no promesas (§32, §39).
+- [-] **P11.3** Preparar vídeo 3–5 min y presentación/ensayo: resultados observados, no promesas (§32, §39). Evidencia: `docs/video-guion.md` (guion literal por tramos de §39, con notas de producción que prohíben recrear capturas y exigen grabar la demo de Odoo en una sola toma) y `docs/presentacion.md` (15 diapositivas con lo que se ve y lo que se dice, más 8 de reserva para preguntas). Estrategia y las siete preguntas difíciles en `docs/defensa.md`. **Pendiente:** grabar y maquetar.
 - [ ] **P11.4** Verificar los 20 criterios de aceptación del §35 uno a uno antes de cerrar.
 
 | ID | Fuente normativa | Resultado observable esperado | Evidencia concreta | Gate binario |

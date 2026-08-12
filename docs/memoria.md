@@ -1279,12 +1279,16 @@ make figures
 defectos), `docs/spec-coverage.md` (cobertura §-por-§ de la
 especificación normativa), `docs/product-viability.md` (transferencia a
 producto: qué afirmación comercial sostiene cada número y cuál no),
-`docs/defensa.md` (guion de defensa y vídeo: en qué orden contar los
-resultados y cómo responder las siete preguntas difíciles).
+`docs/defensa.md` (estrategia de defensa: en qué orden contar los
+resultados y cómo responder las siete preguntas difíciles),
+`docs/presentacion.md` (15 diapositivas, contenido y locución) y
+`docs/video-guion.md` (guion literal del vídeo de 4 minutos).
 
 ### Anexo D. Trabajo pendiente declarado
 
 1. **Kappa de anotación** — instrumento generado, paso humano pendiente.
 2. **Workbook de Tableau** — insumos generados, montaje manual.
 3. **Ejecución del brazo de temperatura y medición de H3b con LLM real.**
-4. **Vídeo de competición y presentación de defensa.**
+4. **Vídeo de competición y presentación de defensa** — guion y
+   contenido escritos (`docs/video-guion.md`, `docs/presentacion.md`);
+   falta grabar y maquetar.
