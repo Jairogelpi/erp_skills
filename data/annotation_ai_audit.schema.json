@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ERP Agent OS blinded AI annotation consistency audit",
+  "type": "object",
+  "required": ["schema_version", "evidence_status", "diagnostic_only", "manual_adjudication_required", "human_inter_annotator_agreement", "provenance", "n", "agreement_rate", "disagreement_request_ids", "decisions"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "evidence_status": {"const": "ai_consistency_audit"},
+    "diagnostic_only": {"const": true},
+    "manual_adjudication_required": {"const": true},
+    "human_inter_annotator_agreement": {"const": false},
+    "provenance": {"type": "object", "required": ["provider", "model", "temperature", "prompt_version", "prompt_hash"]},
+    "n": {"type": "integer", "minimum": 1},
+    "agreement_rate": {"type": "number", "minimum": 0, "maximum": 1},
+    "disagreement_request_ids": {"type": "array", "items": {"type": "string"}},
+    "decisions": {"type": "array", "items": {"type": "object"}}
+  },
+  "additionalProperties": false
+}
