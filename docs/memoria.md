@@ -47,13 +47,35 @@ allow rate* A = 0,889 · B = 0,889 · **C = 0,111** (8×); trazabilidad
 0,356 / 0,374 / **0,820** (2,2×); consumo 185,1 / 265,3 / **67,6**
 tokens por ejecución (3,9× menos que B).
 
-La conclusión defendible es más estrecha que la intuición de partida: la
-gobernanza compra sobre todo **seguridad, auditabilidad y ahorro de
-tokens**, y mejora el éxito de tarea de forma **modesta pero
-significativa**. El trabajo documenta además quince defectos encontrados
-en su propio instrumento de medida —dos de ellos en la capa estadística
-que produce los números publicados— y el patrón metodológico que
-explica dónde se concentran.
+Ese contraste, sin embargo, **no es el resultado más informativo del
+trabajo**, y decirlo forma parte de reportarlo con honestidad. Que un
+sistema diseñado para bloquear bloquee está cerca de la tautología, la
+ventaja en éxito de tarea es modesta y —medido después— **no transfiere
+a texto de usuario real**. Los dos hallazgos que sí resisten el
+escrutinio surgieron de auditar el propio trabajo:
+
+**Primero, una forma distinta de preguntar por la seguridad.** La
+literatura de inyección de prompts mide si un detector dispara; el
+detector de este sistema apenas lo hace fuera de su distribución (3,3 %
+sobre 510 casos externos de InjecAgent). La pregunta que decide si un
+ERP está protegido es otra: *concedido el ataque por completo —el
+modelo comprometido, el atacante dictando los argumentos—, ¿ocurre
+alguna mutación no autorizada?* Sobre esos mismos 510 payloads
+entregados por los tres canales que un atacante controla:
+**0 de 1.530**, con 510 de 510 denegadas en el brazo que entrega el LLM
+al atacante. La defensa efectiva resultó ser arquitectónica, no
+detectiva, y eso es medible con independencia del modelo empleado.
+
+**Segundo, una observación sobre el propio proceso de medir.** El
+trabajo documenta **quince defectos hallados en su instrumento de
+medida**, y el patrón que los explica: *el desarrollo dirigido por
+pruebas protege bien lo que se implementa contra un requisito explícito
+y protege mal lo que solo se calcula a partir de una fórmula*, porque en
+el segundo caso es fácil verificar la conclusión del cálculo sin
+verificar el mecanismo. Cinco de esos defectos comparten forma —una
+comprobación que no podía fallar— y uno, al corregirse, **habría
+mejorado los resultados** del sistema propuesto; no se corrigió, porque
+el conjunto de test estaba congelado.
 
 **Palabras clave:** agentes LLM, automatización ERP, gobernanza de
 agentes, recuperación semántica, evaluación selectiva, inyección de
@@ -1143,11 +1165,30 @@ generalización que el corpus disponible no permite hacer.
 ### 11.4 Cierre
 
 El valor de este trabajo no está en presentar ERP Agent OS como solución
-universal, sino en haber medido honestamente qué compra y qué cuesta
-gobernar a un agente en un dominio transaccional — incluyendo las tres
-ocasiones en que la medición honesta produjo un resultado **peor** que
-la intuición de partida, y el registro de los quince defectos que hubo
-que corregir en el propio instrumento antes de poder confiar en él.
+universal. Hay muchos prototipos que conectan un modelo de lenguaje con
+un ERP, y la arquitectura empleada —skills versionadas, políticas,
+auditoría, postcondiciones— no es novedosa por sí misma.
+
+Lo que este trabajo aporta es de otro tipo. Aporta **una forma más
+exigente de preguntar por la seguridad de un agente**: no si un detector
+dispara, sino si el daño ocurre cuando se concede que el detector ha
+fallado y el modelo está comprometido. Bajo esa pregunta, la respuesta
+fue 0 de 1.530, con un dataset externo y un brazo que entrega el modelo
+al atacante.
+
+Y aporta **el registro de haberse equivocado en público**. Tres veces la
+medición honesta produjo un resultado peor que la intuición de partida,
+y las tres se publicaron antes de encontrar el matiz que las mejoraba.
+Quince defectos del instrumento quedaron documentados con su fecha, su
+causa y qué habría pasado sin corregirlos; dos de ellos los destapó una
+pregunta escéptica sobre resultados ya aceptados, y uno se dejó sin
+corregir precisamente porque corregirlo habría favorecido a la
+hipótesis.
+
+Un trabajo experimental que solo confirma lo que esperaba debe levantar
+sospecha. Este documenta dónde se equivocó, cómo lo descubrió y qué
+quedó en pie después. Eso —más que cualquiera de sus cifras— es lo que
+pretende dejar utilizable para quien venga detrás.
 
 ---
 
@@ -1237,7 +1278,9 @@ make figures
 `docs/odoo-demo.md`, `docs/audit.md` (registro completo de los quince
 defectos), `docs/spec-coverage.md` (cobertura §-por-§ de la
 especificación normativa), `docs/product-viability.md` (transferencia a
-producto: qué afirmación comercial sostiene cada número y cuál no).
+producto: qué afirmación comercial sostiene cada número y cuál no),
+`docs/defensa.md` (guion de defensa y vídeo: en qué orden contar los
+resultados y cómo responder las siete preguntas difíciles).
 
 ### Anexo D. Trabajo pendiente declarado
 

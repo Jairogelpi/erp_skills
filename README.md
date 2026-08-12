@@ -10,6 +10,32 @@ credentials, tokens, secrets, or local environment files are ever tracked.
 
 ---
 
+## The result that survives most scrutiny
+
+Prompt-injection work usually measures whether a **detector** fires.
+This system's detector barely does out of distribution — 3.3% on 510
+external InjecAgent cases, reported as the failure it is. So the
+question became a harder one:
+
+> Grant the attack completely — the model compromised, the attacker
+> dictating the arguments — does any unauthorized mutation occur?
+
+Those same 510 payloads, delivered through all three channels an
+attacker controls: **0 of 1530**, with **510/510 denied** in the arm
+that hands the attacker the whole LLM. A positive control aborts the run
+unless a clean request really writes a record, so the zero cannot be
+vacuous.
+
+The defence is architectural, not detective: ERP data never occupies an
+instruction position, the model can only emit a skill id plus arguments
+validated against a schema, and the handler writes solely to its own
+allowlisted model and fields.
+
+The paired A/B/C experiment (below) is the thesis' primary endpoint and
+is reported in full — but a system built to block blocking things is a
+weaker claim than this one, and its task-success edge does not transfer
+to real user text. Both facts are stated wherever the numbers appear.
+
 ## What this is
 
 ERP Agent OS separates the *probabilistic* interpretation of a natural-language ERP
@@ -556,8 +582,8 @@ data/                   generated benchmark + wiring report (regenerable, not
                         hand-edited)
 docs/                   memoria.md (TFM draft, built from the real results),
                         results.md, dataset-card.md, audit.md, threat-model.md,
-                        spec-coverage.md, product-viability.md, roadmap.md,
-                        and the per-study pages
+                        spec-coverage.md, product-viability.md, defensa.md,
+                        roadmap.md, and the per-study pages
 openspec/changes/       SDD trail: proposal/spec/design/tasks/apply-progress
                         per work unit, with TDD evidence and disclosed budget
                         exceptions where a unit exceeded the 400-line review
