@@ -523,6 +523,35 @@ def test_handler_error_attempt_is_replayed_without_reinvoking_handler():
     assert replay.check_results == first.check_results == ()
 
 
+def test_arbitrary_handler_failure_after_mutation_is_contained_and_replayed():
+    erp = FakeERPAdapter(allowed_models={"crm.lead"})
+    calls = []
+
+    def mutates_then_raises(adapter, args):
+        calls.append(args)
+        adapter.create("crm.lead", {"name": "Acme"})
+        raise RuntimeError("customer secret: top-secret")
+
+    runtime = Runtime(erp)
+    runtime.register("crm.create_opportunity", "1.0.0", mutates_then_raises)
+
+    first = runtime.execute(skill(), {}, "sales_user", "runtime-error-key")
+    replay = runtime.execute(skill(), {}, "sales_user", "runtime-error-key")
+
+    assert len(calls) == 1
+    assert len(erp._records["crm.lead"]) == 1
+    assert first.verification_status is VerificationStatus.VERIFIER_ERROR
+    assert first.postconditions_met is None
+    assert first.handler_error == "RuntimeError: handler execution failed"
+    assert "top-secret" not in first.handler_error
+    assert first.check_results == ()
+    assert replay.verification_status is VerificationStatus.REPLAYED
+    assert replay.idempotent_replay is True
+    assert replay.postconditions_met is None
+    assert replay.handler_error == first.handler_error
+    assert replay.check_results == first.check_results
+
+
 def test_handler_key_error_from_mismatched_args_is_caught_not_raised():
     erp = FakeERPAdapter(allowed_models={"crm.lead"})
     runtime = Runtime(erp)

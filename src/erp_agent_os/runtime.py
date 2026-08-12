@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Generic, TypeVar
 
-from erp_agent_os.adapters import ErpAdapter, UnknownModelError, UnknownRecordError
+from erp_agent_os.adapters import ErpAdapter
 from erp_agent_os.policy import PolicyDecision, decide
 from erp_agent_os.skills import SkillDefinition
 from erp_agent_os.validation import Finding
@@ -241,7 +241,7 @@ class Runtime(Generic[T]):
 
         try:
             output = handler(self._erp, args)
-        except (UnknownModelError, UnknownRecordError, KeyError) as exc:
+        except Exception as exc:
             error_message = f"{type(exc).__name__}: handler execution failed"
             result = ExecutionResult(
                 outcome.decision,
