@@ -417,6 +417,38 @@ def test_fingerprint_construction_failures_are_sanitized(malformed_args):
     assert calls == []
 
 
+def test_arbitrary_fingerprint_exception_is_sanitized_without_handler_call():
+    class HostileArguments(dict):
+        def items(self):
+            raise RuntimeError("SECRET from hostile mapping")
+
+    erp = FakeERPAdapter(allowed_models={"crm.lead"})
+    calls = []
+
+    def handler(adapter, args):
+        calls.append(args)
+        return "output"
+
+    runtime = Runtime(erp)
+    runtime.register("crm.create_opportunity", "1.0.0", handler)
+
+    with pytest.raises(IdempotencyFingerprintError) as error:
+        runtime.execute(
+            skill(),
+            HostileArguments(name="Acme"),
+            "sales_user",
+            "hostile-key",
+            postcondition_checks=(named_check("not_run"),),
+        )
+
+    assert str(error.value) == (
+        "idempotency request arguments must be canonical JSON"
+    )
+    assert error.value.__cause__ is None
+    assert "SECRET" not in str(error.value)
+    assert calls == []
+
+
 def test_fully_evaluated_failed_verification_is_replayed_with_exact_evidence():
     erp = FakeERPAdapter(allowed_models={"crm.lead"})
     handler_calls = []

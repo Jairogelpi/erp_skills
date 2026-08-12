@@ -113,7 +113,7 @@ def _request_fingerprint(
             sort_keys=True,
         )
         return sha256(canonical.encode("utf-8")).hexdigest()
-    except (RecursionError, TypeError, UnicodeError, ValueError):
+    except Exception:
         raise IdempotencyFingerprintError(
             "idempotency request arguments must be canonical JSON"
         ) from None
