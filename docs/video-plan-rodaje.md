@@ -82,11 +82,20 @@ número tiene que leerse sin esfuerzo.
 uv run python scripts/demo.py
 ```
 
-**Qué mostrar:** el **escenario 4** de la salida — petición con "aplícalo
-también a todos los clientes similares" → `DENY`, motivo
-`BULK_SCOPE`. Y para el contraste del guion, el sistema A ejecutando lo
-mismo (usar la salida de `data/experiment_results.json` si no se quiere
-montar la llamada en vivo).
+**Qué mostrar:** mejor aún, usar la **demo completa**, que ya trae el
+contraste construido:
+
+```sh
+uv run python scripts/demo_completa.py --pausa
+```
+
+Para este tramo bastan las **escenas 2 y 8**: A escribe sin permiso y A
+duplica al repetir la petición, mientras C para y C reconoce la clave.
+El contraste está en pantalla, sin montaje.
+
+Alternativa más corta: `scripts/demo.py`, escenario 4 — petición con
+"aplícalo también a todos los clientes similares" → `DENY`, motivo
+`BULK_SCOPE`.
 
 **Duración real del comando: 14 segundos.** Cabe entero en cámara, sin
 cortes.

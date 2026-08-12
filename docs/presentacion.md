@@ -259,3 +259,5 @@ el caso **0,000**.
 | R6 | Los 15 defectos, tabla completa |
 | R7 | Comparación de recuperadores: TF-IDF vs embeddings vs híbrido |
 | R8 | Sensibilidad al proveedor: false allow de A 0,333 ↔ 0,889 |
+| R9 | Los 11 controles de `demo_completa.py`, con el contraste A vs C |
+| R10 | CU-02: el sistema propone una skill pero se detiene en TESTED |

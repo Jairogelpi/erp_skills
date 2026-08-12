@@ -319,6 +319,38 @@ uv run python scripts/odoo_governed_demo.py
 adapter type) — not just duck-type-compatible at runtime. Only 2 of 12
 catalog skills are mapped to real Odoo models, declared as future work.
 
+### Demos: what each control does, and what an ungoverned agent does instead
+
+```sh
+uv run python scripts/demo_completa.py           # 11 controls, A vs C contrast
+uv run python scripts/demo_completa.py --pausa   # step through it
+```
+
+Eleven scenes. Each runs the **same request** against System A (generic
+tools, no governance — the same code the 1,080-observation experiment
+uses) and System C, from the same initial state with the same arguments.
+Covers: R1 happy path with postconditions · R2 approval with actor,
+scope and expiry · **mandatory R3 simulation** with mutation preview ·
+prompt injection · type validation · role denial · CLARIFY vs ABSTAIN ·
+idempotency · **compromised parser** · **governed skill onboarding
+(CU-02)** · append-only audit.
+
+System A is given **correct routing on purpose**: with a keyword
+selector it mis-routes and never executes, so it would fail for
+*retrieval* rather than for lack of governance. Handing it the right
+tool makes it **stronger**, not weaker — the point is that even with the
+right tool and the right arguments, damage happens without governance.
+
+**Every claim carries a check, and the demo exits 1 if the system stops
+behaving as it says.** That is not rhetoric: while writing it, three
+claims about System A turned out to be false and the checks caught them.
+It also surfaced two real findings rather than hiding them — the role is
+filtered at *retrieval* (so the outcome is ABSTAIN, not DENY), and
+TF-IDF **does** commit to a skill for an out-of-catalog request.
+
+Full walkthrough, code trace and replication guide:
+[`docs/demo-explicada.md`](docs/demo-explicada.md).
+
 ### From results to a product
 
 [`docs/product-viability.md`](docs/product-viability.md) separates the
