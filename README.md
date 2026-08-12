@@ -584,6 +584,7 @@ docs/                   memoria.md (TFM draft, built from the real results),
                         results.md, dataset-card.md, audit.md, threat-model.md,
                         spec-coverage.md, product-viability.md, defensa.md,
                         presentacion.md, video-guion.md, video-plan-rodaje.md,
+                        demo-explicada.md,
                         roadmap.md, and
                         the per-study pages
 openspec/changes/       SDD trail: proposal/spec/design/tasks/apply-progress

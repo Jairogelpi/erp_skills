@@ -7,6 +7,10 @@ Los tiempos están medidos en esta máquina, no estimados.
 Regla: **todo lo que aparezca en pantalla es salida real**. Nada
 recreado, nada maquetado para parecer una ejecución.
 
+> Para entender **qué hace y qué prueba cada paso** de la demo —traza
+> del código, mapa contra la especificación y guía de réplica— ver
+> [`docs/demo-explicada.md`](demo-explicada.md).
+
 ---
 
 ## Preparación (una vez, antes de grabar)
