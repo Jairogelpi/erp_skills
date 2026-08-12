@@ -168,6 +168,34 @@ medido con peticiones reales (`docs/product-viability.md` §7.2). La
 demo lo muestra porque esconderlo sería exactamente lo que este proyecto
 no hace.
 
+### Escena 1 — una afirmación que la propia demo desmentía
+
+La primera versión de esta escena decía *«C sabe que acertó: releyó el
+estado final y lo contrastó con el contrato»*… e imprimía justo al lado
+`postcondiciones comprobadas: None`.
+
+**La afirmación era falsa.** `SystemC.handle` **no** pasa
+`postcondition_checks` al runtime: quien resuelve y ejecuta las
+comprobaciones es el orquestador (`experiment.py:165` en el
+experimento). Por el camino de `handle()`, `postconditions_met` sale
+siempre `None`.
+
+Importante para no leerlo de más: **el experimento sí las verifica**, así
+que las cifras de STSR no están afectadas. Lo que estaba mal era la
+demo, que presentaba como prueba un campo vacío.
+
+Arreglado **demostrando** la verificación en vez de afirmarla — la
+escena resuelve las comprobaciones del contrato y las ejecuta contra el
+ERP a la vista:
+
+```
+Verificación de postcondiciones, resuelta del contrato de la
+skill y ejecutada contra el ERP (2 comprobaciones):
+  · exactly_one_new_opportunity
+  · opportunity_is_open
+Resultado: True
+```
+
 ### Escena 9 — el resultado fuerte, en vivo
 
 Supuesto: **el atacante controla el LLM por completo** y dicta los

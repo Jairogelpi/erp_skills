@@ -39,6 +39,7 @@ from erp_agent_os.handlers import HANDLERS, SKILL_MODELS
 from erp_agent_os.llm_client import ArgumentExtraction, ToolCall, ToolSpec
 from erp_agent_os.parser import structure_proposal
 from erp_agent_os.policy import decide
+from erp_agent_os.postconditions import build_checks
 from erp_agent_os.retrieval import TfidfRetriever
 from erp_agent_os.runtime import Runtime
 from erp_agent_os.skills import SkillState
@@ -143,7 +144,8 @@ def escena_1_camino_feliz(pausa: bool) -> None:
     texto = "Crea una oportunidad para Acme por 15000 euros."
     args = {"customer_name": "Acme", "expected_revenue": 15000}
 
-    _erp_c, sistema_c, audit, _ = _build_c()
+    erp_c, sistema_c, audit, _ = _build_c()
+    estado_previo = erp_c.snapshot()
     proposal = structure_proposal(
         "crm.create_opportunity", args, ["customer_name", "expected_revenue"], 0.9
     )
@@ -156,15 +158,32 @@ def escena_1_camino_feliz(pausa: bool) -> None:
     print(f"  A (sin gobierno) : ejecuta {a.tool_name}, registro {a.output}")
     print("                     sin contrato, sin verificar el estado final")
     print(f"  C (gobernado)    : {r.decision} vía {r.selected_skill_id}")
-    print(
-        f"                     postcondiciones comprobadas: "
-        f"{r.execution.postconditions_met if r.execution else None}"
-    )
     print(f"                     eventos de auditoría: {len(audit.events())}")
-    print("\n  -> Aquí ambos aciertan. La diferencia es que C SABE que acertó:")
+
+    # Las postcondiciones NO las verifica SystemC.handle: las resuelve y
+    # ejecuta quien orquesta (experiment.py:165 en el experimento). Aquí
+    # se hace explícito para que la demo demuestre la verificación en vez
+    # de afirmarla: `r.execution.postconditions_met` sale None por este
+    # camino, y presentarlo como prueba sería exactamente el defecto que
+    # esta demo existe para evitar.
+    skill = CATALOG_BY_ID[str(r.selected_skill_id)]
+    checks = build_checks(skill, args, estado_previo)
+    salida = r.execution.output if r.execution else None
+    verificadas = all(check(erp_c, salida) for check in checks)
+
+    print()
+    print("  Verificación de postcondiciones, resuelta del contrato de la")
+    print(f"  skill y ejecutada contra el ERP ({len(checks)} comprobaciones):")
+    for nombre in skill.postconditions:
+        print(f"    · {nombre}")
+    print(f"  Resultado: {verificadas}")
+    print()
+    print("  -> Aquí ambos aciertan. La diferencia es que C SABE que acertó:")
     print("     releyó el estado final y lo contrastó con el contrato.")
+    print("     A no tiene con qué contrastar: no hay contrato.")
 
     _check(r.decision == "ALLOW", "escena 1: C debía ejecutar una R1")
+    _check(verificadas, "escena 1: las postcondiciones debían cumplirse")
     _check(_total_records(erp_a) == 1, "escena 1: A debía ejecutar (contraste)")
     _check(len(audit.events()) == 1, "escena 1: C debía auditar la ejecución")
     _pause(pausa)
