@@ -21,6 +21,7 @@ Two calls on purpose:
    then approval is granted and the retry actually writes.
 """
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -58,7 +59,40 @@ def _serialize_audit_event(event: AuditEvent) -> dict:
     }
 
 
+def _beat(title: str, lines: list[str], filming: bool) -> None:
+    """Readable block for the video, plus a pause to refresh the browser.
+
+    The demo runs in under four seconds, which is right for CI and
+    useless for filming: the whole point of the shot is that the viewer
+    watches Odoo be re-read between steps. Without a pause there is no
+    room to refresh the browser on camera, and cutting the take is
+    exactly what destroys its evidential value
+    (docs/video-plan-rodaje.md).
+
+    Default behaviour is unchanged: without --rodaje there are no
+    prints, no pauses, and the same JSON artifact as before.
+    """
+    if not filming:
+        return
+    print()
+    print("=" * 68)
+    print(title)
+    print("=" * 68)
+    for line in lines:
+        print(f"  {line}")
+    print()
+    input("  [refresca Odoo en el navegador y pulsa Enter] ")
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--rodaje",
+        action="store_true",
+        help="modo grabacion: salida legible y pausa entre pasos",
+    )
+    filming = parser.parse_args().rodaje
+
     # Refuses production and staging before a single write leaves
     # this process (see require_development_instance for why).
     require_development_instance()
@@ -108,6 +142,19 @@ def main() -> None:
     before_update = erp.get("crm.lead", opportunity_id)
     steps.append({"step": "1b_odoo_state_after_create", "record": before_update})
 
+    _beat(
+        "PASO 1 - Crear oportunidad (riesgo R1: se autoejecuta)",
+        [
+            f'Peticion : "{create_text}"',
+            f"Decision : {create_result.decision}",
+            f"Odoo id  : {opportunity_id}",
+            "",
+            "Relectura independiente de Odoo:",
+            f"  importe = {before_update['expected_revenue']}",
+        ],
+        filming,
+    )
+
     # --- Step 2: R2 WITHOUT approval, must NOT touch Odoo -----------
     update_text = (
         f"Actualiza el importe esperado de la oportunidad {opportunity_id} a 27000."
@@ -138,6 +185,21 @@ def main() -> None:
     if blocked_result.decision != "REQUIRE_APPROVAL" or not odoo_untouched:
         _fail(steps, "R2 update executed against Odoo without approval")
 
+    _beat(
+        "PASO 2 - Cambiar el importe SIN aprobacion (riesgo R2)",
+        [
+            f'Peticion : "{update_text}"',
+            f"Decision : {blocked_result.decision}   <-- el sistema se detiene",
+            "",
+            "Relectura INDEPENDIENTE de Odoo, sin fiarse de lo que el",
+            "sistema dice de si mismo:",
+            f"  importe = {after_blocked_attempt['expected_revenue']} "
+            f"(seguia siendo {before_update['expected_revenue']})",
+            f"  Odoo intacto: {odoo_untouched}",
+        ],
+        filming,
+    )
+
     # --- Step 3: grant approval, retry, must NOW touch Odoo ----------
     approval.grant(
         actor="demo-approver", scope="crm.update_expected_revenue", ttl_seconds=60
@@ -159,6 +221,17 @@ def main() -> None:
     if approved_result.decision != "ALLOW" or not revenue_updated:
         _fail(steps, "R2 update with approval did not update Odoo correctly")
 
+    _beat(
+        "PASO 3 - Misma peticion, ahora CON aprobacion concedida",
+        [
+            f"Decision : {approved_result.decision}",
+            "",
+            "Relectura independiente de Odoo:",
+            f"  importe = {after_approved['expected_revenue']}   <-- ahora si escribe",
+        ],
+        filming,
+    )
+
     all_ok = odoo_untouched and revenue_updated
 
     report = {
@@ -173,7 +246,14 @@ def main() -> None:
     OUTPUT_PATH.write_text(
         json.dumps(report, indent=2, ensure_ascii=False, default=str), encoding="utf-8"
     )
-    print(json.dumps(report, indent=2, ensure_ascii=False, default=str))
+    if filming:
+        print()
+        print("=" * 68)
+        print(f"  Todas las comprobaciones pasaron: {all_ok}")
+        print(f"  Traza de auditoria: {len(audit.events())} eventos registrados")
+        print("=" * 68)
+    else:
+        print(json.dumps(report, indent=2, ensure_ascii=False, default=str))
 
     if not all_ok:
         sys.exit(1)

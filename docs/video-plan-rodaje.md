@@ -20,9 +20,9 @@ guardián del código lo rechaza (correctamente). Antes de grabar, en la
 misma terminal:
 
 ```sh
-export ODOO_URL="https://esenssi-aromas-dev-pruebas-limpio-36154343.dev.odoo.com"
-export ODOO_DB="esenssi-aromas-dev-pruebas-limpio-36154343"
-export ODOO_USERNAME="jairogelpi@gmail.com"
+export ODOO_URL="https://esenssi-aromas-dev-pruebas-limpio-36295186.dev.odoo.com"
+export ODOO_DB="esenssi-aromas-dev-pruebas-limpio-36295186"
+export ODOO_USERNAME="claude@esenssi.com"
 export ODOO_API_KEY="<la de .env>"
 ```
 
@@ -107,8 +107,17 @@ aparezca primero la zona izquierda, luego la línea, luego la derecha.
 **Pantalla:** terminal a pantalla partida con el navegador de Odoo.
 
 ```sh
-uv run python scripts/odoo_governed_demo.py
+uv run python scripts/odoo_governed_demo.py --rodaje
 ```
+
+**`--rodaje` es obligatorio aquí.** Sin ese flag el demo termina en
+**3,6 segundos** y escupe JSON crudo: no da tiempo material a refrescar
+el navegador entre pasos, que es justo lo que la toma tiene que
+enseñar. Con el flag, la salida es legible a 1080p y **se detiene tras
+cada paso** esperando un Enter — el operador refresca Odoo en cámara y
+continúa. El modo por defecto no cambia: sigue produciendo
+`data/odoo_governed_demo_results.json` idéntico, que es el artefacto de
+evidencia.
 
 **Qué se ve, en orden:**
 
@@ -117,6 +126,10 @@ uv run python scripts/odoo_governed_demo.py
 2. Cambiar importe (R2) sin aprobación → `REQUIRE_APPROVAL`. **Refrescar
    Odoo**: el importe **no ha cambiado**.
 3. Conceder aprobación, repetir → `ALLOW`. **Refrescar Odoo**: ahora sí.
+
+Cada paso imprime la relectura independiente en pantalla, así que el
+espectador ve **el número que el sistema leyó de Odoo**, no solo la
+decisión que el sistema dice haber tomado.
 
 **Regla de rodaje, no negociable: una sola toma continua.** Un corte
 entre el bloqueo y el refresco del navegador destruye todo el valor
