@@ -35,7 +35,7 @@ API es de demo), y cifrado en reposo.
 - Caché de idempotencia por proceso: no persiste entre reinicios.
 
 ### Validez externa
-- Un único ERP simulado (`FakeERPAdapter`) para el núcleo confirmatorio,
+- Un único ERP simulado (`FakeERPAdapter`) para el núcleo prospectivo v2,
   datos 100 % sintéticos, un solo idioma (español), un solo dominio de
   12 skills. No se extrapola a despliegues reales ni a otros ERPs. Como
   evidencia parcial, no como sustituto del experimento: `docs/odoo-demo.md`
@@ -52,11 +52,11 @@ API es de demo), y cifrado en reposo.
   no solo declarado: 0 % → 3,3 % sobre 510 casos de InjecAgent fuera de
   distribución.
 - Ese 3,3 %, sin embargo, mide el **detector**, no el sistema. Los
-  mismos 510 payloads por los tres canales que un atacante controla de
-  verdad (texto de la petición, dato almacenado que se lee, y parser
+  mismos 510 payloads por tres canales sintéticos (texto de la petición, dato almacenado que se lee, y parser
   comprometido con los argumentos dictados por el atacante) producen
-  **0/1.530 mutaciones no autorizadas**: la defensa efectiva es
-  arquitectónica (los datos del ERP nunca ocupan posición de
+  **0/1.530 mutaciones no autorizadas** en un stress test exploratorio de
+  confinamiento por tres canales: el control observado fue
+  arquitectónico (los datos del ERP nunca ocupan posición de
   instrucción; el LLM solo puede emitir un `skill_id` y argumentos que
   se validan contra el esquema), no léxica. **No probado:** un
   adversario adaptativo que conozca el catálogo y redacte argumentos

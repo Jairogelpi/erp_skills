@@ -31,11 +31,17 @@ Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLA
 | `EXT` | extensión post-core | no puede bloquear CONF |
 | `CONF` | requisito confirmatorio | debe cerrarse antes del experimento final |
 
-**Estado al 2026-08-07.** Unidades 1–30 (incluye tokens/H2, rúbrica de trazabilidad/H7, tres clientes LLM reales, checkpoint/resume y caché de llamadas). **El experimento confirmatorio de §19 está ejecutado con LLM real y con H2/H7 medidos por primera vez**: 1.080 observaciones (120 casos de test × 3 sistemas × 3 repeticiones), `manifest.selector: "OpenRouterClient"` (`openai/gpt-oss-20b:free`), `is_confirmatory_run: true`, `data/experiment_results.json`, análisis completo en [`results.md`](results.md), que conserva también la línea base con selector stub para aislar la contribución arquitectónica.
+**Revisión al 2026-08-12.** La clasificación protocolaria anterior queda
+supersedida por `data/evidence_registry.json`: `data/experiment_results.json`
+es una ejecución v1 exploratoria de 1.080 observaciones. El flag histórico del
+manifiesto se conserva por trazabilidad y no altera esa clasificación.
+
+ERP-Skills-Bench v2 es el único protocolo confirmatorio y está pendiente de
+dataset, freeze y ejecución.
 
 **Historial de proveedor:** Groq completó una corrida entera antes de que existieran H2/H7; al relanzar con la instrumentación nueva, la cuota diaria de Groq (agotada por intentos previos sin checkpoint) y luego la de Gemini (20 peticiones/día por modelo en todos los modelos probados) bloquearon el reintento. OpenRouter (`openai/gpt-oss-20b:free`) es el que completó la corrida que se reporta. Los tres clientes quedan en el repo, probados y seleccionables vía `--provider {groq,gemini,openrouter}`.
 
-**Resultados medidos, ejecución confirmatoria real** (unidad de inferencia = caso, n=120, no la ejecución):
+**Resultados medidos, ejecución v1 exploratoria** (unidad de inferencia = caso, n=120, no la ejecución):
 
 | Métrica | A | B | C |
 |---|---|---|---|
@@ -60,13 +66,14 @@ C−A = +0,700 IC95 [+0,617, +0,783], Holm *p* = 2,71×10⁻¹⁹, OR 169. C−B
 
 **C−B en STSR = +0,150 IC95 [+0,042, +0,258], Holm *p* = 0,0162.** Significativo, y con un efecto **menor** que el +0,183 que sostenía el parseo regalado. En tokens gana con holgura: C−B = −197,6 IC95 [−198,3, −196,9], **3,9× más barato**. Seguridad y trazabilidad no dependen del parseo: provienen del policy engine y de la auditoría.
 
-**Historia de esta cifra, porque importa más que la cifra:** al quitar el parseo regalado, C−B cayó a +0,075 (*p* = 0,212) y **se publicó así, como no significativo**. Una pregunta escéptica posterior reveló que ese resultado arrastraba un sesgo **contra** C —una unidad monetaria sin normalizar que solo penalizaba al sistema que valida tipos, defecto #13—. Corregido, la ventaja volvió, pero menor que la original. Detalle en `docs/results.md` § Ejecución 4.
+**Historia exploratoria de esta cifra:** en la ejecución 3 histórica, al quitar el parseo regalado, C−B cayó a +0,075 (*p* = 0,212) y se publicó así, como no significativo. Una pregunta escéptica posterior reveló un sesgo contra C —una unidad monetaria sin normalizar que solo penalizaba al sistema que valida tipos—. El episodio motiva la congelación prospectiva v2.
 
-**Tesis defendible:** frente a un baseline de herramientas tipadas con el mismo LLM, la gobernanza compra **8× menos ejecuciones inseguras, 2,2× más trazabilidad y 3,9× menos tokens**, con una ventaja **pequeña pero significativa** en éxito de tarea que **no transfiere a texto real** (`docs/results.md`, amenaza 3c).
+**Lectura permitida:** v1 ofrece señales exploratorias sobre seguridad,
+trazabilidad, tokens y STSR. La tesis cuantitativa queda pendiente de v2.
 
 **Doce defectos encontrados y corregidos por auditoría propia** (unidades 21–31, detalle completo en [`docs/audit.md`](audit.md)): fuga del test congelado; validador de fuga tautológico; dos conjuntos vacíos de STSR; pseudo-replicación; dos huecos en la suite estadística (mutation testing); caveat del manifiesto inconsistente con `is_confirmatory_run`; caveat con el nombre del proveedor hardcodeado; error de varianza de `Callable` al retipar contra `ErpAdapter`; dos clases de error homónimas entre `odoo_client` y `adapters`; y **el #12, caché de extracción compartido entre A/B/C**, que hacía que los tokens por sistema midieran orden de ejecución. Once correcciones **no cambiaron el signo de ninguna conclusión**; la doceava **sí** — es la que reformuló la tesis. Mutation testing acumulado: 40 mutantes, 40 muertos, cobertura de los 23 módulos con lógica de antes de esta sesión.
 
-**Pendiente explícito:** H8 (coste) es análisis de sensibilidad declarado, no gasto medido (los proveedores usados son gratis de verdad); H3 no discriminable ni con LLM real en tres proveedores distintos (temperatura 0 exigida por §23 la vuelve determinista por diseño); kappa de anotación pendiente (paso humano); dashboard y vídeo sin empezar.
+**Pendiente explícito:** completar ERP-Skills-Bench v2; H8 es análisis de sensibilidad, no gasto medido; H3 v1 no discrimina con temperatura 0; no hay segundo anotador humano disponible y no se reporta acuerdo humano; grabar y maquetar el vídeo.
 
 ## Mapa de requisitos y decisiones normativas
 
@@ -278,10 +285,11 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 ### 9. Congelación, experimento y estadística `CONF`
 
 - [x] **P9.1** Congelar test, anotaciones, 12 skills, prompts, configuración y plan de análisis (D-01, D-04). Evidencia: `src/erp_agent_os/freeze.py`, `data/freeze_manifest.json` (hashes de split de test, dataset completo, catálogo y semilla); `make verify-freeze` **corre en CI** y rompe el build ante cualquier deriva; detección probada alterando cada componente uno a uno (`tests/test_freeze.py` → 12 passed). **Schema 1.1 (unidad 39) cierra el pendiente que este ítem arrastraba:** el manifiesto añade `prompt_hash` (prompt de selección, prompt de extracción y plantilla de usuario renderizada) y `provider_config_hash` (modelo, temperatura, reintentos, timeout y tope de tokens de los tres clientes reales). La extensión es **puramente aditiva** — los hashes de split, dataset y catálogo son byte-idénticos a los de schema 1.0, fijado por test, así que los resultados ya publicados siguen siendo comparables. Un manifiesto 1.0 no pasa en silencio: `verify_freeze` reporta los componentes nuevos como no congelados. Deriva verificada cambiando de verdad el modelo, la temperatura y un prompt.
-- [x] **P9.2** Ejecutar 120 test × 3 sistemas × 3 repeticiones = 1.080 observaciones, con estados restaurados y orden aleatorio (§19). Evidencia: `data/experiment_results.json`; `tests/test_experiment.py` verifica el conteo exacto y que cada caso corre 3 veces en cada sistema.
+- [x] **P9.2-v1** Ejecutar 120 test × 3 sistemas × 3 repeticiones = 1.080 observaciones exploratorias. Evidencia: `data/experiment_results.json`; `tests/test_experiment.py` verifica el conteo histórico.
+- [ ] **P9.2-v2** Generar el dataset nuevo, congelar y ejecutar 1.080 observaciones independientes con restauración probada, sin cache entre unidades y checkpoint cifrado.
 - [x] **P9.3** Calcular STSR, seguridad/false allow, recuperación y estabilidad (RF-16–18, D-04). Evidencia: `src/erp_agent_os/metrics.py` (STSR conjuntivo de 5 componentes, false allow, Top-1/Top-3/MRR/cobertura/exactitud selectiva, estabilidad, tokens desde la unidad 30); `traceability.py` (rúbrica H7, unidad 30); `tests/test_metrics.py`/`tests/test_traceability.py` → todos passed. Incluye `false_reuse_risk` (§20) y segmentación por módulo/riesgo/etiqueta (§21), tabuladas en `docs/results.md`. Latencia por ejecución **cerrada**: `ExecutionRecord.latency_seconds`, medida con `time.monotonic()` alrededor de cada observación y agregada por sistema (RF-16). Pendiente declarado de RF-16: coste real y tiempo de revisión humana — el primero es análisis de sensibilidad por decisión de §20, el segundo requeriría usuarios reales, excluidos por §11.
 - [x] **P9.4** Aplicar McNemar/Q de Cochran, Holm, IC 95 % y tamaños de efecto (§21). Evidencia: `docs/results.md`; funciones en `statistics.py` verificadas contra valores críticos conocidos.
-- [ ] **P9.5** Ejecutar ablaciones estratificadas de 60 casos como exploratorias; separar resultados confirmatorios y exploratorios (D-06).
+- [ ] **P9.5** Ejecutar ablaciones estratificadas de 60 casos y mantener visible el estado protocolario de cada resultado (D-06).
 - [x] **P9.6** Exportar CSV/Parquet, notebooks, figuras reproducibles y análisis de sensibilidad de coste (RF-18, D-04). Evidencia: `scripts/export_results.py` → `data/experiment_metrics.csv` y `data/experiment_segments.csv` (una fila por sistema/métrica y por segmento módulo·riesgo·etiqueta), regenerables con `make export-results`; `scripts/make_figures.py` → cinco figuras PNG+SVG en `reports/figures/` (`h1_stsr`, `h4_false_allow`, `h2_tokens`, `h7_traceability`, `stsr_by_risk_class`), todas reconstruidas desde el JSON commiteado, ninguna capturada a mano. **Parcial declarado:** Parquet solo si `pandas`+`pyarrow` están presentes, y no se añaden como dependencia — RF-18 dice "CSV **o** Parquet" y §27 prohíbe dependencias sin necesidad demostrada. matplotlib vive en el grupo `figures`, no en `dev`, porque instalarlo en el entorno que analiza mypy provoca un crash interno de mypy 1.15 (`unresolved placeholder type None`) contra el override `follow_imports = "skip"` de numpy — reproducido por bisección y desaparecido al desinstalarlo.
 
 | ID | Fuente normativa | Resultado observable esperado | Evidencia concreta | Gate binario |

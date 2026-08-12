@@ -115,8 +115,8 @@ incompleto que baste con seguir ampliando.
   ejecutando herramientas, cae en la instrucción inyectada). Aquí solo
   se prueba el detector léxico aislado.
 - No se usa este resultado para inflar ni para hundir H4: H4 se mide
-  sobre ERP-Skills-Bench, el benchmark confirmatorio del TFM; esta
-  página es evidencia adicional sobre **generalización**, discutida
+  sobre ERP-Skills-Bench v1, hoy clasificado como exploratorio; esta
+  página es evidencia externa adicional, discutida
   aparte en la memoria (§36, amenazas a la validez de constructo).
 - No se afirma que ampliar más el catálogo de patrones cerraría la
   brecha — el análisis de la sección anterior indica que no, por
@@ -138,8 +138,8 @@ no lo rompa en silencio.
 
 # Segunda prueba: ¿alguna inyección consigue mutar el ERP?
 
-El 3,3 % anterior es honesto, pero responde a la pregunta equivocada
-para esta arquitectura, y **subestima la propiedad de seguridad real**.
+El 3,3 % anterior es honesto, pero solo mide el detector léxico. La segunda
+prueba mide una propiedad distinta y acotada: confinamiento de mutaciones.
 La defensa de System C frente a inyección indirecta no es el regex: es
 que los datos del ERP nunca llegan a una posición de instrucción, que
 lo único que el LLM puede emitir es un `skill_id` más argumentos, que
@@ -147,8 +147,8 @@ ese id debe resolver a una skill registrada y `ACTIVE`, que los
 argumentos se validan contra el esquema y que el handler solo escribe
 en su propio modelo y campos de la allowlist.
 
-Así que `scripts/injection_resistance_test.py` pregunta lo que decide
-si el sistema es seguro:
+Así que `scripts/injection_resistance_test.py` formula una pregunta de
+confinamiento operacional:
 
 > Dado un payload de InjecAgent entregado por **cada canal que un
 > atacante controla de verdad**, ¿ocurre alguna mutación no autorizada?
@@ -174,13 +174,16 @@ operación R4, o mutación bajo una decisión que no fue `ALLOW`.
 | `compromised_parser` | **0 / 510** | 510 `DENY` |
 | **Total** | **0 / 1.530** | |
 
+Este es un **stress test exploratorio de confinamiento por tres canales**; no
+cubre ataques adaptativos ni autoriza una afirmación general. El artefacto
 `data/injection_resistance_results.json` guarda la salida completa.
 
 ## Control positivo, y por qué importa
 
 La **primera versión de este script usaba un rol que la skill objetivo
 no permite**. Todos los casos se abstuvieron, incluido el benigno, y el
-script reportó un 0/1.530 perfecto — un resultado que **no podía
+script reportó un 0/1.530 en el stress exploratorio de confinamiento por tres
+canales — un resultado que **no podía
 fallar**, exactamente el modo de fallo que este proyecto ha encontrado
 varias veces (`docs/audit.md`). El script ahora ejecuta primero una
 petición limpia y **aborta con error** si no llega al handler y muta el

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-labelledby="title desc">
+  <title id="title">Primero, un experimento que pueda fallar</title>
+  <desc id="desc">ERP-Skills-Bench v2 · diseño previo a cualquier salida A/B/C</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111F"/>
+      <stop offset="1" stop-color="#0C1B30"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000814" flood-opacity=".38"/>
+    </filter>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <circle cx="1700" cy="-30" r="330" fill="#42D3FF" opacity=".055"/>
+  <circle cx="90" cy="1010" r="260" fill="#58E0B3" opacity=".045"/>
+  <text x="104" y="82" fill="#42D3FF" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" letter-spacing="5">ERP AGENT OS  /  01</text>
+  <text x="104" y="164" fill="#F4F8FC" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="750">Primero, un experimento que pueda fallar</text>
+  <text x="106" y="213" fill="#9EB2C9" font-family="Arial, Helvetica, sans-serif" font-size="26">ERP-Skills-Bench v2 · diseño previo a cualquier salida A/B/C</text>
+  
+  <g filter="url(#shadow)">
+    <rect x="104" y="284" width="560" height="600" rx="32" fill="#101F33" stroke="#203A57" stroke-width="2"/>
+    <text x="152" y="342" fill="#9EB2C9" font-family="Arial" font-size="22" font-weight="700" letter-spacing="3">DISEÑO PROSPECTIVO</text>
+    <text x="152" y="478" fill="#F4F8FC" font-family="Arial" font-size="116" font-weight="800">120</text>
+    <text x="152" y="525" fill="#42D3FF" font-family="Arial" font-size="28" font-weight="700">PETICIONES NUEVAS</text>
+    <line x1="152" y1="570" x2="616" y2="570" stroke="#2B4665" stroke-width="2"/>
+    <text x="152" y="658" fill="#F4F8FC" font-family="Arial" font-size="72" font-weight="750">24 × 5</text>
+    <text x="152" y="700" fill="#9EB2C9" font-family="Arial" font-size="24">intenciones × casos</text>
+    <text x="152" y="790" fill="#58E0B3" font-family="Arial" font-size="24" font-weight="700">AUTOR ≠ SELECTOR</text>
+    <text x="152" y="832" fill="#9EB2C9" font-family="Arial" font-size="21">oracle compilado después</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="706" y="284" width="1110" height="600" rx="32" fill="#101F33" stroke="#203A57" stroke-width="2"/>
+    <text x="758" y="342" fill="#9EB2C9" font-family="Arial" font-size="22" font-weight="700" letter-spacing="3">UNIDAD EMPAREJADA</text>
+    <g transform="translate(758 394)">
+      <rect width="270" height="118" rx="22" fill="#162A43" stroke="#42D3FF" stroke-width="2"/>
+      <text x="135" y="54" text-anchor="middle" fill="#F4F8FC" font-family="Arial" font-size="42" font-weight="800">A</text>
+      <text x="135" y="88" text-anchor="middle" fill="#9EB2C9" font-family="Arial" font-size="19">agente directo</text>
+      <rect x="304" width="270" height="118" rx="22" fill="#162A43" stroke="#FFBD59" stroke-width="2"/>
+      <text x="439" y="54" text-anchor="middle" fill="#F4F8FC" font-family="Arial" font-size="42" font-weight="800">B</text>
+      <text x="439" y="88" text-anchor="middle" fill="#9EB2C9" font-family="Arial" font-size="19">herramientas tipadas</text>
+      <rect x="608" width="270" height="118" rx="22" fill="#162A43" stroke="#58E0B3" stroke-width="2"/>
+      <text x="743" y="54" text-anchor="middle" fill="#F4F8FC" font-family="Arial" font-size="42" font-weight="800">C</text>
+      <text x="743" y="88" text-anchor="middle" fill="#9EB2C9" font-family="Arial" font-size="19">gobierno completo</text>
+    </g>
+    <text x="758" y="600" fill="#F4F8FC" font-family="Arial" font-size="37" font-weight="700">3 sistemas × 3 repeticiones independientes</text>
+    <text x="758" y="684" fill="#42D3FF" font-family="Arial" font-size="88" font-weight="850">1.080</text>
+    <text x="1048" y="678" fill="#F4F8FC" font-family="Arial" font-size="38" font-weight="700">observaciones</text>
+    <text x="758" y="758" fill="#9EB2C9" font-family="Arial" font-size="23">mismo modelo · rol · estado · presupuesto · evaluador</text>
+    <rect x="758" y="796" width="900" height="58" rx="29" fill="#123548"/>
+    <text x="1208" y="834" text-anchor="middle" fill="#42D3FF" font-family="Arial" font-size="24" font-weight="700">PRIMARIO  ·  STSR  ·  C−B  ·  IC95  ·  McNEMAR</text>
+  </g>
+  <line x1="104" y1="1008" x2="1816" y2="1008" stroke="#29405C" stroke-width="2"/>
+  <text x="104" y="1048" fill="#9EB2C9" font-family="Arial, Helvetica, sans-serif" font-size="19" letter-spacing="1">TFM · MÉTODO PRIMERO · EVIDENCIA CON ESTADO VISIBLE</text>
+</svg>

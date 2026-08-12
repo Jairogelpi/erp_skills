@@ -16,7 +16,7 @@ la evidencia no existe o no es comprobable, el componente puntúa **cero**
 | 4 | Decisión de política y permisos | 15 % | Decisión, `risk_score` y razones legibles | `AuditEvent.decision`, `.risk_score`, `.reasons` |
 | 5 | Versión de skill/handler y entrada normalizada | 15 % | Versión exacta ejecutada e idempotency key | `AuditEvent.skill_version`, `.idempotency_key` |
 | 6 | Resultado y efectos observados | 15 % | Salida (redactada) y marca de replay idempotente | `AuditEvent.output`, `.idempotent_replay` |
-| 7 | Evidencia de postcondiciones, aprobación o bloqueo | 15 % | Resultado de postcondiciones, o la aprobación/denegación que impidió ejecutar | `AuditEvent.postconditions_met`, `Approval` |
+| 7 | Evidencia de postcondiciones, aprobación o bloqueo | 15 % | `verification_status`, lista completa de checks y detalle determinista; o evidencia explícita de no ejecución/aprobación/bloqueo | `AuditEvent.verification_status`, `.verification_evidence`, `.postconditions_met`, `Approval` |
 
 **Total:** 100 %.
 
@@ -28,6 +28,16 @@ la evidencia no existe o no es comprobable, el componente puntúa **cero**
 3. Se reportan la media, el IC del 95 % **y el desglose por componente**
    — un sistema puede puntuar alto en total y aun así fallar
    sistemáticamente un componente crítico, y eso debe verse.
+
+Los estados cerrados del verificador son `verified`, `failed`,
+`not_executed`, `missing_verification`, `verifier_error` y `replayed`. Solo
+`verified` puede aportar `postconditions_met = true`; los desenlaces sin
+ejecución y los fallos de verificación conservan `null`. Un replay conserva la
+evidencia original sin volver a invocar handler ni checks.
+
+En v2, los siete booleanos deben sumar exactamente la puntuación con pesos
+10/15/15/15/15/15/15. Una discrepancia de esquema o aritmética invalida la
+observación antes del agregado.
 
 ## Limitación declarada
 

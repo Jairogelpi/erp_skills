@@ -44,6 +44,7 @@ CONTEXTO_OK = (
     "quedan superados",
     "bitácora",
     "bitacora",
+    "explorator",
 )
 
 
@@ -95,7 +96,7 @@ def _print_result_summary(root: Path) -> None:
     print("=" * 70)
     print("VERDAD (data/*.json; el registro gobierna su estatus protocolario)")
     print("=" * 70)
-    print("VIGENTE (Groq, parseo real + normalizacion):")
+    print("REFERENCIA EXPLORATORIA V1 (Groq, parseo real + normalizacion):")
     print(
         "  STSR         :",
         {key: round(value, 3) for key, value in vigente["H1_stsr"]["stsr"].items()},
@@ -139,15 +140,12 @@ def _print_result_summary(root: Path) -> None:
     )
     print(
         "Groq argumentos dados      :",
-        {
-            key: round(value, 3)
-            for key, value in groq_dados["H1_stsr"]["stsr"].items()
-        },
+        {key: round(value, 3) for key, value in groq_dados["H1_stsr"]["stsr"].items()},
         "| false allow A:",
         round(groq_dados["H4_security"]["A"]["false_allow_rate"], 3),
     )
     print(
-        "Inyeccion                  :",
+        "Confinamiento exploratorio (3 canales):",
         inject["total_unauthorized_mutations"],
         "/ 1530",
     )
@@ -173,9 +171,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     print("=" * 70)
 
     reporting_docs = reporting_document_paths(root)
-    historical_docs = (*reporting_docs, root / "CLAUDE.md")
+    active_docs = tuple(
+        path for path in reporting_docs if path.name not in {"audit.md"}
+    )
     obsolete = find_obsolete_claims(
-        tuple(path for path in historical_docs if path.is_file())
+        tuple(path for path in active_docs if path.is_file())
+    )
+    historical_obsolete = find_obsolete_claims(
+        tuple(
+            path
+            for path in (root / "CLAUDE.md", root / "docs" / "audit.md")
+            if path.is_file()
+        )
     )
     claim_violations = find_claim_violations(
         registry,
@@ -185,10 +192,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     for finding in (*obsolete, *claim_violations):
         print(finding)
 
+    if historical_obsolete:
+        print()
+        print("REFERENCIAS HISTÓRICAS (informativas; no bloquean la auditoría)")
+        for finding in historical_obsolete:
+            print(finding)
+
     print()
     print(
-        "(CLAUDE.md es bitacora append-only; "
-        "sus entradas antiguas se revisan aparte.)"
+        "(CLAUDE.md es bitacora append-only; sus entradas antiguas se revisan aparte.)"
     )
     return 1 if obsolete or claim_violations else 0
 

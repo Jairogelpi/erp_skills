@@ -1,114 +1,123 @@
-# Protocolo experimental
+# Protocolo experimental prospectivo — ERP-Skills-Bench v2
 
-Operacionaliza CLAUDE.md §§6, 19–21 (P1.3/P1.4 de la hoja de ruta). Este
-documento se congela antes de ejecutar el test final; cualquier cambio
-posterior es exploratorio y se etiqueta como tal.
+Este documento define el único protocolo que puede producir evidencia
+confirmatoria A/B/C. Todas las ejecuciones v1 conservadas en `data/` son
+exploratorias o de sensibilidad según `data/evidence_registry.json`.
 
-## 1. Diseño
+**Estado al 12 de agosto de 2026: pendiente.** El generador, la puerta de
+congelación, el runner cifrado y el análisis existen; el dataset v2, su
+manifiesto firmado por hashes y las 1.080 observaciones todavía no se han
+producido. Por tanto, este documento no contiene resultados v2.
 
-- **Unidad emparejada:** `request_id` × estado inicial de `FakeERP` ×
-  repetición. A, B y C ejecutan la misma unidad con restauración completa
-  del estado antes de cada observación.
-- **Tamaño:** 120 casos de test × 3 sistemas × 3 repeticiones = **1.080
-  ejecuciones**.
-- **Aleatorización:** orden de ejecución aleatorizado con semilla
-  registrada; el manifiesto de congelación guarda la semilla.
-- **Endpoint primario:** Strict Task Success Rate (STSR) — acción
-  correcta ∧ argumentos válidos ∧ permisos respetados ∧ estado final
-  esperado ∧ sin efectos laterales.
+## 1. Pregunta y endpoint primario
 
-## 2. Variables de control (idénticas en A/B/C)
+La pregunta es si ERP Agent OS (C) mejora el éxito estricto frente a
+herramientas tipadas sin gobierno completo (B). El endpoint primario es STSR:
 
-Modelo, proveedor, versión y configuración; temperatura; límite de
-tokens; timeout; presupuesto de reintentos; máximo de pasos; roles y
-permisos; evaluador determinista; estados sintéticos; claves de
-idempotencia; política de restauración. Las diferencias arquitectónicas
-necesarias (C tiene recuperación y verificación; A y B no) se versionan
-y se reportan explícitamente.
+`acción correcta ∧ argumentos válidos ∧ permisos respetados ∧ estado esperado ∧ sin efectos laterales`.
 
-> **Estado actual:** existen tres `LLMClient` reales intercambiables
-> (`groq_client.py`, `gemini_client.py`, `openrouter_client.py`),
-> seleccionables vía `scripts/run_experiment.py --real-llm --provider
-> {groq,gemini,openrouter}`. El `DeterministicStubClient` sigue sin
-> satisfacer esta sección — se usa solo para la línea base de
-> aislamiento arquitectónico (`is_confirmatory_run: false`), nunca para
-> resultados confirmatorios. La ejecución confirmatoria completada
-> (`data/experiment_results.json`, `manifest.selector:
-> "OpenRouterClient"`) usó `openai/gpt-oss-20b:free` vía OpenRouter,
-> tras que Groq y Gemini agotaran sus cuotas gratuitas respectivas
-> (detalle en `docs/results.md`). D-03 exige un único proveedor
-> **dentro** de una ejecución, no un proveedor fijo entre ejecuciones.
+El contraste primario predeclarado es C−B. Se informa diferencia emparejada,
+IC bootstrap del 95 % y McNemar. La hipótesis se considera apoyada únicamente
+si el límite inferior del IC es mayor que cero. Un resultado nulo o adverso
+sigue siendo el resultado válido.
 
-## 3. Contrastes por hipótesis
+## 2. Muestra, unidad y contaminación
 
-| H | Endpoint | Prueba | Efecto | Función |
-|---|---|---|---|---|
-| H1 | STSR, C vs A | No inferioridad, margen −5 pp; McNemar | Diferencia de proporciones + IC bootstrap | `mcnemar`, `paired_proportion_difference` |
-| H2 | Tokens totales | Bootstrap emparejado sobre la media por caso | Diferencia de medias + IC | `paired_mean_difference` |
-| H3 | Consistencia entre 3 repeticiones | Q de Cochran → post hoc, Holm | Diferencia de proporciones | `cochran_q`, `holm_correction` |
-| H4 | False allow / detección preejecución | McNemar sobre casos peligrosos | Odds ratio emparejado | `mcnemar`, `odds_ratio` |
-| H5 | Top-1/Top-3, coverage, selective accuracy | Descriptivo + IC bootstrap | — | `paired_proportion_difference` |
-| H6 | Abstención y false-reuse risk | Curva precisión-cobertura | — | — |
-| H7 | Rúbrica de trazabilidad (0–1 por ejecución) | Descriptivo: media por sistema | — | `traceability.score_governed_execution`/`score_ungoverned_execution` |
-| H8 | Coste modelado | Análisis de sensibilidad, no confirmatorio | — | — |
+- 120 peticiones nuevas: cinco por cada una de las 24 intenciones congeladas.
+- Por intención: tres paráfrasis ordinarias, una ruidosa y un caso de borde
+  gobernado.
+- Autoría del texto con proveedor/modelo distinto del selector A/B/C.
+- Oracle de skill, argumentos, decisión y transición compilado después de la
+  autoría mediante catálogo y política deterministas.
+- Ningún texto v2 puede reutilizar exactamente una petición v1.
+- Los resultados v2 no pueden utilizarse para cambiar prompts, catálogo,
+  umbrales, reglas, etiquetas o código.
 
-Todas las funciones están implementadas y testeadas en
-`src/erp_agent_os/statistics.py` / `tests/test_statistics.py`. **H2 y H7
-se ejecutaron por primera vez con datos reales en la unidad 30** (§
-bitácora de `CLAUDE.md`); H7 se reporta hoy como descriptivo (media por
-sistema), sin la prueba emparejada con tamaño de efecto que la tabla
-original preveía — pendiente si el presupuesto de tiempo lo permite,
-señalado aquí en vez de reclamarlo hecho.
+La unidad es `request_id × estado inicial restaurado × repetición`. Cada caso
+se ejecuta tres veces en A, B y C: 120 × 3 × 3 = **1.080 observaciones**. Los
+contrastes se colapsan a 120 unidades emparejadas por sistema antes de la
+inferencia.
 
-## 4. Regla de decisión
+## 3. Controles idénticos
 
-- IC del 95 % en todos los contrastes.
-- Corrección de Holm en toda familia post hoc.
-- H1 se acepta si el límite inferior del IC de la diferencia C−A supera
-  −5 puntos porcentuales.
-- Los resultados nulos o desfavorables se publican igual (CLAUDE.md
-  §35.18). No se reinterpretan post hoc como exploratorios favorables.
+Un `RunConfig` inmutable fija proveedor, modelo, versión, temperatura, límite
+de tokens, timeout, reintentos, pasos, rol, hash del prompt de extracción,
+hash de la factoría de estado inicial y semilla. El mismo hash se registra en
+cada observación. Cada repetición usa llamadas independientes: ningún cache de
+respuestas puede compartirse entre sistemas o repeticiones.
 
-## 5. Potencia
+Cada observación aporta hashes del estado inicial y final. Las nueve
+observaciones de un caso deben partir del mismo hash inicial. Una discrepancia
+detiene la validación.
 
-Con 120 casos emparejados y α = 0,05 bilateral, McNemar tiene potencia
-≈ 0,80 para detectar una diferencia cuando los pares discordantes son
-≈ 25 y el desequilibrio entre ellos es ≈ 70/30. **Este cálculo asume
-independencia entre paráfrasis**, supuesto que el diseño mitiga (cada
-caso es su propio grupo) pero no elimina: las formulaciones de una misma
-intención comparten plantilla y vocabulario. Si la tasa observada de
-pares discordantes es muy inferior, el estudio quedará infrapotenciado
-para esa hipótesis y así debe reportarse, en lugar de presentar el
-resultado no significativo como evidencia de equivalencia.
+## 4. Sistemas
 
-## 6. Amenazas a la validez
+- **A:** agente directo con herramientas ERP genéricas.
+- **B:** herramientas tipadas, sin memoria de skills ni verificador completo.
+- **C:** recuperación, abstención, políticas, aprobación, runtime determinista,
+  idempotencia, postcondiciones ejecutadas y auditoría.
 
-Ver [`docs/threat-model.md`](threat-model.md) §Validez. En resumen, las
-que este protocolo no puede eliminar:
+`FakeERPAdapter` es obligatorio. La demostración Odoo no forma parte del
+contraste ni hereda sus conclusiones.
 
-- **Constructo:** los detectores adversariales de `validation.py` son
-  léxicos y están ajustados al texto plantillado del benchmark; miden
-  "detección de patrones conocidos", no robustez general.
-- **Externa:** un único ERP simulado, datos sintéticos, un solo idioma,
-  un solo modelo. No se extrapola a despliegues reales.
-- **Interna:** el parser no es todavía un LLM real; usar
-  `expected_arguments` como parseo perfecto elimina una fuente de error
-  que un sistema real sí tendría, y favorece a los tres sistemas por
-  igual pero no de forma neutral respecto a C (cuya recuperación depende
-  del texto, no de los argumentos).
-- **Estadística:** comparaciones múltiples (mitigadas con Holm),
-  dependencia residual entre paráfrasis, y distribuciones no normales en
-  tokens/latencia (mitigadas usando pruebas no paramétricas).
+## 5. Endpoints secundarios
 
-## 6b. Rúbrica de trazabilidad
+Para cada sistema se publican denominador y estado `estimated` o
+`not_estimable`:
 
-Ver [`docs/traceability-rubric.md`](traceability-rubric.md): siete
-componentes ponderados, cada uno exigiendo evidencia verificable en la
-traza; la ausencia puntúa cero. No se mide por volumen de logs.
+- false allow en el subconjunto peligroso y false block en el subconjunto
+  seguro que debía permitirse, con IC del 95 %;
+- tokens de entrada, salida y total, además de diferencias emparejadas C−A y
+  C−B;
+- trazabilidad total y sus siete componentes ponderados;
+- Top-1, Top-3, coverage, selective accuracy y false-reuse risk en el
+  subconjunto elegible;
+- coincidencia del estado final entre las tres repeticiones;
+- latencia, llamadas al modelo y reintentos por observación.
 
-## 7. Congelación
+Un denominador cero se publica como `not_estimable` con motivo; nunca se
+convierte en cero ni desaparece del esquema.
 
-Antes del test se congelan y se registran con hash: partición de test,
-anotaciones, catálogo de 12 skills, prompts, configuración de proveedor,
-semillas y este plan de análisis. El manifiesto vive junto a los
-resultados y no se reescribe.
+## 6. Puerta de congelación y regla de una sola mirada
+
+Antes de cualquier salida A/B/C, `scripts/freeze_protocol_v2.py --verify`
+debe verificar un árbol limpio y el tag exacto `v2-protocol-freeze`. El
+manifiesto incluye hashes del dataset y procedencia, configuración, catálogo,
+política, sistemas, evaluador, runner y este plan.
+
+El runner aleatoriza el orden con la semilla congelada y escribe únicamente un
+checkpoint Fernet cifrado, con clave externa al repositorio. No imprime
+observaciones ni agregados parciales. Si falla la infraestructura, registra de
+forma cifrada la unidad, el número completado y el tipo de error sanitizado;
+solo puede reanudarse con la misma configuración.
+
+`scripts/analyze_experiment_v2.py` publica el agregado únicamente después de
+validar 1.080 unidades únicas, hashes, restauración, llamadas independientes,
+esquema y endpoint primario. Solo entonces el registro de evidencia puede
+clasificar el artefacto como confirmatorio.
+
+## 7. Limitaciones predeclaradas
+
+- Datos sintéticos, español y un dominio ERP acotado; no se extrapola a
+  producción ni a usuarios reales.
+- No hay segundo anotador humano disponible. El chequeo opcional con IA es una
+  revisión de consistencia, no acuerdo humano.
+- La detección léxica externa observada fue 3,3 %, un resultado negativo.
+- Los stress tests de confinamiento son exploratorios y no cubren adversarios
+  adaptativos.
+- Odoo prueba integración técnica en una demo; no aporta estimaciones A/B/C.
+
+## 8. Comandos
+
+```powershell
+uv run python scripts/generate_bench_v2.py ...
+uv run python scripts/freeze_protocol_v2.py --write
+# commit + tag v2-protocol-freeze, sin observar salidas A/B/C
+uv run python scripts/freeze_protocol_v2.py --verify
+uv run python scripts/run_experiment_v2.py --executor paquete:funcion_congelada
+uv run python scripts/analyze_experiment_v2.py
+uv run python scripts/audit_evidence_status.py --require-confirmatory
+```
+
+La ejecución real se mantiene pendiente mientras falte cualquiera de esas
+precondiciones.

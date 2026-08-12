@@ -10,15 +10,15 @@ cumpla eso, no se dice.
 
 ---
 
-## 1. Evidencia que aguanta un cliente
+## 1. Evidencia que justifica una validación con clientes
 
 | Afirmación | Número que la sostiene | Dónde |
 |---|---|---|
-| **Aunque el modelo esté comprometido, no puede escribir fuera de contrato** | **0 / 1.530** mutaciones no autorizadas, con 510 payloads externos por tres canales, incluido un brazo que **concede el LLM entero al atacante** (510/510 `DENY`) | `docs/injecagent-stress-test.md`, `data/injection_resistance_results.json` |
-| **Una llamada al LLM menos por petición** | 67,6 tokens/ejecución frente a 265,3 del baseline tipado; el incremento por parsear es +67,68/+67,67/+67,62 en A/B/C, luego el gasto **total** de C *es* la extracción y nada más | `docs/results.md` § Ejecución 5 |
-| **La decisión no depende del modelo** | *False allow* de C = 0,111 con los tres proveedores probados; el de A oscila 0,333 ↔ 0,889 según proveedor | `docs/results.md` § Ejecución 5 |
+| **El contrato contuvo los tres canales probados** | Stress test **exploratorio de confinamiento por tres canales**: **0 / 1.530** mutaciones no autorizadas, con 510 payloads externos por canal y un brazo de parser comprometido | `docs/injecagent-stress-test.md`, `data/injection_resistance_results.json` |
+| **Una llamada al LLM menos por petición en v1** | Estimación exploratoria: 67,6 tokens/ejecución frente a 265,3 del baseline tipado | `docs/results.md` |
+| **La decisión fue estable entre los proveedores v1** | Estimación exploratoria: *false allow* de C = 0,111 en las corridas comparadas | `docs/results.md` |
 | **El bloqueo funciona contra un ERP real, no solo en simulador** | Escritura R2 sin aprobación bloqueada contra Odoo 19, verificada por **relectura independiente**; tras conceder aprobación, la misma petición escribe | `docs/odoo-demo.md`, `data/odoo_governed_demo_results.json` |
-| **Cada acción queda reconstruible** | Rúbrica de trazabilidad 0,820 frente a 0,356 / 0,374 | `docs/results.md` § H7 |
+| **Cada acción deja evidencia estructurada** | Contrato y tests actuales; puntuaciones v1 exploratorias 0,820 frente a 0,356 / 0,374 | `docs/results.md` |
 
 ## 2. Evidencia que NO aguanta, y que por tanto no se usa
 

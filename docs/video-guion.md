@@ -1,165 +1,137 @@
-# Vídeo de 4 minutos — guion literal
+# Guion literal — competición de becas
 
-Narración palabra por palabra, con lo que se ve en pantalla y los
-tiempos de los tramos de `CLAUDE.md` §39. ~620 palabras ≈ 4:00 a ritmo
-normal en español.
+**Dirección aprobada:** método primero. **Duración objetivo:** 4:30. **Límite
+absoluto:** 5:00. Ensayar a 125–135 palabras por minuto y cortar, no acelerar,
+si una toma supera 4:40.
 
-Regla heredada de `docs/defensa.md`: **el dato flojo antes que el
-fuerte**. En ese orden el fuerte se cree.
+Cada rótulo numérico incluye su estado de evidencia dentro del plano. Mientras
+v2 siga pendiente, no se reemplaza por una cifra v1.
 
-Todo lo que aparece en pantalla es salida real de un comando del
-repositorio. Nada recreado.
+## 0:00–0:25 — El riesgo
 
----
+**Imagen:** Odoo, oportunidad comercial y cambio de importe. Rótulo:
+`UN ERROR DEL AGENTE CAMBIA ESTADO EMPRESARIAL`.
 
-## 0:00 – 0:30 · El problema
+**Locución:**
 
-**Pantalla:** Odoo real. Una oportunidad con importe 15.000 €. Corte. La
-misma con 27.600 €.
+> En un chatbot, un error produce una respuesta incorrecta. En un ERP puede
+> duplicar una oportunidad, cambiar un importe o confirmar un documento. Mi
+> proyecto parte de una idea simple: que el modelo entienda la petición no
+> significa que deba tener autoridad para ejecutarla.
 
-> Cuando un agente de inteligencia artificial se equivoca escribiendo un
-> correo, sale un correo raro. Cuando se equivoca sobre un ERP, sale
-> esto: un importe cambiado. O un pedido confirmado que no debía
-> confirmarse. O un cliente duplicado.
->
-> No es una respuesta incorrecta. Es un asiento. Y alguien responde por
-> él.
+## 0:25–0:50 — Pregunta de investigación
 
----
+**Imagen:** A · agente directo; B · herramientas tipadas; C · ERP Agent OS.
 
-## 0:30 – 1:00 · El error de un agente sin gobierno
+**Locución:**
 
-**Pantalla:** terminal. Se escribe una petición con una instrucción
-inyectada al final. El sistema A la ejecuta. Se ve el registro escrito
-en el almacén.
+> La pregunta es si separar la interpretación probabilística de la ejecución
+> determinista mejora fiabilidad, eficiencia y trazabilidad. Para responderla
+> comparo un agente directo, un agente con herramientas tipadas y una
+> arquitectura gobernada mediante skills verificables.
 
-> Este es un agente con herramientas y sin gobierno. Le pido algo
-> normal, y dentro del texto viene escondida otra instrucción.
->
-> La ejecuta. No porque el modelo sea malo: porque nada entre el modelo
-> y la base de datos tenía autoridad para decir que no.
+## 0:50–1:25 — Método antes que números
 
----
+**Imagen:** `reports/video/01-method.svg`.
 
-## 1:00 – 1:45 · La arquitectura
+**Locución:**
 
-**Pantalla:** diagrama de dos zonas. A la izquierda interpretar,
-proponer, recuperar. A la derecha validar, autorizar, ejecutar,
-verificar, auditar.
+> El test prospectivo, ERP-Skills-Bench v2, tendrá ciento veinte peticiones
+> nuevas: cinco por cada una de veinticuatro intenciones. Cada caso se ejecuta
+> en los tres sistemas y en tres repeticiones independientes: mil ochenta
+> observaciones. El modelo que redacta las peticiones es distinto del selector,
+> y el resultado esperado se compila después mediante reglas deterministas.
 
-> ERP Agent OS parte el sistema en dos.
->
-> A la izquierda, el modelo de lenguaje: interpreta y **propone**. A la
-> derecha, código determinista: valida el esquema, comprueba el rol,
-> clasifica el riesgo, pide aprobación si hace falta, ejecuta solo
-> handlers registrados y **verifica el estado final** antes de dar nada
-> por bueno.
->
-> El modelo puede proponer lo que quiera. Lo único que puede emitir es
-> el identificador de una capacidad conocida, con argumentos que se
-> validan contra un contrato. No hay camino desde el texto libre hasta
-> la base de datos.
+## 1:25–1:55 — Congelación y una sola mirada
 
----
+**Imagen:** dataset → hashes → tag de freeze → checkpoint cifrado → agregado.
 
-## 1:45 – 2:45 · Demostración contra Odoo real
+**Locución:**
 
-**Pantalla:** `uv run python scripts/odoo_governed_demo.py`, salida
-real. Tres bloques, uno por paso. Cortes a la interfaz de Odoo para ver
-el registro.
+> Antes de observar una sola salida, se congelan dataset, catálogo, política,
+> prompts, configuración, semilla y plan estadístico. El runner aleatoriza el
+> orden, restaura el mismo estado y prohíbe reutilizar respuestas entre
+> repeticiones. Los parciales quedan cifrados. Solo se publica un agregado si
+> las mil ochenta unidades y todos sus hashes validan.
 
-> Esto es Odoo 19 real. No un simulador.
->
-> Primero, crear una oportunidad. Riesgo bajo: se ejecuta, y el sistema
-> vuelve a leer Odoo para comprobar que el registro existe con el
-> importe que se pidió.
->
-> Segundo, cambiar ese importe. Eso es riesgo medio: **requiere
-> aprobación**. El sistema se detiene. Y aquí está lo importante — no me
-> creo lo que el sistema dice de sí mismo: leo Odoo otra vez, por
-> separado. El importe sigue siendo el original. No escribió nada.
->
-> Tercero, concedo la aprobación y repito la misma petición. Ahora sí
-> escribe.
+## 1:55–2:30 — Arquitectura y verificación
 
----
+**Imagen:** `reports/video/02-architecture.svg`.
 
-## 2:45 – 3:40 · Los números
+**Locución:**
 
-**Pantalla:** primero la tabla de detección (0 % → 3,3 %). Después, la
-tabla de los tres canales con el 0 / 1.530 destacado.
+> El LLM propone intención y argumentos. A partir de ahí, el catálogo recupera
+> una skill versionada; la política comprueba rol, riesgo y aprobación; el
+> runtime ejecuta solo un handler registrado; y el verificador vuelve a leer el
+> estado final. Cada postcondición tiene nombre y evidencia. Si falla el
+> verificador, el sistema falla cerrado. Si se repite la petición, la
+> idempotencia evita una segunda mutación.
 
-> Ahora los datos, empezando por mi peor número.
->
-> Cogí quinientos diez ataques reales de inyección de un benchmark
-> externo y los pasé por mis detectores. Detectan el tres coma tres por
-> ciento. Es un mal resultado y lo reporto como tal.
->
-> Así que hice otra pregunta. En vez de «¿salta el detector?»:
-> **concedido que el ataque ha ganado — el modelo comprometido, el
-> atacante escribiendo directamente los argumentos —, ¿se llega a
-> escribir algo?**
->
-> Los mismos quinientos diez ataques, por los tres canales que un
-> atacante controla de verdad. **Cero mutaciones no autorizadas en mil
-> quinientas treinta.** Quinientas diez de quinientas diez denegadas en
-> el caso en que le regalo el modelo entero al atacante.
->
-> La defensa no era el detector. Era la arquitectura.
+## 2:30–3:05 — Demo Odoo como prueba visual
 
----
+**Imagen:** grabación continua; rótulo fijo:
+`DEMOSTRACIÓN ODOO · NO RESULTADO EXPERIMENTAL`.
 
-## 3:40 – 4:20 · Valor, y el límite
+**Locución:**
 
-**Pantalla:** dos cifras enfrentadas. False allow del agente sin
-gobierno: 0,333 con un proveedor, 0,889 con otro. Del sistema gobernado:
-0,111 con los tres.
+> La misma tubería funciona contra un Odoo de desarrollo. Una operación R1 se
+> ejecuta. Una R2 sin aprobación queda bloqueada, y una relectura independiente
+> demuestra que el ERP no cambió. Después de aprobarla, se ejecuta y se vuelve
+> a verificar. La demo prueba integración técnica; no sustituye el experimento
+> con FakeERP.
 
-> Esto tiene una consecuencia práctica. La seguridad de un agente sin
-> gobierno **depende de qué modelo le toque**: entre dos proveedores se
-> mueve del treinta y tres al ochenta y nueve por ciento de fallos
-> peligrosos. La del sistema gobernado no se mueve: once por ciento con
-> los tres.
->
-> Es decir, la gobernanza te permite usar un modelo barato sin heredar
-> su riesgo.
->
-> Y el límite, porque también lo medí: la ventaja en tasa de éxito
-> frente a un baseline de herramientas tipadas es modesta, y **no
-> sobrevive** al texto real de usuario. Está escrito en los resultados,
-> no escondido en una nota al pie.
+## 3:05–3:40 — Estado honesto de los resultados
 
----
+**Imagen:** `reports/video/04-results.svg`.
 
-## Cierre
+**Locución:**
 
-**Pantalla:** frase única sobre fondo limpio.
+> El resultado confirmatorio v2 está pendiente, así que no voy a inventarlo ni
+> a promover una corrida antigua. La evidencia v1 es exploratoria. Como señal,
+> estimó una mejora de quince puntos de STSR frente al baseline tipado, menos
+> false allow y menos tokens. Son cifras útiles para justificar v2, no para dar
+> la hipótesis por demostrada.
 
-> ERP Agent OS no intenta que el agente improvise mejor cada vez.
-> Convierte una operación aprendida en una capacidad reutilizable,
-> verificable y medible.
->
-> El modelo propone. El contrato decide. Y cuando el modelo falla del
-> todo, el contrato sigue decidiendo.
+## 3:40–4:05 — El peor número y el límite adversarial
 
----
+**Imagen:** `3,3 % DETECCIÓN EXTERNA`; después:
+`STRESS EXPLORATORIO · CONFINAMIENTO POR TRES CANALES · 0/1.530`;
+sello `NO ADAPTATIVO`.
 
-> **Plan de rodaje en `docs/video-plan-rodaje.md`**: qué comando por
-> toma, cuánto tarda cada uno medido en esta máquina, y la preparación
-> de entorno que la toma de Odoo necesita antes de rodar.
+**Locución:**
 
-## Notas de producción
+> Mi peor resultado es importante: el detector léxico solo reconoció el tres
+> coma tres por ciento de un dataset externo. En un stress test exploratorio,
+> esos payloads no produjeron mutaciones no autorizadas por tres canales. Pero
+> ese cero está acotado: no cubre adversarios adaptativos, y un test posterior
+> consciente del catálogo encontró un caso de inyección en campo.
 
-- **Todo lo que se ve debe ser salida real.** Los comandos son
-  `scripts/odoo_governed_demo.py`, `scripts/injection_resistance_test.py`
-  y `scripts/run_experiment.py`. Si algo no se puede grabar en vivo, se
-  muestra el JSON de `data/` — no se recrea una captura.
-- **No decir «seguro» ni «inmune».** La afirmación es acotada: 510
-  payloads, tres canales, cero mutaciones no autorizadas, sin adversario
-  adaptativo.
-- **No decir «ahorra X euros»**: el análisis de coste es de
-  sensibilidad, con tarifa declarada.
-- El tramo 2:45–3:40 es el que decide el vídeo. Si hay que recortar,
-  recortar de 1:00–1:45, no de ahí.
-- Grabar la demo de Odoo **de una sola toma**. Un corte en medio hace
-  que la relectura independiente pierda todo su valor probatorio.
+## 4:05–4:22 — Innovación y límites
+
+**Imagen:** `reports/video/05-limitations.svg`, luego contrato de skill.
+
+**Locución:**
+
+> La contribución no es conectar un LLM con Odoo. Es un método reproducible
+> para convertir una propuesta incierta en una acción contractual y auditable.
+> Los límites son visibles: datos sintéticos, doce skills, sin usuarios reales
+> y sin segundo anotador humano.
+
+## 4:22–4:30 — Cierre
+
+**Imagen:** marca ERP Agent OS, fondo limpio.
+
+**Locución:**
+
+> ERP Agent OS. El modelo propone. El contrato decide.
+
+## Reglas de montaje
+
+- Ninguna toma recreada se presenta como ejecución real.
+- La secuencia Odoo se graba continua; se permiten cortes solo antes o después.
+- Los rótulos `V2 PENDIENTE`, `EXPLORATORIO` y `DEMOSTRACIÓN` ocupan al menos
+  el 4 % de la altura del plano.
+- No usar música con derechos no acreditados ni mostrar claves, URLs privadas,
+  nombres de clientes o terminales con secretos.
+- Exportar a 1080p, comprobar audio con auriculares y móvil, y mantener la
+  versión final por debajo de 4:50 para absorber silencios de plataforma.

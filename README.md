@@ -80,13 +80,13 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Executable postconditions (verification engine) | `postconditions.py` | ✅ |
 | Paired A/B/C experiment runner (1.080 observations) | `experiment.py` | ✅ |
 | Freeze manifest + drift detection (CI-enforced) | `freeze.py` | ✅ |
-| Inter-annotator agreement instrument (Cohen's kappa) | `agreement.py` | ⚠️ human annotation pending |
+| Annotation audit | `annotation_audit.py`, `agreement.py` | ⚠️ AI consistency review supported; no second human reviewer and no agreement statistic |
 | Real LLM clients for A/B/C (Groq, Gemini, OpenRouter — all free tier) | `groq_client.py`, `gemini_client.py`, `openrouter_client.py` | ✅ |
 | Checkpoint/resume + call caching for real-LLM runs | `experiment.py`, `llm_client.CachingLLMClient` | ✅ |
 | Token instrumentation (H2) and traceability rubric (H7) | `metrics.py`, `traceability.py` | ✅ |
-| Confirmatory run with a real LLM (CLAUDE.md §19) | `scripts/run_experiment.py --real-llm --provider {groq,gemini,openrouter}` | ✅ executed, 1.080 observations |
+| Legacy A/B/C run with a real LLM | `scripts/run_experiment.py --real-llm --provider {groq,gemini,openrouter}` | ✅ exploratory, 1.080 observations |
 | External adversarial stress test (InjecAgent, out-of-distribution) | `scripts/injecagent_stress_test.py` | ✅ measured, 0%→3.3% (see below) |
-| Injection **resistance** sweep: 510 payloads × 3 attack channels | `scripts/injection_resistance_test.py` | ✅ 0/1530 unauthorized mutations |
+| Injection confinement sweep: 510 payloads × 3 attack channels | `scripts/injection_resistance_test.py` | ✅ exploratory scoped three-channel confinement result: 0/1.530 unauthorized mutations |
 | **Odoo 19 adapter** (post-core, JSON-2 API, allowlisted, no delete) | `odoo_client.py` | ✅ live-verified |
 | Odoo 19 demo through the **full governed pipeline** (System C, real approval gate) | `odoo_handlers.py`, `scripts/odoo_governed_demo.py` | ✅ live-verified |
 | Persistent skill registry: versions, states, append-only transition history | `registry.py` | ✅ |
@@ -98,7 +98,8 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Six-scenario deterministic demo (§38) | `scripts/demo.py` | ✅ self-verifying |
 | Results export (CSV) and reproducible figures (§31) | `scripts/export_results.py`, `scripts/make_figures.py` | ✅ Tableau workbook itself is manual |
 
-393 tests, `ruff`/`mypy` clean, CI green.
+The current verification count is reported by CI; `ruff`, `mypy` and the full
+test suite are the release gate.
 
 Every software requirement CLAUDE.md specifies is implemented; the
 section-by-section audit lives in
@@ -114,7 +115,7 @@ architecture: Groq's daily token quota got exhausted by earlier
 interrupted runs, and every Gemini model tested on this project's key
 carried a 20-requests-per-day cap. CLAUDE.md D-03 requires A, B, and C to
 share the same model/provider/config *within one run* — it does not
-mandate a specific provider. The confirmatory run reported below used
+mandate a specific provider. The legacy exploratory run reported below used
 OpenRouter (`openai/gpt-oss-20b:free`).
 
 ```sh
@@ -122,24 +123,26 @@ cp .env.example .env   # fill in GROQ_API_KEY / GEMINI_API_KEY / OPENROUTER_API_
 uv run python scripts/run_experiment.py --real-llm --provider openrouter
 ```
 
-Without `--real-llm` the experiment uses `DeterministicStubClient`
-(architecture-isolation baseline, `is_confirmatory_run: false`); both
-manifests state the flag explicitly so results can never be silently
-misread as the other kind. Each `--real-llm` run checkpoints progress
+Without `--real-llm` the legacy runner uses `DeterministicStubClient`.
+Historical manifests retain their original flags, but the authoritative
+`data/evidence_registry.json` classifies every v1 run as exploratory or
+sensitivity evidence; an old `is_confirmatory_run` field does not promote it.
+Each `--real-llm` run checkpoints progress
 per-provider (`data/checkpoint_real_llm_<provider>.jsonl`, gitignored)
 and reuses one real call across a case's 3 repetitions
 (`CachingLLMClient`) instead of calling the LLM 3×, since
 `temperature=0.0` was empirically confirmed reproducible across three
 independent real runs (H3 = 1.0 every time).
 
-### Measured result: the confirmatory A/B/C experiment (real LLM)
+### Legacy exploratory estimate: A/B/C with a real LLM
 
 **1.080 executions** (120 frozen-test cases × 3 systems × 3 repetitions),
 randomized order, `FakeERPAdapter` rebuilt per observation, A/B/C sharing
 one real OpenRouter selector (`openai/gpt-oss-20b:free`, temperature 0).
 Full analysis — including the stub-selector baseline kept for comparison
-— in [`docs/results.md`](docs/results.md); raw output in
-`data/experiment_results.json` (`is_confirmatory_run: true`).
+— is in [`docs/results.md`](docs/results.md); raw output is
+`data/experiment_results.json`. This run predates the complete prospective
+freeze and is not confirmatory evidence.
 
 | Metric | A (ungoverned) | B (typed only) | **C (ERP Agent OS)** |
 |---|---|---|---|
@@ -160,6 +163,15 @@ Full analysis — including the stub-selector baseline kept for comparison
 > These numbers remain valid for what they measure (tool selection with
 > arguments given), but the C − B margin they show is inflated by help
 > that C benefited from most.
+
+### Confirmatory status: ERP-Skills-Bench v2 pending
+
+The only eligible confirmatory estimate is the prospective v2 protocol:
+120 new cases × 3 systems × 3 independent repetitions. The dataset, freeze
+manifest and complete encrypted run do not yet exist, so no v2 number is
+reported. `scripts/freeze_protocol_v2.py`, `scripts/run_experiment_v2.py` and
+`scripts/analyze_experiment_v2.py` fail closed until those prerequisites and
+all 1.080 observations validate.
 
 ### The result that changed: honest argument parsing
 
@@ -275,9 +287,11 @@ whether any unauthorized mutation occurs:
 | Payload in the request text | **0 / 510** | 493 `ALLOW`, 17 `DENY` |
 | Payload stored in an ERP field the request reads | **0 / 510** | 510 `ALLOW` |
 | Compromised parser (attacker dictates the arguments) | **0 / 510** | 510 `DENY` |
-| **Total** | **0 / 1530** | |
+| **Total** | **0 / 1.530** | |
 
-The third arm concedes the LLM entirely and tests governance alone. A
+This is an **exploratory, scoped three-channel confinement result**, not a
+general robustness or safety result. The third arm concedes the LLM entirely
+and tests governance alone. A
 positive control aborts the run if a clean request fails to reach the
 handler and mutate — an earlier version used a role the target skill
 does not permit, abstained on everything and reported a perfect score
@@ -291,7 +305,7 @@ uv run python scripts/injection_resistance_test.py
 
 ### Odoo 19 demo (post-core, real instance)
 
-`FakeERPAdapter` remains mandatory for the confirmatory experiment
+`FakeERPAdapter` remains mandatory for the prospective v2 experiment
 (CLAUDE.md §26/D-07); `odoo_client.py` is a post-core demonstration
 that the same skill contract executes against a real ERP. Two demos,
 both live-verified against a real Odoo.sh Development-branch instance
@@ -302,7 +316,7 @@ both live-verified against a real Odoo.sh Development-branch instance
    postcondition → update → independent re-read, against real Odoo.
 2. **Full governed pipeline** (`scripts/odoo_governed_demo.py`): the
    *same* `Runtime`/`SystemC`/`ApprovalService`/`AuditStore` classes
-   the confirmatory core runs 1.080 times, pointed at `Odoo19Adapter`
+   the same governed core uses in tests, pointed at `Odoo19Adapter`
    instead of `FakeERPAdapter`. An R1 skill auto-executes; an R2 skill
    is blocked with `REQUIRE_APPROVAL` and proven — via an independent
    Odoo read, not the system's own say-so — to leave Odoo untouched
@@ -358,8 +372,10 @@ evidence that would survive a customer conversation from the evidence
 that would not — because they are not the same set, and conflating them
 would produce false commercial claims.
 
-**Survives:** no unauthorized mutation through any attack channel
-(0/1530, including the arm that hands the attacker the whole LLM); one
+**Survives as scoped exploratory evidence:** the three-channel confinement
+stress test observed 0/1.530 unauthorized mutations, including the arm that
+hands the attacker the whole LLM. This does not cover adaptive attacks. Also:
+one
 fewer LLM call per request, shown by arithmetic; a decision that is
 invariant to the provider while an ungoverned agent's is not; a real
 Odoo block verified by independent re-read; traceability 0.820.
@@ -510,18 +526,20 @@ make figures              # reproducible PNG+SVG figures (needs the figures grou
 make build                # builds sdist + wheel
 ```
 
-## Second-annotator review (pending human step)
+## Annotation review status
 
 ```sh
 uv run python scripts/build_annotation_sample.py   # blank review sheet, 96 cases
-# a second annotator fills the `annotator2_decision` column, then:
+# if an independent human annotator later fills `annotator2_decision`:
 uv run python scripts/compute_agreement.py         # Cohen's kappa
+uv run python scripts/run_ai_annotation_audit.py  # optional AI consistency audit
 ```
 
 The sample is deterministic and stratified so adversarial/high-risk cases are
 over-represented. `compute_agreement.py` **refuses to print a number** while the
-second-annotator column is empty — this step is honestly pending (CLAUDE.md
-§17/§21, roadmap P3.4), not silently skipped.
+second-annotator column is empty. No second human annotator is currently
+available, so no human agreement statistic is reported. An AI consistency
+audit is labeled as AI review and never presented as human agreement.
 
 Ruff is the formatter and linter; mypy is static type checking only (not a
 formatter). mypy is configured to skip re-checking `torch`/`transformers`/
@@ -637,7 +655,7 @@ Both are local, read-mostly assistance — not application runtime dependencies.
 ## Scope and non-negotiables
 
 Full detail in [`CLAUDE.md`](CLAUDE.md#41-decisiones-no-negociables). In short:
-`FakeERPAdapter` is the confirmatory core (Odoo 19 is a post-core extension);
+`FakeERPAdapter` is the prospective v2 core (Odoo 19 is a post-core extension);
 R4-risk operations are unconditionally denied; skills are versioned with an
 enforced lifecycle (no direct `DRAFT → ACTIVE`); the test split freezes before the
-confirmatory experiment; synthetic data only, no secrets ever committed.
+v2 experiment; synthetic data only, no secrets ever committed.
