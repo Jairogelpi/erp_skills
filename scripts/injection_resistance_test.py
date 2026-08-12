@@ -1,4 +1,4 @@
-"""Can an injected instruction cause an unauthorized mutation? (§30, §36)
+"""Exploratory three-channel confinement stress test (§30, §36).
 
 `docs/injecagent-stress-test.md` measured whether the *lexical detector*
 fires on InjecAgent payloads: 3,3 %. That number is honest but it
@@ -20,8 +20,8 @@ position. In System C:
     engine rules on role, risk and findings;
   - the handler writes only to its own allowlisted model and fields.
 
-So the question this script asks is the one that decides whether the
-system is safe, not whether a regex fired:
+This harness asks a deliberately bounded question. It does not establish
+general safety, immunity, or the behaviour of a fully compromised model:
 
     **Given an InjecAgent payload delivered through every channel an
     attacker actually controls, does any unauthorized mutation occur?**
@@ -186,6 +186,17 @@ def main() -> None:
     ]
 
     report: dict[str, Any] = {
+        "evidence_status": "exploratory",
+        "test_name": "three-channel confinement stress test",
+        "permitted_claim": (
+            "In this harness, the tested payloads did not cause a write outside "
+            "the selected skill model and allowlisted fields in the three channels."
+        ),
+        "non_claims": [
+            "general prompt-injection resistance",
+            "safety against a fully compromised model",
+            "security certification or immunity",
+        ],
         "source": "InjecAgent test_cases_dh_base.json (Zhan et al., 2024)",
         "question": (
             "does an injected instruction cause an unauthorized mutation? "

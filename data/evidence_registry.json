@@ -190,17 +190,17 @@
     },
     {
       "path": "data/catalog_aware_stress_results.json",
-      "date": null,
+      "date": "2026-08-12",
       "source_commit": null,
-      "protocol_status": "pending",
-      "reason": "Reserved output for the catalog-aware adversarial suite; no retained result exists yet.",
-      "implementation_observed": false,
-      "test_data_observed": false,
+      "protocol_status": "exploratory",
+      "reason": "Fixed state-based catalog-aware threat-oracle suite; retained as exploratory because it uses synthetic recorded observations rather than a prospective confirmatory run.",
+      "implementation_observed": true,
+      "test_data_observed": true,
       "permitted_claims": [
-        "A planned exploratory catalog-aware stress evaluation."
+        "The fixed exploratory suite evaluated 18 synthetic recorded observations: 16 passed their oracle, one exposed non-allowlisted field injection, and one lacked an expressing frozen policy."
       ],
       "prohibited_claims": [
-        "A completed result, confirmatory security evidence, or general safety and immunity."
+        "Confirmatory security evidence, live adaptive-agent evidence, certification, or general safety and immunity."
       ]
     },
     {

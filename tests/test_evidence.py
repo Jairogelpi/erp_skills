@@ -113,7 +113,7 @@ def test_committed_registry_has_the_required_authoritative_classifications():
         "data/injection_resistance_results.json": EvidenceStatus.EXPLORATORY,
         "data/odoo_governed_demo_results.json": EvidenceStatus.DEMONSTRATION,
         "data/bench_v2_confirmatory_results.json": EvidenceStatus.PENDING,
-        "data/catalog_aware_stress_results.json": EvidenceStatus.PENDING,
+        "data/catalog_aware_stress_results.json": EvidenceStatus.EXPLORATORY,
         "data/annotation_ai_audit.json": EvidenceStatus.PENDING,
     }
 
