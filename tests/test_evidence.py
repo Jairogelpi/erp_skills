@@ -1,3 +1,4 @@
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -50,6 +51,52 @@ def _registry(*entries: dict[str, object], **overrides: object) -> dict[str, obj
     }
     registry.update(overrides)
     return registry
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _write_valid_confirmation_evidence(
+    root: Path,
+    *,
+    freeze_overrides: dict[str, object] | None = None,
+    validation_overrides: dict[str, object] | None = None,
+) -> None:
+    data = root / "data"
+    data.mkdir(exist_ok=True)
+    artifact_path = data / "example_results.json"
+    artifact_path.write_text('{"complete": true}', encoding="utf-8")
+
+    freeze: dict[str, object] = {
+        "schema_version": "1.0",
+        "status": "verified",
+        "protocol_id": "erp-skills-bench-v2",
+        "manifest_hash": "a" * 64,
+        "run_config_hash": "b" * 64,
+        "expected_observations": 1080,
+    }
+    freeze.update(freeze_overrides or {})
+    freeze_path = data / "freeze_manifest_v2.json"
+    freeze_path.write_text(json.dumps(freeze), encoding="utf-8")
+
+    validation: dict[str, object] = {
+        "schema_version": "1.0",
+        "artifact_path": "data/example_results.json",
+        "artifact_sha256": _sha256(artifact_path),
+        "freeze_manifest_path": "data/freeze_manifest_v2.json",
+        "freeze_manifest_sha256": _sha256(freeze_path),
+        "manifest_hash": "a" * 64,
+        "run_config_hash": "b" * 64,
+        "validation_status": "passed",
+        "completed_observations": 1080,
+        "expected_observations": 1080,
+        "primary_endpoint_complete": True,
+    }
+    validation.update(validation_overrides or {})
+    (data / "bench_v2_result_validation.json").write_text(
+        json.dumps(validation), encoding="utf-8"
+    )
 
 
 def test_committed_registry_has_the_required_authoritative_classifications():
@@ -112,6 +159,23 @@ def test_registry_rejects_duplicate_paths_and_unknown_statuses():
         EvidenceRegistry.model_validate(_registry(_entry(unreviewed_field=True)))
 
 
+def test_optional_confirmation_paths_accept_explicit_null():
+    entry = EvidenceEntry.model_validate(
+        _entry(freeze_manifest_path=None, result_validation_path=None)
+    )
+    assert entry.freeze_manifest_path is None
+    assert entry.result_validation_path is None
+
+    with pytest.raises(ValidationError, match="freeze_manifest_path"):
+        EvidenceEntry.model_validate(
+            _entry(
+                protocol_status="confirmatory",
+                freeze_manifest_path=None,
+                result_validation_path=None,
+            )
+        )
+
+
 @pytest.mark.parametrize(
     "missing_field",
     ["freeze_manifest_path", "result_validation_path"],
@@ -140,16 +204,68 @@ def test_confirmation_guard_requires_the_declared_evidence_files(tmp_path):
     with pytest.raises(ValueError, match="freeze_manifest_v2.json"):
         registry.require_confirmatory("data/example_results.json", root=tmp_path)
 
-    (tmp_path / "data" / "freeze_manifest_v2.json").write_text("{}")
+    _write_valid_confirmation_evidence(tmp_path)
+    (tmp_path / "data" / "bench_v2_result_validation.json").unlink()
     with pytest.raises(ValueError, match="bench_v2_result_validation.json"):
         registry.require_confirmatory("data/example_results.json", root=tmp_path)
 
-    (tmp_path / "data" / "bench_v2_result_validation.json").write_text("{}")
+    _write_valid_confirmation_evidence(tmp_path)
     assert registry.require_confirmatory(
         "data/example_results.json", root=tmp_path
     ) == registry.entry_for(
         "data/example_results.json",
     )
+
+
+def test_confirmation_guard_rejects_empty_or_malformed_evidence(tmp_path):
+    entry = _entry(
+        protocol_status="confirmatory",
+        freeze_manifest_path="data/freeze_manifest_v2.json",
+        result_validation_path="data/bench_v2_result_validation.json",
+    )
+    registry = EvidenceRegistry.model_validate(_registry(entry))
+    _write_valid_confirmation_evidence(tmp_path)
+
+    freeze = tmp_path / "data" / "freeze_manifest_v2.json"
+    freeze.write_text("{}", encoding="utf-8")
+    with pytest.raises(ValueError, match="invalid freeze evidence"):
+        registry.require_confirmatory("data/example_results.json", root=tmp_path)
+
+    _write_valid_confirmation_evidence(tmp_path)
+    validation = tmp_path / "data" / "bench_v2_result_validation.json"
+    validation.write_text("{not-json", encoding="utf-8")
+    with pytest.raises(ValueError, match="invalid result validation evidence"):
+        registry.require_confirmatory("data/example_results.json", root=tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("validation_overrides", "message"),
+    [
+        ({"validation_status": "failed"}, "validation_status"),
+        ({"completed_observations": 1079}, "completed_observations"),
+        ({"primary_endpoint_complete": False}, "primary_endpoint_complete"),
+        ({"artifact_path": "data/other_results.json"}, "artifact_path"),
+        ({"artifact_sha256": "c" * 64}, "artifact_sha256"),
+        ({"freeze_manifest_sha256": "c" * 64}, "freeze_manifest_sha256"),
+        ({"manifest_hash": "c" * 64}, "manifest_hash"),
+        ({"run_config_hash": "c" * 64}, "run_config_hash"),
+    ],
+)
+def test_confirmation_guard_rejects_failed_incomplete_or_mismatched_validation(
+    tmp_path, validation_overrides, message
+):
+    entry = _entry(
+        protocol_status="confirmatory",
+        freeze_manifest_path="data/freeze_manifest_v2.json",
+        result_validation_path="data/bench_v2_result_validation.json",
+    )
+    registry = EvidenceRegistry.model_validate(_registry(entry))
+    _write_valid_confirmation_evidence(
+        tmp_path, validation_overrides=validation_overrides
+    )
+
+    with pytest.raises(ValueError, match=message):
+        registry.require_confirmatory("data/example_results.json", root=tmp_path)
 
 
 def test_committed_registry_covers_every_reportable_artifact():
@@ -244,3 +360,29 @@ def test_evidence_cli_enforces_confirmation_evidence_for_confirmatory_entries(
     assert "data/future_results.json" in output
     assert "data/freeze_manifest_v2.json" in output
     assert "data/future_result_validation.json" in output
+
+
+def test_evidence_cli_handles_explicit_null_confirmation_paths(capsys, tmp_path):
+    audit_script = _load_audit_script()
+    registry_path = tmp_path / "registry.json"
+    registry_path.write_text(
+        json.dumps(
+            _registry(
+                _entry(
+                    protocol_status="confirmatory",
+                    freeze_manifest_path=None,
+                    result_validation_path=None,
+                )
+            )
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = audit_script.main(
+        ["--root", str(tmp_path), "--registry", str(registry_path)]
+    )
+
+    output = capsys.readouterr().out
+    assert exit_code != 0
+    assert "INVALID REGISTRY" in output
+    assert "freeze_manifest_path" in output

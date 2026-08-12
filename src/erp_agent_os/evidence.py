@@ -4,14 +4,22 @@ from __future__ import annotations
 
 import csv
 import datetime
+import hashlib
 import json
 import re
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 
 class EvidenceStatus(StrEnum):
@@ -40,6 +48,14 @@ def _validate_repository_path(value: str) -> str:
     return value
 
 
+def _sha256_file(path: Path) -> str:
+    try:
+        content = path.read_bytes()
+    except OSError as exc:
+        raise ValueError(f"cannot read confirmation evidence {path}: {exc}") from exc
+    return hashlib.sha256(content).hexdigest()
+
+
 class EvidenceEntry(BaseModel):
     """Immutable provenance and claim boundary for one result artefact."""
 
@@ -57,9 +73,15 @@ class EvidenceEntry(BaseModel):
     freeze_manifest_path: str | None = None
     result_validation_path: str | None = None
 
-    _path_is_repository_relative = field_validator(
-        "path", "freeze_manifest_path", "result_validation_path"
-    )(_validate_repository_path)
+    @field_validator("path")
+    @classmethod
+    def validate_path(cls, value: str) -> str:
+        return _validate_repository_path(value)
+
+    @field_validator("freeze_manifest_path", "result_validation_path")
+    @classmethod
+    def validate_optional_path(cls, value: str | None) -> str | None:
+        return None if value is None else _validate_repository_path(value)
 
     @field_validator("source_commit")
     @classmethod
@@ -82,6 +104,44 @@ class EvidenceEntry(BaseModel):
                 "confirmatory evidence requires " + " and ".join(missing)
             )
         return self
+
+
+_SHA256_PATTERN = r"^[0-9a-f]{64}$"
+
+
+class ConfirmatoryFreezeEvidence(BaseModel):
+    """Core proof fields emitted by the prospective v2 freeze verifier."""
+
+    model_config = ConfigDict(frozen=True, extra="allow")
+
+    schema_version: Literal["1.0"]
+    status: Literal["verified"]
+    protocol_id: Literal["erp-skills-bench-v2"]
+    manifest_hash: str = Field(pattern=_SHA256_PATTERN)
+    run_config_hash: str = Field(pattern=_SHA256_PATTERN)
+    expected_observations: Literal[1080]
+
+
+class ConfirmatoryResultValidation(BaseModel):
+    """Core proof fields emitted by the prospective v2 result validator."""
+
+    model_config = ConfigDict(frozen=True, extra="allow")
+
+    schema_version: Literal["1.0"]
+    artifact_path: str
+    artifact_sha256: str = Field(pattern=_SHA256_PATTERN)
+    freeze_manifest_path: str
+    freeze_manifest_sha256: str = Field(pattern=_SHA256_PATTERN)
+    manifest_hash: str = Field(pattern=_SHA256_PATTERN)
+    run_config_hash: str = Field(pattern=_SHA256_PATTERN)
+    validation_status: Literal["passed"]
+    completed_observations: Literal[1080]
+    expected_observations: Literal[1080]
+    primary_endpoint_complete: Literal[True]
+
+    _paths_are_repository_relative = field_validator(
+        "artifact_path", "freeze_manifest_path"
+    )(_validate_repository_path)
 
 
 class EvidenceRegistry(BaseModel):
@@ -135,17 +195,16 @@ class EvidenceRegistry(BaseModel):
         return self.entry_for(path).protocol_status
 
     def require_confirmatory(self, path: str, *, root: Path) -> EvidenceEntry:
-        """Guard a confirmatory claim with status and extant validation evidence."""
+        """Require cross-bound proof of a complete, prospectively frozen run."""
 
         entry = self.entry_for(path)
         if entry.protocol_status is not EvidenceStatus.CONFIRMATORY:
             raise ValueError(
                 f"{path} is {entry.protocol_status.value}, not confirmatory"
             )
-        evidence_paths = (
-            entry.freeze_manifest_path,
-            entry.result_validation_path,
-        )
+        freeze_relative = entry.freeze_manifest_path
+        validation_relative = entry.result_validation_path
+        evidence_paths = (entry.path, freeze_relative, validation_relative)
         missing: list[str] = []
         for evidence_path in evidence_paths:
             if evidence_path is None:
@@ -156,6 +215,50 @@ class EvidenceRegistry(BaseModel):
             raise ValueError(
                 f"{path} lacks confirmation evidence: {', '.join(missing)}"
             )
+
+        assert freeze_relative is not None
+        assert validation_relative is not None
+        artifact_path = root / entry.path
+        freeze_path = root / freeze_relative
+        validation_path = root / validation_relative
+
+        try:
+            freeze = ConfirmatoryFreezeEvidence.model_validate_json(
+                freeze_path.read_bytes()
+            )
+        except (OSError, ValidationError) as exc:
+            raise ValueError(
+                f"{path} has invalid freeze evidence {freeze_relative}: {exc}"
+            ) from exc
+        try:
+            validation = ConfirmatoryResultValidation.model_validate_json(
+                validation_path.read_bytes()
+            )
+        except (OSError, ValidationError) as exc:
+            raise ValueError(
+                f"{path} has invalid result validation evidence "
+                f"{validation_relative}: {exc}"
+            ) from exc
+
+        if validation.artifact_path != entry.path:
+            raise ValueError(
+                f"{path} artifact_path mismatch: {validation.artifact_path}"
+            )
+        if validation.freeze_manifest_path != freeze_relative:
+            raise ValueError(
+                f"{path} freeze_manifest_path mismatch: "
+                f"{validation.freeze_manifest_path}"
+            )
+        if validation.artifact_sha256 != _sha256_file(artifact_path):
+            raise ValueError(f"{path} artifact_sha256 mismatch")
+        if validation.freeze_manifest_sha256 != _sha256_file(freeze_path):
+            raise ValueError(f"{path} freeze_manifest_sha256 mismatch")
+        if validation.manifest_hash != freeze.manifest_hash:
+            raise ValueError(f"{path} manifest_hash mismatch")
+        if validation.run_config_hash != freeze.run_config_hash:
+            raise ValueError(f"{path} run_config_hash mismatch")
+        if validation.expected_observations != freeze.expected_observations:
+            raise ValueError(f"{path} expected_observations mismatch")
         return entry
 
     def unregistered_reportable_paths(self, root: Path) -> tuple[str, ...]:
@@ -194,11 +297,8 @@ class ClaimViolation:
 _CONFIRMATORY_WORDING = re.compile(
     r"confirmator(?:y|io|ia|ios|ias)|is_confirmatory_run", re.IGNORECASE
 )
-_NEGATED_CONFIRMATORY = re.compile(
-    r"(?:not|no|non[- ]|no\s+es|no\s+se\s+considera)\W+"
-    r"(?:\w+\W+){0,3}confirmator|"
-    r"(?:classified|clasificad\w*)\W+(?:as|como)\W+explorator|"
-    r"(?:legacy metadata|metadato heredado)",
+_CONFIRMATORY_DISCUSSION = re.compile(
+    r"(?:classified|clasificad\w*)\W+(?:as|como)\W+explorator",
     re.IGNORECASE,
 )
 _GENERAL_SAFETY = re.compile(
@@ -211,9 +311,18 @@ _GENERAL_SAFETY = re.compile(
     r"\b(?:is|are)\s+safe\s+(?:against|from)\s+(?:any|all)\b",
     re.IGNORECASE,
 )
-_NEGATED_SAFETY = re.compile(
-    r"\b(?:no|not|cannot|can't|may not|does not|doesn't|never)\b|"
-    r"\b(?:no prueba|no demuestra|no evidencia|no garantiza|prohibid\w*)\b|"
+_DIRECT_NEGATION_SUFFIX = re.compile(
+    r"(?:\b(?:no|not)(?:\s+\w+){0,3}|\bnon[-])\s*$",
+    re.IGNORECASE,
+)
+_SAFETY_DENIAL = re.compile(
+    r"\b(?:no\s+(?:afirmamos|sostenemos|decimos)\s+que|"
+    r"no\s+(?:prueba|demuestra|evidencia|garantiza)|"
+    r"we\s+do\s+not\s+(?:claim|state)(?:\s+that)?|"
+    r"does\s+not\s+(?:prove|demonstrate|guarantee))\b",
+    re.IGNORECASE,
+)
+_PROHIBITION_HEADING = re.compile(
     r"\b(?:lo que no se debe decir|errores que arruinan)\b",
     re.IGNORECASE,
 )
@@ -239,18 +348,55 @@ def _line_number(text: str, offset: int) -> int:
     return text.count("\n", 0, offset) + 1
 
 
-def _line_at(text: str, offset: int) -> str:
-    start = text.rfind("\n", 0, offset) + 1
-    end = text.find("\n", offset)
-    return text[start : len(text) if end == -1 else end]
-
-
 def _paragraph_at(text: str, offset: int) -> str:
     previous_break = text.rfind("\n\n", 0, offset)
     start = 0 if previous_break == -1 else previous_break + 2
     next_break = text.find("\n\n", offset)
     end = len(text) if next_break == -1 else next_break
     return text[start:end]
+
+
+def _sentence_at(text: str, start_offset: int, end_offset: int) -> str:
+    boundaries = "\n.;!?"
+    start = max(text.rfind(marker, 0, start_offset) for marker in boundaries)
+    ends = [
+        position
+        for marker in boundaries
+        if (position := text.find(marker, end_offset)) != -1
+    ]
+    end = min(ends) if ends else len(text)
+    return text[start + 1 : end]
+
+
+def _clause_prefix(text: str, offset: int) -> str:
+    sentence = _sentence_at(text, offset, offset)
+    sentence_start = text.rfind(sentence, 0, offset + len(sentence))
+    relative_offset = offset - sentence_start
+    prefix = sentence[:relative_offset]
+    separators = list(
+        re.finditer(
+            r"(?:,|\bpero\b|\bsin embargo\b|\bbut\b|\bhowever\b|\by\b|\band\b)",
+            prefix,
+            re.IGNORECASE,
+        )
+    )
+    return prefix[separators[-1].end() :] if separators else prefix
+
+
+def _confirmatory_claim_is_negated(text: str, match: re.Match[str]) -> bool:
+    prefix = _clause_prefix(text, match.start())
+    sentence = _sentence_at(text, match.start(), match.end())
+    return bool(
+        _DIRECT_NEGATION_SUFFIX.search(prefix)
+        or _CONFIRMATORY_DISCUSSION.search(sentence)
+    )
+
+
+def _safety_claim_is_negated(text: str, match: re.Match[str]) -> bool:
+    prefix = _clause_prefix(text, match.start())
+    return bool(
+        _DIRECT_NEGATION_SUFFIX.search(prefix) or _SAFETY_DENIAL.search(prefix)
+    )
 
 
 def _heading_at(text: str, offset: int) -> str:
@@ -288,9 +434,15 @@ def audit_document_claims(
             continue
         for match in re.finditer(re.escape(entry.path), text):
             block = _paragraph_at(text, match.start())
-            has_confirmatory_wording = _CONFIRMATORY_WORDING.search(block)
-            is_negated = _NEGATED_CONFIRMATORY.search(block)
-            if has_confirmatory_wording and not is_negated:
+            prohibited_claim = next(
+                (
+                    claim
+                    for claim in _CONFIRMATORY_WORDING.finditer(block)
+                    if not _confirmatory_claim_is_negated(block, claim)
+                ),
+                None,
+            )
+            if prohibited_claim is not None:
                 violations.append(
                     ClaimViolation(
                         document=document,
@@ -305,9 +457,10 @@ def audit_document_claims(
                 break
 
     for match in _GENERAL_SAFETY.finditer(text):
-        line = _line_at(text, match.start())
-        context = f"{_heading_at(text, match.start())}\n{line}"
-        if not _NEGATED_SAFETY.search(context):
+        in_prohibition_section = _PROHIBITION_HEADING.search(
+            _heading_at(text, match.start())
+        )
+        if not in_prohibition_section and not _safety_claim_is_negated(text, match):
             violations.append(
                 ClaimViolation(
                     document=document,
@@ -340,8 +493,11 @@ def audit_document_claims(
 
     if not second_annotation_available(annotation_sheet):
         for match in _HUMAN_KAPPA.finditer(text):
-            line = _line_at(text, match.start())
-            if not _KAPPA_UNAVAILABLE.search(line):
+            sentence = _sentence_at(text, match.start(), match.end())
+            sentence_start = text.rfind(sentence, 0, match.start() + len(sentence))
+            relative_start = match.start() - sentence_start
+            trailing_claim = sentence[relative_start:]
+            if not _KAPPA_UNAVAILABLE.search(trailing_claim):
                 violations.append(
                     ClaimViolation(
                         document=document,

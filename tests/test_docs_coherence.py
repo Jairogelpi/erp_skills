@@ -75,6 +75,33 @@ def test_rejects_confirmatory_wording_in_the_same_paragraph_as_legacy_artifact(
     )
 
 
+def test_mixed_positive_and_negative_confirmatory_claim_still_flags_positive(
+    tmp_path,
+):
+    violations = _violations(
+        tmp_path,
+        (
+            "Fuente: data/experiment_results.json\n"
+            "No es un resultado confirmatorio. Sin embargo, esta es la ejecución "
+            "confirmatoria final."
+        ),
+    )
+
+    assert len(violations) == 1
+    assert _violations(
+        tmp_path,
+        (
+            "Fuente: data/experiment_results.json\n"
+            "El metadato heredado no es confirmatorio, pero esta es la ejecución "
+            "confirmatoria final."
+        ),
+    )
+    assert not _violations(
+        tmp_path,
+        "data/experiment_results.json no es un resultado confirmatorio.",
+    )
+
+
 def test_does_not_ban_unrelated_methodological_use_of_confirmatory(tmp_path):
     assert not _violations(
         tmp_path,
@@ -104,6 +131,19 @@ def test_rejects_concrete_claim_of_safety_against_any_prompt_injection(tmp_path)
             "No afirmamos que ERP Agent OS sea seguro frente a cualquier ataque "
             "de prompt injection."
         ),
+    )
+
+
+def test_safety_negation_must_bind_to_the_safety_claim(tmp_path):
+    violations = _violations(
+        tmp_path,
+        "No hubo errores de red y el sistema garantiza seguridad total.",
+    )
+
+    assert any("general safety or immunity" in item for item in violations)
+    assert not _violations(
+        tmp_path,
+        "El resultado no garantiza seguridad total frente a otros ataques.",
     )
 
 
@@ -153,6 +193,13 @@ def test_rejects_ordinary_cohen_kappa_between_annotators_claim(tmp_path):
     )
 
     assert any("human kappa" in item for item in violations)
+    assert _violations(
+        tmp_path,
+        (
+            "El análisis de costes sigue pendiente y el kappa de Cohen entre "
+            "anotadores fue 0,82."
+        ),
+    )
     assert not _violations(
         tmp_path,
         "El kappa de Cohen entre anotadores no se calculó; sigue pendiente.",
