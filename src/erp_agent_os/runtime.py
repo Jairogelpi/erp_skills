@@ -8,7 +8,9 @@ SIMULATE previews without mutating).
 """
 
 from collections.abc import Callable
+from copy import deepcopy
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, Generic, TypeVar
 
 from erp_agent_os.adapters import ErpAdapter, UnknownModelError, UnknownRecordError
@@ -27,6 +29,89 @@ T = TypeVar("T", bound=ErpAdapter)
 
 Handler = Callable[[T, dict[str, Any]], Any]
 PostconditionCheck = Callable[[T, Any], bool]
+
+
+class VerificationStatus(str, Enum):
+    PASSED = "passed"
+    FAILED = "failed"
+    NOT_RUN_CLEAN = "not_run_clean"
+    NOT_RUN_DIRTY = "not_run_dirty"
+    REPLAYED = "replayed"
+    VERIFIER_ERROR = "verifier_error"
+
+
+@dataclass(frozen=True)
+class VerificationCheck(Generic[T]):
+    """A stable audit identifier bound to one executable verification."""
+
+    check_id: str
+    evaluate: PostconditionCheck[T]
+
+    def __post_init__(self) -> None:
+        if not self.check_id.strip():
+            raise ValueError("verification check_id must not be empty")
+
+    def __call__(self, erp: T, output: Any) -> bool:
+        return self.evaluate(erp, output)
+
+
+@dataclass(frozen=True)
+class VerificationCheckResult:
+    """Non-sensitive evidence produced by one named verification check."""
+
+    check_id: str
+    passed: bool | None
+    detail: str
+
+
+def _evaluate_checks(
+    erp: T,
+    output: Any,
+    checks: tuple[object, ...],
+) -> tuple[
+    VerificationStatus,
+    bool | None,
+    tuple[VerificationCheckResult, ...],
+]:
+    """Evaluate every valid named check and reduce its complete evidence.
+
+    Bare callables are deliberately not executed: without a stable identifier
+    their outcome cannot support an auditable verification claim. Exceptions
+    are represented by a fixed message so ERP data and secrets in exception
+    text never enter verification evidence.
+    """
+    if not checks:
+        return VerificationStatus.VERIFIER_ERROR, None, ()
+
+    malformed = False
+    results: list[VerificationCheckResult] = []
+    for candidate in checks:
+        if not isinstance(candidate, VerificationCheck):
+            malformed = True
+            continue
+        try:
+            passed = bool(candidate(erp, output))
+        except Exception:
+            results.append(
+                VerificationCheckResult(
+                    candidate.check_id, None, "check raised an exception"
+                )
+            )
+        else:
+            results.append(
+                VerificationCheckResult(
+                    candidate.check_id,
+                    passed,
+                    "check passed" if passed else "check failed",
+                )
+            )
+
+    evidence = tuple(results)
+    if malformed or any(item.passed is None for item in evidence):
+        return VerificationStatus.VERIFIER_ERROR, None, evidence
+    if all(item.passed is True for item in evidence):
+        return VerificationStatus.PASSED, True, evidence
+    return VerificationStatus.FAILED, False, evidence
 
 
 class UnregisteredHandlerError(ValueError):
@@ -63,16 +148,36 @@ class ExecutionResult:
     # RF-11: populated only for SIMULATE, where the point is to show
     # what would happen instead of doing it.
     preview: dict[str, Any] | None = None
+    verification_status: VerificationStatus = VerificationStatus.VERIFIER_ERROR
+    check_results: tuple[VerificationCheckResult, ...] = ()
 
 
 class Runtime(Generic[T]):
     def __init__(self, erp: T) -> None:
         self._erp = erp
         self._handlers: dict[tuple[str, str], Handler[T]] = {}
-        self._idempotency_cache: dict[str, ExecutionResult] = {}
+        # This ledger prevents a completed handler attempt from ever running
+        # twice. Entries are not necessarily trusted verification: replayed
+        # results preserve False/None and their exact evidence.
+        self._idempotency_ledger: dict[str, ExecutionResult] = {}
 
     def register(self, skill_id: str, version: str, handler: Handler[T]) -> None:
         self._handlers[(skill_id, version)] = handler
+
+    def _record_attempt(
+        self, idempotency_key: str, result: ExecutionResult
+    ) -> ExecutionResult:
+        self._idempotency_ledger[idempotency_key] = ExecutionResult(
+            result.decision,
+            deepcopy(result.output),
+            result.idempotent_replay,
+            result.postconditions_met,
+            handler_error=result.handler_error,
+            preview=deepcopy(result.preview),
+            verification_status=result.verification_status,
+            check_results=result.check_results,
+        )
+        return result
 
     def execute(
         self,
@@ -82,17 +187,22 @@ class Runtime(Generic[T]):
         idempotency_key: str,
         *,
         approval_granted: bool = False,
-        postcondition_checks: tuple[PostconditionCheck[T], ...] = (),
+        postcondition_checks: tuple[VerificationCheck[T], ...] = (),
         findings: list[Finding] | None = None,
     ) -> ExecutionResult:
         outcome = decide(
             skill, role, approval_granted=approval_granted, findings=findings
         )
 
-        if outcome.decision in (PolicyDecision.DENY, PolicyDecision.REQUIRE_APPROVAL):
-            return ExecutionResult(outcome.decision, None, False, None)
+        if outcome.decision is not PolicyDecision.ALLOW:
+            verification_status, postconditions_met, check_results = _evaluate_checks(
+                self._erp, None, postcondition_checks
+            )
+            if verification_status is VerificationStatus.PASSED:
+                verification_status = VerificationStatus.NOT_RUN_CLEAN
+            elif verification_status is VerificationStatus.FAILED:
+                verification_status = VerificationStatus.NOT_RUN_DIRTY
 
-        if outcome.decision is PolicyDecision.SIMULATE:
             # RF-11: show what *would* change. Derived from the skill
             # contract and the normalized arguments, never by executing
             # and rolling back: a rollback-based preview would need
@@ -102,14 +212,27 @@ class Runtime(Generic[T]):
                 outcome.decision,
                 None,
                 False,
-                None,
-                preview=preview_mutation(skill, args),
+                postconditions_met,
+                preview=(
+                    preview_mutation(skill, args)
+                    if outcome.decision is PolicyDecision.SIMULATE
+                    else None
+                ),
+                verification_status=verification_status,
+                check_results=check_results,
             )
 
-        cached = self._idempotency_cache.get(idempotency_key)
+        cached = self._idempotency_ledger.get(idempotency_key)
         if cached is not None:
             return ExecutionResult(
-                cached.decision, cached.output, True, cached.postconditions_met
+                cached.decision,
+                deepcopy(cached.output),
+                True,
+                cached.postconditions_met,
+                handler_error=cached.handler_error,
+                preview=deepcopy(cached.preview),
+                verification_status=VerificationStatus.REPLAYED,
+                check_results=cached.check_results,
             )
 
         handler = self._handlers.get((skill.skill_id, skill.version))
@@ -119,16 +242,26 @@ class Runtime(Generic[T]):
         try:
             output = handler(self._erp, args)
         except (UnknownModelError, UnknownRecordError, KeyError) as exc:
-            error_message = f"{type(exc).__name__}: {exc}"
-            return ExecutionResult(
-                outcome.decision, None, False, None, handler_error=error_message
+            error_message = f"{type(exc).__name__}: handler execution failed"
+            result = ExecutionResult(
+                outcome.decision,
+                None,
+                False,
+                None,
+                handler_error=error_message,
+                verification_status=VerificationStatus.VERIFIER_ERROR,
             )
+            return self._record_attempt(idempotency_key, result)
 
-        postconditions_met = (
-            all(check(self._erp, output) for check in postcondition_checks)
-            if postcondition_checks
-            else None
+        verification_status, postconditions_met, check_results = _evaluate_checks(
+            self._erp, output, postcondition_checks
         )
-        result = ExecutionResult(outcome.decision, output, False, postconditions_met)
-        self._idempotency_cache[idempotency_key] = result
-        return result
+        result = ExecutionResult(
+            outcome.decision,
+            output,
+            False,
+            postconditions_met,
+            verification_status=verification_status,
+            check_results=check_results,
+        )
+        return self._record_attempt(idempotency_key, result)
