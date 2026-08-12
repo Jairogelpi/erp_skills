@@ -7,6 +7,8 @@ from erp_agent_os.dataset import RiskClass
 from erp_agent_os.policy import PolicyDecision
 from erp_agent_os.runtime import (
     ExecutionResult,
+    IdempotencyConflictError,
+    IdempotencyFingerprintError,
     Runtime,
     UnregisteredHandlerError,
     VerificationCheck,
@@ -197,6 +199,222 @@ def test_replay_preserves_the_original_mutable_output_snapshot():
         skill(), {}, "sales_user", "mutable-key", postcondition_checks=(check,)
     )
     assert another_replay.output == {"results": ["original"]}
+
+
+@pytest.mark.parametrize(
+    ("changed_skill", "changed_args", "changed_role", "changed_scope"),
+    [
+        (skill(skill_id="crm.other_skill"), {"name": "Acme"}, "sales_user", "org-a"),
+        (skill(version="2.0.0"), {"name": "Acme"}, "sales_user", "org-a"),
+        (skill(), {"name": "Different"}, "sales_user", "org-a"),
+        (
+            skill(
+                permissions=Permissions(
+                    allowed_roles=["sales_user", "sales_manager"]
+                )
+            ),
+            {"name": "Acme"},
+            "sales_manager",
+            "org-a",
+        ),
+        (skill(), {"name": "Acme"}, "sales_user", "org-b"),
+    ],
+    ids=["skill", "version", "args", "role", "scope"],
+)
+def test_idempotency_key_conflict_is_sanitized_and_preserves_original_entry(
+    changed_skill, changed_args, changed_role, changed_scope
+):
+    erp = FakeERPAdapter(allowed_models={"crm.lead"})
+    handler_calls = []
+    check_calls = []
+
+    def handler(adapter, args):
+        handler_calls.append(args)
+        return {"secret_output": "never disclose this"}
+
+    def check(adapter, output):
+        check_calls.append(output)
+        return True
+
+    original_skill = skill(
+        permissions=Permissions(allowed_roles=["sales_user", "sales_manager"])
+    )
+    runtime = Runtime(erp)
+    runtime.register(original_skill.skill_id, original_skill.version, handler)
+    runtime.register(changed_skill.skill_id, changed_skill.version, handler)
+    verification = VerificationCheck("safe_result", check)
+    original = runtime.execute(
+        original_skill,
+        {"name": "Acme"},
+        "sales_user",
+        "request-bound-key",
+        idempotency_scope="org-a",
+        postcondition_checks=(verification,),
+    )
+
+    with pytest.raises(IdempotencyConflictError) as conflict:
+        runtime.execute(
+            changed_skill,
+            changed_args,
+            changed_role,
+            "request-bound-key",
+            idempotency_scope=changed_scope,
+            postcondition_checks=(verification,),
+        )
+
+    assert str(conflict.value) == "idempotency key conflicts with another request"
+    assert "request-bound-key" not in str(conflict.value)
+    assert "never disclose this" not in str(conflict.value)
+    assert len(handler_calls) == len(check_calls) == 1
+
+    replay = runtime.execute(
+        original_skill,
+        {"name": "Acme"},
+        "sales_user",
+        "request-bound-key",
+        idempotency_scope="org-a",
+        postcondition_checks=(verification,),
+    )
+    assert replay.verification_status is VerificationStatus.REPLAYED
+    assert replay.output == original.output
+    assert len(handler_calls) == len(check_calls) == 1
+
+
+def test_canonical_argument_key_order_replays_the_same_request():
+    erp = FakeERPAdapter(allowed_models={"crm.lead"})
+    calls = []
+
+    def handler(adapter, args):
+        calls.append(args)
+        return "stable-output"
+
+    runtime = Runtime(erp)
+    runtime.register("crm.create_opportunity", "1.0.0", handler)
+    check = named_check("stable_result")
+
+    first = runtime.execute(
+        skill(),
+        {"name": "Acme", "metadata": {"a": 1, "b": 2}},
+        "sales_user",
+        "canonical-key",
+        postcondition_checks=(check,),
+    )
+    replay = runtime.execute(
+        skill(),
+        {"metadata": {"b": 2, "a": 1}, "name": "Acme"},
+        "sales_user",
+        "canonical-key",
+        postcondition_checks=(check,),
+    )
+
+    assert len(calls) == 1
+    assert replay.verification_status is VerificationStatus.REPLAYED
+    assert replay.output == first.output
+
+
+def test_non_json_arguments_are_rejected_before_handler_execution():
+    erp = FakeERPAdapter(allowed_models={"crm.lead"})
+    calls = []
+
+    def handler(adapter, args):
+        calls.append(args)
+        return "output"
+
+    runtime = Runtime(erp)
+    runtime.register("crm.create_opportunity", "1.0.0", handler)
+
+    with pytest.raises(
+        IdempotencyFingerprintError,
+        match="request arguments must be canonical JSON",
+    ):
+        runtime.execute(
+            skill(),
+            {"names": {"Acme"}},
+            "sales_user",
+            "invalid-json-key",
+            postcondition_checks=(named_check("not_run"),),
+        )
+
+    assert calls == []
+
+
+def test_cyclic_arguments_are_sanitized_without_disclosing_an_existing_entry():
+    erp = FakeERPAdapter(allowed_models={"crm.lead"})
+    calls = []
+
+    def handler(adapter, args):
+        calls.append(args)
+        return {"secret_output": "never disclose this"}
+
+    runtime = Runtime(erp)
+    runtime.register("crm.create_opportunity", "1.0.0", handler)
+    verification = named_check("safe_result")
+    runtime.execute(
+        skill(),
+        {"name": "Acme"},
+        "sales_user",
+        "cyclic-key",
+        postcondition_checks=(verification,),
+    )
+    cyclic = {}
+    cyclic["self"] = cyclic
+
+    with pytest.raises(IdempotencyFingerprintError) as error:
+        runtime.execute(
+            skill(),
+            cyclic,
+            "sales_user",
+            "cyclic-key",
+            postcondition_checks=(verification,),
+        )
+
+    assert str(error.value) == (
+        "idempotency request arguments must be canonical JSON"
+    )
+    assert "never disclose this" not in str(error.value)
+    assert len(calls) == 1
+
+    replay = runtime.execute(
+        skill(),
+        {"name": "Acme"},
+        "sales_user",
+        "cyclic-key",
+        postcondition_checks=(verification,),
+    )
+    assert replay.verification_status is VerificationStatus.REPLAYED
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "malformed_args",
+    [{"huge": 10**5000}, {"surrogate": "\ud800"}],
+    ids=["huge-integer", "lone-surrogate"],
+)
+def test_fingerprint_construction_failures_are_sanitized(malformed_args):
+    erp = FakeERPAdapter(allowed_models={"crm.lead"})
+    calls = []
+
+    def handler(adapter, args):
+        calls.append(args)
+        return {"secret_output": "never disclose this"}
+
+    runtime = Runtime(erp)
+    runtime.register("crm.create_opportunity", "1.0.0", handler)
+
+    with pytest.raises(IdempotencyFingerprintError) as error:
+        runtime.execute(
+            skill(),
+            malformed_args,
+            "sales_user",
+            "malformed-key",
+            postcondition_checks=(named_check("not_run"),),
+        )
+
+    assert str(error.value) == (
+        "idempotency request arguments must be canonical JSON"
+    )
+    assert "never disclose this" not in str(error.value)
+    assert calls == []
 
 
 def test_fully_evaluated_failed_verification_is_replayed_with_exact_evidence():
