@@ -23,7 +23,11 @@ from erp_agent_os.catalog import CATALOG
 from erp_agent_os.handlers import HANDLERS, SKILL_MODELS
 from erp_agent_os.parser import structure_proposal
 from erp_agent_os.retrieval import TfidfRetriever
-from erp_agent_os.runtime import Runtime
+from erp_agent_os.runtime import (
+    IdempotencyConflictError,
+    IdempotencyFingerprintError,
+    Runtime,
+)
 from erp_agent_os.system_c import SystemC
 
 # Demo-only credential (CLAUDE.md §14: "autenticación para la demo").
@@ -69,6 +73,9 @@ class ExecuteResponse(BaseModel):
     decision: str
     selected_skill_id: str | None
     reasons: list[str]
+    verification_status: str
+    postconditions_met: bool | None
+    checks: list[dict[str, object]]
 
 
 class ApprovalRequest(BaseModel):
@@ -114,14 +121,39 @@ def create_app() -> FastAPI:
             body.proposal.confidence,
             body.proposal.constraints,
         )
-        result = system.handle(
-            correlation_id, body.query_text, proposal, body.role, body.idempotency_key
-        )
+        try:
+            result = system.handle(
+                correlation_id,
+                body.query_text,
+                proposal,
+                body.role,
+                body.idempotency_key,
+            )
+        except IdempotencyConflictError:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "idempotency key conflicts with request",
+            ) from None
+        except IdempotencyFingerprintError:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                "request arguments cannot be fingerprinted",
+            ) from None
         return ExecuteResponse(
             correlation_id=correlation_id,
             decision=result.decision,
             selected_skill_id=result.selected_skill_id,
             reasons=list(result.reasons),
+            verification_status=result.verification_status.value,
+            postconditions_met=result.postconditions_met,
+            checks=[
+                {
+                    "check_id": check.check_id,
+                    "passed": check.passed,
+                    "detail": check.detail,
+                }
+                for check in result.check_results
+            ],
         )
 
     @app.get(
@@ -143,8 +175,39 @@ def create_app() -> FastAPI:
         events = audit.events(correlation_id)
         abstentions = audit.abstentions(correlation_id)
         return {
-            "events": [e.decision for e in events],
+            "events": [
+                {
+                    "decision": event.decision,
+                    "verification_status": event.verification_status,
+                    "postconditions_met": event.postconditions_met,
+                    "checks": [
+                        {
+                            "check_id": check.check_id,
+                            "passed": check.passed,
+                            "detail": check.detail,
+                        }
+                        for check in event.check_results
+                    ],
+                }
+                for event in events
+            ],
             "abstentions": len(abstentions),
+            "abstention_events": [
+                {
+                    "reasons": list(event.reasons),
+                    "verification_status": event.verification_status,
+                    "postconditions_met": event.postconditions_met,
+                    "checks": [
+                        {
+                            "check_id": check.check_id,
+                            "passed": check.passed,
+                            "detail": check.detail,
+                        }
+                        for check in event.check_results
+                    ],
+                }
+                for event in abstentions
+            ],
         }
 
     @app.post("/approvals", dependencies=[Depends(require_api_key)])

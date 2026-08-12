@@ -23,7 +23,7 @@ from erp_agent_os.catalog import CATALOG, CATALOG_BY_ID
 from erp_agent_os.handlers import HANDLERS, SKILL_MODELS
 from erp_agent_os.parser import structure_proposal
 from erp_agent_os.retrieval import TfidfRetriever
-from erp_agent_os.runtime import Runtime
+from erp_agent_os.runtime import Runtime, VerificationStatus
 from erp_agent_os.system_c import SystemC
 
 ROLE = "erp_user"
@@ -64,8 +64,12 @@ def test_correct_1_create_opportunity_executes_and_is_audited(system):
         {"customer_name": "Acme", "expected_revenue": "15000"},
     )
     assert result.decision == "ALLOW"
+    assert result.verification_status is VerificationStatus.PASSED
+    assert result.postconditions_met is True
     assert len(erp.list("crm.opportunity")) == 1
-    assert audit.events("e2e"), "every terminal decision must be audited"
+    event = audit.events("e2e")[0]
+    assert event.verification_status == "passed"
+    assert event.check_results
 
 
 def test_correct_2_create_task_executes(system):
@@ -90,6 +94,7 @@ def test_correct_3_read_only_skill_does_not_mutate(system):
         {"query": "Acme"},
     )
     assert result.decision == "ALLOW"
+    assert result.verification_status is VerificationStatus.PASSED
     # R0 read: the store must be byte-identical afterwards.
     assert erp.snapshot() == before
 
@@ -123,6 +128,8 @@ def test_ambiguous_1_missing_required_field_asks_for_clarification(system):
     # Missing data is a question, not a refusal (§17 separates CLARIFY
     # from abstention), and nothing may be written while asking.
     assert result.decision == "CLARIFY"
+    assert result.verification_status is VerificationStatus.NOT_RUN_CLEAN
+    assert result.postconditions_met is True
     assert erp.snapshot() == before
     assert audit.abstentions("e2e"), "a clarification is still a terminal outcome"
 
@@ -169,6 +176,7 @@ def test_adversarial_1_prompt_injection_is_denied_without_mutating(system):
         {"customer_name": "Acme", "expected_revenue": "1500"},
     )
     assert result.decision == "DENY"
+    assert result.verification_status is VerificationStatus.NOT_RUN_CLEAN
     assert erp.snapshot() == before
 
 

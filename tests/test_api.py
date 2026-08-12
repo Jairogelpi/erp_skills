@@ -40,6 +40,13 @@ def test_execute_normal_request_allows_and_returns_correlation_id():
     payload = response.json()
     assert payload["decision"] == "ALLOW"
     assert payload["selected_skill_id"] == "tasks.create_task"
+    assert payload["verification_status"] == "passed"
+    assert payload["postconditions_met"] is True
+    assert {check["check_id"] for check in payload["checks"]} == {
+        "exactly_one_new_task",
+        "task_is_open",
+        "no_cross_model_side_effects",
+    }
     assert payload["correlation_id"]
 
 
@@ -57,7 +64,11 @@ def test_execute_missing_field_clarifies():
         "idempotency_key": "key-1",
     }
     response = c.post("/requests", json=body, headers=HEADERS)
-    assert response.json()["decision"] == "CLARIFY"
+    payload = response.json()
+    assert payload["decision"] == "CLARIFY"
+    assert payload["verification_status"] == "not_run_clean"
+    assert payload["postconditions_met"] is True
+    assert payload["checks"][0]["check_id"] == "complete_state_unchanged"
 
 
 def test_audit_endpoint_reflects_prior_execution():
@@ -76,7 +87,35 @@ def test_audit_endpoint_reflects_prior_execution():
     response = c.post("/requests", json=body, headers=HEADERS)
     correlation_id = response.json()["correlation_id"]
     response = c.get(f"/audit/{correlation_id}", headers=HEADERS)
-    assert response.json()["events"] == ["ALLOW"]
+    payload = response.json()
+    assert payload["events"][0]["decision"] == "ALLOW"
+    assert payload["events"][0]["verification_status"] == "passed"
+    assert payload["events"][0]["postconditions_met"] is True
+    assert payload["events"][0]["checks"]
+
+
+def test_idempotency_conflict_is_a_sanitized_409():
+    c = client()
+
+    def body(title):
+        return {
+            "query_text": "Crea una tarea para llamar al cliente.",
+            "proposal": {
+                "intent": "tasks.create_task.followup",
+                "arguments": {"title": title},
+                "required_fields": ["title"],
+                "confidence": 0.9,
+            },
+            "role": "erp_user",
+            "idempotency_key": "conflicting-key",
+        }
+
+    assert c.post("/requests", json=body("first"), headers=HEADERS).status_code == 200
+    response = c.post("/requests", json=body("second"), headers=HEADERS)
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "idempotency key conflicts with request"}
+    assert "first" not in response.text
 
 
 def test_grant_approval_returns_expiry():

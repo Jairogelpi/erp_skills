@@ -7,6 +7,7 @@ from erp_agent_os.persistence import (
     SqlAuditStore,
     in_memory_engine,
 )
+from erp_agent_os.runtime import VerificationCheckResult
 
 NOW = datetime(2026, 8, 5, 12, 0, tzinfo=UTC)
 
@@ -25,6 +26,10 @@ def event(correlation_id: str = "corr-1", decision: str = "ALLOW") -> AuditEvent
         postconditions_met=None,
         output="42",
         recorded_at=NOW,
+        verification_status="failed",
+        check_results=(
+            VerificationCheckResult("record_exists", False, "check failed"),
+        ),
     )
 
 
@@ -38,6 +43,15 @@ def test_recorded_event_survives_a_new_store_instance():
 
     assert len(rows) == 1
     assert rows[0]["decision"] == "ALLOW"
+    assert rows[0]["verification_status"] == "failed"
+    assert rows[0]["postconditions_met"] is None
+    assert rows[0]["check_results"] == [
+        {
+            "check_id": "record_exists",
+            "passed": False,
+            "detail": "check failed",
+        }
+    ]
 
 
 def test_events_filtered_by_correlation_id():

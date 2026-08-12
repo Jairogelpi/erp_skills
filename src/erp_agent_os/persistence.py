@@ -16,6 +16,7 @@ Append-only is enforced the same way as in memory: no update or delete
 method exists on the public surface.
 """
 
+import json
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from typing import Any
@@ -55,6 +56,16 @@ audit_events = Table(
     Column("idempotency_key", String(128), nullable=False),
     Column("idempotent_replay", Boolean, nullable=False),
     Column("postconditions_met", Boolean, nullable=True),
+    Column(
+        "verification_status",
+        String(32),
+        nullable=False,
+        default="verifier_error",
+        server_default="verifier_error",
+    ),
+    Column(
+        "check_results", Text, nullable=False, default="[]", server_default="[]"
+    ),
     Column("output", Text, nullable=True),
     Column("recorded_at", DateTime(timezone=True), nullable=False),
 )
@@ -101,6 +112,19 @@ class SqlAuditStore:
                     idempotency_key=event.idempotency_key,
                     idempotent_replay=event.idempotent_replay,
                     postconditions_met=event.postconditions_met,
+                    verification_status=event.verification_status,
+                    check_results=json.dumps(
+                        [
+                            {
+                                "check_id": check.check_id,
+                                "passed": check.passed,
+                                "detail": check.detail,
+                            }
+                            for check in event.check_results
+                        ],
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    ),
                     output=None if event.output is None else str(event.output),
                     recorded_at=event.recorded_at,
                 )
@@ -111,7 +135,10 @@ class SqlAuditStore:
         if correlation_id is not None:
             stmt = stmt.where(audit_events.c.correlation_id == correlation_id)
         with self._engine.connect() as conn:
-            return [dict(row._mapping) for row in conn.execute(stmt)]
+            rows = [dict(row._mapping) for row in conn.execute(stmt)]
+        for row in rows:
+            row["check_results"] = json.loads(row["check_results"])
+        return rows
 
 
 class SqlApprovalStore:

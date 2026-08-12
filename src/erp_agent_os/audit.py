@@ -13,7 +13,11 @@ from datetime import UTC, datetime
 from typing import Any
 
 from erp_agent_os.policy import PolicyOutcome
-from erp_agent_os.runtime import ExecutionResult
+from erp_agent_os.runtime import (
+    ExecutionResult,
+    VerificationCheckResult,
+    VerificationStatus,
+)
 from erp_agent_os.skills import SkillDefinition
 
 REDACTED = "***REDACTED***"
@@ -42,6 +46,8 @@ class AuditEvent:
     postconditions_met: bool | None
     output: Any
     recorded_at: datetime
+    verification_status: str = VerificationStatus.VERIFIER_ERROR.value
+    check_results: tuple[VerificationCheckResult, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -49,6 +55,9 @@ class AbstentionEvent:
     correlation_id: str
     reasons: tuple[str, ...]
     recorded_at: datetime
+    verification_status: str = VerificationStatus.VERIFIER_ERROR.value
+    postconditions_met: bool | None = None
+    check_results: tuple[VerificationCheckResult, ...] = ()
 
 
 class AuditStore:
@@ -85,6 +94,8 @@ class AuditStore:
             postconditions_met=execution.postconditions_met,
             output=_redact(deepcopy(execution.output), self._redact_keys),
             recorded_at=self._clock(),
+            verification_status=execution.verification_status.value,
+            check_results=execution.check_results,
         )
         self._events.append(event)
         return event
@@ -95,9 +106,29 @@ class AuditStore:
         return tuple(e for e in self._events if e.correlation_id == correlation_id)
 
     def record_abstention(
-        self, correlation_id: str, reasons: list[str]
+        self,
+        correlation_id: str,
+        reasons: list[str],
+        *,
+        verification_status: VerificationStatus | str = (
+            VerificationStatus.VERIFIER_ERROR
+        ),
+        postconditions_met: bool | None = None,
+        check_results: tuple[VerificationCheckResult, ...] = (),
     ) -> AbstentionEvent:
-        event = AbstentionEvent(correlation_id, tuple(reasons), self._clock())
+        status = (
+            verification_status.value
+            if isinstance(verification_status, VerificationStatus)
+            else verification_status
+        )
+        event = AbstentionEvent(
+            correlation_id,
+            tuple(reasons),
+            self._clock(),
+            status,
+            postconditions_met,
+            check_results,
+        )
         self._abstentions.append(event)
         return event
 
