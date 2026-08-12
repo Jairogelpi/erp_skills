@@ -229,7 +229,15 @@ def test_approval_grants_allow_for_r2_skill():
     audit = AuditStore()
     approval = ApprovalService(clock=lambda: datetime(2026, 8, 5, tzinfo=UTC))
     approval.grant("manager1", skill.skill_id, ttl_seconds=60)
-    system = SystemC(erp, runtime, retriever, audit, approval)
+    system = SystemC(
+        erp,
+        runtime,
+        retriever,
+        audit,
+        approval,
+        monitored_models={"crm.lead"},
+        skill_models={skill.skill_id: "crm.lead"},
+    )
     proposal = structure_proposal(
         skill.skill_id, {"name": "Acme"}, ["name"], confidence=0.9
     )
@@ -401,8 +409,16 @@ def test_snapshot_read_failure_is_verifier_error_without_sensitive_detail():
 
     skill = make_skill()
     erp = UnreadableAdapter(allowed_models={"crm.lead"})
-    _, system, audit = build_system(skill, erp=erp)
-    proposal = structure_proposal(skill.skill_id, {}, ["name"], confidence=0.9)
+    handler_calls = []
+
+    def must_not_run(adapter, args):
+        handler_calls.append(args)
+        return adapter.create("crm.lead", args)
+
+    _, system, audit = build_system(skill, erp=erp, handler_fn=must_not_run)
+    proposal = structure_proposal(
+        skill.skill_id, {"name": "Acme"}, ["name"], confidence=0.9
+    )
 
     result = system.handle(
         "corr-unreadable",
@@ -412,20 +428,29 @@ def test_snapshot_read_failure_is_verifier_error_without_sensitive_detail():
         "unreadable",
     )
 
-    assert result.decision == "CLARIFY"
+    assert result.decision == "DENY"
+    assert result.reasons == ("verification baseline unavailable",)
     assert result.verification_status is VerificationStatus.VERIFIER_ERROR
     assert result.postconditions_met is None
+    assert handler_calls == []
     assert "secret" not in repr(result.check_results)
-    assert audit.abstentions("corr-unreadable")[0].verification_status == (
-        VerificationStatus.VERIFIER_ERROR.value
-    )
+    event = audit.events("corr-unreadable")[0]
+    assert event.decision == "DENY"
+    assert event.verification_status == VerificationStatus.VERIFIER_ERROR.value
+    assert "secret" not in repr(event)
 
 
 def test_unknown_skill_model_mapping_is_a_controlled_verifier_error():
     skill = make_skill(skill_id="custom.create_record")
     erp = FakeERPAdapter(allowed_models={"crm.lead"})
+    handler_calls = []
+
+    def must_not_run(adapter, args):
+        handler_calls.append(args)
+        return adapter.create("crm.lead", args)
+
     runtime = Runtime(erp)
-    runtime.register(skill.skill_id, skill.version, handler)
+    runtime.register(skill.skill_id, skill.version, must_not_run)
     system = SystemC(
         erp,
         runtime,
@@ -442,7 +467,76 @@ def test_unknown_skill_model_mapping_is_a_controlled_verifier_error():
         "corr-mapping", "crear una oportunidad comercial", proposal, "sales_user", "map"
     )
 
-    assert result.decision == "ALLOW"
+    assert result.decision == "DENY"
+    assert result.reasons == ("verification baseline unavailable",)
     assert result.verification_status is VerificationStatus.VERIFIER_ERROR
     assert result.postconditions_met is None
     assert result.check_results[0].check_id == "skill_model_mapping"
+    assert handler_calls == []
+    assert erp.list("crm.lead") == {}
+
+
+def test_snapshot_failure_preserves_clarify_without_running_handler():
+    class UnreadableAdapter(FakeERPAdapter):
+        def list(self, model):
+            raise RuntimeError("secret ERP response")
+
+    skill = make_skill()
+    erp = UnreadableAdapter(allowed_models={"crm.lead"})
+    handler_calls = []
+
+    def must_not_run(adapter, args):
+        handler_calls.append(args)
+        return adapter.create("crm.lead", args)
+
+    _, system, audit = build_system(skill, erp=erp, handler_fn=must_not_run)
+    proposal = structure_proposal(skill.skill_id, {}, ["name"], confidence=0.9)
+
+    result = system.handle(
+        "corr-unreadable-clarify",
+        "crear una oportunidad comercial",
+        proposal,
+        "sales_user",
+        "unreadable-clarify",
+    )
+
+    assert result.decision == "CLARIFY"
+    assert result.verification_status is VerificationStatus.VERIFIER_ERROR
+    assert result.postconditions_met is None
+    assert handler_calls == []
+    assert audit.events("corr-unreadable-clarify") == ()
+    assert audit.abstentions("corr-unreadable-clarify")[0].decision == "CLARIFY"
+
+
+def test_snapshot_failure_preserves_abstain_without_running_handler():
+    class UnreadableAdapter(FakeERPAdapter):
+        def list(self, model):
+            raise RuntimeError("secret ERP response")
+
+    skill = make_skill()
+    erp = UnreadableAdapter(allowed_models={"crm.lead"})
+    handler_calls = []
+
+    def must_not_run(adapter, args):
+        handler_calls.append(args)
+        return adapter.create("crm.lead", args)
+
+    _, system, audit = build_system(skill, erp=erp, handler_fn=must_not_run)
+    proposal = structure_proposal(
+        skill.skill_id, {"name": "Acme"}, ["name"], confidence=0.9
+    )
+
+    result = system.handle(
+        "corr-unreadable-abstain",
+        "zzzz qqqq xxxx",
+        proposal,
+        "sales_user",
+        "unreadable-abstain",
+    )
+
+    assert result.decision == "ABSTAIN"
+    assert result.verification_status is VerificationStatus.VERIFIER_ERROR
+    assert result.postconditions_met is None
+    assert handler_calls == []
+    assert audit.events("corr-unreadable-abstain") == ()
+    assert audit.abstentions("corr-unreadable-abstain")[0].decision == "ABSTAIN"

@@ -148,6 +148,53 @@ def test_idempotency_fingerprint_failure_is_a_sanitized_422(monkeypatch):
     assert "secret" not in response.text
 
 
+def test_verification_baseline_failure_is_a_sanitized_nonexecuting_result(
+    monkeypatch,
+):
+    def unreadable(_adapter, _model):
+        raise RuntimeError("secret ERP response")
+
+    handler_calls = []
+
+    def must_not_run(_adapter, _args):
+        handler_calls.append(True)
+        return "unexpected"
+
+    monkeypatch.setattr("erp_agent_os.api.FakeERPAdapter.list", unreadable)
+    monkeypatch.setitem(
+        __import__("erp_agent_os.api", fromlist=["HANDLERS"]).HANDLERS,
+        "tasks.create_task",
+        must_not_run,
+    )
+    c = client()
+    body = {
+        "query_text": "Crea una tarea para llamar al cliente.",
+        "proposal": {
+            "intent": "tasks.create_task.followup",
+            "arguments": {"title": "llamar al cliente"},
+            "required_fields": ["title"],
+            "confidence": 0.9,
+        },
+        "role": "erp_user",
+        "idempotency_key": "unreadable-baseline",
+    }
+
+    response = c.post("/requests", json=body, headers=HEADERS)
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["decision"] == "DENY"
+    assert payload["reasons"] == ["verification baseline unavailable"]
+    assert payload["verification_status"] == "verifier_error"
+    assert payload["postconditions_met"] is None
+    assert handler_calls == []
+    assert "secret" not in response.text
+    audit = c.get(f"/audit/{payload['correlation_id']}", headers=HEADERS).json()
+    assert audit["events"][0]["decision"] == "DENY"
+    assert audit["events"][0]["verification_status"] == "verifier_error"
+    assert "secret" not in str(audit)
+
+
 def test_grant_approval_returns_expiry():
     c = client()
     response = c.post(

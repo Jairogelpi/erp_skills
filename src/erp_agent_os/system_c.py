@@ -18,7 +18,7 @@ from erp_agent_os.audit import AuditStore
 from erp_agent_os.dataset import RiskClass
 from erp_agent_os.handlers import SKILL_MODELS
 from erp_agent_os.parser import IntentProposal
-from erp_agent_os.policy import decide
+from erp_agent_os.policy import PolicyDecision, PolicyOutcome, decide
 from erp_agent_os.postconditions import build_checks
 from erp_agent_os.retrieval import TfidfRetriever, should_abstain
 from erp_agent_os.runtime import (
@@ -28,6 +28,7 @@ from erp_agent_os.runtime import (
     VerificationCheckResult,
     VerificationStatus,
 )
+from erp_agent_os.skills import SkillDefinition
 from erp_agent_os.validation import (
     detect_text_signals,
     normalize_arguments,
@@ -75,13 +76,6 @@ def _snapshot(
             raise TypeError("adapter list result must be a mapping")
         records[model] = _normalize_snapshot_value(listed)
     return {"records": records}
-
-
-def _error_check(check_id: str) -> VerificationCheck[ErpAdapter]:
-    def unavailable(_erp: ErpAdapter, _output: Any) -> bool:
-        raise RuntimeError("verification input unavailable")
-
-    return VerificationCheck(check_id, unavailable)
 
 
 def _state_check(
@@ -167,6 +161,44 @@ class SystemC:
             SKILL_MODELS if skill_models is None else skill_models
         )
 
+    def _fail_closed(
+        self,
+        correlation_id: str,
+        skill: SkillDefinition,
+        role: str,
+        idempotency_key: str,
+        risk_score: float,
+        *,
+        check_id: str,
+        reason: str,
+    ) -> SystemCResult:
+        evidence = (
+            VerificationCheckResult(
+                check_id, None, "check raised an exception"
+            ),
+        )
+        outcome = PolicyOutcome(PolicyDecision.DENY, risk_score, [reason])
+        execution = ExecutionResult(
+            PolicyDecision.DENY,
+            None,
+            False,
+            None,
+            verification_status=VerificationStatus.VERIFIER_ERROR,
+            check_results=evidence,
+        )
+        self._audit.record(
+            correlation_id, skill, role, outcome, execution, idempotency_key
+        )
+        return SystemCResult(
+            PolicyDecision.DENY.value,
+            skill.skill_id,
+            execution,
+            (reason,),
+            VerificationStatus.VERIFIER_ERROR,
+            None,
+            evidence,
+        )
+
     def handle(
         self,
         correlation_id: str,
@@ -239,10 +271,31 @@ class SystemC:
             skill, role, approval_granted=approval_granted, findings=findings
         )
 
-        checks: tuple[VerificationCheck[ErpAdapter], ...]
         if before is None:
-            checks = (_error_check("complete_state_snapshot"),)
-        elif outcome.decision.value != "ALLOW":
+            return self._fail_closed(
+                correlation_id,
+                skill,
+                role,
+                idempotency_key,
+                outcome.risk_score,
+                check_id="complete_state_snapshot",
+                reason="verification baseline unavailable",
+            )
+
+        model = self._skill_models.get(skill.skill_id)
+        if model is None or model not in self._monitored_models:
+            return self._fail_closed(
+                correlation_id,
+                skill,
+                role,
+                idempotency_key,
+                outcome.risk_score,
+                check_id="skill_model_mapping",
+                reason="verification baseline unavailable",
+            )
+
+        checks: tuple[VerificationCheck[ErpAdapter], ...]
+        if outcome.decision.value != "ALLOW":
             checks = (
                 _state_check(
                     before,
@@ -251,32 +304,36 @@ class SystemC:
                 ),
             )
         else:
-            model = self._skill_models.get(skill.skill_id)
-            if model is None or model not in self._monitored_models:
-                checks = (_error_check("skill_model_mapping"),)
+            try:
+                checks = build_checks(skill, arguments, before, model=model)
+            except Exception:
+                return self._fail_closed(
+                    correlation_id,
+                    skill,
+                    role,
+                    idempotency_key,
+                    outcome.risk_score,
+                    check_id="declared_postconditions",
+                    reason="verification checks unavailable",
+                )
             else:
-                try:
-                    checks = build_checks(skill, arguments, before, model=model)
-                except Exception:
-                    checks = (_error_check("declared_postconditions"),)
+                if skill.risk_class is RiskClass.R0:
+                    checks += (
+                        _state_check(
+                            before,
+                            self._monitored_models,
+                            check_id="complete_state_unchanged",
+                        ),
+                    )
                 else:
-                    if skill.risk_class is RiskClass.R0:
-                        checks += (
-                            _state_check(
-                                before,
-                                self._monitored_models,
-                                check_id="complete_state_unchanged",
-                            ),
-                        )
-                    else:
-                        checks += (
-                            _state_check(
-                                before,
-                                self._monitored_models,
-                                check_id="no_cross_model_side_effects",
-                                excluded_models=frozenset({model}),
-                            ),
-                        )
+                    checks += (
+                        _state_check(
+                            before,
+                            self._monitored_models,
+                            check_id="no_cross_model_side_effects",
+                            excluded_models=frozenset({model}),
+                        ),
+                    )
 
         execution = self._runtime.execute(
             skill,

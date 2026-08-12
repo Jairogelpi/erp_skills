@@ -33,14 +33,23 @@ from sqlalchemy import (
     Text,
     create_engine,
     insert,
+    inspect,
     select,
 )
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection, Engine
 
 from erp_agent_os.approval import Approval
 from erp_agent_os.audit import AbstentionEvent, AuditEvent
 
 metadata = MetaData()
+LATEST_SCHEMA_VERSION = 1
+
+schema_migrations = Table(
+    "schema_migrations",
+    metadata,
+    Column("version", Integer, primary_key=True),
+    Column("applied_at", DateTime(timezone=True), nullable=False),
+)
 
 audit_events = Table(
     "audit_events",
@@ -88,8 +97,150 @@ approvals = Table(
 )
 
 
-def create_schema(engine: Engine) -> None:
+def _sqlite_migrate_v1(connection: Connection, columns: set[str]) -> None:
+    event_type = "event_type" if "event_type" in columns else "'execution'"
+    verification_status = (
+        "verification_status"
+        if "verification_status" in columns
+        else "'verifier_error'"
+    )
+    check_results = "check_results" if "check_results" in columns else "'[]'"
+    connection.exec_driver_sql(
+        """
+        CREATE TABLE audit_events_migration_v1 (
+            id INTEGER NOT NULL PRIMARY KEY,
+            correlation_id VARCHAR(64) NOT NULL,
+            event_type VARCHAR(32) NOT NULL DEFAULT 'execution',
+            skill_id VARCHAR(128),
+            skill_version VARCHAR(32),
+            role VARCHAR(64),
+            decision VARCHAR(32) NOT NULL,
+            risk_score FLOAT,
+            reasons TEXT NOT NULL,
+            idempotency_key VARCHAR(128),
+            idempotent_replay BOOLEAN,
+            postconditions_met BOOLEAN,
+            verification_status VARCHAR(32) NOT NULL DEFAULT 'verifier_error',
+            check_results TEXT NOT NULL DEFAULT '[]',
+            output TEXT,
+            recorded_at DATETIME NOT NULL
+        )
+        """
+    )
+    connection.exec_driver_sql(
+        f"""
+        INSERT INTO audit_events_migration_v1 (
+            id, correlation_id, event_type, skill_id, skill_version, role,
+            decision, risk_score, reasons, idempotency_key, idempotent_replay,
+            postconditions_met, verification_status, check_results, output,
+            recorded_at
+        )
+        SELECT
+            id, correlation_id, {event_type}, skill_id, skill_version, role,
+            decision, risk_score, reasons, idempotency_key, idempotent_replay,
+            postconditions_met, {verification_status}, {check_results}, output,
+            recorded_at
+        FROM audit_events
+        """
+    )
+    connection.exec_driver_sql("DROP TABLE audit_events")
+    connection.exec_driver_sql(
+        "ALTER TABLE audit_events_migration_v1 RENAME TO audit_events"
+    )
+    connection.exec_driver_sql(
+        "CREATE INDEX ix_audit_events_correlation_id "
+        "ON audit_events (correlation_id)"
+    )
+
+
+def _postgresql_v1_statements(columns: set[str]) -> tuple[str, ...]:
+    statements: list[str] = []
+    additions = {
+        "event_type": (
+            "ALTER TABLE audit_events ADD COLUMN event_type "
+            "VARCHAR(32) NOT NULL DEFAULT 'execution'"
+        ),
+        "verification_status": (
+            "ALTER TABLE audit_events ADD COLUMN verification_status "
+            "VARCHAR(32) NOT NULL DEFAULT 'verifier_error'"
+        ),
+        "check_results": (
+            "ALTER TABLE audit_events ADD COLUMN check_results "
+            "TEXT NOT NULL DEFAULT '[]'"
+        ),
+    }
+    statements.extend(
+        statement for name, statement in additions.items() if name not in columns
+    )
+    statements.extend(
+        f"ALTER TABLE audit_events ALTER COLUMN {name} DROP NOT NULL"
+        for name in (
+            "skill_id",
+            "skill_version",
+            "role",
+            "risk_score",
+            "idempotency_key",
+            "idempotent_replay",
+        )
+    )
+    return tuple(statements)
+
+
+def _audit_schema_is_current(connection: Connection) -> bool:
+    columns = {
+        column["name"]: column
+        for column in inspect(connection).get_columns("audit_events")
+    }
+    nullable_for_nonexecution = (
+        "skill_id",
+        "skill_version",
+        "role",
+        "risk_score",
+        "idempotency_key",
+        "idempotent_replay",
+    )
+    return (
+        {"event_type", "verification_status", "check_results"} <= columns.keys()
+        and all(
+            columns[name]["nullable"] is not False
+            for name in nullable_for_nonexecution
+        )
+    )
+
+
+def migrate_schema(engine: Engine) -> None:
+    """Upgrade the audit schema transactionally and record version 1."""
     metadata.create_all(engine)
+    with engine.begin() as connection:
+        versions = set(
+            connection.execute(select(schema_migrations.c.version)).scalars()
+        )
+        if LATEST_SCHEMA_VERSION in versions:
+            return
+
+        columns = {
+            column["name"]
+            for column in inspect(connection).get_columns("audit_events")
+        }
+        if not _audit_schema_is_current(connection):
+            dialect = connection.dialect.name
+            if dialect == "sqlite":
+                _sqlite_migrate_v1(connection, columns)
+            elif dialect == "postgresql":
+                for statement in _postgresql_v1_statements(columns):
+                    connection.exec_driver_sql(statement)
+            else:
+                raise RuntimeError(f"unsupported audit migration dialect: {dialect}")
+
+        connection.execute(
+            insert(schema_migrations).values(
+                version=LATEST_SCHEMA_VERSION, applied_at=datetime.now(UTC)
+            )
+        )
+
+
+def create_schema(engine: Engine) -> None:
+    migrate_schema(engine)
 
 
 def in_memory_engine() -> Engine:
@@ -104,6 +255,7 @@ class SqlAuditStore:
 
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
+        migrate_schema(engine)
 
     def record(self, event: AuditEvent | AbstentionEvent) -> None:
         check_results = json.dumps(
