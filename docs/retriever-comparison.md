@@ -71,6 +71,12 @@ todo lo difícil):
 **TF-IDF gana en todas las métricas, en ambos splits, incluso después
 de calibrar cada recuperador de forma individualizada y favorable.**
 
+> ⚠️ **No leer esto como «TF-IDF es mejor recuperador».** Lo es *sobre
+> este corpus y con estas descripciones*. Con peticiones reales cae de
+> 0,733 a 0,381 y el orden se invierte en las métricas que importan en
+> producción — ver la [actualización al final de esta
+> página](#actualización-posterior-este-resultado-no-sobrevive-al-texto-real).
+
 ## Interpretación honesta
 
 **Por qué pierde el modelo de embeddings.** ERP-Skills-Bench v1 es

@@ -2,9 +2,10 @@
 
 > ## ⚠️ Lee esto primero: cuál es el resultado vigente
 >
-> Hay **cuatro ejecuciones** documentadas aquí. La vigente es la
-> **ejecución 4**; las anteriores se conservan porque el motivo por el
-> que quedaron superadas es material metodológico, no ruido.
+> Hay **cinco ejecuciones** documentadas aquí. La vigente es la
+> **ejecución 4**; las demás se conservan porque el motivo por el que
+> quedaron superadas —o lo que aíslan— es material metodológico, no
+> ruido.
 >
 > Las ejecuciones 1 y 2 entregaban a **los tres sistemas** los
 > argumentos ya extraídos (`case.expected_arguments`): un parseo
@@ -37,11 +38,19 @@
 >
 > Detalle en [§ Ejecución 4](#ejecución-4-normalización-de-argumentos-el-resultado-vigente).
 
-Tres ejecuciones, mismo protocolo (`uv run python scripts/run_experiment.py
+Cinco ejecuciones, mismo protocolo (`uv run python scripts/run_experiment.py
 [--real-llm --real-parser --provider {groq,gemini,openrouter}]`):
 **1.080 ejecuciones** cada una (120 casos de test congelado × 3 sistemas
 × 3 repeticiones), semilla `20260805`, estado de `FakeERPAdapter`
 reconstruido por observación.
+
+| # | Selector | Argumentos | Fichero | Papel |
+|---|---|---|---|---|
+| 1 | OpenRouter | dados | `experiment_results.json` | Confirmatoria con LLM real |
+| 2 | stub | dados | (histórica) | Aísla gobernanza de calidad del modelo |
+| 3 | Groq | parseados | (superada por la 4) | Elimina el sesgo del parseo regalado |
+| 4 | Groq | parseados + normalizados | `experiment_results_real_parser.json` | **VIGENTE** |
+| 5 | Groq | dados | `experiment_results_groq_given_args.json` | Resuelve el confundido proveedor↔régimen |
 
 1. **Ejecución confirmatoria real** (`data/experiment_results.json`,
    `manifest.selector: "OpenRouterClient"`, `is_confirmatory_run: true`)
@@ -104,8 +113,14 @@ reconstruido por observación.
 
 - **Errores de seguridad: sí, contundente.** C reduce el false allow de
   0,889 a 0,111 (8×) y sube el recall de detección de 0,111 a 0,889,
-  de forma estable entre tres proveedores y ambos regímenes de parseo.
-- **Consumo de tokens: sí.** C usa 67,6 tok/ejecución frente a 265,2 de
+  de forma estable entre los proveedores y regímenes de parseo probados.
+  **Con dos matices que viajan siempre con esta cifra:** descansa en
+  **n = 9** casos peligrosos (IC de C [0,020, 0,435]), y **8 de esos 9
+  los bloquea un patrón léxico escrito sobre este mismo corpus**. La
+  afirmación *arquitectónica* de seguridad que sí generaliza es la otra:
+  0/1.530 mutaciones no autorizadas con un dataset externo, incluido el
+  brazo que entrega el LLM entero al atacante.
+- **Consumo de tokens: sí.** C usa 67,6 tok/ejecución frente a 265,3 de
   B (−197,6, IC95 [−198,3, −196,9]): 3,9× más barato, porque sustituye
   la llamada de selección de herramienta por recuperación TF-IDF.
 - **Variabilidad: no medible.** H3 sale 1,0 en los tres sistemas porque
@@ -123,6 +138,13 @@ LLM.
 ---
 
 ## H1 — Strict Task Success Rate
+
+> **Esta sección reporta la ejecución 1 (OpenRouter, argumentos dados).**
+> Se conserva porque es la primera corrida confirmatoria con LLM real y
+> porque su comparación con la ejecución 5 es lo que resuelve el
+> confundido proveedor↔régimen. **Las cifras vigentes están en
+> [§ Ejecución 4](#ejecución-4-normalización-de-argumentos-el-resultado-vigente)**:
+> C = 0,633 y C−B = +0,150.
 
 | Sistema | STSR (real, OpenRouter) | STSR (stub, arquitectura-solo) |
 |---|---|---|
@@ -193,8 +215,8 @@ producida").
 | B | 1,000 |
 | C | 1,000 |
 
-**Resultado nulo, en las tres ejecuciones con LLM real probadas
-(Groq, ahora OpenRouter).** Con `temperature=0.0` (§23) el LLM real
+**Resultado nulo, en todas las ejecuciones con LLM real probadas
+(Groq y OpenRouter).** Con `temperature=0.0` (§23) el LLM real
 resultó también perfectamente reproducible. H3 sigue sin poder
 discriminar: haría falta temperatura > 0, lo cual contradice la propia
 norma de temperatura baja del protocolo.
@@ -838,4 +860,4 @@ Cada ejecución `--real-llm` usa un checkpoint propio por proveedor
 reanudar sin re-gastar cuota si se interrumpe; se borra automáticamente
 al completar. Las repeticiones de un mismo caso reutilizan la primera
 llamada real (`CachingLLMClient`), verificado empíricamente reproducible
-con temperatura 0 (H3 = 1,0 en las tres ejecuciones reales).
+con temperatura 0 (H3 = 1,0 en todas las ejecuciones reales).

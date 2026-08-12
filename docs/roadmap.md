@@ -53,14 +53,16 @@ C−A = +0,700 IC95 [+0,617, +0,783], Holm *p* = 2,71×10⁻¹⁹, OR 169. C−B
 
 | Métrica | A | B | C |
 |---|---|---|---|
-| STSR | 0,000 | 0,483 | **0,558** |
-| Tokens medios/ejecución | 185,1 | 265,2 | **67,6** |
+| STSR | 0,000 | 0,483 | **0,633** |
+| Tokens medios/ejecución | 185,1 | 265,3 | **67,6** |
 | False allow rate | 0,889 | 0,889 | **0,111** |
 | Trazabilidad media | 0,356 | 0,374 | **0,820** |
 
-**C−B en STSR = +0,075 IC95 [−0,025, +0,175], Holm *p* = 0,212 — no significativo.** El IC cruza el cero: sin el parseo regalado, la superioridad de C sobre B en éxito de tarea no se sostiene. H1 **sigue aceptándose como no inferioridad** (límite inferior −0,025, por encima del margen de −5 pp), no como superioridad. En tokens sí gana con holgura: C−B = −197,6 IC95 [−198,3, −196,9], **3,9× más barato**. Seguridad y trazabilidad no cambian: provienen del policy engine y la auditoría, no de la calidad del parseo.
+**C−B en STSR = +0,150 IC95 [+0,042, +0,258], Holm *p* = 0,0162.** Significativo, y con un efecto **menor** que el +0,183 que sostenía el parseo regalado. En tokens gana con holgura: C−B = −197,6 IC95 [−198,3, −196,9], **3,9× más barato**. Seguridad y trazabilidad no dependen del parseo: provienen del policy engine y de la auditoría.
 
-**Tesis defendible, reformulada:** la gobernanza **no compra más éxito de tarea** frente a un baseline de herramientas tipadas; compra **8× menos ejecuciones inseguras, 2,2× más trazabilidad y 3,9× menos tokens, sin coste medible en éxito de tarea**.
+**Historia de esta cifra, porque importa más que la cifra:** al quitar el parseo regalado, C−B cayó a +0,075 (*p* = 0,212) y **se publicó así, como no significativo**. Una pregunta escéptica posterior reveló que ese resultado arrastraba un sesgo **contra** C —una unidad monetaria sin normalizar que solo penalizaba al sistema que valida tipos, defecto #13—. Corregido, la ventaja volvió, pero menor que la original. Detalle en `docs/results.md` § Ejecución 4.
+
+**Tesis defendible:** frente a un baseline de herramientas tipadas con el mismo LLM, la gobernanza compra **8× menos ejecuciones inseguras, 2,2× más trazabilidad y 3,9× menos tokens**, con una ventaja **pequeña pero significativa** en éxito de tarea que **no transfiere a texto real** (`docs/results.md`, amenaza 3c).
 
 **Doce defectos encontrados y corregidos por auditoría propia** (unidades 21–31, detalle completo en [`docs/audit.md`](audit.md)): fuga del test congelado; validador de fuga tautológico; dos conjuntos vacíos de STSR; pseudo-replicación; dos huecos en la suite estadística (mutation testing); caveat del manifiesto inconsistente con `is_confirmatory_run`; caveat con el nombre del proveedor hardcodeado; error de varianza de `Callable` al retipar contra `ErpAdapter`; dos clases de error homónimas entre `odoo_client` y `adapters`; y **el #12, caché de extracción compartido entre A/B/C**, que hacía que los tokens por sistema midieran orden de ejecución. Once correcciones **no cambiaron el signo de ninguna conclusión**; la doceava **sí** — es la que reformuló la tesis. Mutation testing acumulado: 40 mutantes, 40 muertos, cobertura de los 23 módulos con lógica de antes de esta sesión.
 
@@ -313,7 +315,7 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 11. Entregables, memoria y defensa `CONF`
 
-- [-] **P11.1** Redactar memoria con método, arquitectura, dataset, resultados, discusión, validez, seguridad y límites (D-09). Evidencia: `docs/memoria.md`, **borrador completo de los 13 capítulos del índice de §33**, construido desde los artefactos reales — cada cifra procede de un `data/*.json` versionado y es reproducible con los comandos del anexo A. Incluye resultados negativos sin suavizar, las tres tensiones no resueltas a favor del número bonito (R3 vs STSR, abstención vs Top-1, temperatura vs H3) y el capítulo metodológico sobre los trece defectos del instrumento de medida. **Pendiente:** revisión del tutor, kappa de anotación para cerrar §6.3, y el formato final de entrega (el borrador es Markdown, no el documento maquetado).
+- [-] **P11.1** Redactar memoria con método, arquitectura, dataset, resultados, discusión, validez, seguridad y límites (D-09). Evidencia: `docs/memoria.md`, **borrador completo de los 13 capítulos del índice de §33**, construido desde los artefactos reales — cada cifra procede de un `data/*.json` versionado y es reproducible con los comandos del anexo A. Incluye resultados negativos sin suavizar, las tres tensiones no resueltas a favor del número bonito (R3 vs STSR, abstención vs Top-1, temperatura vs H3) y el capítulo metodológico sobre los quince defectos del instrumento de medida. **Pendiente:** revisión del tutor, kappa de anotación para cerrar §6.3, y el formato final de entrega (el borrador es Markdown, no el documento maquetado).
 - [ ] **P11.2** Entregar repositorio público, CITATION, dataset card, threat model, catálogo, experimentos, notebook, figuras y resultados negativos (§32, §35).
 - [-] **P11.3** Preparar vídeo 3–5 min y presentación/ensayo: resultados observados, no promesas (§32, §39). Evidencia: `docs/video-guion.md` (guion literal por tramos de §39, con notas de producción que prohíben recrear capturas y exigen grabar la demo de Odoo en una sola toma) y `docs/presentacion.md` (15 diapositivas con lo que se ve y lo que se dice, más 8 de reserva para preguntas). Estrategia y las siete preguntas difíciles en `docs/defensa.md`. **Pendiente:** grabar y maquetar.
 - [ ] **P11.4** Verificar los 20 criterios de aceptación del §35 uno a uno antes de cerrar.

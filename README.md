@@ -98,7 +98,7 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Six-scenario deterministic demo (§38) | `scripts/demo.py` | ✅ self-verifying |
 | Results export (CSV) and reproducible figures (§31) | `scripts/export_results.py`, `scripts/make_figures.py` | ✅ Tableau workbook itself is manual |
 
-384 tests, `ruff`/`mypy` clean, CI green.
+393 tests, `ruff`/`mypy` clean, CI green.
 
 Every software requirement CLAUDE.md specifies is implemented; the
 section-by-section audit lives in
