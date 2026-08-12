@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from erp_agent_os.evidence import (
     EvidenceRegistry,
+    EvidenceStatus,
     audit_reporting_documents,
     reporting_document_paths,
 )
@@ -38,6 +39,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
 
     failures: list[str] = []
+    for entry in registry.entries:
+        if entry.protocol_status is not EvidenceStatus.CONFIRMATORY:
+            continue
+        try:
+            registry.require_confirmatory(entry.path, root=root)
+        except ValueError as exc:
+            failures.append(f"INVALID CONFIRMATORY ENTRY {entry.path}: {exc}")
     failures.extend(
         f"UNREGISTERED ARTIFACT {path}"
         for path in registry.unregistered_reportable_paths(root)

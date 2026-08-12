@@ -50,6 +50,31 @@ def test_rejects_confirmatory_wording_attached_to_a_legacy_artifact(tmp_path):
     assert "data/experiment_results.json" in violations[0]
 
 
+def test_rejects_confirmatory_wording_in_the_same_paragraph_as_legacy_artifact(
+    tmp_path,
+):
+    violations = _violations(
+        tmp_path,
+        (
+            "Fuente: data/experiment_results.json\n"
+            "Esta es la ejecución confirmatoria final."
+        ),
+    )
+
+    assert len(violations) == 1
+    assert "data/experiment_results.json" in violations[0]
+
+    assert not _violations(
+        tmp_path,
+        (
+            "La metodología prospectiva se describe aquí.\n"
+            "La ejecución confirmatoria final usará datos nuevos.\n\n"
+            "## Evidencia histórica\n\n"
+            "Fuente: data/experiment_results.json"
+        ),
+    )
+
+
 def test_does_not_ban_unrelated_methodological_use_of_confirmatory(tmp_path):
     assert not _violations(
         tmp_path,
@@ -64,6 +89,22 @@ def test_rejects_general_immunity_or_safety_claims(tmp_path):
     )
 
     assert any("general safety or immunity" in item for item in violations)
+
+
+def test_rejects_concrete_claim_of_safety_against_any_prompt_injection(tmp_path):
+    violations = _violations(
+        tmp_path,
+        "ERP Agent OS es seguro frente a cualquier ataque de prompt injection.",
+    )
+
+    assert any("general safety or immunity" in item for item in violations)
+    assert not _violations(
+        tmp_path,
+        (
+            "No afirmamos que ERP Agent OS sea seguro frente a cualquier ataque "
+            "de prompt injection."
+        ),
+    )
 
 
 def test_accepts_an_explicit_disclaimer_of_general_safety(tmp_path):
@@ -103,6 +144,19 @@ def test_rejects_human_kappa_claim_while_second_annotation_is_empty(tmp_path):
     )
 
     assert any("human kappa" in item for item in violations)
+
+
+def test_rejects_ordinary_cohen_kappa_between_annotators_claim(tmp_path):
+    violations = _violations(
+        tmp_path,
+        "El kappa de Cohen entre anotadores fue 0,82.",
+    )
+
+    assert any("human kappa" in item for item in violations)
+    assert not _violations(
+        tmp_path,
+        "El kappa de Cohen entre anotadores no se calculó; sigue pendiente.",
+    )
 
 
 def test_accepts_an_explicit_statement_that_human_kappa_is_unavailable(tmp_path):

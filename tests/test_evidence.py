@@ -214,3 +214,33 @@ def test_evidence_cli_fails_and_names_document_and_artifact(tmp_path, capsys):
     assert exit_code != 0
     assert "report.md" in output
     assert "data/experiment_results.json" in output
+
+
+def test_evidence_cli_enforces_confirmation_evidence_for_confirmatory_entries(
+    tmp_path, capsys
+):
+    audit_script = _load_audit_script()
+    registry_path = tmp_path / "registry.json"
+    registry_path.write_text(
+        json.dumps(
+            _registry(
+                _entry(
+                    path="data/future_results.json",
+                    protocol_status="confirmatory",
+                    freeze_manifest_path="data/freeze_manifest_v2.json",
+                    result_validation_path="data/future_result_validation.json",
+                )
+            )
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = audit_script.main(
+        ["--root", str(tmp_path), "--registry", str(registry_path)]
+    )
+
+    output = capsys.readouterr().out
+    assert exit_code != 0
+    assert "data/future_results.json" in output
+    assert "data/freeze_manifest_v2.json" in output
+    assert "data/future_result_validation.json" in output

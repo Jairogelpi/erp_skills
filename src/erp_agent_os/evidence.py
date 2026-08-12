@@ -146,11 +146,16 @@ class EvidenceRegistry(BaseModel):
             entry.freeze_manifest_path,
             entry.result_validation_path,
         )
+        missing: list[str] = []
         for evidence_path in evidence_paths:
-            if evidence_path is None or not (root / evidence_path).is_file():
-                raise ValueError(
-                    f"{path} lacks confirmation evidence: {evidence_path}"
-                )
+            if evidence_path is None:
+                missing.append("undeclared confirmation evidence")
+            elif not (root / evidence_path).is_file():
+                missing.append(evidence_path)
+        if missing:
+            raise ValueError(
+                f"{path} lacks confirmation evidence: {', '.join(missing)}"
+            )
         return entry
 
     def unregistered_reportable_paths(self, root: Path) -> tuple[str, ...]:
@@ -200,7 +205,10 @@ _GENERAL_SAFETY = re.compile(
     r"\b(?:inmunidad|inmune|immunity|immune)\b|"
     r"\bseguridad\s+(?:total|general|absoluta|garantizada)\b|"
     r"\b(?:general safety|completely safe|guarantees? safety)\b|"
-    r"\b(?:resiste cualquier ataque|prompt[- ]injection[- ]proof)\b",
+    r"\b(?:resiste cualquier ataque|prompt[- ]injection[- ]proof)\b|"
+    r"\b(?:es|sea)\s+segur[oa]\s+(?:frente\s+a|ante|contra)\s+"
+    r"(?:cualquier|todo)\b|"
+    r"\b(?:is|are)\s+safe\s+(?:against|from)\s+(?:any|all)\b",
     re.IGNORECASE,
 )
 _NEGATED_SAFETY = re.compile(
@@ -212,12 +220,17 @@ _NEGATED_SAFETY = re.compile(
 _ZERO_OF_1530 = re.compile(r"\b0\s*/\s*1[.,]?530\b")
 _HUMAN_KAPPA = re.compile(
     r"\b(?:kappa\s+humano|human(?:\s+cohen(?:'s)?)?\s+kappa|"
+    r"kappa(?:\s+de\s+cohen)?\s+entre\s+anotadores|"
+    r"(?:cohen['’]s\s+)?kappa\s+(?:between|among)\s+(?:human\s+)?annotators|"
     r"kappa[^\n.]{0,60}interanotador|inter[- ]annotator[^\n.]{0,60}kappa)\b",
     re.IGNORECASE,
 )
 _KAPPA_UNAVAILABLE = re.compile(
     r"\b(?:pending|pendiente|unavailable|no disponible|unmet|no hay|"
-    r"sigue sin|remains? unavailable|waived)\b",
+    r"sigue sin|remains? unavailable|waived)\b|"
+    r"\bno se (?:calcul[oó]|midi[oó]|estim[oó]|report[oó])\b|"
+    r"\bnot (?:calculated|measured|estimated|reported)\b|"
+    r"\bsin (?:calcular|medir|estimar|reportar)\b",
     re.IGNORECASE,
 )
 
@@ -230,6 +243,14 @@ def _line_at(text: str, offset: int) -> str:
     start = text.rfind("\n", 0, offset) + 1
     end = text.find("\n", offset)
     return text[start : len(text) if end == -1 else end]
+
+
+def _paragraph_at(text: str, offset: int) -> str:
+    previous_break = text.rfind("\n\n", 0, offset)
+    start = 0 if previous_break == -1 else previous_break + 2
+    next_break = text.find("\n\n", offset)
+    end = len(text) if next_break == -1 else next_break
+    return text[start:end]
 
 
 def _heading_at(text: str, offset: int) -> str:
@@ -266,10 +287,10 @@ def audit_document_claims(
         if entry.protocol_status is EvidenceStatus.CONFIRMATORY:
             continue
         for match in re.finditer(re.escape(entry.path), text):
-            line = _line_at(text, match.start())
-            if _CONFIRMATORY_WORDING.search(line) and not _NEGATED_CONFIRMATORY.search(
-                line
-            ):
+            block = _paragraph_at(text, match.start())
+            has_confirmatory_wording = _CONFIRMATORY_WORDING.search(block)
+            is_negated = _NEGATED_CONFIRMATORY.search(block)
+            if has_confirmatory_wording and not is_negated:
                 violations.append(
                     ClaimViolation(
                         document=document,
