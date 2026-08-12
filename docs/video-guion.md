@@ -144,6 +144,10 @@ gobierno: 0,333 con un proveedor, 0,889 con otro. Del sistema gobernado:
 
 ---
 
+> **Plan de rodaje en `docs/video-plan-rodaje.md`**: qué comando por
+> toma, cuánto tarda cada uno medido en esta máquina, y la preparación
+> de entorno que la toma de Odoo necesita antes de rodar.
+
 ## Notas de producción
 
 - **Todo lo que se ve debe ser salida real.** Los comandos son
