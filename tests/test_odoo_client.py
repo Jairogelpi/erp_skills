@@ -116,6 +116,141 @@ def test_list_returns_records_keyed_by_id_without_id_field():
         "1": {"name": "Acme", "email": "a@acme.test"},
         "2": {"name": "Beta", "email": "b@beta.test"},
     }
+    assert adapter._client.post.call_args.kwargs["json"] == {
+        "domain": [],
+        "fields": ["email", "name"],
+        "limit": 100,
+        "offset": 0,
+        "order": "id asc",
+    }
+
+
+def test_unbounded_list_paginates_until_every_record_is_returned():
+    adapter = _adapter()
+    source = [
+        {"id": record_id, "name": f"Partner {record_id}", "email": None}
+        for record_id in range(1, 206)
+    ]
+
+    def page(_path, *, json):
+        offset = json["offset"]
+        limit = json["limit"]
+        return _fake_response(source[offset : offset + limit])
+
+    adapter._client.post = MagicMock(side_effect=page)
+
+    records = adapter.list("res.partner")
+
+    assert len(records) == 205
+    assert list(records) == [str(record_id) for record_id in range(1, 206)]
+    offsets = [
+        call.kwargs["json"]["offset"]
+        for call in adapter._client.post.call_args_list
+    ]
+    assert offsets == [0, 100, 200]
+    assert all(
+        call.kwargs["json"]["order"] == "id asc"
+        for call in adapter._client.post.call_args_list
+    )
+
+
+def test_bounded_list_returns_exact_limit_across_pages():
+    adapter = _adapter()
+    source = [
+        {"id": record_id, "name": f"Partner {record_id}", "email": None}
+        for record_id in range(1, 206)
+    ]
+
+    def page(_path, *, json):
+        offset = json["offset"]
+        limit = json["limit"]
+        return _fake_response(source[offset : offset + limit])
+
+    adapter._client.post = MagicMock(side_effect=page)
+
+    records = adapter.list("res.partner", limit=150)
+
+    assert len(records) == 150
+    assert [call.kwargs["json"] for call in adapter._client.post.call_args_list] == [
+        {
+            "domain": [],
+            "fields": ["email", "name"],
+            "limit": 100,
+            "offset": 0,
+            "order": "id asc",
+        },
+        {
+            "domain": [],
+            "fields": ["email", "name"],
+            "limit": 50,
+            "offset": 100,
+            "order": "id asc",
+        },
+    ]
+
+
+def test_list_does_not_mutate_transport_response_records():
+    adapter = _adapter()
+    response_records = [{"id": 1, "name": "Acme", "email": "a@acme.test"}]
+    adapter._call = MagicMock(return_value=response_records)
+
+    adapter.list("res.partner")
+
+    assert response_records == [
+        {"id": 1, "name": "Acme", "email": "a@acme.test"}
+    ]
+
+
+@pytest.mark.parametrize(
+    "response_body",
+    [
+        {"records": "not-a-list", "secret": "do not expose"},
+        [{"name": "missing id", "secret": "do not expose"}],
+    ],
+)
+def test_list_rejects_malformed_response_without_leaking_it(response_body):
+    adapter = _adapter()
+    adapter._client.post = MagicMock(return_value=_fake_response(response_body))
+
+    with pytest.raises(OdooApiError) as error:
+        adapter.list("res.partner")
+
+    assert str(error.value) == "malformed Odoo list response"
+    assert "secret" not in str(error.value)
+
+
+def test_list_rejects_non_json_response_without_leaking_it():
+    adapter = _adapter()
+    adapter._client.post = MagicMock(
+        return_value=httpx.Response(
+            200,
+            content=b"secret invalid response",
+            request=httpx.Request("POST", "https://example.odoo.com"),
+        )
+    )
+
+    with pytest.raises(OdooApiError) as error:
+        adapter.list("res.partner")
+
+    assert str(error.value) == "malformed Odoo list response"
+    assert "secret" not in str(error.value)
+
+
+def test_list_rejects_nonprogressing_duplicate_page():
+    adapter = _adapter()
+    page = [
+        {"id": record_id, "name": f"Partner {record_id}", "email": None}
+        for record_id in range(1, 101)
+    ]
+    adapter._client.post = MagicMock(
+        side_effect=[_fake_response(page), _fake_response(page)]
+    )
+
+    with pytest.raises(OdooApiError) as error:
+        adapter.list("res.partner")
+
+    assert str(error.value) == "Odoo list pagination did not advance"
+    assert adapter._client.post.call_count == 2
 
 
 def test_update_sends_only_allowlisted_fields():

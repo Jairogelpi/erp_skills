@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from erp_agent_os.api import DEMO_API_KEY, create_app
+from erp_agent_os.runtime import IdempotencyFingerprintError
 
 HEADERS = {"x-api-key": DEMO_API_KEY}
 
@@ -69,6 +70,8 @@ def test_execute_missing_field_clarifies():
     assert payload["verification_status"] == "not_run_clean"
     assert payload["postconditions_met"] is True
     assert payload["checks"][0]["check_id"] == "complete_state_unchanged"
+    audit = c.get(f"/audit/{payload['correlation_id']}", headers=HEADERS).json()
+    assert audit["abstention_events"][0]["decision"] == "CLARIFY"
 
 
 def test_audit_endpoint_reflects_prior_execution():
@@ -116,6 +119,33 @@ def test_idempotency_conflict_is_a_sanitized_409():
     assert response.status_code == 409
     assert response.json() == {"detail": "idempotency key conflicts with request"}
     assert "first" not in response.text
+
+
+def test_idempotency_fingerprint_failure_is_a_sanitized_422(monkeypatch):
+    def fail_fingerprint(_system, *_args, **_kwargs):
+        raise IdempotencyFingerprintError("secret hostile argument details")
+
+    monkeypatch.setattr("erp_agent_os.api.SystemC.handle", fail_fingerprint)
+    c = client()
+    body = {
+        "query_text": "Crea una tarea para llamar al cliente.",
+        "proposal": {
+            "intent": "tasks.create_task.followup",
+            "arguments": {"title": "llamar al cliente"},
+            "required_fields": ["title"],
+            "confidence": 0.9,
+        },
+        "role": "erp_user",
+        "idempotency_key": "bad-fingerprint",
+    }
+
+    response = c.post("/requests", json=body, headers=HEADERS)
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": "request arguments cannot be fingerprinted"
+    }
+    assert "secret" not in response.text
 
 
 def test_grant_approval_returns_expiry():

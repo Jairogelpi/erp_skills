@@ -136,7 +136,7 @@ def create_app() -> FastAPI:
             ) from None
         except IdempotencyFingerprintError:
             raise HTTPException(
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
                 "request arguments cannot be fingerprinted",
             ) from None
         return ExecuteResponse(
@@ -194,6 +194,7 @@ def create_app() -> FastAPI:
             "abstentions": len(abstentions),
             "abstention_events": [
                 {
+                    "decision": event.decision,
                     "reasons": list(event.reasons),
                     "verification_status": event.verification_status,
                     "postconditions_met": event.postconditions_met,

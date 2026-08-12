@@ -1,7 +1,9 @@
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from erp_agent_os.approval import Approval
-from erp_agent_os.audit import AuditEvent
+from erp_agent_os.audit import AuditEvent, AuditStore
 from erp_agent_os.persistence import (
     SqlApprovalStore,
     SqlAuditStore,
@@ -69,6 +71,54 @@ def test_append_order_preserved():
     store.record(event(decision="DENY"))
 
     assert [r["decision"] for r in store.events()] == ["ALLOW", "DENY"]
+
+
+@pytest.mark.parametrize(
+    ("decision", "event_type", "status", "met"),
+    [
+        ("CLARIFY", "clarification", "not_run_clean", True),
+        ("ABSTAIN", "abstention", "verifier_error", None),
+    ],
+)
+def test_abstention_and_clarification_evidence_round_trips(
+    decision, event_type, status, met
+):
+    evidence = (
+        VerificationCheckResult(
+            "complete_state_unchanged",
+            met,
+            "check passed" if met else "check raised an exception",
+        ),
+    )
+    memory = AuditStore(clock=lambda: NOW)
+    event = memory.record_abstention(
+        f"corr-{decision.lower()}",
+        [f"{decision.lower()} reason"],
+        decision=decision,
+        verification_status=status,
+        postconditions_met=met,
+        check_results=evidence,
+    )
+    store = SqlAuditStore(in_memory_engine())
+
+    store.record(event)
+    row = store.events(event.correlation_id)[0]
+
+    assert row["event_type"] == event_type
+    assert row["decision"] == decision
+    assert row["reasons"] == f"{decision.lower()} reason"
+    assert row["verification_status"] == status
+    assert row["postconditions_met"] is met
+    assert row["check_results"] == [
+        {
+            "check_id": "complete_state_unchanged",
+            "passed": met,
+            "detail": "check passed" if met else "check raised an exception",
+        }
+    ]
+    assert row["skill_id"] is None
+    assert row["skill_version"] is None
+    assert row["role"] is None
 
 
 def test_audit_store_exposes_no_mutation_or_delete_method():

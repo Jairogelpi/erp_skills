@@ -38,7 +38,7 @@ from sqlalchemy import (
 from sqlalchemy.engine import Engine
 
 from erp_agent_os.approval import Approval
-from erp_agent_os.audit import AuditEvent
+from erp_agent_os.audit import AbstentionEvent, AuditEvent
 
 metadata = MetaData()
 
@@ -47,14 +47,21 @@ audit_events = Table(
     metadata,
     Column("id", Integer, primary_key=True),
     Column("correlation_id", String(64), nullable=False, index=True),
-    Column("skill_id", String(128), nullable=False),
-    Column("skill_version", String(32), nullable=False),
-    Column("role", String(64), nullable=False),
+    Column(
+        "event_type",
+        String(32),
+        nullable=False,
+        default="execution",
+        server_default="execution",
+    ),
+    Column("skill_id", String(128), nullable=True),
+    Column("skill_version", String(32), nullable=True),
+    Column("role", String(64), nullable=True),
     Column("decision", String(32), nullable=False),
-    Column("risk_score", Float, nullable=False),
+    Column("risk_score", Float, nullable=True),
     Column("reasons", Text, nullable=False),
-    Column("idempotency_key", String(128), nullable=False),
-    Column("idempotent_replay", Boolean, nullable=False),
+    Column("idempotency_key", String(128), nullable=True),
+    Column("idempotent_replay", Boolean, nullable=True),
     Column("postconditions_met", Boolean, nullable=True),
     Column(
         "verification_status",
@@ -98,37 +105,61 @@ class SqlAuditStore:
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
 
-    def record(self, event: AuditEvent) -> None:
+    def record(self, event: AuditEvent | AbstentionEvent) -> None:
+        check_results = json.dumps(
+            [
+                {
+                    "check_id": check.check_id,
+                    "passed": check.passed,
+                    "detail": check.detail,
+                }
+                for check in event.check_results
+            ],
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        if isinstance(event, AuditEvent):
+            values = {
+                "correlation_id": event.correlation_id,
+                "event_type": "execution",
+                "skill_id": event.skill_id,
+                "skill_version": event.skill_version,
+                "role": event.role,
+                "decision": event.decision,
+                "risk_score": event.risk_score,
+                "reasons": "\n".join(event.reasons),
+                "idempotency_key": event.idempotency_key,
+                "idempotent_replay": event.idempotent_replay,
+                "postconditions_met": event.postconditions_met,
+                "verification_status": event.verification_status,
+                "check_results": check_results,
+                "output": None if event.output is None else str(event.output),
+                "recorded_at": event.recorded_at,
+            }
+        else:
+            values = {
+                "correlation_id": event.correlation_id,
+                "event_type": (
+                    "clarification"
+                    if event.decision == "CLARIFY"
+                    else "abstention"
+                ),
+                "skill_id": None,
+                "skill_version": None,
+                "role": None,
+                "decision": event.decision,
+                "risk_score": None,
+                "reasons": "\n".join(event.reasons),
+                "idempotency_key": None,
+                "idempotent_replay": None,
+                "postconditions_met": event.postconditions_met,
+                "verification_status": event.verification_status,
+                "check_results": check_results,
+                "output": None,
+                "recorded_at": event.recorded_at,
+            }
         with self._engine.begin() as conn:
-            conn.execute(
-                insert(audit_events).values(
-                    correlation_id=event.correlation_id,
-                    skill_id=event.skill_id,
-                    skill_version=event.skill_version,
-                    role=event.role,
-                    decision=event.decision,
-                    risk_score=event.risk_score,
-                    reasons="\n".join(event.reasons),
-                    idempotency_key=event.idempotency_key,
-                    idempotent_replay=event.idempotent_replay,
-                    postconditions_met=event.postconditions_met,
-                    verification_status=event.verification_status,
-                    check_results=json.dumps(
-                        [
-                            {
-                                "check_id": check.check_id,
-                                "passed": check.passed,
-                                "detail": check.detail,
-                            }
-                            for check in event.check_results
-                        ],
-                        ensure_ascii=False,
-                        sort_keys=True,
-                    ),
-                    output=None if event.output is None else str(event.output),
-                    recorded_at=event.recorded_at,
-                )
-            )
+            conn.execute(insert(audit_events).values(**values))
 
     def events(self, correlation_id: str | None = None) -> Sequence[dict[str, Any]]:
         stmt = select(audit_events).order_by(audit_events.c.id)

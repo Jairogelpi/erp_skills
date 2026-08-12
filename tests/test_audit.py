@@ -80,12 +80,14 @@ def test_abstention_records_aggregate_and_named_non_sensitive_evidence():
     event = store.record_abstention(
         "corr-abstain",
         ["no confident candidate"],
+        decision="CLARIFY",
         verification_status=VerificationStatus.NOT_RUN_DIRTY,
         postconditions_met=False,
         check_results=checks,
     )
 
     assert event.verification_status == "not_run_dirty"
+    assert event.decision == "CLARIFY"
     assert event.postconditions_met is False
     assert event.check_results == checks
 

@@ -194,6 +194,7 @@ class SystemC:
             self._audit.record_abstention(
                 correlation_id,
                 reasons,
+                decision="CLARIFY",
                 verification_status=status,
                 postconditions_met=met,
                 check_results=evidence,
@@ -210,6 +211,7 @@ class SystemC:
             self._audit.record_abstention(
                 correlation_id,
                 reasons,
+                decision="ABSTAIN",
                 verification_status=status,
                 postconditions_met=met,
                 check_results=evidence,

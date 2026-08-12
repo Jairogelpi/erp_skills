@@ -58,6 +58,7 @@ class AbstentionEvent:
     verification_status: str = VerificationStatus.VERIFIER_ERROR.value
     postconditions_met: bool | None = None
     check_results: tuple[VerificationCheckResult, ...] = ()
+    decision: str = "ABSTAIN"
 
 
 class AuditStore:
@@ -110,6 +111,7 @@ class AuditStore:
         correlation_id: str,
         reasons: list[str],
         *,
+        decision: str = "ABSTAIN",
         verification_status: VerificationStatus | str = (
             VerificationStatus.VERIFIER_ERROR
         ),
@@ -128,6 +130,7 @@ class AuditStore:
             status,
             postconditions_met,
             check_results,
+            decision,
         )
         self._abstentions.append(event)
         return event
