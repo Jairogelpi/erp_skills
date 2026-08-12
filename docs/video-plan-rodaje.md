@@ -37,13 +37,36 @@ de la rama de desarrollo, lista para refrescar en cámara.
 
 ### Toma 1 — El problema *(0:00–0:30)*
 
-**Pantalla:** navegador, Odoo real. Una oportunidad con importe. Corte
-seco a la misma con otro importe.
+**Pantalla:** navegador, Odoo real. Oportunidad "Renovacion contrato
+anual" de **Hoteles Camino (DEMO)** con 15.000 €. Corte seco. La misma
+con 27.600 €.
 
-**Cómo:** dos capturas de la interfaz de Odoo, no terminal. Es la única
-toma donde se ve producto y no consola, y por eso abre.
+**Qué afirma esta toma, y qué no.** Muestra **lo que está en juego**: un
+registro de negocio real con un importe que puede cambiar. **No afirma
+que un agente lo cambiara mal** — esa afirmación se hace en la toma 2,
+donde el agente sin gobierno ejecuta de verdad y se ve la ejecución.
+Presentar la toma 1 como «mira lo que hizo la IA» sería una recreación
+disfrazada de prueba, exactamente lo que las notas de producción
+prohíben. La locución del guion está escrita en términos de riesgo
+(«sale esto: un importe cambiado»), no de incidente.
 
-**Duración de rodaje:** 2 minutos.
+**Preparación del estado, en dos comandos:**
+
+```sh
+uv run python scripts/stage_video_shot1.py --before   # crea el registro a 15.000
+#   ... grabar el plano del importe inicial ...
+uv run python scripts/stage_video_shot1.py --after    # lo cambia a 27.600
+#   ... refrescar y grabar el plano del importe cambiado ...
+```
+
+El cliente se llama **"Hoteles Camino (DEMO)"** a propósito: si el vídeo
+se publica, nadie puede confundirlo con un cliente real de la empresa.
+
+**Encuadre:** la ficha de la oportunidad con el campo de ingreso
+esperado visible y grande. No grabar la lista, grabar la ficha — el
+número tiene que leerse sin esfuerzo.
+
+**Duración de rodaje:** 5 minutos (2 planos + los dos comandos).
 
 ---
 
