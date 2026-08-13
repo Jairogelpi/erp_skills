@@ -1,0 +1,16 @@
+{
+  "new_protocol_name": "ERP-Skills-Bench-Proc v2.1",
+  "old_human_packets_completed": 0,
+  "old_manifest_path": "bench_v2_candidate_seal_386fdf8b16f8283280d4f7127b1613fff5e0917e37a8bb11132896a06c63f037.json",
+  "old_manifest_sha256": "386fdf8b16f8283280d4f7127b1613fff5e0917e37a8bb11132896a06c63f037",
+  "old_system_evaluation_count": 0,
+  "reason": "no_human_annotation",
+  "reasons": [
+    "human_annotators_unavailable",
+    "h1_h2_h3_h4_h7_redesigned_before_v2_results"
+  ],
+  "schema_version": "1.0",
+  "spec_path": "docs/tfm-closure-no-human-v2.1.md",
+  "spec_sha256": "2df68d76b38dcb983f8cc93c7aad6332f76bb2a361e35750c3bb703fd84258af",
+  "status": "SUPERSEDED_BEFORE_SYSTEM_EVALUATION"
+}

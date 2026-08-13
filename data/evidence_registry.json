@@ -92,7 +92,8 @@
   "artifacts": {
     "docs/tfm-closure-no-human-v2.1.md": {"kind": "normative_protocol_amendment", "status": "specified_pending_implementation_freeze_and_execution", "enables_confirmatory_claims": false},
     "docs/superpowers/plans/2026-08-14-tfm-closure-no-human-v2-1.md": {"kind": "implementation_plan", "status": "agent_review_approved_pending_implementation", "review_kind": "independent_agent_review_not_human_validation", "enables_confirmatory_claims": false},
-    "data/prospective_v2/bench_v2_candidate_seal_386fdf8b16f8283280d4f7127b1613fff5e0917e37a8bb11132896a06c63f037.json": {"kind": "prospective_candidate_manifest", "status": "retired_unevaluated_pending_append_only_supersession_receipt", "system_evaluation_allowed": false},
+    "data/prospective_v2/bench_v2_candidate_seal_386fdf8b16f8283280d4f7127b1613fff5e0917e37a8bb11132896a06c63f037.json": {"kind": "prospective_candidate_manifest", "status": "superseded_before_system_evaluation", "system_evaluation_allowed": false, "superseded_by": "data/protocol_v2_1/v2_supersession_de52502c346f8c566e9f486c66d92e53c08f23a9bbfbe582f28cbcc6a507b462.json"},
+    "data/protocol_v2_1/v2_supersession_de52502c346f8c566e9f486c66d92e53c08f23a9bbfbe582f28cbcc6a507b462.json": {"kind": "v2_supersession_receipt", "status": "superseded_before_system_evaluation_zero_evaluations_zero_completed_packets", "enables_confirmatory_claims": false},
     "data/prospective_v2/bench_v2_candidates_0f738bf7feaa9f31f67e2dc908d1efe16112cf20a50f6efe1baabb381493e799.jsonl": {"kind": "blinded_prospective_candidates", "status": "sealed_unevaluated"},
     "data/prospective_v2/bench_v2_annotation_annotator_1.csv": {"kind": "human_annotation_packet", "status": "retired_blank_unused"},
     "data/prospective_v2/bench_v2_annotation_annotator_2.csv": {"kind": "human_annotation_packet", "status": "retired_blank_unused"},
