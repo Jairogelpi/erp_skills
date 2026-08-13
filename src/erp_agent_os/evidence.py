@@ -100,9 +100,7 @@ class EvidenceEntry(BaseModel):
             if getattr(self, name) is None
         ]
         if missing:
-            raise ValueError(
-                "confirmatory evidence requires " + " and ".join(missing)
-            )
+            raise ValueError("confirmatory evidence requires " + " and ".join(missing))
         return self
 
 
@@ -394,9 +392,7 @@ def _confirmatory_claim_is_negated(text: str, match: re.Match[str]) -> bool:
 
 def _safety_claim_is_negated(text: str, match: re.Match[str]) -> bool:
     prefix = _clause_prefix(text, match.start())
-    return bool(
-        _DIRECT_NEGATION_SUFFIX.search(prefix) or _SAFETY_DENIAL.search(prefix)
-    )
+    return bool(_DIRECT_NEGATION_SUFFIX.search(prefix) or _SAFETY_DENIAL.search(prefix))
 
 
 def _heading_at(text: str, offset: int) -> str:

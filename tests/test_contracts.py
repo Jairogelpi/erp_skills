@@ -249,9 +249,7 @@ def test_event_contract_events_are_filterable_by_correlation():
         False,
         True,
         verification_status=VerificationStatus.PASSED,
-        check_results=(
-            VerificationCheckResult("record_exists", True, "check passed"),
-        ),
+        check_results=(VerificationCheckResult("record_exists", True, "check passed"),),
     )
     store.record("a", _skill(), "erp_user", outcome, result, "k1")
     store.record("b", _skill(), "erp_user", outcome, result, "k2")

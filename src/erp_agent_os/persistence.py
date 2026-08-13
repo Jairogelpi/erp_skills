@@ -79,9 +79,7 @@ audit_events = Table(
         default="verifier_error",
         server_default="verifier_error",
     ),
-    Column(
-        "check_results", Text, nullable=False, default="[]", server_default="[]"
-    ),
+    Column("check_results", Text, nullable=False, default="[]", server_default="[]"),
     Column("output", Text, nullable=True),
     Column("recorded_at", DateTime(timezone=True), nullable=False),
 )
@@ -148,8 +146,7 @@ def _sqlite_migrate_v1(connection: Connection, columns: set[str]) -> None:
         "ALTER TABLE audit_events_migration_v1 RENAME TO audit_events"
     )
     connection.exec_driver_sql(
-        "CREATE INDEX ix_audit_events_correlation_id "
-        "ON audit_events (correlation_id)"
+        "CREATE INDEX ix_audit_events_correlation_id ON audit_events (correlation_id)"
     )
 
 
@@ -199,12 +196,12 @@ def _audit_schema_is_current(connection: Connection) -> bool:
         "idempotency_key",
         "idempotent_replay",
     )
-    return (
-        {"event_type", "verification_status", "check_results"} <= columns.keys()
-        and all(
-            columns[name]["nullable"] is not False
-            for name in nullable_for_nonexecution
-        )
+    return {
+        "event_type",
+        "verification_status",
+        "check_results",
+    } <= columns.keys() and all(
+        columns[name]["nullable"] is not False for name in nullable_for_nonexecution
     )
 
 
@@ -219,8 +216,7 @@ def migrate_schema(engine: Engine) -> None:
             return
 
         columns = {
-            column["name"]
-            for column in inspect(connection).get_columns("audit_events")
+            column["name"] for column in inspect(connection).get_columns("audit_events")
         }
         if not _audit_schema_is_current(connection):
             dialect = connection.dialect.name
@@ -292,9 +288,7 @@ class SqlAuditStore:
             values = {
                 "correlation_id": event.correlation_id,
                 "event_type": (
-                    "clarification"
-                    if event.decision == "CLARIFY"
-                    else "abstention"
+                    "clarification" if event.decision == "CLARIFY" else "abstention"
                 ),
                 "skill_id": None,
                 "skill_version": None,

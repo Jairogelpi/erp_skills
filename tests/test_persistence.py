@@ -180,8 +180,7 @@ def test_legacy_sqlite_schema_migrates_without_data_loss_and_is_idempotent():
     assert legacy["check_results"] == []
     assert legacy["output"] == "legacy-output"
     columns = {
-        column["name"]: column
-        for column in inspect(engine).get_columns("audit_events")
+        column["name"]: column for column in inspect(engine).get_columns("audit_events")
     }
     assert columns["skill_id"]["nullable"] is True
     assert columns["skill_version"]["nullable"] is True
@@ -194,9 +193,7 @@ def test_legacy_sqlite_schema_migrates_without_data_loss_and_is_idempotent():
         verification_status="not_run_clean",
         postconditions_met=True,
         check_results=(
-            VerificationCheckResult(
-                "complete_state_unchanged", True, "check passed"
-            ),
+            VerificationCheckResult("complete_state_unchanged", True, "check passed"),
         ),
     )
     store.record(abstention)
@@ -210,9 +207,13 @@ def test_legacy_sqlite_schema_migrates_without_data_loss_and_is_idempotent():
         "new-abstention",
     ]
     with engine.connect() as connection:
-        versions = connection.execute(
-            text("SELECT version FROM schema_migrations ORDER BY version")
-        ).scalars().all()
+        versions = (
+            connection.execute(
+                text("SELECT version FROM schema_migrations ORDER BY version")
+            )
+            .scalars()
+            .all()
+        )
     assert versions == [persistence.LATEST_SCHEMA_VERSION]
 
 
@@ -220,9 +221,13 @@ def test_fresh_schema_records_current_migration_version():
     engine = in_memory_engine()
 
     with engine.connect() as connection:
-        versions = connection.execute(
-            text("SELECT version FROM schema_migrations ORDER BY version")
-        ).scalars().all()
+        versions = (
+            connection.execute(
+                text("SELECT version FROM schema_migrations ORDER BY version")
+            )
+            .scalars()
+            .all()
+        )
 
     assert versions == [persistence.LATEST_SCHEMA_VERSION]
 

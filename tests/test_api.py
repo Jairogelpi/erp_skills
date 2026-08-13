@@ -142,9 +142,7 @@ def test_idempotency_fingerprint_failure_is_a_sanitized_422(monkeypatch):
     response = c.post("/requests", json=body, headers=HEADERS)
 
     assert response.status_code == 422
-    assert response.json() == {
-        "detail": "request arguments cannot be fingerprinted"
-    }
+    assert response.json() == {"detail": "request arguments cannot be fingerprinted"}
     assert "secret" not in response.text
 
 

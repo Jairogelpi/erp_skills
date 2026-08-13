@@ -65,9 +65,7 @@ def _normalize_snapshot_value(value: Any) -> Any:
     return deepcopy(value)
 
 
-def _snapshot(
-    erp: ErpAdapter, monitored_models: frozenset[str]
-) -> dict[str, Any]:
+def _snapshot(erp: ErpAdapter, monitored_models: frozenset[str]) -> dict[str, Any]:
     """Read complete allowlisted state through the adapter protocol only."""
     records: dict[str, Any] = {}
     for model in sorted(monitored_models):
@@ -173,9 +171,7 @@ class SystemC:
         reason: str,
     ) -> SystemCResult:
         evidence = (
-            VerificationCheckResult(
-                check_id, None, "check raised an exception"
-            ),
+            VerificationCheckResult(check_id, None, "check raised an exception"),
         )
         outcome = PolicyOutcome(PolicyDecision.DENY, risk_score, [reason])
         execution = ExecutionResult(

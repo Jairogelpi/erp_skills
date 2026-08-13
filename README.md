@@ -523,7 +523,21 @@ make demo                 # the six §38 scenarios, deterministic, no network
 make compare-retrievers   # the §22 TF-IDF / embeddings / hybrid comparison
 make export-results       # CSV tables for the results chapter / dashboard
 make figures              # reproducible PNG+SVG figures (needs the figures group)
+make competition-readiness # full scientific, code, evidence and video gate
 make build                # builds sdist + wheel
+```
+
+`make competition-readiness` runs the full tests twice (once with coverage),
+requires at least 95 % coverage, checks formatting/types, audits evidence and
+documentation, verifies the v1 freeze, reruns the adversarial harness tests and
+regenerates/tests the five 1080p video cards. If v2 files exist, it validates
+the dataset and freeze; if they do not, it reports the scientifically correct
+`pending` state without inventing a result.
+
+En Windows, donde `make` no siempre está instalado, el comando equivalente es:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/competition_readiness.ps1
 ```
 
 ## Annotation review status

@@ -144,8 +144,7 @@ def test_unbounded_list_paginates_until_every_record_is_returned():
     assert len(records) == 205
     assert list(records) == [str(record_id) for record_id in range(1, 206)]
     offsets = [
-        call.kwargs["json"]["offset"]
-        for call in adapter._client.post.call_args_list
+        call.kwargs["json"]["offset"] for call in adapter._client.post.call_args_list
     ]
     assert offsets == [0, 100, 200]
     assert all(
@@ -196,9 +195,7 @@ def test_list_does_not_mutate_transport_response_records():
 
     adapter.list("res.partner")
 
-    assert response_records == [
-        {"id": 1, "name": "Acme", "email": "a@acme.test"}
-    ]
+    assert response_records == [{"id": 1, "name": "Acme", "email": "a@acme.test"}]
 
 
 @pytest.mark.parametrize(

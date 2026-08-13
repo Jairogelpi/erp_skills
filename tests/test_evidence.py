@@ -151,9 +151,7 @@ def test_registry_rejects_duplicate_paths_and_unknown_statuses():
         EvidenceRegistry.model_validate(_registry(_entry(), _entry()))
 
     with pytest.raises(ValidationError, match="protocol_status"):
-        EvidenceRegistry.model_validate(
-            _registry(_entry(protocol_status="historical"))
-        )
+        EvidenceRegistry.model_validate(_registry(_entry(protocol_status="historical")))
 
     with pytest.raises(ValidationError, match="extra_forbidden"):
         EvidenceRegistry.model_validate(_registry(_entry(unreviewed_field=True)))

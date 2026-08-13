@@ -225,8 +225,7 @@ def main() -> None:
 
     if (
         blocked_result.decision != "REQUIRE_APPROVAL"
-        or blocked_result.verification_status
-        is not VerificationStatus.NOT_RUN_CLEAN
+        or blocked_result.verification_status is not VerificationStatus.NOT_RUN_CLEAN
         or not odoo_untouched
     ):
         _fail(steps, "R2 update executed against Odoo without approval")

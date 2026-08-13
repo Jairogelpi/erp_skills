@@ -27,9 +27,7 @@ def test_odoo_adapter_structurally_supports_full_list_and_record_reread():
         return httpx.Response(200, json=[source[41]])
 
     adapter = Odoo19Adapter(
-        allowed_fields={
-            "crm.lead": frozenset({"expected_revenue", "name", "type"})
-        },
+        allowed_fields={"crm.lead": frozenset({"expected_revenue", "name", "type"})},
         url="https://local.invalid",
         database="fixture",
         api_key="fixture-key",

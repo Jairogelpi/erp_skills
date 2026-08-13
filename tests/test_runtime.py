@@ -209,9 +209,7 @@ def test_replay_preserves_the_original_mutable_output_snapshot():
         (skill(), {"name": "Different"}, "sales_user", "org-a"),
         (
             skill(
-                permissions=Permissions(
-                    allowed_roles=["sales_user", "sales_manager"]
-                )
+                permissions=Permissions(allowed_roles=["sales_user", "sales_manager"])
             ),
             {"name": "Acme"},
             "sales_manager",
@@ -368,9 +366,7 @@ def test_cyclic_arguments_are_sanitized_without_disclosing_an_existing_entry():
             postcondition_checks=(verification,),
         )
 
-    assert str(error.value) == (
-        "idempotency request arguments must be canonical JSON"
-    )
+    assert str(error.value) == ("idempotency request arguments must be canonical JSON")
     assert "never disclose this" not in str(error.value)
     assert len(calls) == 1
 
@@ -410,9 +406,7 @@ def test_fingerprint_construction_failures_are_sanitized(malformed_args):
             postcondition_checks=(named_check("not_run"),),
         )
 
-    assert str(error.value) == (
-        "idempotency request arguments must be canonical JSON"
-    )
+    assert str(error.value) == ("idempotency request arguments must be canonical JSON")
     assert "never disclose this" not in str(error.value)
     assert calls == []
 
@@ -441,9 +435,7 @@ def test_arbitrary_fingerprint_exception_is_sanitized_without_handler_call():
             postcondition_checks=(named_check("not_run"),),
         )
 
-    assert str(error.value) == (
-        "idempotency request arguments must be canonical JSON"
-    )
+    assert str(error.value) == ("idempotency request arguments must be canonical JSON")
     assert error.value.__cause__ is None
     assert "SECRET" not in str(error.value)
     assert calls == []
@@ -504,9 +496,7 @@ def test_postcondition_check_runs_and_can_fail():
     assert result.postconditions_met is False
     assert result.verification_status is VerificationStatus.FAILED
     assert result.check_results == (
-        VerificationCheckResult(
-            "exactly_one_new_opportunity", False, "check failed"
-        ),
+        VerificationCheckResult("exactly_one_new_opportunity", False, "check failed"),
     )
 
 

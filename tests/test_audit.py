@@ -46,9 +46,7 @@ def execution(output=None, replay=False, met=True) -> ExecutionResult:
         replay,
         met,
         verification_status=VerificationStatus.PASSED,
-        check_results=(
-            VerificationCheckResult("record_exists", True, "check passed"),
-        ),
+        check_results=(VerificationCheckResult("record_exists", True, "check passed"),),
     )
 
 
@@ -72,9 +70,7 @@ def test_record_appends_and_returns_event():
 def test_abstention_records_aggregate_and_named_non_sensitive_evidence():
     store = AuditStore(clock=lambda: FIXED_TIME)
     checks = (
-        VerificationCheckResult(
-            "complete_state_unchanged", False, "check failed"
-        ),
+        VerificationCheckResult("complete_state_unchanged", False, "check failed"),
     )
 
     event = store.record_abstention(

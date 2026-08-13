@@ -196,9 +196,7 @@ class Odoo19Adapter:
         while limit is None or len(out) < limit:
             remaining = None if limit is None else limit - len(out)
             request_limit = (
-                LIST_PAGE_SIZE
-                if remaining is None
-                else min(LIST_PAGE_SIZE, remaining)
+                LIST_PAGE_SIZE if remaining is None else min(LIST_PAGE_SIZE, remaining)
             )
             if request_limit == 0:
                 break

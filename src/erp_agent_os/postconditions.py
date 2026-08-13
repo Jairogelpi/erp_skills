@@ -62,9 +62,7 @@ def _state_is(model: str, expected_state: str) -> CheckEvaluator:
     return check
 
 
-def _field_matches(
-    model: str, field: str, arguments: dict[str, Any]
-) -> CheckEvaluator:
+def _field_matches(model: str, field: str, arguments: dict[str, Any]) -> CheckEvaluator:
     def check(erp: ErpAdapter, output: Any) -> bool:
         record_id = output if isinstance(output, str) else None
         if record_id is None:
