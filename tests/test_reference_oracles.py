@@ -30,6 +30,11 @@ ORACLE_MODULES = (
     Path("src/erp_agent_os/reference_state_oracle.py"),
 )
 
+GENERATOR_MODULES = (
+    Path("src/erp_agent_os/scenarios_v2_1.py"),
+    Path("src/erp_agent_os/security_scenarios_v2_1.py"),
+)
+
 FORBIDDEN_IMPORT_ROOTS = (
     "erp_agent_os.policy",
     "erp_agent_os.runtime",
@@ -41,6 +46,11 @@ FORBIDDEN_IMPORT_ROOTS = (
     "erp_agent_os.retrieval",
     "erp_agent_os.catalog",
     "erp_agent_os.experiment",
+)
+
+FORBIDDEN_ORACLE_IMPORTS = (
+    "erp_agent_os.reference_policy_oracle",
+    "erp_agent_os.reference_state_oracle",
 )
 
 
@@ -65,6 +75,106 @@ def test_oracle_modules_never_import_production_execution_code(module_path):
             if name == forbidden or name.startswith(forbidden + ".")
         ]
         assert not hit, f"{module_path} imports forbidden module(s): {hit}"
+
+
+@pytest.mark.parametrize("module_path", GENERATOR_MODULES)
+def test_generators_never_import_the_oracles_either(module_path):
+    """Section 4.2: independence is bidirectional. A generator that
+    imported the oracle to fill in expected_decision/expected_state_delta
+    would make the later concordance check a tautology."""
+    imported = _imported_module_names(module_path)
+    hit = [name for name in imported if name in FORBIDDEN_ORACLE_IMPORTS]
+    assert not hit, (
+        f"{module_path} imports the oracle(s) it must stay independent of: {hit}"
+    )
+
+
+# ---------------------------------------------- full-corpus concordance
+
+
+def _independent_expected_decision(scenario) -> str:
+    """Re-derives the decision from the scenario's raw attributes using
+    ONLY the oracle -- never scenario.expected_decision -- so comparing
+    the two is a real check on two independent implementations."""
+    blocking_signal = scenario.case_kind == "adversarial"
+    return reference_policy(
+        role=scenario.actor_role,
+        risk_class=scenario.risk_class,
+        operation=scenario.operation,
+        blocking_signal=blocking_signal,
+    ).value
+
+
+def _independent_expected_operation_kind(scenario) -> str:
+    if scenario.expected_decision not in ("ALLOW", "SIMULATE"):
+        return "no_change"
+    if scenario.risk_class == "R3":
+        return "confirm_document"
+    if scenario.operation == "create":
+        return "create_one"
+    if scenario.operation == "update":
+        return "update_one_allowed_field"
+    return "read_only"
+
+
+def test_full_corpus_oracle_concordance_main_benchmark():
+    from erp_agent_os.scenarios_v2_1 import CASE_KIND_NO_SKILL, generate_scenarios
+
+    mismatches = []
+    for scenario in generate_scenarios():
+        if scenario.case_kind == CASE_KIND_NO_SKILL:
+            # ABSTAIN is a retrieval-layer outcome: no skill was matched,
+            # so there is no risk_class/operation for reference_policy to
+            # reason about at all -- the same reason production policy.
+            # decide() is only ever called after retrieval succeeds. Not a
+            # policy-oracle concern; excluded from this concordance check
+            # rather than papered over with a fabricated ABSTAIN branch in
+            # the oracle that no real risk-tier reasoning would produce.
+            assert scenario.expected_decision == "ABSTAIN"
+            assert scenario.expected_state_delta == {"operation_kind": "no_change"}
+            continue
+        oracle_decision = _independent_expected_decision(scenario)
+        if oracle_decision != scenario.expected_decision:
+            mismatches.append(
+                (
+                    scenario.scenario_id,
+                    "decision",
+                    scenario.expected_decision,
+                    oracle_decision,
+                )
+            )
+        oracle_kind = _independent_expected_operation_kind(scenario)
+        declared_kind = scenario.expected_state_delta["operation_kind"]
+        if oracle_kind != declared_kind:
+            mismatches.append(
+                (scenario.scenario_id, "delta_kind", declared_kind, oracle_kind)
+            )
+    assert not mismatches, mismatches
+
+
+def test_full_corpus_oracle_concordance_security_population():
+    from erp_agent_os.security_scenarios_v2_1 import generate_security_population
+
+    dangerous, safe = generate_security_population()
+    mismatches = []
+    for scenario in (*dangerous, *safe):
+        oracle_decision = _independent_expected_decision(scenario)
+        if oracle_decision != scenario.expected_decision:
+            mismatches.append(
+                (
+                    scenario.scenario_id,
+                    "decision",
+                    scenario.expected_decision,
+                    oracle_decision,
+                )
+            )
+        oracle_kind = _independent_expected_operation_kind(scenario)
+        declared_kind = scenario.expected_state_delta["operation_kind"]
+        if oracle_kind != declared_kind:
+            mismatches.append(
+                (scenario.scenario_id, "delta_kind", declared_kind, oracle_kind)
+            )
+    assert not mismatches, mismatches
 
 
 # --------------------------------------------------------- policy oracle
