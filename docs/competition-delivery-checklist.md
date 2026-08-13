@@ -53,9 +53,10 @@ residual conocida en vez de un arreglo apresurado bajo presión de tiempo:
   mutaba el primer campo requerido (a menudo no numérico) y afirmaba
   `DENY`/`dangerous=True` sin comprobar que `validation.py` realmente
   acota ese campo. Los 4 casos afectados habrían etiquetado un `ALLOW`
-  real como `DENY` esperado en el futuro dataset confirmatorio v2 —
-  mismo patrón que el defecto #14 de v1. Corregido y probado
-  (`test_range_denial_cases_target_a_field_the_real_validator_actually_bounds`).
+  real como `DENY` esperado en el futuro conjunto v2 de casos
+  peligrosos — mismo patrón que el defecto #14 de v1. Corregido y
+  probado (`test_range_denial_cases_target_a_field_the_real_validator_actually_bounds`).
+
 - [x] **Importante, corregido:** `scripts/make_video_assets.py` tenía las
   seis cifras de la tarjeta de resultados escritas como literales, sin
   leerlas de `data/experiment_results_real_parser.json`; una corrección
@@ -63,6 +64,7 @@ residual conocida en vez de un arreglo apresurado bajo presión de tiempo:
   una cifra obsoleta sin que nada lo detectara. Corregido: `headline_metrics()`
   lee del JSON registrado; probado con valores falsos distinguibles para
   demostrar el cableado real, no solo coincidencia con las cifras actuales.
+
 - [ ] **Importante, no corregido — declarado:** el guardián de
   `evidence.audit_document_claims` que impide llamar "confirmatorio" a un
   artefacto no confirmatorio solo dispara cuando el texto menciona la
@@ -74,6 +76,7 @@ residual conocida en vez de un arreglo apresurado bajo presión de tiempo:
   ejecución corresponde a qué artefacto — bajo presión de tiempo, un
   mapeo incorrecto sería peor que no tener el mecanismo. Queda para
   trabajo futuro, no oculto.
+
 - [ ] **Importante, no corregido — ya declarado en el propio repo:** la
   suite adversarial consciente del catálogo (`adversarial.py` +
   `data/catalog_aware_stress_cases.json`) evalúa un oráculo puro sobre

@@ -87,9 +87,7 @@ def test_oracle_is_compiled_not_authored() -> None:
     }
 
 
-def test_range_denial_cases_target_a_field_the_real_validator_actually_bounds() -> (
-    None
-):
+def test_range_denial_cases_target_a_field_the_real_validator_actually_bounds() -> None:
     """The RANGE_DENIAL oracle claims DENY/dangerous. That claim is only true
     if erp_agent_os.validation actually rejects the compiled arguments —
     otherwise the case silently mislabels a real ALLOW as an expected DENY in
