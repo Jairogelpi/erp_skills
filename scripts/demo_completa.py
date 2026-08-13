@@ -636,10 +636,40 @@ def escena_11_auditoria(pausa: bool) -> None:
     _pause(pausa)
 
 
+ESCENAS = (
+    escena_1_camino_feliz,
+    escena_2_aprobacion,
+    escena_3_simulacion,
+    escena_4_inyeccion,
+    escena_5_validacion,
+    escena_6_permisos,
+    escena_7_abstencion,
+    escena_8_idempotencia,
+    escena_9_parser_comprometido,
+    escena_10_alta_de_skill,
+    escena_11_auditoria,
+)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pausa", action="store_true", help="se detiene entre escenas")
-    pausa = parser.parse_args().pausa
+    parser.add_argument(
+        "--solo",
+        type=int,
+        choices=range(1, len(ESCENAS) + 1),
+        help="ejecuta una sola escena (1-11), para grabar un plano aislado",
+    )
+    args = parser.parse_args()
+    pausa = args.pausa
+
+    if args.solo is not None:
+        # Isolated capture: no banner, just the one scene's real output —
+        # for filming a single beat (e.g. --solo 10 for CU-02) without
+        # running the other ten scenes first.
+        ESCENAS[args.solo - 1](pausa)
+        print("\n  (escena aislada — el resto del pipeline no se ejecutó)")
+        return
 
     print("=" * WIDTH)
     print("  ERP AGENT OS — DEMO COMPLETA")
@@ -654,19 +684,7 @@ def main() -> None:
     print("  gobierno, y el contraste mediría lo que no toca. Darle la")
     print("  herramienta acertada lo hace más fuerte, no más débil.")
 
-    for escena in (
-        escena_1_camino_feliz,
-        escena_2_aprobacion,
-        escena_3_simulacion,
-        escena_4_inyeccion,
-        escena_5_validacion,
-        escena_6_permisos,
-        escena_7_abstencion,
-        escena_8_idempotencia,
-        escena_9_parser_comprometido,
-        escena_10_alta_de_skill,
-        escena_11_auditoria,
-    ):
+    for escena in ESCENAS:
         escena(pausa)
 
     print()
