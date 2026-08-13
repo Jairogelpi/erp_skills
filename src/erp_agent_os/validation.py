@@ -90,6 +90,12 @@ _NUMERIC_LIMITS: dict[str, tuple[float, float]] = {
     "quantity": (1.0, 1_000.0),
 }
 
+# Public so callers (e.g. the bench v2 generator) can check whether a field
+# is actually range/type-validated before authoring a case that expects a
+# range violation to be caught. Deriving this from _NUMERIC_LIMITS instead of
+# a second hardcoded literal means the two can never silently drift apart.
+NUMERIC_LIMITED_FIELDS: frozenset[str] = frozenset(_NUMERIC_LIMITS)
+
 
 # A numeric value followed only by a currency unit: "27600 euros",
 # "1.200,50 EUR", "15000€". Deliberately anchored end-to-end so that

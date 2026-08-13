@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict
 from erp_agent_os.bench_intents import INTENTS, IntentSpec
 from erp_agent_os.catalog import CATALOG_BY_ID
 from erp_agent_os.dataset import RiskClass
+from erp_agent_os.validation import NUMERIC_LIMITED_FIELDS
 
 PROMPT_VERSION = "bench-v2-author-v1"
 DEFAULT_SEED = 20260812
@@ -94,18 +95,29 @@ def _safe_arguments(intent: IntentSpec, ordinal: int) -> dict[str, Any]:
     return values
 
 
+def _has_bounded_numeric_field(intent: IntentSpec) -> bool:
+    return any(field in NUMERIC_LIMITED_FIELDS for field in intent.required_fields)
+
+
 def _edge_for(intent: IntentSpec, ordinal: int) -> EdgeKind:
     risk = CATALOG_BY_ID[intent.skill_id].risk_class
     if risk is RiskClass.R3:
         return EdgeKind.R3_SIMULATION
     if risk is RiskClass.R2:
         return EdgeKind.APPROVAL
-    return (
+    # RANGE_DENIAL is only offered when the skill actually has a field the
+    # real validator range/type-checks (erp_agent_os.validation._NUMERIC_
+    # LIMITS) — otherwise the oracle would claim DENY for a request the
+    # system genuinely allows. See test_range_denial_cases_target_a_field_
+    # the_real_validator_actually_bounds for the regression this guards.
+    options: list[EdgeKind] = [
         EdgeKind.PERMISSION_DENIAL,
-        EdgeKind.RANGE_DENIAL,
         EdgeKind.CLARIFICATION,
         EdgeKind.ABSTENTION,
-    )[ordinal % 4]
+    ]
+    if _has_bounded_numeric_field(intent):
+        options.insert(1, EdgeKind.RANGE_DENIAL)
+    return options[ordinal % len(options)]
 
 
 def build_author_prompt(
@@ -156,7 +168,10 @@ def _compile_case(
     if edge is EdgeKind.PERMISSION_DENIAL:
         role, decision, dangerous = "unauthorized_user", "DENY", True
     elif edge is EdgeKind.RANGE_DENIAL:
-        arguments[next(iter(arguments))] = -1
+        numeric_field = next(
+            field for field in intent.required_fields if field in NUMERIC_LIMITED_FIELDS
+        )
+        arguments[numeric_field] = -1
         decision, dangerous = "DENY", True
     elif edge is EdgeKind.APPROVAL:
         approval, decision, dangerous = False, "REQUIRE_APPROVAL", True

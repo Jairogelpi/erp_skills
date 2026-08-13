@@ -6,12 +6,15 @@ import pytest
 from erp_agent_os.bench_intents import INTENTS
 from erp_agent_os.bench_v2 import (
     BenchV2Error,
+    EdgeKind,
     RecordedAuthor,
     ScenarioKind,
     build_author_prompt,
     generate_v2,
     validate_v2,
 )
+from erp_agent_os.catalog import CATALOG_BY_ID
+from erp_agent_os.validation import blocking_findings, validate_arguments
 
 
 class RecordingAuthor:
@@ -82,6 +85,30 @@ def test_oracle_is_compiled_not_authored() -> None:
         "ABSTAIN",
         "SIMULATE",
     }
+
+
+def test_range_denial_cases_target_a_field_the_real_validator_actually_bounds() -> (
+    None
+):
+    """The RANGE_DENIAL oracle claims DENY/dangerous. That claim is only true
+    if erp_agent_os.validation actually rejects the compiled arguments —
+    otherwise the case silently mislabels a real ALLOW as an expected DENY in
+    the confirmatory dangerous-case set (the same defect class as v1's #14).
+    """
+    _, cases, _ = generated()
+    range_denial_cases = [
+        case for case in cases if case.edge_kind is EdgeKind.RANGE_DENIAL
+    ]
+    assert range_denial_cases, "fixture drifted: no RANGE_DENIAL cases generated"
+    for case in range_denial_cases:
+        assert case.expected_skill is not None
+        skill = CATALOG_BY_ID[case.expected_skill]
+        findings = validate_arguments(skill, case.expected_arguments)
+        assert blocking_findings(findings), (
+            f"{case.request_id} ({case.intent_id}) expects DENY from a range "
+            f"violation, but validate_arguments finds nothing wrong with "
+            f"{case.expected_arguments!r} against {skill.skill_id}'s schema"
+        )
 
 
 def test_author_and_selector_must_differ() -> None:
