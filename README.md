@@ -1,5 +1,18 @@
 # ERP Agent OS
 
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion**
+>
+> Auditoría actualizada el 14-08-2026: los resultados actuales son
+> exploratorios o de
+> factibilidad. Test v1 fue inspeccionado antes de las últimas correcciones y
+> las ejecuciones históricas solo conservan agregados. Véase
+> `docs/hypotheses-and-theses.md` y `data/evidence_registry.json`.
+> El holdout humano v2 de 120 casos permanece sin ejecutar y se retirará mediante
+> supersesión append-only antes de cualquier evaluación. El protocolo normativo
+> de reemplazo, v2.1 sin anotadores humanos, está definido en
+> `docs/tfm-closure-no-human-v2.1.md`; todavía no está implementado, congelado ni
+> ejecutado, por lo que no habilita ninguna conclusión confirmatoria.
+
 **Diseño y evaluación experimental de un sistema para recuperar, verificar y ejecutar skills reutilizables en procesos ERP mediante agentes de inteligencia artificial.**
 
 Trabajo Fin de Máster — Jairo Gelpi Moreno · Máster en Data Science, IA y Big Data · Curso 2025–2026.
@@ -80,11 +93,11 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Executable postconditions (verification engine) | `postconditions.py` | ✅ |
 | Paired A/B/C experiment runner (1.080 observations) | `experiment.py` | ✅ |
 | Freeze manifest + drift detection (CI-enforced) | `freeze.py` | ✅ |
-| Inter-annotator agreement instrument (Cohen's kappa) | `agreement.py` | ⚠️ human annotation pending |
+| Legacy inter-annotator instrument (not used by v2.1) | `agreement.py` | ⛔ retired protocol only |
 | Real LLM clients for A/B/C (Groq, Gemini, OpenRouter — all free tier) | `groq_client.py`, `gemini_client.py`, `openrouter_client.py` | ✅ |
 | Checkpoint/resume + call caching for real-LLM runs | `experiment.py`, `llm_client.CachingLLMClient` | ✅ |
 | Token instrumentation (H2) and traceability rubric (H7) | `metrics.py`, `traceability.py` | ✅ |
-| Confirmatory run with a real LLM (CLAUDE.md §19) | `scripts/run_experiment.py --real-llm --provider {groq,gemini,openrouter}` | ✅ executed, 1.080 observations |
+| Legacy real-LLM A/B/C run (exploratory; aggregates only) | `scripts/run_experiment.py --real-llm --provider {groq,gemini,openrouter}` | ⚠️ executed, not confirmatory |
 | External adversarial stress test (InjecAgent, out-of-distribution) | `scripts/injecagent_stress_test.py` | ✅ measured, 0%→3.3% (see below) |
 | Injection **resistance** sweep: 510 payloads × 3 attack channels | `scripts/injection_resistance_test.py` | ✅ 0/1530 unauthorized mutations |
 | **Odoo 19 adapter** (post-core, JSON-2 API, allowlisted, no delete) | `odoo_client.py` | ✅ live-verified |
@@ -510,18 +523,18 @@ make figures              # reproducible PNG+SVG figures (needs the figures grou
 make build                # builds sdist + wheel
 ```
 
-## Second-annotator review (pending human step)
+## Retired second-annotator workflow (do not execute)
 
 ```sh
-uv run python scripts/build_annotation_sample.py   # blank review sheet, 96 cases
-# a second annotator fills the `annotator2_decision` column, then:
-uv run python scripts/compute_agreement.py         # Cohen's kappa
+uv run python scripts/build_annotation_sample.py   # legacy artifact only
+uv run python scripts/compute_agreement.py         # legacy artifact only
 ```
 
-The sample is deterministic and stratified so adversarial/high-risk cases are
-over-represented. `compute_agreement.py` **refuses to print a number** while the
-second-annotator column is empty — this step is honestly pending (CLAUDE.md
-§17/§21, roadmap P3.4), not silently skipped.
+These commands remain reproducible history, but the v2.1 protocol does not use
+human annotators or Cohen's kappa. The blank sheets must remain blank. Gold is
+instead generated from latent scenarios and checked through independent-by-
+dependency reference oracles, as specified in
+`docs/tfm-closure-no-human-v2.1.md`.
 
 Ruff is the formatter and linter; mypy is static type checking only (not a
 formatter). mypy is configured to skip re-checking `torch`/`transformers`/

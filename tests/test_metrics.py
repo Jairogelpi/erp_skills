@@ -4,8 +4,10 @@ from erp_agent_os.bench_generator import generate_cases
 from erp_agent_os.dataset import ExpectedDecision
 from erp_agent_os.metrics import (
     ExecutionRecord,
+    collapse_latency,
     collapse_repetitions,
     collapse_tokens,
+    collapse_traceability,
     paraphrase_consistency,
     retrieval_metrics,
     security_metrics,
@@ -313,6 +315,30 @@ def test_collapse_tokens_averages_repetitions_of_the_same_case():
     collapsed = collapse_tokens(records)
 
     assert collapsed["C"][case.request_id] == pytest.approx(150.0)
+
+
+def test_h2_token_population_excludes_cases_without_expected_skill():
+    skill_case = next(c for c in CASES if not c.expected_skill.startswith("sin_skill"))
+    no_skill_case = next(c for c in CASES if c.expected_skill.startswith("sin_skill"))
+    records = [
+        record(skill_case, prompt_tokens=100),
+        record(no_skill_case, prompt_tokens=999),
+    ]
+
+    collapsed = collapse_tokens(records, [skill_case, no_skill_case])
+
+    assert set(collapsed["C"]) == {skill_case.request_id}
+
+
+def test_continuous_metrics_collapse_repetitions_per_case():
+    case = CASES[0]
+    records = [
+        record(case, repetition=0, traceability_score=0.4, latency_seconds=0.1),
+        record(case, repetition=1, traceability_score=0.8, latency_seconds=0.3),
+    ]
+
+    assert collapse_traceability(records)["C"][case.request_id] == pytest.approx(0.6)
+    assert collapse_latency(records)["C"][case.request_id] == pytest.approx(0.2)
 
 
 # --- paraphrase consistency: the variability H3 cannot measure --------

@@ -3,11 +3,14 @@ import pytest
 from erp_agent_os.statistics import (
     cliffs_delta,
     cochran_q,
+    cohens_dz,
+    friedman_test,
     holm_correction,
     mcnemar,
     odds_ratio,
     paired_mean_difference,
     paired_proportion_difference,
+    wilcoxon_signed_rank,
 )
 
 
@@ -148,6 +151,29 @@ def test_paired_mean_difference_on_token_counts():
     assert interval.point == pytest.approx(-285.0)
     assert interval.low <= interval.point <= interval.high
     assert interval.high < 0  # C uses strictly fewer tokens than B here
+
+
+def test_friedman_detects_consistent_ordering_across_three_systems():
+    result = friedman_test(
+        [1.0, 1.0, 1.0, 1.0],
+        [2.0, 2.0, 2.0, 2.0],
+        [3.0, 3.0, 3.0, 3.0],
+    )
+
+    assert result.df == 2
+    assert result.statistic == pytest.approx(8.0)
+    assert result.p_value < 0.05
+
+
+def test_wilcoxon_reports_direction_and_rank_biserial_effect():
+    result = wilcoxon_signed_rank([1.0] * 12, [2.0] * 12)
+
+    assert result.p_value < 0.01
+    assert result.rank_biserial == pytest.approx(-1.0)
+
+
+def test_cohens_dz_uses_paired_differences():
+    assert cohens_dz([2.0, 4.0, 7.0], [1.0, 2.0, 4.0]) == pytest.approx(2.0)
 
 
 def test_bootstrap_width_shrinks_as_the_sample_grows():

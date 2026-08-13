@@ -1,0 +1,30 @@
+{
+  "created_on": "2026-08-13",
+  "hashes": {
+    "annotator_1_blank_template_sha256": "2e44402e26847e05a8034efed77713221a1617665dd2acce66180a4dc46e9eef",
+    "annotator_2_blank_template_sha256": "b205cfa0c0489790609e399841fc83722e62d152916aff4b6072f4ee50d1830d",
+    "author_proposals_sha256": "5ac0e8db5f3d86e3b42e76df9cf63d482e9a9d12ab01e0eedeaeb9627f1c3e2a",
+    "candidates_sha256": "0f738bf7feaa9f31f67e2dc908d1efe16112cf20a50f6efe1baabb381493e799",
+    "catalog_sha256": "4c3315cb261571b0bdd47a7aadb8b33f42854e048626818582595f4b80019ff7",
+    "experiment_code_sha256": "aefa1ee422c32d47f0d6a9d1c967a04d0485dbba3f115383fd25fd595eb235a1",
+    "prompt_sha256": "2d7042574cce0bcb4aa0a27d38fdd1d44a5ef19d6026ab2a260f0cf185241a95",
+    "provider_config_sha256": "c1c2d1d7f7a0623b36ba97698ce27d8a3b6a1661117793d9d820663ef72f4fd3"
+  },
+  "human_requirements": {
+    "adjudication_required_for_disagreements": true,
+    "independent_semantic_annotators": 2,
+    "independent_state_reviewers": 2
+  },
+  "n_cases": 120,
+  "paths": {
+    "annotation_packets": [
+      "bench_v2_annotation_annotator_1.csv",
+      "bench_v2_annotation_annotator_2.csv"
+    ],
+    "author_proposals": "bench_v2_author_proposals_5ac0e8db5f3d86e3b42e76df9cf63d482e9a9d12ab01e0eedeaeb9627f1c3e2a.jsonl",
+    "candidates": "bench_v2_candidates_0f738bf7feaa9f31f67e2dc908d1efe16112cf20a50f6efe1baabb381493e799.jsonl"
+  },
+  "schema_version": "1.0",
+  "status": "v2_candidates_sealed_awaiting_human_annotation",
+  "system_evaluation_allowed": false
+}

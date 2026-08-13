@@ -15,7 +15,12 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from erp_agent_os.dataset import BenchmarkCase, CaseLabel, ExpectedDecision
+from erp_agent_os.dataset import (
+    ABSTENTION_SENTINEL,
+    BenchmarkCase,
+    CaseLabel,
+    ExpectedDecision,
+)
 
 # Decisions that mean "the system refused to act". A dangerous case is
 # handled safely if the system produced one of these.
@@ -65,6 +70,17 @@ class ExecutionRecord:
     # effectively zero on stub runs -- report it as "measured under this
     # provider and this rate limit", not as a property of the system.
     latency_seconds: float = 0.0
+    # Evidence fields preserved for future, auditable experiment archives.
+    initial_state: dict[str, Any] = field(default_factory=dict)
+    normalized_arguments: dict[str, Any] = field(default_factory=dict)
+    candidate_scores: dict[str, float] | str = "not_available"
+    role: str = "not_available"
+    policy_reasons: tuple[str, ...] = ()
+    permission_evidence: str = "not_available"
+    selected_skill_version: str | None = None
+    handler_name: str = "not_available"
+    postcondition_evidence: dict[str, bool] | str = "not_available"
+    traceability_components: dict[str, float] | str = "not_available"
 
 
 @dataclass(frozen=True)
@@ -438,20 +454,53 @@ def token_metrics(records: Sequence[ExecutionRecord]) -> TokenMetrics:
     )
 
 
+def filter_records_with_expected_skill(
+    cases: Sequence[BenchmarkCase], records: Sequence[ExecutionRecord]
+) -> list[ExecutionRecord]:
+    """Return only observations whose benchmark case expects a real skill."""
+    expected = {
+        case.request_id for case in cases if case.expected_skill != ABSTENTION_SENTINEL
+    }
+    return [record for record in records if record.request_id in expected]
+
+
+def collapse_measure(
+    records: Sequence[ExecutionRecord], attribute: str
+) -> dict[str, dict[str, float]]:
+    """Average a numeric field across repetitions for each system and case."""
+    grouped: dict[tuple[str, str], list[float]] = {}
+    for record in records:
+        value = getattr(record, attribute)
+        if not isinstance(value, (int, float)):
+            raise TypeError(f"{attribute} must be numeric")
+        key = (record.system, record.request_id)
+        grouped.setdefault(key, []).append(float(value))
+
+    collapsed: dict[str, dict[str, float]] = {}
+    for (system, request_id), values in grouped.items():
+        collapsed.setdefault(system, {})[request_id] = sum(values) / len(values)
+    return collapsed
+
+
 def collapse_tokens(
     records: Sequence[ExecutionRecord],
+    cases: Sequence[BenchmarkCase] | None = None,
 ) -> dict[str, dict[str, float]]:
     """Per-case mean total tokens, one inference unit per (system, case).
 
     Mirrors `collapse_repetitions`: repetitions of one case are not
     independent, so H2's paired comparison uses the mean total tokens
-    per case, not each repetition as its own observation. Every case in
-    this dataset has an expected skill by construction (no abstention
-    label in ERP-Skills-Bench v1), so no case-level filter is applied --
-    "peticiones de test con skill esperada" (§20) is all of them here.
+    per case, not each repetition as its own observation. When `cases` is
+    supplied, H2's declared population is enforced by excluding explicit
+    `sin_skill/abstención` cases.
     """
+    selected = (
+        filter_records_with_expected_skill(cases, records)
+        if cases is not None
+        else list(records)
+    )
     grouped: dict[tuple[str, str], list[int]] = {}
-    for record in records:
+    for record in selected:
         key = (record.system, record.request_id)
         grouped.setdefault(key, []).append(
             record.prompt_tokens + record.completion_tokens
@@ -461,3 +510,15 @@ def collapse_tokens(
     for (system, request_id), totals in grouped.items():
         collapsed.setdefault(system, {})[request_id] = sum(totals) / len(totals)
     return collapsed
+
+
+def collapse_traceability(
+    records: Sequence[ExecutionRecord],
+) -> dict[str, dict[str, float]]:
+    return collapse_measure(records, "traceability_score")
+
+
+def collapse_latency(
+    records: Sequence[ExecutionRecord],
+) -> dict[str, dict[str, float]]:
+    return collapse_measure(records, "latency_seconds")

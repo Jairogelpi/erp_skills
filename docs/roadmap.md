@@ -1,5 +1,12 @@
 # Hoja de ruta operativa — ERP Agent OS
 
+> **ESTADO 14-08-2026 — HOJA HISTÓRICA PENDIENTE DE MIGRACIÓN:** la anotación
+> humana y el kappa ya no forman parte del cierre. Las tareas incompatibles de
+> esta hoja están sustituidas por `tfm-closure-no-human-v2.1.md` y por el plan
+> `superpowers/plans/2026-08-14-tfm-closure-no-human-v2-1.md`. Hasta implementar
+> ese plan, v2.1 está especificado pero no ejecutado y H1-H8 siguen sin
+> conclusión confirmatoria.
+
 Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLAUDE.md) **y las prioridades/riesgos de evaluación de [`../evaluacion_tfm.md`](../evaluacion_tfm.md)** en trabajo trazable y gobernado. Sirve para planificar, ejecutar y aceptar unidades de trabajo; no modifica el alcance, las hipótesis ni el protocolo normativo. La bitácora canónica, append-only, está en [`../CLAUDE.md#bitácora-operativa`](../CLAUDE.md#bitácora-operativa).
 
 ## Ruta rápida
@@ -31,7 +38,7 @@ Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLA
 | `EXT` | extensión post-core | no puede bloquear CONF |
 | `CONF` | requisito confirmatorio | debe cerrarse antes del experimento final |
 
-**Estado al 2026-08-07.** Unidades 1–30 (incluye tokens/H2, rúbrica de trazabilidad/H7, tres clientes LLM reales, checkpoint/resume y caché de llamadas). **El experimento confirmatorio de §19 está ejecutado con LLM real y con H2/H7 medidos por primera vez**: 1.080 observaciones (120 casos de test × 3 sistemas × 3 repeticiones), `manifest.selector: "OpenRouterClient"` (`openai/gpt-oss-20b:free`), `is_confirmatory_run: true`, `data/experiment_results.json`, análisis completo en [`results.md`](results.md), que conserva también la línea base con selector stub para aislar la contribución arquitectónica.
+**Estado histórico al 2026-08-07.** Unidades 1–30 (incluye tokens/H2, rúbrica de trazabilidad/H7, tres clientes LLM reales, checkpoint/resume y caché de llamadas). La corrida entonces etiquetada como “confirmatoria” se conserva como exploratoria: no contiene las filas crudas necesarias y el test fue inspeccionado. La campaña confirmatoria vigente será v2.1 y aún no se ha ejecutado.
 
 **Historial de proveedor:** Groq completó una corrida entera antes de que existieran H2/H7; al relanzar con la instrumentación nueva, la cuota diaria de Groq (agotada por intentos previos sin checkpoint) y luego la de Gemini (20 peticiones/día por modelo en todos los modelos probados) bloquearon el reintento. OpenRouter (`openai/gpt-oss-20b:free`) es el que completó la corrida que se reporta. Los tres clientes quedan en el repo, probados y seleccionables vía `--provider {groq,gemini,openrouter}`.
 

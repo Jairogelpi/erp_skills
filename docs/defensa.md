@@ -1,5 +1,11 @@
 # Guion de defensa y vídeo: qué contar y en qué orden
 
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion**
+>
+> Este guion debe presentar las cifras A/B/C como señales exploratorias y las
+> pruebas de Odoo como factibilidad. Ninguna de H1-H8 está confirmada todavía;
+> el estado canónico está en `docs/hypotheses-and-theses.md`.
+
 Documento de **presentación**, no de investigación. No introduce ningún
 resultado nuevo ni reformula ninguna hipótesis: H1–H8 quedan como se
 declararon en `CLAUDE.md` §6 y se reportan como se midieron. Lo único
@@ -151,9 +157,9 @@ cuestan **cero tokens**.
 ## Las siete preguntas difíciles, y qué responder
 
 **1. «Su sistema bloquea porque usted lo diseñó para bloquear. ¿Qué ha
-demostrado?»**
-Correcto, y por eso el resultado que defiendo no es ese. Lo demostrado
-es más estrecho: que el bloqueo **se sostiene cuando el modelo falla del
+observado?»**
+Correcto, y por eso el resultado que presento no es ese. La señal
+exploratoria es más estrecha: que el bloqueo **se sostiene cuando el modelo falla del
 todo** — 510 de 510 con el atacante dictando los argumentos — y que eso
 es independiente del proveedor, mientras que la seguridad del agente sin
 gobierno sí depende de qué modelo le toque.

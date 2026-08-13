@@ -1,5 +1,13 @@
 # ERP Agent OS: diseño y evaluación experimental de un sistema de recuperación y ejecución segura de skills reutilizables para la automatización de procesos ERP mediante agentes de inteligencia artificial
 
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion**
+>
+> Auditoría del 14-08-2026: ninguna de H1-H8 está confirmada todavía. Las
+> etiquetas históricas de «confirmatorio» quedan invalidadas; las cifras se
+> conservan como evidencia exploratoria. Véase `docs/hypotheses-and-theses.md`
+> y `data/evidence_registry.json`. El cierre vigente será v2.1 sin anotadores
+> humanos; está especificado, pero no implementado, congelado ni ejecutado.
+
 **Autor:** Jairo Gelpi Moreno
 **Programa:** Máster en Data Science, Inteligencia Artificial y Big Data
 **Modalidad:** Opción 3 — proyecto técnico aplicado con evaluación experimental
@@ -10,9 +18,10 @@
 > los artefactos y resultados reales del repositorio**, no de
 > expectativas. Toda cifra que aparece aquí procede de un fichero
 > versionado (`data/*.json`) y es reproducible con los comandos del
-> anexo A. Los apartados que dependen de trabajo humano pendiente —
-> kappa de anotación, workbook de Tableau, defensa— están marcados como
-> tales y **no se dan por hechos**.
+> anexo A. Las referencias posteriores a kappa o segundo anotador describen el
+> protocolo histórico retirado y serán sustituidas al implementar v2.1. El
+> workbook y la defensa siguen siendo entregables pendientes y **no se dan por
+> hechos**.
 
 ---
 
@@ -513,10 +522,10 @@ reintento, mismo evaluador determinista.
 
 | # | Selector | Régimen de argumentos | Papel |
 |---|---|---|---|
-| 1 | OpenRouter (`gpt-oss-20b:free`) | Parseo regalado | Confirmatoria con LLM real |
+| 1 | OpenRouter (`gpt-oss-20b:free`) | Parseo regalado | Histórica; etiqueta confirmatoria invalidada |
 | 2 | Stub determinista | Parseo regalado | Arquitectura-solo: aísla gobernanza de calidad del modelo |
 | 3 | Groq (`llama-3.1-8b-instant`) | Parseo real | Elimina el sesgo del parseo regalado |
-| 4 | Groq | Parseo real + normalización | **Vigente** |
+| 4 | Groq | Parseo real + normalización | Referencia exploratoria más reciente |
 | 5 | Groq | Parseo regalado | **Réplica que separa proveedor de régimen** |
 
 **Por qué cambia el proveedor entre corridas.** La cuota diaria gratuita
@@ -701,7 +710,7 @@ recuperador para no favorecer al incumbente:
 | Híbrido | 0,713 | 0,675 |
 
 **TF-IDF gana en todas las métricas y en ambos splits.** El experimento
-confirmatorio ya usaba el mejor de los tres. La causa es el benchmark:
+histórico ya usaba el mejor de los tres. La causa es el benchmark:
 texto plantillado con alto solape léxico entre petición y descripción de
 skill, exactamente la señal que TF-IDF explota y que un vector denso
 comprime. **No es un resultado sobre embeddings en general.**
@@ -768,7 +777,7 @@ las 1.080 observaciones, cambiando únicamente el adaptador:
   correcta.
 
 Es una demostración **cualitativa** con 2 de las 12 skills mapeadas a
-modelos reales; no sustituye ni replica el experimento confirmatorio, y
+modelos reales; no sustituye una comparación A/B/C prospectiva, y
 así se declara.
 
 ### 8.9 Réplica que separa proveedor de régimen de argumentos
@@ -802,18 +811,18 @@ es precisamente el mecanismo que la tesis afirma.
 de C es 0,111 en todas. La seguridad de un agente sin gobernanza depende
 de qué modelo le toque; la de la arquitectura gobernada, de ninguno.
 
-### 8.10 Estado final de las hipótesis
+### 8.10 Estado auditado de las hipótesis
 
 | H | Estado |
 |---|---|
-| H1 | **Aceptada.** C−A y C−B significativos; margen de no inferioridad cumplido. Efecto sobre B modesto (+0,150). |
-| H2 | **Confirmada.** C 67,6 tok/ejec frente a B 265,3 (3,9×). |
-| H3 | **Nula por diseño.** Temperatura 0 la vuelve no discriminable. |
-| H4 | **Confirmada y robusta.** False allow 0,111 vs 0,889, invariante a proveedor y régimen de parseo. |
-| H5 | **Parcial.** C gana en Top-3 y abstención; Top-1 depende del selector. |
-| H6 | **Matizada.** El valor de abstenerse depende de la calidad del selector alternativo. |
-| H7 | **Confirmada.** 0,820 vs 0,356/0,374. |
-| H8 | **Análisis de sensibilidad**, no ahorro medido. |
+| H1 | **No confirmada; señal exploratoria favorable.** El test fue inspeccionado, faltan filas históricas y oráculo independiente. |
+| H2 | **No confirmada; señal exploratoria favorable.** El histórico incluyó dos casos `sin_skill` fuera de la población declarada. |
+| H3 | **No evaluable con el diseño actual.** Temperatura 0 y caché producen A=B=C=1,000. |
+| H4 | **No confirmada; señal exploratoria favorable.** Solo nueve casos peligrosos únicos y baja transferencia del detector. |
+| H5 | **Parcial y descriptiva.** Buen Top-3 en v1; caída acusada de TF-IDF en texto menos templado. |
+| H6 | **Parcial y descriptiva.** La curva se implementó después de inspeccionar v1. |
+| H7 | **No confirmada; señal exploratoria favorable.** No se conservaron las filas históricas por componente. |
+| H8 | **Solo análisis de sensibilidad**, no ahorro medido. |
 
 ---
 
@@ -1222,13 +1231,13 @@ revisión sistemática.
 
 ```sh
 uv sync
-uv run python -m pytest                       # 393 tests
+uv run python -m pytest                       # suite completa
 uv run python scripts/freeze_protocol.py --verify
 
 # Experimento (arquitectura-solo, sin red)
 uv run python scripts/run_experiment.py
 
-# Experimento confirmatorio con LLM real y parseo real
+# Experimento exploratorio con LLM real sobre test v1 ya inspeccionado
 uv run python scripts/run_experiment.py --real-llm --real-parser \
     --provider groq
 
@@ -1254,8 +1263,8 @@ make figures
 |---|---|
 | `data/bench_v1.jsonl` | 480 casos del benchmark |
 | `data/freeze_manifest.json` | Hashes del protocolo congelado (schema 1.1) |
-| `data/experiment_results.json` | Corrida confirmatoria (OpenRouter, parseo regalado) |
-| `data/experiment_results_real_parser.json` | **Corrida vigente** (Groq, parseo real + normalización) |
+| `data/experiment_results.json` | Resumen histórico agregado (OpenRouter, parseo regalado) |
+| `data/experiment_results_real_parser.json` | Referencia exploratoria agregada más reciente (Groq, parseo real + normalización) |
 | `data/experiment_results_groq_given_args.json` | Réplica que separa proveedor de régimen (Groq, argumentos dados) |
 | `data/retriever_comparison.json` | TF-IDF vs embeddings vs híbrido |
 | `data/injecagent_stress_test_results.json` | Detección léxica, 510 payloads |

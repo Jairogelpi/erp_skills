@@ -1,5 +1,11 @@
 # De los resultados a un producto: qué sostiene la evidencia y qué no
 
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion**
+>
+> Las cifras de este documento son señales exploratorias o pruebas de
+> factibilidad; no respaldan aún afirmaciones causales ni confirmatorias ante un
+> cliente. Véase `docs/hypotheses-and-theses.md`.
+
 Documento de **transferencia**, no de investigación. Traduce los
 resultados medidos (`docs/results.md`) a qué se puede afirmar ante un
 cliente, qué producto sostienen y qué falta construir.

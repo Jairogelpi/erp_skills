@@ -1,5 +1,11 @@
 # Las demos, explicadas: qué se construyó, qué se prueba y qué enseña cada paso
 
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion**
+>
+> Las demos prueban funcionamiento y factibilidad, no confirman H1-H8 ni
+> sustituyen el benchmark prospectivo pendiente. Estado canónico:
+> `docs/hypotheses-and-theses.md`.
+
 Documento de **comprensión y réplica**. Responde a tres preguntas que
 son distintas y conviene no mezclar:
 
