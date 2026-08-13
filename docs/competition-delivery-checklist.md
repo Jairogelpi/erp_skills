@@ -42,6 +42,50 @@ fichero solicitado por UCM. La competición es independiente del TFM.
 **Regla:** si falta cualquiera de esas puertas, v2 permanece `pending`. No se
 usa una cifra v1 para rellenar la diapositiva.
 
+## Hallazgos de la revisión de código independiente (previa al freeze)
+
+Revisión ejecutada contra el diseño y el plan aprobados, diff completo
+`fa2ba00..HEAD`. Un hallazgo Crítico y un Importante corregidos con TDD
+(commits `a83dc81`, `c657762`); dos Importantes quedan como brecha
+residual conocida en vez de un arreglo apresurado bajo presión de tiempo:
+
+- [x] **Crítico, corregido:** el oráculo `RANGE_DENIAL` de `bench_v2.py`
+  mutaba el primer campo requerido (a menudo no numérico) y afirmaba
+  `DENY`/`dangerous=True` sin comprobar que `validation.py` realmente
+  acota ese campo. Los 4 casos afectados habrían etiquetado un `ALLOW`
+  real como `DENY` esperado en el futuro dataset confirmatorio v2 —
+  mismo patrón que el defecto #14 de v1. Corregido y probado
+  (`test_range_denial_cases_target_a_field_the_real_validator_actually_bounds`).
+- [x] **Importante, corregido:** `scripts/make_video_assets.py` tenía las
+  seis cifras de la tarjeta de resultados escritas como literales, sin
+  leerlas de `data/experiment_results_real_parser.json`; una corrección
+  futura del JSON (ya ha pasado varias veces) podría dejar el vídeo con
+  una cifra obsoleta sin que nada lo detectara. Corregido: `headline_metrics()`
+  lee del JSON registrado; probado con valores falsos distinguibles para
+  demostrar el cableado real, no solo coincidencia con las cifras actuales.
+- [ ] **Importante, no corregido — declarado:** el guardián de
+  `evidence.audit_document_claims` que impide llamar "confirmatorio" a un
+  artefacto no confirmatorio solo dispara cuando el texto menciona la
+  **ruta literal** del artefacto junto a la palabra. Un documento que
+  nombrara una corrida por número de ejecución o proveedor (p. ej. "la
+  ejecución 4", "la corrida OpenRouter") sin citar la ruta no lo
+  detectaría. Verificado por grep: ningún documento actual lo dispara.
+  Un arreglo por alias requeriría mapear con precisión qué número de
+  ejecución corresponde a qué artefacto — bajo presión de tiempo, un
+  mapeo incorrecto sería peor que no tener el mecanismo. Queda para
+  trabajo futuro, no oculto.
+- [ ] **Importante, no corregido — ya declarado en el propio repo:** la
+  suite adversarial consciente del catálogo (`adversarial.py` +
+  `data/catalog_aware_stress_cases.json`) evalúa un oráculo puro sobre
+  observaciones **escritas a mano**, no derivadas de ejecutar
+  `SystemC`/`Runtime`/`policy.decide` de verdad contra `FakeERPAdapter`
+  (a diferencia de `injection_resistance_test.py`, que sí lo hace). Ya
+  está declarado como tal en `data/evidence_registry.json` y en
+  `docs/results.md` ("observaciones sintéticas registradas... no una
+  ejecución online"); no es una afirmación falsa, pero conviene no citar
+  su "hallazgo" de campo no permitido como si fuera un ataque detectado
+  en vivo — es una fixture, no una ejecución.
+
 ## Puertas externas que el repositorio no puede completar
 
 - [ ] Segundo anotador humano independiente — actualmente no disponible; no
