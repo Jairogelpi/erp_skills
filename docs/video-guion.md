@@ -1,8 +1,9 @@
 # Guion literal — competición de becas
 
-**Dirección aprobada:** método primero. **Duración objetivo:** 4:30. **Límite
-absoluto:** 5:00. Ensayar a 125–135 palabras por minuto y cortar, no acelerar,
-si una toma supera 4:40.
+**Dirección aprobada:** método primero. **Duración objetivo:** 4:45 (con el
+tramo de generación de skills, §12 CU-02, que faltaba en versiones previas de
+este guion). **Rechazo interno:** > 4:50. **Límite absoluto:** 5:00. Ensayar
+a 125–135 palabras por minuto y cortar, no acelerar, si una toma supera 4:40.
 
 Cada rótulo numérico incluye su estado de evidencia dentro del plano. Mientras
 v2 siga pendiente, no se reemplaza por una cifra v1.
@@ -67,7 +68,20 @@ v2 siga pendiente, no se reemplaza por una cifra v1.
 > verificador, el sistema falla cerrado. Si se repite la petición, la
 > idempotencia evita una segunda mutación.
 
-## 2:30–3:05 — Demo Odoo como prueba visual
+## 2:30–2:45 — Cuando no hay skill: proponer, nunca autodesplegar
+
+**Imagen:** terminal, `uv run python scripts/demo_completa.py --solo 10`
+(escena aislada de CU-02, sin correr las otras diez). Antes de grabar,
+ejecutar `chcp 65001` en PowerShell para que los acentos no salgan como
+`�` en pantalla.
+
+**Locución:**
+
+> ¿Y si no hay skill adecuada? El modelo puede proponer una nueva —
+> validada, probada en sandbox, pero nunca activada sola. Solo un humano con
+> nombre la aprueba; nunca entra en el experimento congelado.
+
+## 2:45–3:20 — Demo Odoo como prueba visual
 
 **Imagen:** grabación continua; rótulo fijo:
 `DEMOSTRACIÓN ODOO · NO RESULTADO EXPERIMENTAL`.
@@ -80,7 +94,7 @@ v2 siga pendiente, no se reemplaza por una cifra v1.
 > a verificar. La demo prueba integración técnica; no sustituye el experimento
 > con FakeERP.
 
-## 3:05–3:40 — Estado honesto de los resultados
+## 3:20–3:55 — Estado honesto de los resultados
 
 **Imagen:** `reports/video/04-results.svg`.
 
@@ -92,7 +106,7 @@ v2 siga pendiente, no se reemplaza por una cifra v1.
 > false allow y menos tokens. Son cifras útiles para justificar v2, no para dar
 > la hipótesis por demostrada.
 
-## 3:40–4:05 — El peor número y el límite adversarial
+## 3:55–4:20 — El peor número y el límite adversarial
 
 **Imagen:** `3,3 % DETECCIÓN EXTERNA`; después:
 `STRESS EXPLORATORIO · CONFINAMIENTO POR TRES CANALES · 0/1.530`;
@@ -106,7 +120,7 @@ sello `NO ADAPTATIVO`.
 > ese cero está acotado: no cubre adversarios adaptativos, y un test posterior
 > consciente del catálogo encontró un caso de inyección en campo.
 
-## 4:05–4:22 — Innovación y límites
+## 4:20–4:37 — Innovación y límites
 
 **Imagen:** `reports/video/05-limitations.svg`, luego contrato de skill.
 
@@ -117,7 +131,7 @@ sello `NO ADAPTATIVO`.
 > Los límites son visibles: datos sintéticos, doce skills, sin usuarios reales
 > y sin segundo anotador humano.
 
-## 4:22–4:30 — Cierre
+## 4:37–4:45 — Cierre
 
 **Imagen:** marca ERP Agent OS, fondo limpio.
 

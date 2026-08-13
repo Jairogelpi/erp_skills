@@ -1,8 +1,10 @@
-# Plan de rodaje — vídeo de competición 4:30
+# Plan de rodaje — vídeo de competición 4:45
 
 ## Entregable
 
-- Duración objetivo: 4:30; rechazo interno de cualquier exportación > 4:50.
+- Duración objetivo: 4:45 (incluye el tramo de generación de skills, CU-02,
+  que faltaba en versiones previas de este plan); rechazo interno de
+  cualquier exportación > 4:50.
 - 1920×1080, 25 o 30 fps, H.264, audio AAC 48 kHz.
 - YouTube en oculto; entregar el enlace en el fichero solicitado por UCM.
 - Narrativa: método primero; la demo es evidencia visual y no sustituye el
@@ -17,6 +19,8 @@
 5. `reports/video/05-limitations.svg` — límites y resultado negativo.
 6. Instancia Odoo de desarrollo con datos sintéticos y estado conocido.
 7. Cuenta/rol de demo sin secretos visibles.
+8. Terminal con `chcp 65001` (acentos legibles) para
+   `uv run python scripts/demo_completa.py --solo 10` (CU-02 aislado).
 
 ## Orden de rodaje
 
@@ -26,12 +30,14 @@ Grabar riesgo y pregunta de investigación. Plano medio, mirada a cámara,
 teleprompter a la altura del objetivo. Dos versiones completas; conservar la
 más natural, no montar una frase palabra a palabra.
 
-### Toma 2 — Voz y gráficos, 0:50–2:30
+### Toma 2 — Voz y gráficos, 0:50–2:45
 
-Narrar método, freeze y arquitectura sobre los SVG. Capturar audio continuo con
-cinco segundos de silencio ambiente al inicio y final.
+Narrar método, freeze, arquitectura y CU-02 (generación de skills) sobre los
+SVG y la captura de terminal de
+`uv run python scripts/demo_completa.py --solo 10`. Capturar audio continuo
+con cinco segundos de silencio ambiente al inicio y final.
 
-### Toma 3 — Odoo continua, 2:30–3:05
+### Toma 3 — Odoo continua, 2:45–3:20
 
 Grabar en una única toma:
 
@@ -45,14 +51,14 @@ El rótulo `DEMOSTRACIÓN ODOO · NO RESULTADO EXPERIMENTAL` permanece visible.
 Si falla cualquier paso, reiniciar el estado y repetir toda la toma; no pegar
 resultados de sesiones distintas.
 
-### Toma 4 — Voz y resultados, 3:05–4:05
+### Toma 4 — Voz y resultados, 3:20–4:20
 
 Grabar primero la frase `V2 está pendiente`. Después mostrar solo estimaciones
 v1 con la etiqueta `EXPLORATORIO`. El 3,3 % ocupa un plano propio. El 0/1.530
 solo aparece junto a `STRESS EXPLORATORIO · CONFINAMIENTO POR TRES CANALES ·
 NO ADAPTATIVO`.
 
-### Toma 5 — Cámara y cierre, 4:05–4:30
+### Toma 5 — Cámara y cierre, 4:20–4:45
 
 Límites a cámara; cambio a fondo limpio para el cierre literal:
 
@@ -67,11 +73,12 @@ Límites a cámara; cambio a fondo limpio para el cierre literal:
 | 0:50–1:25 | 01-method | voz | `V2 · 120×3×3` |
 | 1:25–1:55 | freeze | voz | `UNA SOLA MIRADA` |
 | 1:55–2:30 | 02-architecture | voz | `POSTCONDICIONES EJECUTADAS` |
-| 2:30–3:05 | Odoo continua | voz/directo | `DEMOSTRACIÓN` |
-| 3:05–3:40 | 04-results | voz | `V2 PENDIENTE` / `EXPLORATORIO` |
-| 3:40–4:05 | límites adversariales | voz | `3,3 %` y alcance del cero |
-| 4:05–4:22 | 05-limitations | cámara | `LÍMITES` |
-| 4:22–4:30 | logo | cámara | frase final |
+| 2:30–2:45 | terminal · `--solo 10` | voz | `CU-02 · PROPONE, NO AUTODESPLIEGA` |
+| 2:45–3:20 | Odoo continua | voz/directo | `DEMOSTRACIÓN` |
+| 3:20–3:55 | 04-results | voz | `V2 PENDIENTE` / `EXPLORATORIO` |
+| 3:55–4:20 | límites adversariales | voz | `3,3 %` y alcance del cero |
+| 4:20–4:37 | 05-limitations | cámara | `LÍMITES` |
+| 4:37–4:45 | logo | cámara | frase final |
 
 ## Checklist antes de exportar
 
