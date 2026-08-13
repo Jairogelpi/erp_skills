@@ -4,7 +4,12 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
+from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_RESULTS_PATH = REPO_ROOT / "data" / "experiment_results_real_parser.json"
 
 ASSETS = (
     "01-method.svg",
@@ -157,7 +162,33 @@ def _odoo() -> str:
     )
 
 
-def _results() -> str:
+def _format_es(value: float, decimals: int) -> str:
+    """Spanish decimal-comma formatting, matching every other document."""
+    return f"{value:.{decimals}f}".replace(".", ",")
+
+
+def headline_metrics(results_path: Path = DEFAULT_RESULTS_PATH) -> dict[str, str]:
+    """Read the results-card headline numbers from the exploratory current-
+    software estimate registered in data/evidence_registry.json, instead of
+    hardcoding them, so a future correction to that JSON (this project has
+    corrected published numbers more than once — see docs/audit.md) cannot
+    leave the video silently quoting a superseded figure.
+    """
+    data: dict[str, Any] = json.loads(results_path.read_text(encoding="utf-8"))
+    stsr = data["H1_stsr"]["stsr"]
+    tokens = data["H2_tokens"]["totals"]
+    security = data["H4_security"]
+    return {
+        "stsr_b": _format_es(stsr["B"], 3),
+        "stsr_c": _format_es(stsr["C"], 3),
+        "tokens_b": _format_es(tokens["B"]["mean_tokens_per_execution"], 1),
+        "tokens_c": _format_es(tokens["C"]["mean_tokens_per_execution"], 1),
+        "false_allow_b": _format_es(security["B"]["false_allow_rate"], 3),
+        "false_allow_c": _format_es(security["C"]["false_allow_rate"], 3),
+    }
+
+
+def _results(metrics: dict[str, str]) -> str:
     body = f'''
   <rect x="104" y="276" width="1712" height="168" rx="32" fill="#332715" stroke="{AMBER}" stroke-width="3" filter="url(#shadow)"/>
   <text x="154" y="330" fill="{AMBER}" font-family="Arial" font-size="21" font-weight="800" letter-spacing="4">RESULTADO PRIMARIO</text>
@@ -169,21 +200,21 @@ def _results() -> str:
   <text x="144" y="630" fill="{MUTED}" font-family="Arial" font-size="21" font-weight="700">STSR · baseline tipado B</text>
   <rect x="144" y="662" width="520" height="58" rx="15" fill="#21364D"/>
   <rect x="144" y="662" width="251" height="58" rx="15" fill="{AMBER}"/>
-  <text x="694" y="703" fill="{INK}" font-family="Arial" font-size="36" font-weight="800">0,483</text>
+  <text x="694" y="703" fill="{INK}" font-family="Arial" font-size="36" font-weight="800">{metrics["stsr_b"]}</text>
   <text x="144" y="782" fill="{MUTED}" font-family="Arial" font-size="21" font-weight="700">STSR · ERP Agent OS C</text>
   <rect x="144" y="814" width="520" height="58" rx="15" fill="#21364D"/>
   <rect x="144" y="814" width="329" height="58" rx="15" fill="{MINT}"/>
-  <text x="694" y="855" fill="{INK}" font-family="Arial" font-size="36" font-weight="800">0,633</text>
+  <text x="694" y="855" fill="{INK}" font-family="Arial" font-size="36" font-weight="800">{metrics["stsr_c"]}</text>
   <line x1="850" y1="574" x2="850" y2="850" stroke="#2B4665" stroke-width="2"/>
   <text x="912" y="635" fill="{MUTED}" font-family="Arial" font-size="21" font-weight="700">OTRAS SEÑALES EXPLORATORIAS</text>
   <text x="912" y="711" fill="{INK}" font-family="Arial" font-size="31" font-weight="750">false allow</text>
-  <text x="1240" y="711" fill="{AMBER}" font-family="Arial" font-size="31" font-weight="800">0,889</text>
+  <text x="1240" y="711" fill="{AMBER}" font-family="Arial" font-size="31" font-weight="800">{metrics["false_allow_b"]}</text>
   <text x="1432" y="711" fill="{MUTED}" font-family="Arial" font-size="24">→</text>
-  <text x="1516" y="711" fill="{MINT}" font-family="Arial" font-size="31" font-weight="800">0,111</text>
+  <text x="1516" y="711" fill="{MINT}" font-family="Arial" font-size="31" font-weight="800">{metrics["false_allow_c"]}</text>
   <text x="912" y="793" fill="{INK}" font-family="Arial" font-size="31" font-weight="750">tokens / ejecución</text>
-  <text x="1240" y="793" fill="{AMBER}" font-family="Arial" font-size="31" font-weight="800">265,3</text>
+  <text x="1240" y="793" fill="{AMBER}" font-family="Arial" font-size="31" font-weight="800">{metrics["tokens_b"]}</text>
   <text x="1432" y="793" fill="{MUTED}" font-family="Arial" font-size="24">→</text>
-  <text x="1516" y="793" fill="{MINT}" font-family="Arial" font-size="31" font-weight="800">67,6</text>
+  <text x="1516" y="793" fill="{MINT}" font-family="Arial" font-size="31" font-weight="800">{metrics["tokens_c"]}</text>
   <text x="912" y="858" fill="{MUTED}" font-family="Arial" font-size="19">señal para justificar v2 · no conclusión final</text>'''
     return _base(
         number="04",
@@ -231,7 +262,13 @@ def _limitations() -> str:
 
 def make_assets(output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
-    payloads = (_method(), _architecture(), _odoo(), _results(), _limitations())
+    payloads = (
+        _method(),
+        _architecture(),
+        _odoo(),
+        _results(headline_metrics()),
+        _limitations(),
+    )
     for name, payload in zip(ASSETS, payloads, strict=True):
         (output_dir / name).write_text(payload, encoding="utf-8", newline="\n")
 
