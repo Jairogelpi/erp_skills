@@ -3,7 +3,11 @@ from datetime import UTC, datetime
 from erp_agent_os.audit import REDACTED, AuditStore
 from erp_agent_os.dataset import RiskClass
 from erp_agent_os.policy import PolicyDecision, PolicyOutcome
-from erp_agent_os.runtime import ExecutionResult
+from erp_agent_os.runtime import (
+    ExecutionResult,
+    VerificationCheckResult,
+    VerificationStatus,
+)
 from erp_agent_os.skills import Execution, Permissions, SkillDefinition, SkillState
 
 FIXED_TIME = datetime(2026, 8, 5, tzinfo=UTC)
@@ -35,8 +39,15 @@ def outcome() -> PolicyOutcome:
     return PolicyOutcome(PolicyDecision.ALLOW, 0.2, ["low risk"])
 
 
-def execution(output=None, replay=False, met=None) -> ExecutionResult:
-    return ExecutionResult(PolicyDecision.ALLOW, output, replay, met)
+def execution(output=None, replay=False, met=True) -> ExecutionResult:
+    return ExecutionResult(
+        PolicyDecision.ALLOW,
+        output,
+        replay,
+        met,
+        verification_status=VerificationStatus.PASSED,
+        check_results=(VerificationCheckResult("record_exists", True, "check passed"),),
+    )
 
 
 def test_record_appends_and_returns_event():
@@ -47,8 +58,34 @@ def test_record_appends_and_returns_event():
 
     assert event.correlation_id == "corr-1"
     assert event.decision == "ALLOW"
+    assert event.verification_status == "passed"
+    assert event.postconditions_met is True
+    assert event.check_results == (
+        VerificationCheckResult("record_exists", True, "check passed"),
+    )
     assert event.recorded_at == FIXED_TIME
     assert store.events() == (event,)
+
+
+def test_abstention_records_aggregate_and_named_non_sensitive_evidence():
+    store = AuditStore(clock=lambda: FIXED_TIME)
+    checks = (
+        VerificationCheckResult("complete_state_unchanged", False, "check failed"),
+    )
+
+    event = store.record_abstention(
+        "corr-abstain",
+        ["no confident candidate"],
+        decision="CLARIFY",
+        verification_status=VerificationStatus.NOT_RUN_DIRTY,
+        postconditions_met=False,
+        check_results=checks,
+    )
+
+    assert event.verification_status == "not_run_dirty"
+    assert event.decision == "CLARIFY"
+    assert event.postconditions_met is False
+    assert event.check_results == checks
 
 
 def test_events_filtered_by_correlation_id():

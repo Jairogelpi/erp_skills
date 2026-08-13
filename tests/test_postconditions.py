@@ -36,6 +36,7 @@ def test_every_catalog_skill_resolves_to_executable_checks():
             skill, {"expected_revenue": "1", "field": "precio"}, {"records": {}}
         )
         assert checks, f"{skill.skill_id} produced no checks"
+        assert tuple(check.check_id for check in checks) == tuple(skill.postconditions)
 
 
 def test_unknown_postcondition_is_rejected_not_silently_passed():
@@ -50,12 +51,36 @@ def test_unknown_postcondition_is_rejected_not_silently_passed():
         build_checks(tampered, {}, {"records": {}})
 
 
+def test_unknown_exactly_one_new_prefix_is_also_rejected():
+    base = CATALOG_BY_ID["tasks.create_task"]
+    tampered = SkillDefinition(
+        **{
+            **base.model_dump(),
+            "postconditions": ["exactly_one_new_unregistered_record"],
+        }
+    )
+
+    with pytest.raises(UnknownPostconditionError):
+        build_checks(tampered, {}, {"records": {}})
+
+
 def test_checks_pass_on_a_correct_execution():
     skill = CATALOG_BY_ID["crm.create_opportunity"]
     args = {"customer_name": "Acme", "expected_revenue": "1000"}
     store, before, output = run(skill.skill_id, args)
 
     assert all(check(store, output) for check in build_checks(skill, args, before))
+
+
+def test_named_catalog_checks_remain_directly_callable():
+    skill = CATALOG_BY_ID["crm.create_opportunity"]
+    args = {"customer_name": "Acme", "expected_revenue": "1000"}
+    store, before, output = run(skill.skill_id, args)
+
+    check = build_checks(skill, args, before)[0]
+
+    assert check.check_id == skill.postconditions[0]
+    assert check(store, output) is True
 
 
 def test_exactly_one_new_fails_when_a_second_record_appears():
@@ -128,7 +153,23 @@ def test_read_only_checks_detect_a_mutation():
     before = store.snapshot()
     checks = read_only_checks(skill, before)
 
+    assert tuple(check.check_id for check in checks) == ("state_unchanged",)
     assert all(check(store, {"results": []}) for check in checks)
 
     store.create("contacts.contact", {"customer_name": "Acme"})
+    assert not all(check(store, {"results": []}) for check in checks)
+
+
+def test_read_only_state_invariant_detects_same_count_and_cross_model_edits():
+    skill = CATALOG_BY_ID["contacts.search_contact"]
+    store = erp()
+    contact_id = store.create("contacts.contact", {"customer_name": "Acme"})
+    before = store.snapshot()
+    checks = read_only_checks(skill, before)
+
+    store.update("contacts.contact", contact_id, {"customer_name": "Changed"})
+    assert not all(check(store, {"results": []}) for check in checks)
+
+    store.restore(before)
+    store.create("tasks.task", {"title": "Collateral mutation"})
     assert not all(check(store, {"results": []}) for check in checks)

@@ -56,6 +56,7 @@ data/checkpoint_real_llm_*.jsonl
 .mcp/local/
 .mcp/tool-venv/
 .codebase-memory/
+.worktrees/
 
 # IDE and operating-system files
 .vscode/

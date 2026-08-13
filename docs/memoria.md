@@ -6,13 +6,13 @@
 **Tutor/a:** [pendiente de asignación]
 **Curso académico:** 2025–2026
 
-> **Estado del documento.** Borrador de memoria construido **a partir de
-> los artefactos y resultados reales del repositorio**, no de
-> expectativas. Toda cifra que aparece aquí procede de un fichero
-> versionado (`data/*.json`) y es reproducible con los comandos del
-> anexo A. Los apartados que dependen de trabajo humano pendiente —
-> kappa de anotación, workbook de Tableau, defensa— están marcados como
-> tales y **no se dan por hechos**.
+> **Estado del documento (12 de agosto de 2026).** Borrador de memoria.
+> `data/evidence_registry.json` es la fuente autoritativa sobre el estatus de
+> cada artefacto. Todas las cifras v1 son exploratorias o de sensibilidad.
+> ERP-Skills-Bench v2 es el único protocolo elegible para inferencia
+> confirmatoria y permanece pendiente; por tanto, ninguna hipótesis se da por
+> confirmada. No hay segundo anotador humano disponible y no se informa
+> acuerdo humano.
 
 ---
 
@@ -40,8 +40,9 @@ congelado) con un diseño emparejado de **1.080 ejecuciones** (120 casos ×
 3 sistemas × 3 repeticiones): **A**, agente directo; **B**, herramientas
 tipadas; **C**, ERP Agent OS completo.
 
-Con un LLM real compartido por los tres sistemas y sin regalar el parseo
-de argumentos a ninguno, el resultado es: STSR A = 0,000 · B = 0,483 ·
+En una ejecución **exploratoria heredada**, con un LLM real compartido por los
+tres sistemas y sin regalar el parseo de argumentos a ninguno, se estimó:
+STSR A = 0,000 · B = 0,483 ·
 **C = 0,633** (C−B = +0,150, IC95 [+0,042, +0,258], *p* = 0,016); *false
 allow rate* A = 0,889 · B = 0,889 · **C = 0,111** (8×); trazabilidad
 0,356 / 0,374 / **0,820** (2,2×); consumo 185,1 / 265,3 / **67,6**
@@ -61,10 +62,10 @@ sobre 510 casos externos de InjecAgent). La pregunta que decide si un
 ERP está protegido es otra: *concedido el ataque por completo —el
 modelo comprometido, el atacante dictando los argumentos—, ¿ocurre
 alguna mutación no autorizada?* Sobre esos mismos 510 payloads
-entregados por los tres canales que un atacante controla:
-**0 de 1.530**, con 510 de 510 denegadas en el brazo que entrega el LLM
-al atacante. La defensa efectiva resultó ser arquitectónica, no
-detectiva, y eso es medible con independencia del modelo empleado.
+entregados por tres canales sintéticos que un atacante puede controlar, se
+observó **0 de 1.530** mutaciones no autorizadas. Es un resultado exploratorio
+de confinamiento por tres canales, no una prueba de robustez general ni de
+adversarios adaptativos.
 
 **Segundo, una observación sobre el propio proceso de medir.** El
 trabajo documenta **quince defectos hallados en su instrumento de
@@ -490,12 +491,13 @@ los resultados de recuperación en particular (§8.5) están condicionados
 por el alto solape léxico entre petición y descripción de skill que las
 plantillas producen.
 
-**Pendiente humano declarado:** la revisión por segundo anotador y el
-kappa de Cohen que exige el plan estadístico. El instrumento existe
+**Limitación humana declarada:** no hay un segundo anotador disponible. El
+instrumento existe
 (`data/annotation_review_sheet.csv`, 96 casos estratificados que
 sobrerrepresentan adversariales y alto riesgo) y el script de cálculo
 **se niega a emitir un kappa** mientras la columna del segundo anotador
-esté vacía. No se ha fabricado un número.
+esté vacía. El audit opcional con IA se etiqueta como revisión de
+consistencia por IA y no sustituye acuerdo humano.
 
 ---
 
@@ -513,10 +515,10 @@ reintento, mismo evaluador determinista.
 
 | # | Selector | Régimen de argumentos | Papel |
 |---|---|---|---|
-| 1 | OpenRouter (`gpt-oss-20b:free`) | Parseo regalado | Confirmatoria con LLM real |
+| 1 | OpenRouter (`gpt-oss-20b:free`) | Parseo regalado | Exploratoria heredada |
 | 2 | Stub determinista | Parseo regalado | Arquitectura-solo: aísla gobernanza de calidad del modelo |
 | 3 | Groq (`llama-3.1-8b-instant`) | Parseo real | Elimina el sesgo del parseo regalado |
-| 4 | Groq | Parseo real + normalización | **Vigente** |
+| 4 | Groq | Parseo real + normalización | **Estimación exploratoria de referencia** |
 | 5 | Groq | Parseo regalado | **Réplica que separa proveedor de régimen** |
 
 **Por qué cambia el proveedor entre corridas.** La cuota diaria gratuita
@@ -559,12 +561,18 @@ es **por sistema**: compartirla entre A, B y C hacía que pagara el que
 el orden aleatorio ejecutara primero, convirtiendo los totales de tokens
 en una medida del orden de ejecución (defecto #12, §9.5).
 
+Estas decisiones históricas —especialmente reutilizar una respuesta entre
+repeticiones— impiden promover las corridas v1. El protocolo v2 elimina la
+caché entre unidades, exige identificadores de llamada únicos, hashes del
+estado restaurado y checkpoints cifrados. Todavía no se ha ejecutado.
+
 ---
 
 ## 8. Resultados
 
-Todas las cifras proceden de `data/experiment_results_real_parser.json`
-(corrida 4, vigente) salvo indicación contraria.
+Todas las cifras de este capítulo son **exploratorias**. Proceden de
+`data/experiment_results_real_parser.json` (corrida 4, referencia histórica)
+salvo indicación contraria. No sustituyen el resultado v2 pendiente.
 
 ### 8.1 H1 — Strict Task Success Rate
 
@@ -579,9 +587,9 @@ Todas las cifras proceden de `data/experiment_results_real_parser.json`
 | C − A | +0,633 | [+0,550, +0,717] | 1,55 × 10⁻¹⁷ | 153,0 |
 | C − B | **+0,150** | [+0,042, +0,258] | **0,0162** | 2,09 |
 
-Q de Cochran = 102,87 (gl = 2). **H1 se acepta**: el límite inferior del
-IC de C−A supera con holgura el margen de no inferioridad de −5 pp, y
-C−B es además significativo.
+Q de Cochran = 102,87 (gl = 2). Este análisis exploratorio produjo una señal
+favorable, pero **H1 no se acepta de forma confirmatoria**: v2 predeclara C−B
+como contraste primario y todavía no tiene observaciones.
 
 **Por qué A obtiene exactamente 0,000.** Es casi determinista dado su
 diseño: herramientas CRUD genéricas no pueden codificar postcondiciones,
@@ -614,8 +622,8 @@ de test provienen de las mismas plantillas que los de desarrollo, ese
 ajuste transfiere casi por construcción. Es un número **dentro de
 distribución**; fuera de ella la detección cae al 3,3 % (§8.6). Lo que
 sostiene la afirmación propiamente arquitectónica es el otro
-experimento: 0/1.530 mutaciones no autorizadas aunque el detector no
-dispare.
+stress test exploratorio de confinamiento por tres canales: 0/1.530
+mutaciones no autorizadas en ese alcance aunque el detector no dispare.
 
 Segunda: **el único caso que C permite no es peligroso**. `r0457` pide
 *"Crea una factura en borrador para Oceanic Airlines"* y está etiquetado
@@ -648,8 +656,8 @@ sería deshonesto.
 | B | 265,3 | 95.497 |
 | **C** | **67,6** | **24.344** |
 
-C − B = −197,6 tokens/ejecución, IC95 [−198,3, −196,9]: **3,9× más
-barato**. El mecanismo es explícito: los tres pagan la extracción de
+C − B = −197,6 tokens/ejecución, IC95 [−198,3, −196,9]: **3,9× menos
+tokens en esta ejecución exploratoria**. El mecanismo es explícito: los tres pagan la extracción de
 argumentos; A y B pagan **además** una llamada de selección de
 herramienta, que C sustituye por TF-IDF a coste cero de tokens.
 
@@ -701,12 +709,12 @@ recuperador para no favorecer al incumbente:
 | Híbrido | 0,713 | 0,675 |
 
 **TF-IDF gana en todas las métricas y en ambos splits.** El experimento
-confirmatorio ya usaba el mejor de los tres. La causa es el benchmark:
+exploratorio ya usaba el mejor de los tres. La causa es el benchmark:
 texto plantillado con alto solape léxico entre petición y descripción de
 skill, exactamente la señal que TF-IDF explota y que un vector denso
 comprime. **No es un resultado sobre embeddings en general.**
 
-### 8.6 Robustez adversarial contra un dataset externo
+### 8.6 Evaluación adversarial exploratoria con un dataset externo
 
 Dos mediciones sobre los 510 payloads de InjecAgent, fuera de la
 distribución del benchmark propio (inglés, dominios no ERP):
@@ -716,15 +724,16 @@ distribución del benchmark propio (inglés, dominios no ERP):
    cerró la brecha porque el vocabulario no era el cuello de botella:
    la mayoría de los payloads son peticiones educadas sin ningún framing
    de ataque textual, invisibles por diseño a cualquier detector léxico.
-2. **Resistencia efectiva:** los mismos 510 payloads por los tres
+2. **Confinamiento acotado:** los mismos 510 payloads por tres
    canales que un atacante controla —texto de la petición, dato
    almacenado que la petición lee, y parser comprometido con los
    argumentos dictados por el atacante— producen **0 / 1.530 mutaciones
    no autorizadas**, con 510/510 `DENY` en el brazo de parser
    comprometido.
 
-La lectura conjunta es la que importa: la defensa efectiva de esta
-arquitectura **no es el detector léxico** sino que los datos del ERP
+Es un **stress test exploratorio de confinamiento por tres canales**. La
+lectura conjunta sugiere que el control relevante en este alcance **no es el
+detector léxico** sino que los datos del ERP
 nunca ocupan posición de instrucción, que el LLM solo puede emitir un
 identificador de skill y argumentos validados contra esquema, y que el
 handler escribe solo en su modelo y campos permitidos. Un control
@@ -768,7 +777,7 @@ las 1.080 observaciones, cambiando únicamente el adaptador:
   correcta.
 
 Es una demostración **cualitativa** con 2 de las 12 skills mapeadas a
-modelos reales; no sustituye ni replica el experimento confirmatorio, y
+modelos reales; no sustituye ni replica el experimento prospectivo v2, y
 así se declara.
 
 ### 8.9 Réplica que separa proveedor de régimen de argumentos
@@ -1038,13 +1047,12 @@ que **la evidencia que aguanta ante un tribunal y la que aguanta ante un
 cliente no son la misma**, y que confundirlas produciría afirmaciones
 comerciales falsas.
 
-**Sostiene un producto:** que ninguna inyección consiga una mutación no
-autorizada por ninguno de los tres canales de ataque (0/1.530, incluido
-el brazo que concede el LLM entero al atacante); que la arquitectura
-elimine una llamada al LLM por petición, demostrado por aritmética; que
-la decisión sea invariante al proveedor mientras la de un agente sin
-gobernanza no lo es; que el bloqueo se sostenga contra un ERP real
-verificado por relectura independiente; y la trazabilidad de 0,820.
+**Sostiene una siguiente fase de validación:** el stress exploratorio de
+confinamiento por tres canales observó 0/1.530 mutaciones no autorizadas en su
+alcance; la arquitectura elimina una llamada de selección en el prototipo; y
+la demostración Odoo verifica el bloqueo mediante relectura independiente.
+Estas pruebas no autorizan una promesa de producto ni una extrapolación a
+producción.
 
 **No sostiene nada comercial:** la detección léxica de ataques (3,3 %
 fuera de distribución, y 8 de 9 casos del test bloqueados por patrones
@@ -1103,26 +1111,25 @@ estos números no permiten afirmar, está en
 
 ### 11.1 Respuesta a la pregunta principal
 
-Una arquitectura que separa la interpretación probabilística de la
-ejecución determinista **sí** reduce errores de seguridad de forma
-contundente (8× menos *false allow*, sin aumentar los falsos bloqueos),
-**sí** reduce el consumo de tokens (3,9× frente a herramientas tipadas,
-sustituyendo la llamada de selección por recuperación léxica), y **mejora
-modestamente** el éxito de tarea (+15,0 pp, IC95 [+4,2, +25,8]). La
-variabilidad entre ejecuciones no es medible con la formulación original
-de H3 porque la temperatura exigida por la norma la vuelve trivial.
+La pregunta principal todavía no admite una respuesta confirmatoria. La
+evidencia v1 exploratoria apunta a menos *false allow*, menos tokens y mayor
+trazabilidad en C, con una diferencia favorable de STSR frente a B. Esas
+estimaciones motivan el experimento prospectivo v2; no lo sustituyen. La
+contribución ya demostrable es técnica y metodológica: el prototipo separa
+propuesta probabilística de ejecución contractual, ejecuta postcondiciones y
+conserva evidencia verificable de cada desenlace.
 
 ### 11.2 Respuestas a las preguntas secundarias
 
-1. **Precisión de recuperación ante paráfrasis:** Top-1 = 0,780,
+1. **Precisión exploratoria ante paráfrasis:** Top-1 = 0,780,
    Top-3 = 0,941, MRR = 0,855 en test, con TF-IDF superando a embeddings
    y a ranking híbrido en dev y validación.
 2. **Errores que previene el verificador:** ejecuciones bajo rol no
    autorizado, argumentos fuera de tipo o rango, operaciones con framing
    irreversible o de alcance masivo, y mutaciones cuyo estado final no
    coincide con la postcondición declarada.
-3. **Reducción de tokens por reutilización:** 3,9× frente a herramientas
-   tipadas; el mecanismo es la sustitución de la llamada de selección.
+3. **Tokens:** la estimación v1 fue 3,9× menor frente a herramientas
+   tipadas; v2 debe comprobarlo con llamadas independientes.
 4. **Variabilidad:** no discriminable con temperatura 0; se propone H3b
    sobre paráfrasis como reformulación medible.
 5. **Latencia adicional de la gobernanza:** instrumentada por ejecución;
@@ -1135,21 +1142,22 @@ de H3 porque la temperatura exigida por la norma la vuelve trivial.
 8. **Umbral, cobertura y riesgo:** calibrar el margen a cero sube Top-1
    unos 7 puntos y elimina casi toda la abstención — objetivos en
    conflicto, resueltos a favor de la configuración conservadora.
-9. **Componente que más aporta:** el policy engine con validación
-   previa; es el responsable del resultado de seguridad y de
-   trazabilidad, invariante a proveedor y a régimen de parseo.
+9. **Componente que parece aportar más:** el policy engine con validación
+   previa; la atribución cuantitativa queda pendiente de v2/ablaciones.
 10. **Cuándo preferir un agente directo:** dominios sin escritura,
     catálogos inviables de mantener, o coste de error bajo frente a
     coste de abstención alto.
 
 ### 11.3 Trabajo futuro
 
-Ejecución del brazo exploratorio de temperatura y de la medición de H3b
+Generación, freeze y ejecución completa de ERP-Skills-Bench v2; ejecución del
+brazo exploratorio de temperatura y de la medición de H3b
 con LLM real; poblado de precondiciones del catálogo con su propia
 corrida; detección semántica de intención frente a la petición original,
 que es lo que el resultado de InjecAgent señala como límite estructural
 del enfoque léxico; mapeo del resto del catálogo a modelos reales de
-Odoo; kappa de anotación; evaluación con anotadores y usuarios reales.
+Odoo; segundo anotador humano si llega a estar disponible; evaluación con
+anotadores y usuarios reales.
 (La réplica de ambos regímenes de parseo en un mismo proveedor, que
 figuraba aquí, **se ejecutó**: §7.2 y §9.4.)
 
@@ -1170,11 +1178,10 @@ un ERP, y la arquitectura empleada —skills versionadas, políticas,
 auditoría, postcondiciones— no es novedosa por sí misma.
 
 Lo que este trabajo aporta es de otro tipo. Aporta **una forma más
-exigente de preguntar por la seguridad de un agente**: no si un detector
-dispara, sino si el daño ocurre cuando se concede que el detector ha
-fallado y el modelo está comprometido. Bajo esa pregunta, la respuesta
-fue 0 de 1.530, con un dataset externo y un brazo que entrega el modelo
-al atacante.
+exigente de preguntar por el control de un agente**: no solo si un detector
+dispara, sino si una mutación escapa del contrato. El stress test exploratorio
+de confinamiento por tres canales observó 0 de 1.530 en su alcance y dejó
+explícitamente fuera los ataques adaptativos.
 
 Y aporta **el registro de haberse equivocado en público**. Tres veces la
 medición honesta produjo un resultado peor que la intuición de partida,
@@ -1222,15 +1229,20 @@ revisión sistemática.
 
 ```sh
 uv sync
-uv run python -m pytest                       # 393 tests
+uv run python -m pytest                       # recuento actual en la salida/CI
 uv run python scripts/freeze_protocol.py --verify
 
 # Experimento (arquitectura-solo, sin red)
 uv run python scripts/run_experiment.py
 
-# Experimento confirmatorio con LLM real y parseo real
+# Ejecución v1 exploratoria con LLM real y parseo real
 uv run python scripts/run_experiment.py --real-llm --real-parser \
     --provider groq
+
+# Puerta prospectiva v2 (permanece detenida si falta cualquier requisito)
+uv run python scripts/freeze_protocol_v2.py --verify
+uv run python scripts/run_experiment_v2.py --executor paquete:funcion_congelada
+uv run python scripts/analyze_experiment_v2.py
 
 # Comparación de recuperadores (dev + validación, nunca test)
 uv run python scripts/compare_retrievers.py
@@ -1254,16 +1266,16 @@ make figures
 |---|---|
 | `data/bench_v1.jsonl` | 480 casos del benchmark |
 | `data/freeze_manifest.json` | Hashes del protocolo congelado (schema 1.1) |
-| `data/experiment_results.json` | Corrida confirmatoria (OpenRouter, parseo regalado) |
-| `data/experiment_results_real_parser.json` | **Corrida vigente** (Groq, parseo real + normalización) |
-| `data/experiment_results_groq_given_args.json` | Réplica que separa proveedor de régimen (Groq, argumentos dados) |
-| `data/retriever_comparison.json` | TF-IDF vs embeddings vs híbrido |
-| `data/injecagent_stress_test_results.json` | Detección léxica, 510 payloads |
-| `data/injection_resistance_results.json` | Resistencia por canal, 1.530 casos |
-| `data/odoo_governed_demo_results.json` | Pipeline gobernado contra Odoo real |
-| `data/odoo_adversarial_results.json` | Casos adversariales contra Odoo real |
-| `data/real_requests_eval.json` | Recuperadores sobre 120 peticiones reales (validación de producto) |
-| `data/real_requests_llm_eval.json` | Router LLM sobre las mismas peticiones, 120 llamadas reales |
+| `data/experiment_results.json` | Exploratoria v1 (OpenRouter, parseo regalado) |
+| `data/experiment_results_real_parser.json` | Exploratoria v1 de referencia (Groq, parseo real + normalización) |
+| `data/experiment_results_groq_given_args.json` | Sensibilidad de proveedor/régimen |
+| `data/retriever_comparison.json` | Exploratoria: TF-IDF vs embeddings vs híbrido |
+| `data/injecagent_stress_test_results.json` | Exploratoria: detección léxica, 510 payloads |
+| `data/injection_resistance_results.json` | Exploratoria: confinamiento por tres canales, 1.530 observaciones |
+| `data/odoo_governed_demo_results.json` | Demostración gobernada contra Odoo |
+| `data/odoo_adversarial_results.json` | Demostración adversarial contra Odoo |
+| `data/real_requests_eval.json` | Exploratoria: recuperadores sobre 120 peticiones |
+| `data/real_requests_llm_eval.json` | Exploratoria: router LLM sobre esas peticiones |
 | `data/router_designs_eval.json` | Cinco diseños de enrutado, calibrados en dev y juzgados held-out |
 | `data/skill_profiles.json` | Descripciones enriquecidas, **fuera** del catálogo congelado |
 | `data/annotation_review_sheet.csv` | Muestra estratificada para el segundo anotador (**pendiente**) |
@@ -1286,9 +1298,11 @@ resultados y cómo responder las siete preguntas difíciles),
 
 ### Anexo D. Trabajo pendiente declarado
 
-1. **Kappa de anotación** — instrumento generado, paso humano pendiente.
+1. **Revisión humana independiente** — no hay segundo anotador disponible;
+   no se calcula acuerdo humano. Audit de consistencia con IA disponible.
 2. **Workbook de Tableau** — insumos generados, montaje manual.
-3. **Ejecución del brazo de temperatura y medición de H3b con LLM real.**
-4. **Vídeo de competición y presentación de defensa** — guion y
+3. **ERP-Skills-Bench v2:** generar, congelar y ejecutar las 1.080 unidades.
+4. **Ejecución del brazo de temperatura y medición de H3b con LLM real.**
+5. **Vídeo de competición y presentación de defensa** — guion y
    contenido escritos (`docs/video-guion.md`, `docs/presentacion.md`);
    falta grabar y maquetar.

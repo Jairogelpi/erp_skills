@@ -39,6 +39,7 @@ from erp_agent_os.adapters import UnknownModelError, UnknownRecordError
 logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT_SECONDS = 20
+LIST_PAGE_SIZE = 100
 
 # Re-exported so callers of this module never need to import adapters.py
 # too: Runtime.execute() catches these by class identity (see
@@ -182,17 +183,61 @@ class Odoo19Adapter:
         record.pop("id", None)
         return record
 
-    def list(self, model: str, *, limit: int = 100) -> dict[str, dict[str, Any]]:
+    def list(
+        self, model: str, *, limit: int | None = None
+    ) -> dict[str, dict[str, Any]]:
+        """Return a stable complete model read, or at most ``limit`` records."""
         allowed = self._require_model(model)
-        result = self._call(
-            model,
-            "search_read",
-            {"domain": [], "fields": sorted(allowed), "limit": limit},
-        )
+        if limit is not None and limit < 0:
+            raise ValueError("list limit must be non-negative")
+
         out: dict[str, dict[str, Any]] = {}
-        for record in result:
-            record_id = str(record.pop("id"))
-            out[record_id] = record
+        offset = 0
+        while limit is None or len(out) < limit:
+            remaining = None if limit is None else limit - len(out)
+            request_limit = (
+                LIST_PAGE_SIZE if remaining is None else min(LIST_PAGE_SIZE, remaining)
+            )
+            if request_limit == 0:
+                break
+            try:
+                result = self._call(
+                    model,
+                    "search_read",
+                    {
+                        "domain": [],
+                        "fields": sorted(allowed),
+                        "limit": request_limit,
+                        "offset": offset,
+                        "order": "id asc",
+                    },
+                )
+            except ValueError:
+                raise OdooApiError("malformed Odoo list response") from None
+            if not isinstance(result, list) or len(result) > request_limit:
+                raise OdooApiError("malformed Odoo list response")
+            if not result:
+                break
+
+            for raw_record in result:
+                if not isinstance(raw_record, dict) or "id" not in raw_record:
+                    raise OdooApiError("malformed Odoo list response")
+                record = dict(raw_record)
+                raw_record_id = record.pop("id")
+                if isinstance(raw_record_id, bool) or not isinstance(
+                    raw_record_id, (int, str)
+                ):
+                    raise OdooApiError("malformed Odoo list response")
+                record_id = str(raw_record_id)
+                if not record_id:
+                    raise OdooApiError("malformed Odoo list response")
+                if record_id in out:
+                    raise OdooApiError("Odoo list pagination did not advance")
+                out[record_id] = record
+
+            offset += len(result)
+            if len(result) < request_limit:
+                break
         return out
 
     def update(self, model: str, record_id: str, fields: dict[str, Any]) -> None:

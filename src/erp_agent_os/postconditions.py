@@ -11,13 +11,25 @@ field changed") and cannot be evaluated from the final state alone.
 """
 
 from collections.abc import Callable
+from copy import deepcopy
 from typing import Any
 
 from erp_agent_os.adapters import ErpAdapter
 from erp_agent_os.handlers import SKILL_MODELS
+from erp_agent_os.runtime import VerificationCheck
 from erp_agent_os.skills import SkillDefinition
 
-Check = Callable[[ErpAdapter, Any], bool]
+CheckEvaluator = Callable[[ErpAdapter, Any], bool]
+Check = VerificationCheck[ErpAdapter]
+
+_EXACTLY_ONE_NEW = {
+    "exactly_one_new_invoice",
+    "exactly_one_new_line",
+    "exactly_one_new_opportunity",
+    "exactly_one_new_purchase_order",
+    "exactly_one_new_quote",
+    "exactly_one_new_task",
+}
 
 
 class UnknownPostconditionError(KeyError):
@@ -28,7 +40,7 @@ def _records(snapshot: dict[str, Any], model: str) -> dict[str, Any]:
     return snapshot["records"].get(model, {})
 
 
-def _exactly_one_new(model: str, before: dict[str, Any]) -> Check:
+def _exactly_one_new(model: str, before: dict[str, Any]) -> CheckEvaluator:
     baseline = len(_records(before, model))
 
     def check(erp: ErpAdapter, output: Any) -> bool:
@@ -37,7 +49,7 @@ def _exactly_one_new(model: str, before: dict[str, Any]) -> Check:
     return check
 
 
-def _state_is(model: str, expected_state: str) -> Check:
+def _state_is(model: str, expected_state: str) -> CheckEvaluator:
     def check(erp: ErpAdapter, output: Any) -> bool:
         record_id = output if isinstance(output, str) else None
         if record_id is None:
@@ -50,7 +62,7 @@ def _state_is(model: str, expected_state: str) -> Check:
     return check
 
 
-def _field_matches(model: str, field: str, arguments: dict[str, Any]) -> Check:
+def _field_matches(model: str, field: str, arguments: dict[str, Any]) -> CheckEvaluator:
     def check(erp: ErpAdapter, output: Any) -> bool:
         record_id = output if isinstance(output, str) else None
         if record_id is None:
@@ -69,7 +81,7 @@ def _field_matches(model: str, field: str, arguments: dict[str, Any]) -> Check:
 
 def _no_other_fields_changed(
     model: str, before: dict[str, Any], allowed: set[str]
-) -> Check:
+) -> CheckEvaluator:
     baseline = _records(before, model)
 
     def check(erp: ErpAdapter, output: Any) -> bool:
@@ -88,18 +100,18 @@ def _no_other_fields_changed(
     return check
 
 
-def _output_has_key(key: str) -> Check:
+def _output_has_key(key: str) -> CheckEvaluator:
     def check(erp: ErpAdapter, output: Any) -> bool:
         return isinstance(output, dict) and key in output
 
     return check
 
 
-def _count_unchanged(model: str, before: dict[str, Any]) -> Check:
-    baseline = len(_records(before, model))
+def _state_unchanged(before: dict[str, Any]) -> CheckEvaluator:
+    baseline = deepcopy(before["records"])
 
     def check(erp: ErpAdapter, output: Any) -> bool:
-        return len(erp.list(model)) == baseline
+        return all(erp.list(model) == records for model, records in baseline.items())
 
     return check
 
@@ -121,40 +133,41 @@ def build_checks(
     checks: list[Check] = []
 
     for name in skill.postconditions:
-        if name.startswith("exactly_one_new_"):
-            checks.append(_exactly_one_new(model, before))
+        if name in _EXACTLY_ONE_NEW:
+            evaluator = _exactly_one_new(model, before)
         elif name in ("opportunity_is_open", "task_is_open"):
-            checks.append(_state_is(model, "open"))
+            evaluator = _state_is(model, "open")
         elif name in (
             "quote_is_draft",
             "quote_still_draft",
             "purchase_order_is_draft",
             "invoice_is_draft",
         ):
-            checks.append(_state_is(model, "draft"))
+            evaluator = _state_is(model, "draft")
         elif name == "order_is_confirmed":
-            checks.append(_state_is(model, "confirmed"))
+            evaluator = _state_is(model, "confirmed")
         elif name == "expected_revenue_matches_input":
-            checks.append(_field_matches(model, "expected_revenue", arguments))
+            evaluator = _field_matches(model, "expected_revenue", arguments)
         elif name == "field_matches_input":
             field = str(arguments.get("field", ""))
-            checks.append(_field_matches(model, field, arguments))
+            evaluator = _field_matches(model, field, arguments)
         elif name == "no_other_fields_changed":
             allowed = {"expected_revenue", str(arguments.get("field", ""))}
-            checks.append(_no_other_fields_changed(model, before, allowed))
+            evaluator = _no_other_fields_changed(model, before, allowed)
         elif name == "no_line_changed":
-            checks.append(_no_other_fields_changed(model, before, {"state"}))
+            evaluator = _no_other_fields_changed(model, before, {"state"})
         elif name == "duplicate_report_returned":
-            checks.append(_output_has_key("duplicates_found"))
+            evaluator = _output_has_key("duplicates_found")
         elif name == "search_results_returned":
-            checks.append(_output_has_key("results"))
+            evaluator = _output_has_key("results")
         elif name == "availability_returned":
-            checks.append(_output_has_key("available_units"))
+            evaluator = _output_has_key("available_units")
         else:
             raise UnknownPostconditionError(
                 f"{skill.skill_id} declares postcondition {name!r} with no "
                 "executable implementation"
             )
+        checks.append(VerificationCheck(name, evaluator))
 
     return tuple(checks)
 
@@ -163,4 +176,4 @@ def read_only_checks(
     skill: SkillDefinition, before: dict[str, Any]
 ) -> tuple[Check, ...]:
     """For R0 read skills: assert the store was not mutated at all."""
-    return (_count_unchanged(SKILL_MODELS[skill.skill_id], before),)
+    return (VerificationCheck("state_unchanged", _state_unchanged(before)),)

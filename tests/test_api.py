@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from erp_agent_os.api import DEMO_API_KEY, create_app
+from erp_agent_os.runtime import IdempotencyFingerprintError
 
 HEADERS = {"x-api-key": DEMO_API_KEY}
 
@@ -40,6 +41,13 @@ def test_execute_normal_request_allows_and_returns_correlation_id():
     payload = response.json()
     assert payload["decision"] == "ALLOW"
     assert payload["selected_skill_id"] == "tasks.create_task"
+    assert payload["verification_status"] == "passed"
+    assert payload["postconditions_met"] is True
+    assert {check["check_id"] for check in payload["checks"]} == {
+        "exactly_one_new_task",
+        "task_is_open",
+        "no_cross_model_side_effects",
+    }
     assert payload["correlation_id"]
 
 
@@ -57,7 +65,13 @@ def test_execute_missing_field_clarifies():
         "idempotency_key": "key-1",
     }
     response = c.post("/requests", json=body, headers=HEADERS)
-    assert response.json()["decision"] == "CLARIFY"
+    payload = response.json()
+    assert payload["decision"] == "CLARIFY"
+    assert payload["verification_status"] == "not_run_clean"
+    assert payload["postconditions_met"] is True
+    assert payload["checks"][0]["check_id"] == "complete_state_unchanged"
+    audit = c.get(f"/audit/{payload['correlation_id']}", headers=HEADERS).json()
+    assert audit["abstention_events"][0]["decision"] == "CLARIFY"
 
 
 def test_audit_endpoint_reflects_prior_execution():
@@ -76,7 +90,107 @@ def test_audit_endpoint_reflects_prior_execution():
     response = c.post("/requests", json=body, headers=HEADERS)
     correlation_id = response.json()["correlation_id"]
     response = c.get(f"/audit/{correlation_id}", headers=HEADERS)
-    assert response.json()["events"] == ["ALLOW"]
+    payload = response.json()
+    assert payload["events"][0]["decision"] == "ALLOW"
+    assert payload["events"][0]["verification_status"] == "passed"
+    assert payload["events"][0]["postconditions_met"] is True
+    assert payload["events"][0]["checks"]
+
+
+def test_idempotency_conflict_is_a_sanitized_409():
+    c = client()
+
+    def body(title):
+        return {
+            "query_text": "Crea una tarea para llamar al cliente.",
+            "proposal": {
+                "intent": "tasks.create_task.followup",
+                "arguments": {"title": title},
+                "required_fields": ["title"],
+                "confidence": 0.9,
+            },
+            "role": "erp_user",
+            "idempotency_key": "conflicting-key",
+        }
+
+    assert c.post("/requests", json=body("first"), headers=HEADERS).status_code == 200
+    response = c.post("/requests", json=body("second"), headers=HEADERS)
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "idempotency key conflicts with request"}
+    assert "first" not in response.text
+
+
+def test_idempotency_fingerprint_failure_is_a_sanitized_422(monkeypatch):
+    def fail_fingerprint(_system, *_args, **_kwargs):
+        raise IdempotencyFingerprintError("secret hostile argument details")
+
+    monkeypatch.setattr("erp_agent_os.api.SystemC.handle", fail_fingerprint)
+    c = client()
+    body = {
+        "query_text": "Crea una tarea para llamar al cliente.",
+        "proposal": {
+            "intent": "tasks.create_task.followup",
+            "arguments": {"title": "llamar al cliente"},
+            "required_fields": ["title"],
+            "confidence": 0.9,
+        },
+        "role": "erp_user",
+        "idempotency_key": "bad-fingerprint",
+    }
+
+    response = c.post("/requests", json=body, headers=HEADERS)
+
+    assert response.status_code == 422
+    assert response.json() == {"detail": "request arguments cannot be fingerprinted"}
+    assert "secret" not in response.text
+
+
+def test_verification_baseline_failure_is_a_sanitized_nonexecuting_result(
+    monkeypatch,
+):
+    def unreadable(_adapter, _model):
+        raise RuntimeError("secret ERP response")
+
+    handler_calls = []
+
+    def must_not_run(_adapter, _args):
+        handler_calls.append(True)
+        return "unexpected"
+
+    monkeypatch.setattr("erp_agent_os.api.FakeERPAdapter.list", unreadable)
+    monkeypatch.setitem(
+        __import__("erp_agent_os.api", fromlist=["HANDLERS"]).HANDLERS,
+        "tasks.create_task",
+        must_not_run,
+    )
+    c = client()
+    body = {
+        "query_text": "Crea una tarea para llamar al cliente.",
+        "proposal": {
+            "intent": "tasks.create_task.followup",
+            "arguments": {"title": "llamar al cliente"},
+            "required_fields": ["title"],
+            "confidence": 0.9,
+        },
+        "role": "erp_user",
+        "idempotency_key": "unreadable-baseline",
+    }
+
+    response = c.post("/requests", json=body, headers=HEADERS)
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["decision"] == "DENY"
+    assert payload["reasons"] == ["verification baseline unavailable"]
+    assert payload["verification_status"] == "verifier_error"
+    assert payload["postconditions_met"] is None
+    assert handler_calls == []
+    assert "secret" not in response.text
+    audit = c.get(f"/audit/{payload['correlation_id']}", headers=HEADERS).json()
+    assert audit["events"][0]["decision"] == "DENY"
+    assert audit["events"][0]["verification_status"] == "verifier_error"
+    assert "secret" not in str(audit)
 
 
 def test_grant_approval_returns_expiry():

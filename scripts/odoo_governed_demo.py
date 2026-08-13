@@ -29,15 +29,20 @@ from pathlib import Path
 from erp_agent_os import odoo_handlers
 from erp_agent_os.approval import ApprovalService
 from erp_agent_os.audit import AuditEvent, AuditStore
-from erp_agent_os.catalog import CATALOG, CATALOG_BY_ID
+from erp_agent_os.catalog import CATALOG_BY_ID
 from erp_agent_os.odoo_client import Odoo19Adapter, require_development_instance
 from erp_agent_os.odoo_handlers import CRM_LEAD_FIELDS
 from erp_agent_os.parser import structure_proposal
 from erp_agent_os.retrieval import TfidfRetriever
-from erp_agent_os.runtime import Runtime
+from erp_agent_os.runtime import Runtime, VerificationStatus
 from erp_agent_os.system_c import SystemC
 
 ROLE = "erp_user"
+ODOO_SKILL_MODELS = {
+    "crm.create_opportunity": "crm.lead",
+    "crm.update_expected_revenue": "crm.lead",
+}
+ODOO_MONITORED_MODELS = frozenset(ODOO_SKILL_MODELS.values())
 OUTPUT_PATH = (
     Path(__file__).resolve().parent.parent / "data" / "odoo_governed_demo_results.json"
 )
@@ -55,6 +60,15 @@ def _serialize_audit_event(event: AuditEvent) -> dict:
         "idempotency_key": event.idempotency_key,
         "idempotent_replay": event.idempotent_replay,
         "postconditions_met": event.postconditions_met,
+        "verification_status": event.verification_status,
+        "checks": [
+            {
+                "check_id": check.check_id,
+                "passed": check.passed,
+                "detail": check.detail,
+            }
+            for check in event.check_results
+        ],
         "output": event.output,
     }
 
@@ -97,21 +111,38 @@ def main() -> None:
     # this process (see require_development_instance for why).
     require_development_instance()
     erp = Odoo19Adapter(allowed_fields={"crm.lead": CRM_LEAD_FIELDS})
+    # The live adapter maps the catalog's synthetic opportunity model to
+    # Odoo's `crm.lead`. Odoo has no synthetic `state="open"` field, so this
+    # demo contract keeps the portable differential creation check; the
+    # independent re-read below still corroborates type and amount.
+    create_skill = CATALOG_BY_ID["crm.create_opportunity"].model_copy(
+        update={"postconditions": ["exactly_one_new_opportunity"]}
+    )
+    update_skill = CATALOG_BY_ID["crm.update_expected_revenue"]
+    odoo_catalog = [create_skill, update_skill]
     runtime: Runtime = Runtime(erp)
     runtime.register(
         "crm.create_opportunity",
-        CATALOG_BY_ID["crm.create_opportunity"].version,
+        create_skill.version,
         odoo_handlers.crm_create_opportunity,
     )
     runtime.register(
         "crm.update_expected_revenue",
-        CATALOG_BY_ID["crm.update_expected_revenue"].version,
+        update_skill.version,
         odoo_handlers.crm_update_expected_revenue,
     )
-    retriever = TfidfRetriever(CATALOG)
+    retriever = TfidfRetriever(odoo_catalog)
     audit = AuditStore()
     approval = ApprovalService()
-    system = SystemC(erp, runtime, retriever, audit, approval)
+    system = SystemC(
+        erp,
+        runtime,
+        retriever,
+        audit,
+        approval,
+        monitored_models=ODOO_MONITORED_MODELS,
+        skill_models=ODOO_SKILL_MODELS,
+    )
 
     steps = []
 
@@ -126,17 +157,25 @@ def main() -> None:
     create_result = system.handle(
         "demo-r1", create_text, create_proposal, ROLE, "demo-r1-key"
     )
-    opportunity_id = create_result.selected_skill_id and create_result.execution.output
+    opportunity_id = (
+        create_result.execution.output if create_result.execution is not None else None
+    )
     steps.append(
         {
             "step": "1_create_opportunity_R1",
             "query": create_text,
             "decision": create_result.decision,
+            "verification_status": create_result.verification_status.value,
+            "postconditions_met": create_result.postconditions_met,
             "opportunity_id": opportunity_id,
         }
     )
 
-    if create_result.decision != "ALLOW" or not opportunity_id:
+    if (
+        create_result.decision != "ALLOW"
+        or create_result.verification_status is not VerificationStatus.PASSED
+        or not opportunity_id
+    ):
         _fail(steps, "R1 create did not auto-execute as expected")
 
     before_update = erp.get("crm.lead", opportunity_id)
@@ -177,12 +216,18 @@ def main() -> None:
             "step": "2_update_without_approval_R2",
             "query": update_text,
             "decision": blocked_result.decision,
+            "verification_status": blocked_result.verification_status.value,
+            "postconditions_met": blocked_result.postconditions_met,
             "odoo_left_untouched": odoo_untouched,
             "odoo_state": after_blocked_attempt,
         }
     )
 
-    if blocked_result.decision != "REQUIRE_APPROVAL" or not odoo_untouched:
+    if (
+        blocked_result.decision != "REQUIRE_APPROVAL"
+        or blocked_result.verification_status is not VerificationStatus.NOT_RUN_CLEAN
+        or not odoo_untouched
+    ):
         _fail(steps, "R2 update executed against Odoo without approval")
 
     _beat(
@@ -213,12 +258,18 @@ def main() -> None:
         {
             "step": "3_update_with_approval_R2",
             "decision": approved_result.decision,
+            "verification_status": approved_result.verification_status.value,
+            "postconditions_met": approved_result.postconditions_met,
             "odoo_state_after": after_approved,
             "revenue_correctly_updated": revenue_updated,
         }
     )
 
-    if approved_result.decision != "ALLOW" or not revenue_updated:
+    if (
+        approved_result.decision != "ALLOW"
+        or approved_result.verification_status is not VerificationStatus.PASSED
+        or not revenue_updated
+    ):
         _fail(steps, "R2 update with approval did not update Odoo correctly")
 
     _beat(
@@ -232,7 +283,11 @@ def main() -> None:
         filming,
     )
 
-    all_ok = odoo_untouched and revenue_updated
+    all_ok = (
+        odoo_untouched
+        and revenue_updated
+        and all(event.verification_status for event in audit.events())
+    )
 
     report = {
         "target": (

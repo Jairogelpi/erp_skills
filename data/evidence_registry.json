@@ -1,0 +1,222 @@
+{
+  "schema_version": "1.0",
+  "legacy_cutoff_commit": "47ecd3f",
+  "retained_annotation_audit_outputs": [
+    "data/annotation_ai_audit.json"
+  ],
+  "non_reportable_allowlist": [],
+  "entries": [
+    {
+      "path": "data/experiment_results.json",
+      "date": "2026-08-07",
+      "source_commit": "eb03100",
+      "protocol_status": "exploratory",
+      "reason": "Legacy A/B/C run produced before a complete prospective freeze; its embedded manifest.is_confirmatory_run field is historical metadata and is not authoritative.",
+      "implementation_observed": true,
+      "test_data_observed": true,
+      "permitted_claims": [
+        "Exploratory historical estimate for the software and provider configuration used in this run."
+      ],
+      "prohibited_claims": [
+        "Confirmatory A/B/C result or prospectively frozen estimate.",
+        "Performance on real users or general ERP deployments."
+      ]
+    },
+    {
+      "path": "data/experiment_results_real_parser.json",
+      "date": "2026-08-10",
+      "source_commit": "0e913bf",
+      "protocol_status": "exploratory",
+      "reason": "Post-freeze corrected run after parser and normalization changes, with the legacy test data and implementation already observed.",
+      "implementation_observed": true,
+      "test_data_observed": true,
+      "permitted_claims": [
+        "Exploratory current-software estimate under real argument parsing."
+      ],
+      "prohibited_claims": [
+        "Confirmatory evidence or an untouched prospective test."
+      ]
+    },
+    {
+      "path": "data/experiment_results_groq_given_args.json",
+      "date": "2026-08-11",
+      "source_commit": "4e7c4da",
+      "protocol_status": "sensitivity",
+      "reason": "Provider and argument-regime replication intended to characterize sensitivity, not a prospectively frozen primary analysis.",
+      "implementation_observed": true,
+      "test_data_observed": true,
+      "permitted_claims": [
+        "Sensitivity of legacy estimates to provider choice and ground-truth arguments."
+      ],
+      "prohibited_claims": [
+        "Confirmatory primary estimate or unbiased token comparison."
+      ]
+    },
+    {
+      "path": "data/retriever_comparison.json",
+      "date": "2026-08-10",
+      "source_commit": "0e913bf",
+      "protocol_status": "exploratory",
+      "reason": "Development and validation retrieval comparison performed after the implementation and benchmark were observed.",
+      "implementation_observed": true,
+      "test_data_observed": true,
+      "permitted_claims": [
+        "Exploratory comparison of retrievers on the declared development and validation splits."
+      ],
+      "prohibited_claims": [
+        "Confirmatory retriever ranking or general-language superiority."
+      ]
+    },
+    {
+      "path": "data/real_requests_eval.json",
+      "date": "2026-08-11",
+      "source_commit": "ad80557",
+      "protocol_status": "exploratory",
+      "reason": "Post hoc transfer evaluation on a separately assembled real-text request set.",
+      "implementation_observed": true,
+      "test_data_observed": true,
+      "permitted_claims": [
+        "Exploratory diagnostic of retriever transfer to the retained request set."
+      ],
+      "prohibited_claims": [
+        "Confirmatory performance on real users or representative production traffic."
+      ]
+    },
+    {
+      "path": "data/real_requests_llm_eval.json",
+      "date": "2026-08-11",
+      "source_commit": "a7db77d",
+      "protocol_status": "exploratory",
+      "reason": "Post hoc LLM-router transfer diagnostic on the same observed request set.",
+      "implementation_observed": true,
+      "test_data_observed": true,
+      "permitted_claims": [
+        "Exploratory comparison of the retained LLM router and TF-IDF evaluation."
+      ],
+      "prohibited_claims": [
+        "Confirmatory real-user performance or a population-level transfer estimate."
+      ]
+    },
+    {
+      "path": "data/injecagent_stress_test_results.json",
+      "date": "2026-08-07",
+      "source_commit": "2eae66c",
+      "protocol_status": "exploratory",
+      "reason": "External detector stress test added during development and observed before the competition evidence boundary was defined.",
+      "implementation_observed": true,
+      "test_data_observed": true,
+      "permitted_claims": [
+        "Exploratory detector coverage on the named InjecAgent payload set."
+      ],
+      "prohibited_claims": [
+        "General injection resistance, safety, or immunity."
+      ]
+    },
+    {
+      "path": "data/injection_resistance_results.json",
+      "date": "2026-08-11",
+      "source_commit": "fa475d9",
+      "protocol_status": "exploratory",
+      "reason": "Post hoc three-channel confinement harness, not a prospectively frozen adversarial evaluation.",
+      "implementation_observed": true,
+      "test_data_observed": true,
+      "permitted_claims": [
+        "In this harness, the 510 payloads caused no write outside the selected skill model and allowlisted fields across the three tested channels."
+      ],
+      "prohibited_claims": [
+        "Proof that a compromised model cannot cause damage.",
+        "General prompt-injection resistance, safety, or immunity."
+      ]
+    },
+    {
+      "path": "data/odoo_demo_results.json",
+      "date": "2026-08-07",
+      "source_commit": "6b7a2aa",
+      "protocol_status": "demonstration",
+      "reason": "Limited live Odoo integration demonstration outside the confirmatory FakeERP experiment.",
+      "implementation_observed": true,
+      "test_data_observed": true,
+      "permitted_claims": [
+        "Demonstration that the mapped operations ran against the named Odoo development instance."
+      ],
+      "prohibited_claims": [
+        "Confirmatory ERP performance or complete Odoo coverage."
+      ]
+    },
+    {
+      "path": "data/odoo_adversarial_results.json",
+      "date": "2026-08-11",
+      "source_commit": "0afc60e",
+      "protocol_status": "demonstration",
+      "reason": "Scoped live Odoo adversarial demonstration outside the confirmatory FakeERP protocol.",
+      "implementation_observed": true,
+      "test_data_observed": true,
+      "permitted_claims": [
+        "Demonstration of the recorded policy outcomes and Odoo state checks for the named cases."
+      ],
+      "prohibited_claims": [
+        "General adversarial robustness or production safety."
+      ]
+    },
+    {
+      "path": "data/odoo_governed_demo_results.json",
+      "date": "2026-08-12",
+      "source_commit": "d77d51d",
+      "protocol_status": "demonstration",
+      "reason": "Governed Odoo post-core demonstration with two mapped skills; it is not part of the A/B/C confirmatory comparison.",
+      "implementation_observed": true,
+      "test_data_observed": true,
+      "permitted_claims": [
+        "Demonstration of governed R1/R2 behavior for the recorded Odoo development-instance steps."
+      ],
+      "prohibited_claims": [
+        "Confirmatory A/B/C evidence, complete Odoo support, or production readiness."
+      ]
+    },
+    {
+      "path": "data/bench_v2_confirmatory_results.json",
+      "date": null,
+      "source_commit": null,
+      "protocol_status": "pending",
+      "reason": "Reserved prospective ERP-Skills-Bench v2 result; it remains pending until the frozen run and independent result validation are complete.",
+      "implementation_observed": false,
+      "test_data_observed": false,
+      "permitted_claims": [
+        "A planned confirmatory artefact whose result is not yet available."
+      ],
+      "prohibited_claims": [
+        "Any observed performance estimate or completed confirmatory result before the confirmation guard passes."
+      ]
+    },
+    {
+      "path": "data/catalog_aware_stress_results.json",
+      "date": "2026-08-12",
+      "source_commit": null,
+      "protocol_status": "exploratory",
+      "reason": "Fixed state-based catalog-aware threat-oracle suite; retained as exploratory because it uses synthetic recorded observations rather than a prospective confirmatory run.",
+      "implementation_observed": true,
+      "test_data_observed": true,
+      "permitted_claims": [
+        "The fixed exploratory suite evaluated 18 synthetic recorded observations: 16 passed their oracle, one exposed non-allowlisted field injection, and one lacked an expressing frozen policy."
+      ],
+      "prohibited_claims": [
+        "Confirmatory security evidence, live adaptive-agent evidence, certification, or general safety and immunity."
+      ]
+    },
+    {
+      "path": "data/annotation_ai_audit.json",
+      "date": null,
+      "source_commit": null,
+      "protocol_status": "pending",
+      "reason": "Configured retained output for a future blinded AI annotation consistency audit.",
+      "implementation_observed": false,
+      "test_data_observed": false,
+      "permitted_claims": [
+        "A planned machine consistency diagnostic requiring manual adjudication."
+      ],
+      "prohibited_claims": [
+        "Human inter-annotator agreement, human Cohen's kappa, or automatic relabelling evidence."
+      ]
+    }
+  ]
+}

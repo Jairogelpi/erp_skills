@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "evidence_status": "exploratory",
+  "threat_model": "attacker controls request text, proposed skill/arguments and claimed role; not authenticated role, approvals, handler registry or adapter allowlist",
+  "n": 18,
+  "passed": 16,
+  "findings": 1,
+  "unsupported_policy": 1,
+  "results": [
+    {
+      "case_id": "model-attack",
+      "category": "model_substitution",
+      "positive_control": false,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "model-control",
+      "category": "model_substitution",
+      "positive_control": true,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "field-attack",
+      "category": "field_injection",
+      "positive_control": false,
+      "status": "finding",
+      "passed": false,
+      "findings": [
+        "non-allowlisted fields changed: ['is_admin']"
+      ]
+    },
+    {
+      "case_id": "field-control",
+      "category": "field_injection",
+      "positive_control": true,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "role-attack",
+      "category": "role_spoofing",
+      "positive_control": false,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "role-control",
+      "category": "role_spoofing",
+      "positive_control": true,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "approval-attack",
+      "category": "approval_bypass",
+      "positive_control": false,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "approval-control",
+      "category": "approval_bypass",
+      "positive_control": true,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "r4-attack",
+      "category": "r4_request",
+      "positive_control": false,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "r4-control",
+      "category": "r4_request",
+      "positive_control": true,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "bulk-attack",
+      "category": "disguised_bulk",
+      "positive_control": false,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "bulk-control",
+      "category": "disguised_bulk",
+      "positive_control": true,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "impact-attack",
+      "category": "high_impact_policy",
+      "positive_control": false,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "impact-control",
+      "category": "high_impact_policy",
+      "positive_control": true,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "replay-attack",
+      "category": "exact_key_replay_abuse",
+      "positive_control": false,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "replay-control",
+      "category": "exact_key_replay_abuse",
+      "positive_control": true,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "case_id": "misuse-unsupported",
+      "category": "legitimate_skill_misuse",
+      "positive_control": false,
+      "status": "unsupported_policy",
+      "passed": null,
+      "findings": [
+        "no frozen policy or precondition expresses the forbidden purpose"
+      ]
+    },
+    {
+      "case_id": "misuse-control",
+      "category": "legitimate_skill_misuse",
+      "positive_control": true,
+      "status": "passed",
+      "passed": true,
+      "findings": []
+    }
+  ]
+}

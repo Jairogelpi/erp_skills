@@ -32,7 +32,13 @@ from erp_agent_os.llm_client import (
     parse_extraction,
 )
 from erp_agent_os.policy import PolicyDecision, decide
-from erp_agent_os.runtime import ExecutionResult, Runtime
+from erp_agent_os.runtime import (
+    ExecutionResult,
+    Runtime,
+    VerificationCheck,
+    VerificationCheckResult,
+    VerificationStatus,
+)
 from erp_agent_os.skills import SkillDefinition, SkillState
 
 MODEL = "crm.opportunity"
@@ -189,7 +195,16 @@ def test_event_contract_audit_event_carries_every_field_the_rubric_scores():
         _skill(),
         _skill().permissions.allowed_roles[0],
         outcome,
-        ExecutionResult(PolicyDecision.ALLOW, "id-1", False, True),
+        ExecutionResult(
+            PolicyDecision.ALLOW,
+            "id-1",
+            False,
+            True,
+            verification_status=VerificationStatus.PASSED,
+            check_results=(
+                VerificationCheckResult("record_exists", True, "check passed"),
+            ),
+        ),
         "key-1",
     )
     assert isinstance(event, AuditEvent)
@@ -228,7 +243,14 @@ def test_event_contract_store_is_append_only_by_surface():
 def test_event_contract_events_are_filterable_by_correlation():
     store = AuditStore()
     outcome = decide(_skill(), _skill().permissions.allowed_roles[0])
-    result = ExecutionResult(PolicyDecision.ALLOW, "id", False, True)
+    result = ExecutionResult(
+        PolicyDecision.ALLOW,
+        "id",
+        False,
+        True,
+        verification_status=VerificationStatus.PASSED,
+        check_results=(VerificationCheckResult("record_exists", True, "check passed"),),
+    )
     store.record("a", _skill(), "erp_user", outcome, result, "k1")
     store.record("b", _skill(), "erp_user", outcome, result, "k2")
 
@@ -247,7 +269,15 @@ def test_event_contract_runtime_result_shape_is_stable():
         {"customer_name": "Acme", "expected_revenue": "100"},
         _skill().permissions.allowed_roles[0],
         "key",
+        postcondition_checks=(
+            VerificationCheck("record_exists", lambda adapter, output: True),
+        ),
     )
     assert isinstance(result, ExecutionResult)
     assert isinstance(result.decision, PolicyDecision)
     assert isinstance(result.idempotent_replay, bool)
+    assert isinstance(result.verification_status, VerificationStatus)
+    assert isinstance(result.check_results, tuple)
+    assert all(
+        isinstance(item, VerificationCheckResult) for item in result.check_results
+    )
