@@ -7,6 +7,7 @@ audited (CLAUDE.md §25: every terminal decision is recorded). No LLM call
 here — `IntentProposal` is taken as already produced (work unit 7's scope).
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from erp_agent_os.adapters import ErpAdapter
@@ -14,13 +15,15 @@ from erp_agent_os.approval import ApprovalService
 from erp_agent_os.audit import AuditStore
 from erp_agent_os.parser import IntentProposal
 from erp_agent_os.policy import decide
-from erp_agent_os.retrieval import TfidfRetriever, should_abstain
+from erp_agent_os.retrieval import RetrievalCandidate, TfidfRetriever, should_abstain
 from erp_agent_os.runtime import ExecutionResult, Runtime
 from erp_agent_os.validation import (
     detect_text_signals,
     normalize_arguments,
     validate_arguments,
 )
+
+AbstainFn = Callable[[list[RetrievalCandidate], list[str]], bool]
 
 
 @dataclass(frozen=True)
@@ -39,12 +42,24 @@ class SystemC:
         retriever: TfidfRetriever,
         audit: AuditStore,
         approval: ApprovalService | None = None,
+        *,
+        abstain: AbstainFn = should_abstain,
     ) -> None:
         self._erp = erp
         self._runtime = runtime
         self._retriever = retriever
         self._audit = audit
         self._approval = approval
+        # v2.1 Task 8's C_NO_ABSTENTION ablation (docs/tfm-closure-no-
+        # human-v2.1.md section 6.1/8): the ONLY permitted difference from
+        # C is disabling the confidence/abstention gate -- everything else
+        # (parser, retriever, candidates, policy, runtime, state) stays
+        # identical because it is the same SystemC class and the same
+        # `handle()` method, just called with a different `abstain`
+        # callable. Defaults to the real gate, so every existing caller
+        # (and every test that constructs SystemC positionally) is
+        # unaffected.
+        self._abstain = abstain
 
     def handle(
         self,
@@ -65,7 +80,7 @@ class SystemC:
             self._audit.record_abstention(correlation_id, reasons)
             return SystemCResult("CLARIFY", None, None, tuple(reasons))
 
-        if should_abstain(ranked, proposal.missing_fields):
+        if self._abstain(ranked, proposal.missing_fields):
             reasons = ["no confident candidate"]
             self._audit.record_abstention(correlation_id, reasons)
             return SystemCResult("ABSTAIN", None, None, tuple(reasons))
