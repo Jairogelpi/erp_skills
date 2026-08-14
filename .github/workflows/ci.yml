@@ -32,6 +32,15 @@ jobs:
       - run: make verify-freeze
       - run: make experiment
       - run: make validate-claims
+      # v2.1 (docs/tfm-closure-no-human-v2.1.md, Task 12 step 3): both
+      # non-consuming -- mutation-v2-1 re-proves the evaluator's own
+      # targeted-mutation report against the committed source, and
+      # verify-tfm-closure (--pre-run) validates protocol/generator/
+      # oracle/evaluator/catalog/prompt/provider/analysis component
+      # hashes plus the committed power artifact, all read-only. Neither
+      # calls a real LLM provider or generates/consumes a holdout.
+      - run: make mutation-v2-1
+      - run: make verify-tfm-closure
       - run: make build
       # actions/upload-artifact v4.6.2
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

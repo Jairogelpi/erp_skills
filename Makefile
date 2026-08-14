@@ -1,4 +1,4 @@
-.PHONY: format format-check lint typecheck test coverage build up down logs compose-config bootstrap-codebase-memory remove-codebase-memory validate-dataset benchmark-smoke experiment verify-freeze validate-claims prepare-v2 advance-v2 demo export-results figures compare-retrievers
+.PHONY: format format-check lint typecheck test coverage build up down logs compose-config bootstrap-codebase-memory remove-codebase-memory validate-dataset benchmark-smoke experiment verify-freeze validate-claims prepare-v2 advance-v2 demo export-results figures compare-retrievers power-v2-1 freeze-v2-1 verify-tfm-closure verify-tfm-failed-external mutation-v2-1
 
 up:
 	docker compose --env-file config/development.defaults up --build
@@ -66,6 +66,26 @@ figures:
 
 compare-retrievers:
 	uv run python scripts/compare_retrievers.py
+
+# --- v2.1 (docs/tfm-closure-no-human-v2.1.md, Task 12) ---
+# None of these targets calls a real provider or consumes the holdout;
+# see scripts/verify_tfm_closure_v2_1.py's own docstring for the exact
+# guarantee each mode makes.
+
+mutation-v2-1:
+	uv run python scripts/run_targeted_mutations_v2_1.py --verify
+
+power-v2-1:
+	uv run python scripts/run_power_v2_1.py
+
+freeze-v2-1:
+	uv run python scripts/freeze_protocol_v2_1.py --verify
+
+verify-tfm-closure:
+	uv run python scripts/verify_tfm_closure_v2_1.py --pre-run
+
+verify-tfm-failed-external:
+	uv run python scripts/verify_tfm_closure_v2_1.py --failed-external
 
 bootstrap-codebase-memory:
 	python scripts/bootstrap-codebase-memory.py
