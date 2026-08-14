@@ -16,9 +16,16 @@ from erp_agent_os.experiment_v2_1 import (
     run_a,
     run_b,
     run_c,
+    run_h2_arm,
+    run_h3a_arm,
+    run_h3b_arm,
+    run_h4_arm,
+    run_h6_ablation,
+    run_main_arm,
 )
 from erp_agent_os.llm_client import ArgumentExtraction, ToolCall
 from erp_agent_os.scenarios_v2_1 import CASE_KIND_NORMAL, generate_scenarios
+from erp_agent_os.security_scenarios_v2_1 import generate_security_population
 from erp_agent_os.surfaces_v2_1 import SurfaceKind, render_surface
 
 
@@ -258,7 +265,9 @@ def test_run_c_records_exactly_one_extraction_call_and_zero_selection_calls():
 def test_run_b_selects_via_the_llm_and_normalizes_arguments():
     scenario, _ = _normal_r1_scenario()
     surface = render_surface(scenario, SurfaceKind.S1_TEMPLATE)
-    llm = _CountingFakeLLM(tool_name=scenario.expected_skill)
+    llm = _CountingFakeLLM(
+        tool_name=scenario.expected_skill, extraction=dict(scenario.arguments)
+    )
     context = _context()
 
     observation = run_b(scenario, surface, context, llm)
@@ -269,10 +278,32 @@ def test_run_b_selects_via_the_llm_and_normalizes_arguments():
     assert observation.selection_prompt_hash == context.selection_prompt_hash
 
 
+def test_run_b_pays_its_own_real_extraction_call_same_as_a_and_c():
+    """Regression: run_b used to call system.handle(text, {}) -- an
+    always-empty argument dict that made every System B scenario fail
+    on "missing required fields" regardless of tool selection, and
+    silently gave B zero extraction token cost. D-03/section 7 require
+    the SAME real extraction cost across A/B/C."""
+    scenario, _ = _normal_r1_scenario()
+    surface = render_surface(scenario, SurfaceKind.S1_TEMPLATE)
+    llm = _CountingFakeLLM(
+        tool_name=scenario.expected_skill, extraction=dict(scenario.arguments)
+    )
+    context = _context(max_call_attempts=1)
+
+    observation = run_b(scenario, surface, context, llm)
+
+    assert llm.extract_calls == 1
+    assert observation.extracted_arguments == dict(scenario.arguments)
+    assert observation.evaluator_components["success"] is True
+
+
 def test_run_a_maps_its_generic_tool_call_back_onto_the_catalog_skill():
     scenario, _ = _normal_r1_scenario()
     surface = render_surface(scenario, SurfaceKind.S1_TEMPLATE)
-    llm = _CountingFakeLLM(tool_name="create_record")
+    llm = _CountingFakeLLM(
+        tool_name="create_record", extraction=dict(scenario.arguments)
+    )
     context = _context()
 
     observation = run_a(scenario, surface, context, llm)
@@ -280,6 +311,23 @@ def test_run_a_maps_its_generic_tool_call_back_onto_the_catalog_skill():
     assert observation.system == "A"
     assert observation.selected_skill_id == scenario.expected_skill
     assert observation.evaluator_components["action_correct"] is True
+
+
+def test_run_a_pays_its_own_real_extraction_call_same_as_b_and_c():
+    """Regression: run_a used to read scenario.arguments directly --
+    a perfect parse nobody paid for, giving A zero extraction token cost
+    while B and C paid theirs."""
+    scenario, _ = _normal_r1_scenario()
+    surface = render_surface(scenario, SurfaceKind.S1_TEMPLATE)
+    llm = _CountingFakeLLM(
+        tool_name="create_record", extraction=dict(scenario.arguments)
+    )
+    context = _context(max_call_attempts=1)
+
+    observation = run_a(scenario, surface, context, llm)
+
+    assert llm.extract_calls == 1
+    assert observation.extracted_arguments == dict(scenario.arguments)
 
 
 def test_run_a_final_state_diverges_from_a_governed_handlers_real_output():
@@ -294,7 +342,9 @@ def test_run_a_final_state_diverges_from_a_governed_handlers_real_output():
     scenario, _ = _normal_r1_scenario()
     assert scenario.expected_skill == "crm.create_opportunity"
     surface = render_surface(scenario, SurfaceKind.S1_TEMPLATE)
-    llm = _CountingFakeLLM(tool_name="create_record")
+    llm = _CountingFakeLLM(
+        tool_name="create_record", extraction=dict(scenario.arguments)
+    )
     context = _context()
 
     observation = run_a(scenario, surface, context, llm)
@@ -356,3 +406,172 @@ def test_a_different_timeout_or_retry_budget_changes_the_provider_config_hash():
     context2 = _context(max_call_attempts=3)
     other2 = _context(max_call_attempts=7)
     assert context2.provider_config_hash != other2.provider_config_hash
+
+
+# ================================================== arm orchestration (3-9)
+
+
+def _llm_by_system() -> dict:
+    """One shared, structurally-permissive fake per system -- these arm
+    tests exercise ORCHESTRATION (unit counts, systems, arms, surface
+    rotation, checkpoint resume), not per-row STSR correctness, which
+    the run_a/run_b/run_c tests above already cover directly."""
+    return {
+        "A": _CountingFakeLLM(tool_name="create_record", extraction={}),
+        "B": _CountingFakeLLM(tool_name="crm.create_opportunity", extraction={}),
+        "C": _CountingFakeLLM(extraction={}),
+    }
+
+
+def _small_scenario_slice(n: int = 4):
+    return list(generate_scenarios())[:n]
+
+
+def test_run_main_arm_produces_one_row_per_scenario_and_system():
+    scenarios = _small_scenario_slice(3)
+    observations = run_main_arm(scenarios, _llm_by_system(), _context())
+
+    assert len(observations) == 3 * 3
+    assert {o.system for o in observations} == {"A", "B", "C"}
+    assert all(o.arm == "main" for o in observations)
+    assert {o.scenario_id for o in observations} == {s.scenario_id for s in scenarios}
+
+
+def test_run_h2_arm_only_includes_scenarios_with_an_expected_skill():
+    scenarios = list(generate_scenarios())
+    no_skill = [s for s in scenarios if s.expected_skill is None]
+    assert no_skill  # sanity: the corpus does contain no-skill scenarios
+    sample = _small_scenario_slice(3) + no_skill[:1]
+
+    observations = run_h2_arm(sample, _llm_by_system(), _context())
+
+    assert len(observations) == 3 * 3  # the no_skill one excluded, x3 systems
+    assert all(o.arm == "h2_tokens" for o in observations)
+    assert all(o.scenario_id != no_skill[0].scenario_id for o in observations)
+
+
+def test_run_h3a_arm_produces_all_three_surfaces_per_scenario_and_system():
+    scenarios = _small_scenario_slice(2)
+    observations = run_h3a_arm(scenarios, _llm_by_system(), _context())
+
+    assert len(observations) == 2 * 3 * 3  # scenarios x surfaces x systems
+    for scenario in scenarios:
+        kinds = {
+            o.surface_kind
+            for o in observations
+            if o.scenario_id == scenario.scenario_id
+        }
+        assert kinds == {"S1", "S2", "S3"}
+
+
+def test_run_h3b_arm_produces_repeated_calls_on_the_same_surface():
+    scenarios = _small_scenario_slice(2)
+    observations = run_h3b_arm(scenarios, _llm_by_system(), _context(), repetitions=3)
+
+    assert len(observations) == 2 * 3 * 3  # scenarios x systems x repetitions
+    assert {o.repetition_index for o in observations} == {0, 1, 2}
+    for scenario in scenarios:
+        surface_ids = {
+            o.surface_id for o in observations if o.scenario_id == scenario.scenario_id
+        }
+        assert len(surface_ids) == 1  # same surface reused across repetitions
+
+
+def test_run_h4_arm_pairs_dangerous_and_safe_rows_and_shares_their_renderer():
+    dangerous, safe = generate_security_population()
+    observations = run_h4_arm(dangerous[:2], safe[:2], _llm_by_system(), _context())
+
+    assert len(observations) == 2 * 2 * 3  # pairs x populations x systems
+    assert {o.population for o in observations} == {"dangerous", "safe_control"}
+    for i in range(2):
+        pair_rows = [
+            o
+            for o in observations
+            if o.scenario_id in (dangerous[i].scenario_id, safe[i].scenario_id)
+        ]
+        assert len({o.security_pair_id for o in pair_rows}) == 1
+        assert len({o.control_stratum for o in pair_rows}) == 1
+        assert len({o.surface_kind for o in pair_rows}) == 1  # shared renderer
+        assert all(o.control_stratum == dangerous[i].attack_category for o in pair_rows)
+
+
+def test_real_arm_output_satisfies_task_7b_semantic_completeness():
+    """Task 7B's validate_arm_semantics was built and unit-tested on
+    hand-built ObservationV21 fixtures (test_evidence_v2_1.py) but never
+    actually run against Task 8's own runner output until now -- this
+    closes that loop for every arm that has one."""
+    context = _context()
+    llm_by_system = _llm_by_system()
+    scenarios = _small_scenario_slice(2)
+
+    for observation in run_main_arm(scenarios, llm_by_system, context):
+        validate_arm_semantics(observation)
+    for observation in run_h2_arm(scenarios, llm_by_system, context):
+        validate_arm_semantics(observation)
+
+    dangerous, safe = generate_security_population()
+    for observation in run_h4_arm(dangerous[:1], safe[:1], llm_by_system, context):
+        validate_arm_semantics(observation)
+
+
+def test_run_h6_ablation_relabels_system_and_shares_everything_else():
+    scenarios = _small_scenario_slice(2)
+    context = _context()
+    llm = _CountingFakeLLM(extraction={})
+
+    main_observations = run_main_arm(scenarios, {**_llm_by_system(), "C": llm}, context)
+    main_c = [o for o in main_observations if o.system == "C"]
+    ablation = run_h6_ablation(scenarios, llm, context)
+
+    assert len(ablation) == len(main_c)
+    assert all(o.system == "C_NO_ABSTENTION" for o in ablation)
+    assert all(o.arm == "main" for o in ablation)
+    for main_row, ablation_row in zip(main_c, ablation, strict=True):
+        assert main_row.scenario_id == ablation_row.scenario_id
+        assert main_row.request_text == ablation_row.request_text
+        assert main_row.provider_config_hash == ablation_row.provider_config_hash
+
+
+def test_checkpoint_resume_preserves_already_written_rows_and_skips_them(tmp_path):
+    scenarios = _small_scenario_slice(2)
+    checkpoint_path = tmp_path / "main.jsonl"
+    llm_by_system = _llm_by_system()
+    context = _context()
+
+    first = run_main_arm(
+        scenarios, llm_by_system, context, checkpoint_path=checkpoint_path
+    )
+    calls_after_first = llm_by_system["C"].extract_calls
+
+    second = run_main_arm(
+        scenarios, llm_by_system, context, checkpoint_path=checkpoint_path
+    )
+    calls_after_second = llm_by_system["C"].extract_calls
+
+    assert len(first) == len(second) == 6
+    assert calls_after_second == calls_after_first  # nothing re-called on resume
+    assert [o.model_dump(mode="json") for o in first] == [
+        o.model_dump(mode="json") for o in second
+    ]
+
+
+def test_h6_ablation_checkpoint_never_collides_with_main_arms(tmp_path):
+    """The key_prefix guard on _run_plan: run_h6_ablation's plan entries
+    carry system="C"/arm="main" internally (run_c hardcodes both; only
+    relabeled to C_NO_ABSTENTION after _run_plan returns) -- pointed at
+    the SAME checkpoint file as run_main_arm, they must not merge."""
+    scenarios = _small_scenario_slice(1)
+    checkpoint_path = tmp_path / "shared.jsonl"
+    context = _context()
+    llm = _CountingFakeLLM(extraction={})
+
+    run_main_arm(
+        scenarios,
+        {**_llm_by_system(), "C": llm},
+        context,
+        checkpoint_path=checkpoint_path,
+    )
+    ablation = run_h6_ablation(scenarios, llm, context, checkpoint_path=checkpoint_path)
+
+    assert len(ablation) == 1
+    assert ablation[0].system == "C_NO_ABSTENTION"

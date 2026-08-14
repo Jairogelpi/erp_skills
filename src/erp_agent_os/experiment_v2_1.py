@@ -38,9 +38,10 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from erp_agent_os.adapters import FakeERPAdapter
@@ -72,7 +73,12 @@ from erp_agent_os.parser import structure_proposal
 from erp_agent_os.retrieval import TfidfRetriever
 from erp_agent_os.runtime import Runtime
 from erp_agent_os.scenarios_v2_1 import ScenarioSpec, build_gold
-from erp_agent_os.surfaces_v2_1 import Surface
+from erp_agent_os.surfaces_v2_1 import (
+    Surface,
+    SurfaceKind,
+    primary_surface_kind,
+    render_surface,
+)
 from erp_agent_os.system_a import SystemA
 from erp_agent_os.system_b import SystemB
 from erp_agent_os.system_c import SystemC
@@ -661,7 +667,17 @@ def run_b(
 
     recorder = RecordingLLMClient(llm, max_attempts=context.max_call_attempts)
     system = SystemB(erp, recorder)
-    result = system.handle(surface.text, {})
+    # D-03/section 7: B pays the SAME real argument-extraction cost as A
+    # and C, over the same field list, as its own separate call -- never
+    # an empty dict, which would make every scenario fail on "missing
+    # required fields" regardless of whether B picked the right tool.
+    required = _required_fields(scenario)
+    if required:
+        extraction = recorder.extract_arguments(surface.text, required)
+        arguments = dict(extraction.arguments)
+    else:
+        arguments = {}
+    result = system.handle(surface.text, arguments)
     # System B has no retrieval/ranking layer at all -- it is the LLM's
     # single tool-selection call. What "candidates" means for it is that
     # one selected tool with confidence 1.0, nothing ranked beneath it.
@@ -695,7 +711,7 @@ def run_b(
 
     outcome = ExecutionOutcome(
         selected_skill_id=result.skill_id,
-        arguments={},
+        arguments=dict(arguments),
         decision=decision,
         final_state_delta=delta,
         duplicate_mutation=False,
@@ -709,7 +725,7 @@ def run_b(
         request_text=surface.text,
         case_id=scenario.scenario_id,
         intent=None,  # System B has no intent-parsing layer of its own
-        arguments={},
+        arguments=arguments,
         selected_skill_id=result.skill_id,
         abstained=False,  # System B has no abstention concept (CLAUDE.md §18)
         policy_decision=decision,
@@ -736,7 +752,7 @@ def run_b(
         control_stratum=control_stratum,
         started_at=started_at,
         request_text=surface.text,
-        extracted_arguments={},
+        extracted_arguments=arguments,
         selected_skill_id=result.skill_id,
         ranked_skill_ids=ranked_ids,
         candidate_scores=candidate_scores,
@@ -784,15 +800,25 @@ def run_a(
     target_model = (
         SKILL_MODELS.get(scenario.expected_skill) if scenario.expected_skill else None
     )
+    # D-03/section 7: A pays the SAME real argument-extraction cost as B
+    # and C, over the same field list -- never scenario.arguments
+    # directly, which would be a perfect parse nobody paid for and would
+    # make A's own H2 token cost artificially zero for arguments.
+    required = _required_fields(scenario)
+    if required:
+        extraction = recorder.extract_arguments(surface.text, required)
+        arguments = dict(extraction.arguments)
+    else:
+        arguments = {}
     record_id = ""
     if scenario.expected_skill:
         for reference in REFERENCE_FIELDS.get(scenario.expected_skill, []):
-            if scenario.arguments.get(reference):
-                record_id = str(scenario.arguments[reference])
+            if arguments.get(reference):
+                record_id = str(arguments[reference])
                 break
     args = {
         "model": target_model,
-        "fields": dict(scenario.arguments),
+        "fields": dict(arguments),
         "record_id": record_id,
     }
     result = system.handle(surface.text, args)
@@ -821,7 +847,7 @@ def run_a(
 
     outcome = ExecutionOutcome(
         selected_skill_id=selected_skill_id,
-        arguments=dict(scenario.arguments),
+        arguments=dict(arguments),
         decision=decision,
         final_state_delta=delta,
         duplicate_mutation=False,
@@ -835,7 +861,7 @@ def run_a(
         request_text=surface.text,
         case_id=scenario.scenario_id,
         intent=None,
-        arguments={},
+        arguments=arguments,
         selected_skill_id=selected_skill_id,
         abstained=False,
         policy_decision=decision,
@@ -866,7 +892,7 @@ def run_a(
         control_stratum=control_stratum,
         started_at=started_at,
         request_text=surface.text,
-        extracted_arguments={},
+        extracted_arguments=arguments,
         selected_skill_id=selected_skill_id,
         ranked_skill_ids=(),
         candidate_scores={},
@@ -912,3 +938,315 @@ RUNNERS: dict[System, Callable[..., ObservationV21]] = {
     "B": run_b,
     "C": run_c,
 }
+
+
+# ============================================================ arm orchestration
+#
+# Every arm below builds a PLAN (a list of fully-specified execution
+# units, each a dict of the kwargs `RUNNERS[system]` needs) up front,
+# then runs it through the single shared `_run_plan` -- checkpointing,
+# resume and the runner dispatch live in exactly one place, so every
+# arm gets the same "never re-select a seed, never regenerate cases on
+# resume" guarantee for free instead of re-implementing it five times.
+
+
+def _unit_key(
+    scenario_id: str, system: str, arm: str, surface_kind: str, repetition: int
+) -> str:
+    return f"{scenario_id}|{system}|{arm}|{surface_kind}|{repetition}"
+
+
+def _dump_observation(observation: ObservationV21) -> dict[str, Any]:
+    return observation.model_dump(mode="json")
+
+
+def _load_observation(payload: dict[str, Any]) -> ObservationV21:
+    return ObservationV21(**payload)
+
+
+def _load_checkpoint(path: Path) -> dict[str, ObservationV21]:
+    """Already-completed units from a prior, interrupted run. Resuming
+    reads this and skips forward; it never re-selects a seed or
+    regenerates the scenario/plan, and the plan's own order (built fresh
+    from the same, already-generated scenarios every time) is what
+    "preserve plan order" means here -- resuming replays the identical
+    plan, just skipping units already checkpointed."""
+    if not path.exists():
+        return {}
+    done: dict[str, ObservationV21] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        done[row["key"]] = _load_observation(row["observation"])
+    return done
+
+
+def _run_plan(
+    plan: list[dict[str, Any]],
+    llm_by_system: Mapping[System, LLMClient],
+    context: ArmRunContext,
+    *,
+    checkpoint_path: Path | None,
+    key_prefix: str = "",
+) -> list[ObservationV21]:
+    """`key_prefix` exists for run_h6_ablation: its plan entries carry
+    system="C"/arm="main" (run_c hardcodes both; the ablation relabels
+    the RESULT to system="C_NO_ABSTENTION" only after this function
+    returns), which would otherwise checkpoint-key-collide with
+    run_main_arm's own C rows if a caller ever pointed both at the same
+    checkpoint file. The prefix makes that collision structurally
+    impossible instead of merely discouraged in a docstring."""
+    done = _load_checkpoint(checkpoint_path) if checkpoint_path else {}
+    handle = None
+    if checkpoint_path is not None:
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+        handle = checkpoint_path.open("a", encoding="utf-8")
+
+    observations: list[ObservationV21] = []
+    try:
+        for entry in plan:
+            scenario: ScenarioSpec = entry["scenario"]
+            surface: Surface = entry["surface"]
+            system: System = entry["system"]
+            arm: Arm = entry["arm"]
+            repetition = entry.get("repetition_index", 0)
+            key = key_prefix + _unit_key(
+                scenario.scenario_id, system, arm, surface.kind, repetition
+            )
+
+            cached = done.get(key)
+            if cached is not None:
+                observations.append(cached)
+                continue
+
+            extra_kwargs = {
+                k: v
+                for k, v in entry.items()
+                if k not in {"scenario", "surface", "system"}
+            }
+            observation = RUNNERS[system](
+                scenario, surface, context, llm_by_system[system], **extra_kwargs
+            )
+            observations.append(observation)
+            if handle is not None:
+                row = {"key": key, "observation": _dump_observation(observation)}
+                handle.write(json.dumps(row) + "\n")
+                handle.flush()
+    finally:
+        if handle is not None:
+            handle.close()
+    return observations
+
+
+def _primary_surfaces(scenarios: Sequence[ScenarioSpec]) -> dict[str, Surface]:
+    """One deterministic S1/S2/S3 surface per scenario (section 6.1),
+    computed once and reused across every system that scenario runs
+    through -- A/B/C must read the identical request text."""
+    return {
+        scenario.scenario_id: render_surface(
+            scenario, primary_surface_kind(scenario.scenario_id, ordinal)
+        )
+        for ordinal, scenario in enumerate(scenarios)
+    }
+
+
+def run_main_arm(
+    scenarios: Sequence[ScenarioSpec],
+    llm_by_system: Mapping[System, LLMClient],
+    context: ArmRunContext,
+    *,
+    checkpoint_path: Path | None = None,
+) -> list[ObservationV21]:
+    """H1/H5/H6/H7: exactly one primary surface per scenario, one row
+    per (scenario, system)."""
+    surfaces = _primary_surfaces(scenarios)
+    plan = [
+        {
+            "scenario": scenario,
+            "surface": surfaces[scenario.scenario_id],
+            "system": system,
+            "arm": "main",
+        }
+        for scenario in scenarios
+        for system in ("A", "B", "C")
+    ]
+    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
+
+
+def run_h2_arm(
+    scenarios: Sequence[ScenarioSpec],
+    llm_by_system: Mapping[System, LLMClient],
+    context: ArmRunContext,
+    *,
+    checkpoint_path: Path | None = None,
+) -> list[ObservationV21]:
+    """Section 6.3: one predefined primary surface per scenario, one
+    real uncached call per (system, case), only cases with an expected
+    skill. Uses the SAME per-scenario primary surface as the main arm
+    (not a second, independent rotation) -- section 6.3 does not ask for
+    a different surface, only a different (token-measuring) purpose."""
+    eligible = [s for s in scenarios if s.expected_skill is not None]
+    surfaces = _primary_surfaces(scenarios)  # keyed by the FULL corpus's ordinals
+    plan = [
+        {
+            "scenario": scenario,
+            "surface": surfaces[scenario.scenario_id],
+            "system": system,
+            "arm": "h2_tokens",
+        }
+        for scenario in eligible
+        for system in ("A", "B", "C")
+    ]
+    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
+
+
+def run_h3a_arm(
+    scenarios: Sequence[ScenarioSpec],
+    llm_by_system: Mapping[System, LLMClient],
+    context: ArmRunContext,
+    *,
+    checkpoint_path: Path | None = None,
+) -> list[ObservationV21]:
+    """H3a: all three surfaces of the SAME scenario, never treated as
+    independent units -- the unit of inference stays the scenario; three
+    rows sharing one scenario_id is what lets a caller later group them
+    back into one "did all three surfaces agree" observation."""
+    plan = [
+        {
+            "scenario": scenario,
+            "surface": render_surface(scenario, kind),
+            "system": system,
+            "arm": "h3a_stability",
+        }
+        for scenario in scenarios
+        for kind in SurfaceKind
+        for system in ("A", "B", "C")
+    ]
+    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
+
+
+def run_h3b_arm(
+    scenarios: Sequence[ScenarioSpec],
+    llm_by_system: Mapping[System, LLMClient],
+    context: ArmRunContext,
+    *,
+    checkpoint_path: Path | None = None,
+    repetitions: int = 3,
+) -> list[ObservationV21]:
+    """H3b: `repetitions` independent, uncached calls on the SAME
+    primary surface -- unique (scenario, system, repetition_index) keys,
+    section 6.4's "no cache" applying here as much as everywhere else in
+    this module (this module has none, full stop)."""
+    surfaces = _primary_surfaces(scenarios)
+    plan = [
+        {
+            "scenario": scenario,
+            "surface": surfaces[scenario.scenario_id],
+            "system": system,
+            "arm": "h3b_repetition",
+            "repetition_index": repetition,
+        }
+        for scenario in scenarios
+        for system in ("A", "B", "C")
+        for repetition in range(repetitions)
+    ]
+    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
+
+
+def run_h4_arm(
+    dangerous: Sequence[ScenarioSpec],
+    safe: Sequence[ScenarioSpec],
+    llm_by_system: Mapping[System, LLMClient],
+    context: ArmRunContext,
+    *,
+    checkpoint_path: Path | None = None,
+) -> list[ObservationV21]:
+    """H4/H7: every power-selected dangerous scenario and its one-to-one
+    safe control, through A/B/C once. security_pair_id/control_stratum
+    are read straight off each ScenarioSpec's own scenario_id/
+    attack_category -- dangerous and safe rows of the same pair share a
+    scenario_id prefix (security_scenarios_v2_1's own "sec-{category}-
+    {index}" convention) but never the same scenario_id itself, so no
+    separate pairing table is needed here.
+
+    Section 6.2: a pair's safe control shares its renderer with the
+    dangerous scenario it controls for -- both members of pair `i` use
+    the ordinal-`i` rotation (dangerous/safe are index-aligned per
+    generate_security_population's own docstring), not each their own
+    independent S1/S2/S3 pick."""
+    plan: list[dict[str, Any]] = []
+    paired = enumerate(zip(dangerous, safe, strict=True))
+    for ordinal, (danger_scenario, safe_scenario) in paired:
+        kind = primary_surface_kind(danger_scenario.scenario_id, ordinal)
+        # The safe control's own attack_category is None (it is not an
+        # attack) -- control_stratum names which stratum of pairs a row
+        # belongs to, so both members of a pair use the DANGEROUS
+        # scenario's category, never the safe scenario's own (always
+        # None) attack_category.
+        stratum = danger_scenario.attack_category
+        for population, scenario in (
+            ("dangerous", danger_scenario),
+            ("safe_control", safe_scenario),
+        ):
+            pair_id = scenario.scenario_id.rsplit("-", 1)[0]
+            surface = render_surface(scenario, kind)
+            for system in ("A", "B", "C"):
+                plan.append(
+                    {
+                        "scenario": scenario,
+                        "surface": surface,
+                        "system": system,
+                        "arm": "h4_security",
+                        "population": population,
+                        "security_pair_id": pair_id,
+                        "control_stratum": stratum,
+                    }
+                )
+    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
+
+
+def run_h6_ablation(
+    scenarios: Sequence[ScenarioSpec],
+    llm_c: LLMClient,
+    context: ArmRunContext,
+    *,
+    checkpoint_path: Path | None = None,
+) -> list[ObservationV21]:
+    """H6: C_NO_ABSTENTION against the SAME scenarios, surfaces, parser,
+    retriever, policy/runtime and state as the main arm's C rows -- the
+    ONLY difference is the injected permissive `abstain` (system_c.py's
+    own ablation hook). Structurally there is nowhere else for a second
+    difference to hide: this calls the identical `run_c`, with the
+    identical llm/context, just a different `abstain` kwarg."""
+    surfaces = _primary_surfaces(scenarios)
+    permissive_abstain = lambda ranked, missing: bool(missing) or not ranked  # noqa: E731
+    plan = [
+        {
+            "scenario": scenario,
+            "surface": surfaces[scenario.scenario_id],
+            "system": "C",
+            "arm": "main",
+            "abstain": permissive_abstain,
+        }
+        for scenario in scenarios
+    ]
+    observations = _run_plan(
+        plan,
+        {"C": llm_c},
+        context,
+        checkpoint_path=checkpoint_path,
+        key_prefix="h6_no_abstention:",
+    )
+    return [
+        _observation_with_system(observation, system="C_NO_ABSTENTION")
+        for observation in observations
+    ]
+
+
+def _observation_with_system(
+    observation: ObservationV21, *, system: System
+) -> ObservationV21:
+    payload = observation.model_dump(mode="json")
+    payload["system"] = system
+    return ObservationV21(**payload)
