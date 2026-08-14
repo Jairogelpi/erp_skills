@@ -1,0 +1,136 @@
+{
+  "all_mutants_killed": true,
+  "config_sha256": "c0291a37863ef5d4c64e417b028d6043919e06b98958afb38de17e23ddec6531",
+  "mutants": [
+    {
+      "failing_tests": [
+        "tests/test_evaluator_v2_1.py::test_wrong_policy_decision_fails_stsr - ...",
+        "tests/test_evaluator_v2_1.py::test_fully_correct_outcome_succeeds_on_every_component"
+      ],
+      "harness_error": null,
+      "kill_tests": [
+        "tests/test_evaluator_v2_1.py::test_wrong_policy_decision_fails_stsr",
+        "tests/test_evaluator_v2_1.py::test_fully_correct_outcome_succeeds_on_every_component"
+      ],
+      "killed": true,
+      "mutant_id": "decision_inversion",
+      "mutated_source_sha256": "7667e2e0bca0ae57d8b8b38fe06f6df6af18f5a596b128001b6adfe65f25b25a",
+      "operator": "comparator_inversion",
+      "original_expression_sha256": "3be8606e214d5f21d47f0a3c6f154cebdbf920098127032036dd3ca999b41e89",
+      "replacement_expression_sha256": "9724225dfdc04c2fea95854ad5ddd71c5c28e1b852417036556950612a9b555f",
+      "returncode": 1,
+      "source_path": "src/erp_agent_os/evaluator_v2_1.py"
+    },
+    {
+      "failing_tests": [
+        "tests/test_evaluator_v2_1.py::test_wrong_final_state_fails_stsr - asse...",
+        "tests/test_evaluator_v2_1.py::test_fully_correct_outcome_succeeds_on_every_component"
+      ],
+      "harness_error": null,
+      "kill_tests": [
+        "tests/test_evaluator_v2_1.py::test_wrong_final_state_fails_stsr",
+        "tests/test_evaluator_v2_1.py::test_fully_correct_outcome_succeeds_on_every_component"
+      ],
+      "killed": true,
+      "mutant_id": "final_state_inversion",
+      "mutated_source_sha256": "c626a60aff0a1b704fbdbeb1b8f5109561c2872c92d61f698c11875b8ce62f4a",
+      "operator": "comparator_inversion",
+      "original_expression_sha256": "c92fd8db547bf5cbc512d22e3dbd881b35ddf5ab873b710efbed96d2b196ce39",
+      "replacement_expression_sha256": "def4ff0cde1744b0402c23da49fa42a17cace81d8115d48cf94ded669aeb7bf2",
+      "returncode": 1,
+      "source_path": "src/erp_agent_os/evaluator_v2_1.py"
+    },
+    {
+      "failing_tests": [
+        "tests/test_evaluator_v2_1.py::test_duplicate_mutation_fails_stsr_even_if_everything_else_is_correct"
+      ],
+      "harness_error": null,
+      "kill_tests": [
+        "tests/test_evaluator_v2_1.py::test_duplicate_mutation_fails_stsr_even_if_everything_else_is_correct"
+      ],
+      "killed": true,
+      "mutant_id": "relaxed_duplicate_cardinality",
+      "mutated_source_sha256": "28149d4c06a034081e6f4f7627ca00ffd3dbe451db63e3d5324d5e9eb68a98c8",
+      "operator": "constant_replacement",
+      "original_expression_sha256": "6e2f5b697850d4bb36f9fd75eee043e2fec90c28a2e3b755bdbcd6eaa8a32ad1",
+      "replacement_expression_sha256": "aea420e63eaba56dc90253aafcd5b5ecf99bf35037552436b411025e3b7200d2",
+      "returncode": 1,
+      "source_path": "src/erp_agent_os/evaluator_v2_1.py"
+    },
+    {
+      "failing_tests": [
+        "tests/test_evaluator_v2_1.py::test_unrelated_side_effect_fails_stsr_even_if_everything_else_is_correct"
+      ],
+      "harness_error": null,
+      "kill_tests": [
+        "tests/test_evaluator_v2_1.py::test_unrelated_side_effect_fails_stsr_even_if_everything_else_is_correct"
+      ],
+      "killed": true,
+      "mutant_id": "ignored_side_effect",
+      "mutated_source_sha256": "27cece477f7b6f040843214acc9316d8e9fb25874dc9905f61fb753a3f82880d",
+      "operator": "constant_replacement",
+      "original_expression_sha256": "26cd537664daaf84ca8c9ac6a9f0eb26f2570292030d8be18aefb888fda54beb",
+      "replacement_expression_sha256": "7057d366cfb9fccb28298cc95b11479968ba1c6a224eabe28121a5dd0787fbc6",
+      "returncode": 1,
+      "source_path": "src/erp_agent_os/evaluator_v2_1.py"
+    },
+    {
+      "failing_tests": [
+        "tests/test_evaluator_v2_1.py::test_allow_with_no_dangerous_mutation_still_counts_as_false_allow",
+        "tests/test_evaluator_v2_1.py::test_correct_deny_with_no_mutation_is_neither"
+      ],
+      "harness_error": null,
+      "kill_tests": [
+        "tests/test_evaluator_v2_1.py::test_allow_with_no_dangerous_mutation_still_counts_as_false_allow",
+        "tests/test_evaluator_v2_1.py::test_correct_deny_with_no_mutation_is_neither"
+      ],
+      "killed": true,
+      "mutant_id": "false_allow_inversion",
+      "mutated_source_sha256": "455e3bfd60ccfc5f324eeb7c68c7a47e5fc58be9269532701d42fe7fc8669b2e",
+      "operator": "comparator_inversion",
+      "original_expression_sha256": "62a36fdd9ac73c426e8da4e54eac26ebcd61ed2d13ca27fc6c42b28bc099d5ff",
+      "replacement_expression_sha256": "49d6c594d2705b9767984c75eaa46cc32622d94c763082abe2b7a982bdedc16c",
+      "returncode": 1,
+      "source_path": "src/erp_agent_os/evaluator_v2_1.py"
+    },
+    {
+      "failing_tests": [
+        "tests/test_evaluator_v2_1.py::test_deny_with_an_observed_mutation_is_unauthorized_mutation_not_false_allow"
+      ],
+      "harness_error": null,
+      "kill_tests": [
+        "tests/test_evaluator_v2_1.py::test_deny_with_an_observed_mutation_is_unauthorized_mutation_not_false_allow"
+      ],
+      "killed": true,
+      "mutant_id": "ignored_unauthorized_mutation",
+      "mutated_source_sha256": "1c73f39e98699551b0c8070e7d642c9452b3920079ad923606a54253d5f0a34b",
+      "operator": "constant_replacement",
+      "original_expression_sha256": "570748ecb76984f14921f90cb577b60bbbb02c7d6fd9035e6f59a0542ec02edb",
+      "replacement_expression_sha256": "f05ae5b367c2eccba101e6bda35be2f3ff403c48e0a0c8529b925b66b80456c5",
+      "returncode": 1,
+      "source_path": "src/erp_agent_os/evaluator_v2_1.py"
+    },
+    {
+      "failing_tests": [
+        "tests/test_audit_reconstruction.py::test_missing_intent_or_arguments_is_recorded_as_not_present"
+      ],
+      "harness_error": null,
+      "kill_tests": [
+        "tests/test_audit_reconstruction.py::test_missing_intent_or_arguments_is_recorded_as_not_present"
+      ],
+      "killed": true,
+      "mutant_id": "missing_audit_fact_accepted",
+      "mutated_source_sha256": "84f160c72024df1306bf184ac04f2aece68e59d7d345af0a25c59a39940922f6",
+      "operator": "constant_replacement",
+      "original_expression_sha256": "03678297361b622b14c1762dd5ef8f5d4289da5021f1d2265e28c3d21e5b104a",
+      "replacement_expression_sha256": "1d9d70c5811da04ccb5a7d829e73067d7fb852e6bbbb9a128ab36b8894b6da29",
+      "returncode": 1,
+      "source_path": "src/erp_agent_os/audit_reconstruction.py"
+    }
+  ],
+  "schema_version": "1.0",
+  "worktree_source_hashes": {
+    "src/erp_agent_os/audit_reconstruction.py": "efea3010642b830deaed9717a1a8ae700a1de0157d3109afda365d77e0f7f295",
+    "src/erp_agent_os/evaluator_v2_1.py": "61ec5a7432151681059d529dcfaa823ec71b1ef9ab51ec75310e2a79b5549b12"
+  }
+}

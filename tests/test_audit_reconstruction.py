@@ -38,6 +38,15 @@ def test_empty_trace_recovers_nothing():
     assert result.coverage() < 0.5
 
 
+def test_missing_intent_or_arguments_is_recorded_as_not_present():
+    """Everything else complete, intent/arguments withheld: this fact
+    alone must read as missing -- not silently accepted because the
+    rest of the trace looks fine."""
+    trace = {**_complete_correct_trace(), "intent": None}
+    result = reconstruct(trace)
+    assert result.facts["intent_and_arguments"].present is False
+
+
 def test_partial_trace_only_some_facts_present():
     trace = {
         "correlation_id": "corr-2",
