@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import tempfile
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,44 @@ from typing import Any
 from erp_agent_os.metrics import ExecutionRecord
 
 OBSERVATION_SCHEMA_VERSION = "1.0"
+
+
+def write_content_addressed(
+    content: bytes, path_for_digest: Callable[[str], Path]
+) -> tuple[Path, str]:
+    """Shared, atomic, content-addressed write used by both the v1
+    observation archive below and erp_agent_os.evidence_v2_1's archive.
+
+    `path_for_digest` turns the content's own SHA-256 into the concrete
+    destination path -- the caller decides the filename convention, this
+    function only guarantees the write is atomic (temp file + os.replace)
+    and that an existing file at that address is never silently
+    overwritten with different bytes."""
+    digest = hashlib.sha256(content).hexdigest()
+    destination = path_for_digest(digest)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    if destination.exists():
+        if destination.read_bytes() != content:
+            raise FileExistsError(
+                f"content-addressed archive has conflicting bytes: {destination}"
+            )
+        return destination, digest
+
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{destination.name}.", suffix=".tmp", dir=destination.parent
+    )
+    temporary_path = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        temporary_path.replace(destination)
+    finally:
+        if temporary_path.exists():
+            temporary_path.unlink()
+    return destination, digest
 
 
 @dataclass(frozen=True)
@@ -116,30 +155,9 @@ def write_observations_jsonl(
 ) -> ObservationArchive:
     """Write an atomic, content-addressed archive without silent overwrite."""
     content = _archive_bytes(records, provenance)
-    digest = hashlib.sha256(content).hexdigest()
-    destination = observations_path_for(report_path, digest)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-
-    if destination.exists():
-        if destination.read_bytes() != content:
-            raise FileExistsError(
-                f"content-addressed archive has conflicting bytes: {destination}"
-            )
-        return ObservationArchive(destination, digest, len(records))
-
-    descriptor, temporary_name = tempfile.mkstemp(
-        prefix=f".{destination.name}.", suffix=".tmp", dir=destination.parent
+    destination, digest = write_content_addressed(
+        content, lambda d: observations_path_for(report_path, d)
     )
-    temporary_path = Path(temporary_name)
-    try:
-        with os.fdopen(descriptor, "wb") as handle:
-            handle.write(content)
-            handle.flush()
-            os.fsync(handle.fileno())
-        temporary_path.replace(destination)
-    finally:
-        if temporary_path.exists():
-            temporary_path.unlink()
     return ObservationArchive(destination, digest, len(records))
 
 
