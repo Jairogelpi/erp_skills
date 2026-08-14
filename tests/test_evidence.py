@@ -6,6 +6,7 @@ import pytest
 from erp_agent_os.evidence import (
     OBSERVATION_SCHEMA_VERSION,
     load_observations_jsonl,
+    trace_from_execution_record,
     validate_observation_units,
     write_observations_jsonl,
 )
@@ -107,3 +108,35 @@ def test_archive_rows_include_semantically_auditable_evidence(tmp_path):
     assert observation["initial_state"]["records"] == {}
     assert observation["postcondition_evidence"]["opportunity_is_open"] is True
     assert len(observation["traceability_components"]) == 7
+
+
+def test_trace_from_execution_record_feeds_a_recoverable_reconstruction():
+    from erp_agent_os.audit_reconstruction import reconstruct
+
+    trace = trace_from_execution_record(_record())
+    result = reconstruct(trace)
+
+    # request_text/intent are not carried by v1's ExecutionRecord, so
+    # those two facts genuinely cannot be fully recovered from it -- the
+    # adapter must not fabricate them to force a passing result.
+    assert result.facts["intent_and_arguments"].present is False
+    assert result.facts["policy_permission_decision"].recovered is True
+    assert result.facts["exact_tool_skill_handler_version"].recovered is True
+    assert result.facts["selected_action_or_skill"].recovered is True
+
+
+def test_trace_from_execution_record_marks_placeholder_role_as_missing():
+    record = ExecutionRecord(
+        request_id="r2",
+        system="A",
+        repetition=0,
+        selected_skill_id=None,
+        decision="DENY",
+        postconditions_met=None,
+        side_effect_free=True,
+        role="not_available",
+        handler_name="not_available",
+    )
+    trace = trace_from_execution_record(record)
+    assert trace["role"] is None
+    assert trace["handler"] is None

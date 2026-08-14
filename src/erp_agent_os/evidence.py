@@ -43,6 +43,48 @@ def execution_record_from_dict(payload: dict[str, Any]) -> ExecutionRecord:
     return ExecutionRecord(**normalized)
 
 
+def trace_from_execution_record(record: ExecutionRecord) -> dict[str, Any]:
+    """Adapts a v1 ExecutionRecord into the flat trace shape
+    erp_agent_os.audit_reconstruction.reconstruct() expects (v2.1 Task 6).
+
+    v1's ExecutionRecord was never designed to carry every field H7's
+    seven-fact reconstruction wants (it has no request_text, no explicit
+    case_id, no approval_evidence) -- this adapter does not fabricate
+    them. Facts that genuinely cannot be recovered from a v1 record
+    correctly read as missing when reconstructed, which is itself
+    accurate information about v1's audit trail, not a bug in the
+    adapter to paper over.
+    """
+    _placeholder = {"not_available", ""}
+    return {
+        "correlation_id": record.request_id,
+        "request_text": None,  # not carried by v1's ExecutionRecord
+        "case_id": record.request_id,
+        "case_id_matches_correlation": True,
+        "intent": None,  # not carried by v1's ExecutionRecord
+        "arguments": record.normalized_arguments or None,
+        "selected_skill_id": record.selected_skill_id,
+        "abstained": record.decision == "ABSTAIN",
+        "policy_decision": record.decision,
+        "role": None if record.role in _placeholder else record.role,
+        "skill_version": record.selected_skill_version,
+        "handler": None if record.handler_name in _placeholder else record.handler_name,
+        "execution_output": record.final_state if record.final_state else None,
+        "observed_state_delta": {
+            "operation_kind": "no_change" if record.state_unchanged else "mutated"
+        },
+        "verification_status": (
+            "passed"
+            if record.postconditions_met is True
+            else "failed"
+            if record.postconditions_met is False
+            else None
+        ),
+        "approval_evidence": None,  # not carried by v1's ExecutionRecord
+        "final_decision_allowed": record.decision == "ALLOW",
+    }
+
+
 def _archive_bytes(records: list[ExecutionRecord], provenance: dict[str, Any]) -> bytes:
     header = {
         "type": "manifest",
