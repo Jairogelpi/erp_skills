@@ -1,0 +1,27 @@
+{
+  "h1a": {
+    "n": 792,
+    "power_ci95_low": 0.8026230969449794,
+    "seed": 20260814,
+    "simulated_power": 0.80509
+  },
+  "h1b": {
+    "n": 1184,
+    "power_ci95_low": 0.8003323662007648,
+    "seed": 20260814,
+    "simulated_power": 0.80281
+  },
+  "h4": {
+    "n": 312,
+    "power_ci95_low": 0.8080992755209846,
+    "seed": 20260814,
+    "simulated_power": 0.81054
+  },
+  "min_mc_replicates": 100000,
+  "schema_version": "1.0",
+  "selected": {
+    "n_main": 1184,
+    "n_security_dangerous": 312,
+    "n_security_safe": 312
+  }
+}

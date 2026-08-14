@@ -18,17 +18,26 @@ dependencies = [
   "sqlalchemy==2.0.51",
   "groq==0.37.1",
   "google-genai>=2.17.0",
+  # v2.1 Task 5 (power_v2_1.py): vectorized Monte Carlo power simulation
+  # and closed-form interval/beta computations. Already present
+  # transitively via sentence-transformers; declared directly per the
+  # v2.1 plan ("Do not rely on their current transitive installation").
+  "numpy>=2,<3",
+  "scipy>=1.18,<2",
 ]
 
 [dependency-groups]
 # Figures only. Deliberately NOT a default dependency and NOT in
-# `dev`: installing matplotlib into the environment mypy analyses
-# triggers an internal mypy 1.15 crash ("unresolved placeholder
-# type" while serializing its cache) on this project's numpy
-# `follow_imports = "skip"` override. Keeping it in its own group
-# means CI (`uv sync --group dev`) type-checks the same environment
-# it always has, and figures are regenerated on demand with
-# `uv sync --group figures`.
+# `dev`: historically, installing matplotlib into the environment
+# mypy analyses triggered an internal mypy 1.15 crash ("unresolved
+# placeholder type" while serializing its cache) that traced back to
+# this project's numpy `follow_imports = "skip"` override. That
+# override was removed (v2.1 Task 5, power_v2_1.py: numpy is now a
+# real, directly-used, type-checked dependency, and mypy handles its
+# own type stubs fine without skip) -- kept in its own group anyway,
+# since figures still have no reason to be part of the default type-
+# checked environment. `uv sync --group dev` covers CI; figures
+# regenerate on demand with `uv sync --group figures`.
 figures = [
   "matplotlib>=3.11,<4",
 ]
@@ -72,6 +81,10 @@ files = ["src"]
 follow_imports = "silent"
 
 [[tool.mypy.overrides]]
-module = ["sentence_transformers.*", "torch.*", "transformers.*", "numpy.*"]
+module = ["sentence_transformers.*", "torch.*", "transformers.*"]
 ignore_missing_imports = true
 follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = ["scipy.*"]
+ignore_missing_imports = true
