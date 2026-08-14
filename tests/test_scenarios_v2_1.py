@@ -114,3 +114,27 @@ def test_noise_scenarios_share_the_same_decision_logic_as_normal():
             assert scenario.expected_decision == "ALLOW"
         else:
             assert scenario.expected_decision == "REQUIRE_APPROVAL"
+
+
+def test_actor_role_is_actually_permitted_by_the_real_frozen_catalog():
+    """Regression: an earlier version hardcoded actor_role="sales_user",
+    a role the reference_policy_oracle's own (deliberately independent)
+    role-capability table accepts but the REAL, frozen 12-skill catalog
+    (catalog.CATALOG, allowed_roles=["erp_user"] only) does not. Every
+    "normal"/"noise" scenario would have DENYed on role mismatch alone
+    the moment it ran through the real policy.decide(), regardless of
+    its intended risk-based outcome -- and the oracle concordance test
+    could not have caught it, because that oracle deliberately never
+    reads this catalog. Only insufficient_permissions is exempt: an
+    unauthorized role is exactly the point of that category."""
+    from erp_agent_os.catalog import CATALOG_BY_ID
+
+    scenarios = generate_scenarios()
+    for scenario in scenarios:
+        if scenario.expected_skill is None:
+            continue
+        allowed = CATALOG_BY_ID[scenario.expected_skill].permissions.allowed_roles
+        if scenario.attack_category == "insufficient_permissions":
+            assert scenario.actor_role not in allowed
+        else:
+            assert scenario.actor_role in allowed

@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from erp_agent_os.bench_intents import INTENTS, IntentSpec
-from erp_agent_os.catalog import CATALOG_BY_ID
+from erp_agent_os.catalog import CATALOG, CATALOG_BY_ID
 from erp_agent_os.dataset import RiskClass
 
 DEFAULT_SEED = 20260814
@@ -174,7 +174,15 @@ def _compile_scenario(
     arguments = _pick_arguments(intent, rng)
 
     attack_category = None
-    role = "sales_user"  # every catalog skill's allowed_roles includes this
+    # Derived from the real, frozen catalog rather than hardcoded: this
+    # module's role must be one the production Permissions.allowed_roles
+    # actually grants, or every "normal"/"noise" scenario would DENY on
+    # role mismatch alone the moment it runs through the real
+    # policy.decide() (Task 8), regardless of its intended risk-based
+    # outcome -- reference_policy_oracle deliberately declares its OWN,
+    # wider role-capability set and does not read this catalog, so its
+    # concordance check could not have caught this by itself.
+    role = skill.permissions.allowed_roles[0]
     decision = _expected_decision(skill.risk_class, case_kind)
 
     if case_kind == CASE_KIND_ADVERSARIAL:
@@ -218,7 +226,11 @@ def _no_skill_scenario(*, family: str, ordinal: int, seed: int) -> ScenarioSpec:
         expected_skill=None,
         operation="none",
         arguments={},
-        actor_role="sales_user",
+        # No target skill to derive a role from -- ABSTAIN never reaches
+        # policy.decide() anyway, but every catalog skill happens to
+        # share the same allowed role, so use that shared value rather
+        # than a second, independent role string.
+        actor_role=CATALOG[0].permissions.allowed_roles[0],
         risk_class=RiskClass.R0.value,
         case_kind=CASE_KIND_NO_SKILL,
         attack_category=None,

@@ -130,7 +130,9 @@ def generate_security_population(
         for case_index in range(per_category):
             skill = _skill_for(cat_index, case_index)
             base_arguments = _placeholder_arguments(skill)
-            base_role = "sales_user"
+            # Derived from the real catalog, not hardcoded -- see the
+            # matching fix and rationale in scenarios_v2_1._compile_scenario.
+            base_role = skill.permissions.allowed_roles[0]
             pair_id = f"sec-{category}-{case_index:03d}"
 
             danger_arguments = _dangerous_arguments(category, base_arguments)

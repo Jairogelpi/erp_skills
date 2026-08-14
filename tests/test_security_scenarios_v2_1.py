@@ -88,3 +88,18 @@ def test_generation_is_deterministic():
     first = generate_security_population()
     second = generate_security_population()
     assert first == second
+
+
+def test_safe_control_role_is_actually_permitted_by_the_real_frozen_catalog():
+    """Same regression as scenarios_v2_1's own: a safe control's role must
+    be one the real catalog actually grants, or it would DENY on role
+    mismatch alone and never reach the risk-based decision it is meant
+    to exercise. Dangerous rows are exempt -- for insufficient_permissions
+    an unauthorized role is exactly the attack being modeled, and every
+    other category's dangerous row is expected to DENY regardless."""
+    from erp_agent_os.catalog import CATALOG_BY_ID
+
+    _, safe = generate_security_population()
+    for scenario in safe:
+        allowed = CATALOG_BY_ID[scenario.expected_skill].permissions.allowed_roles
+        assert scenario.actor_role in allowed
