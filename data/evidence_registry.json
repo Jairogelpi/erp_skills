@@ -9,7 +9,7 @@
     "historic_H2_population_included_sin_skill_cases",
     "historic_H7_lacks_paired_inference_and_component_rows",
     "human_gated_v2_is_retired_and_has_not_been_system_evaluated",
-    "v2_1_no_human_protocol_is_not_yet_implemented_frozen_or_executed"
+    "v2_1_no_human_protocol_is_implemented_and_unit_tested_but_not_yet_code_frozen_or_executed"
   ],
   "hypotheses": {
     "H1": {
@@ -92,6 +92,7 @@
   "artifacts": {
     "docs/tfm-closure-no-human-v2.1.md": {"kind": "normative_protocol_amendment", "status": "specified_pending_implementation_freeze_and_execution", "enables_confirmatory_claims": false},
     "docs/superpowers/plans/2026-08-14-tfm-closure-no-human-v2-1.md": {"kind": "implementation_plan", "status": "agent_review_approved_pending_implementation", "review_kind": "independent_agent_review_not_human_validation", "enables_confirmatory_claims": false},
+    "src/erp_agent_os/{scenarios_v2_1,surfaces_v2_1,security_scenarios_v2_1,reference_policy_oracle,reference_state_oracle,oracle_concordance_v2_1,protocol_v2_1,power_v2_1,evaluator_v2_1,evidence_v2_1,experiment_v2_1,statistics_v2_1,cost_scenarios_v2_1,freeze_v2_1,claims_v2_1}.py": {"kind": "v2_1_protocol_implementation", "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run", "enables_confirmatory_claims": false, "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."},
     "data/prospective_v2/bench_v2_candidate_seal_386fdf8b16f8283280d4f7127b1613fff5e0917e37a8bb11132896a06c63f037.json": {"kind": "prospective_candidate_manifest", "status": "superseded_before_system_evaluation", "system_evaluation_allowed": false, "superseded_by": "data/protocol_v2_1/v2_supersession_de52502c346f8c566e9f486c66d92e53c08f23a9bbfbe582f28cbcc6a507b462.json"},
     "data/protocol_v2_1/v2_supersession_de52502c346f8c566e9f486c66d92e53c08f23a9bbfbe582f28cbcc6a507b462.json": {"kind": "v2_supersession_receipt", "status": "superseded_before_system_evaluation_zero_evaluations_zero_completed_packets", "enables_confirmatory_claims": false},
     "data/prospective_v2/bench_v2_candidates_0f738bf7feaa9f31f67e2dc908d1efe16112cf20a50f6efe1baabb381493e799.jsonl": {"kind": "blinded_prospective_candidates", "status": "sealed_unevaluated"},
