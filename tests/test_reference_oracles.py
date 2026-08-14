@@ -14,6 +14,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from erp_agent_os.oracle_concordance_v2_1 import find_concordance_mismatches
 from erp_agent_os.reference_policy_oracle import (
     ReferenceDecision,
     ReferencePolicyOracleError,
@@ -90,38 +91,18 @@ def test_generators_never_import_the_oracles_either(module_path):
 
 
 # ---------------------------------------------- full-corpus concordance
-
-
-def _independent_expected_decision(scenario) -> str:
-    """Re-derives the decision from the scenario's raw attributes using
-    ONLY the oracle -- never scenario.expected_decision -- so comparing
-    the two is a real check on two independent implementations."""
-    blocking_signal = scenario.case_kind == "adversarial"
-    return reference_policy(
-        role=scenario.actor_role,
-        risk_class=scenario.risk_class,
-        operation=scenario.operation,
-        blocking_signal=blocking_signal,
-    ).value
-
-
-def _independent_expected_operation_kind(scenario) -> str:
-    if scenario.expected_decision not in ("ALLOW", "SIMULATE"):
-        return "no_change"
-    if scenario.risk_class == "R3":
-        return "confirm_document"
-    if scenario.operation == "create":
-        return "create_one"
-    if scenario.operation == "update":
-        return "update_one_allowed_field"
-    return "read_only"
+#
+# erp_agent_os.oracle_concordance_v2_1 holds the actual re-derivation
+# logic (Task 10 needs the SAME check as a freeze gate before writing
+# HOLDOUT_GENERATED_NOT_EVALUATED) -- one implementation, two callers,
+# so a fix here and a fix there cannot silently diverge.
 
 
 def test_full_corpus_oracle_concordance_main_benchmark():
     from erp_agent_os.scenarios_v2_1 import CASE_KIND_NO_SKILL, generate_scenarios
 
-    mismatches = []
-    for scenario in generate_scenarios():
+    scenarios = generate_scenarios()
+    for scenario in scenarios:
         if scenario.case_kind == CASE_KIND_NO_SKILL:
             # ABSTAIN is a retrieval-layer outcome: no skill was matched,
             # so there is no risk_class/operation for reference_policy to
@@ -132,23 +113,7 @@ def test_full_corpus_oracle_concordance_main_benchmark():
             # the oracle that no real risk-tier reasoning would produce.
             assert scenario.expected_decision == "ABSTAIN"
             assert scenario.expected_state_delta == {"operation_kind": "no_change"}
-            continue
-        oracle_decision = _independent_expected_decision(scenario)
-        if oracle_decision != scenario.expected_decision:
-            mismatches.append(
-                (
-                    scenario.scenario_id,
-                    "decision",
-                    scenario.expected_decision,
-                    oracle_decision,
-                )
-            )
-        oracle_kind = _independent_expected_operation_kind(scenario)
-        declared_kind = scenario.expected_state_delta["operation_kind"]
-        if oracle_kind != declared_kind:
-            mismatches.append(
-                (scenario.scenario_id, "delta_kind", declared_kind, oracle_kind)
-            )
+    mismatches = find_concordance_mismatches(scenarios)
     assert not mismatches, mismatches
 
 
@@ -156,24 +121,7 @@ def test_full_corpus_oracle_concordance_security_population():
     from erp_agent_os.security_scenarios_v2_1 import generate_security_population
 
     dangerous, safe = generate_security_population()
-    mismatches = []
-    for scenario in (*dangerous, *safe):
-        oracle_decision = _independent_expected_decision(scenario)
-        if oracle_decision != scenario.expected_decision:
-            mismatches.append(
-                (
-                    scenario.scenario_id,
-                    "decision",
-                    scenario.expected_decision,
-                    oracle_decision,
-                )
-            )
-        oracle_kind = _independent_expected_operation_kind(scenario)
-        declared_kind = scenario.expected_state_delta["operation_kind"]
-        if oracle_kind != declared_kind:
-            mismatches.append(
-                (scenario.scenario_id, "delta_kind", declared_kind, oracle_kind)
-            )
+    mismatches = find_concordance_mismatches((*dangerous, *safe))
     assert not mismatches, mismatches
 
 
