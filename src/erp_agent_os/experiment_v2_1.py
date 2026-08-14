@@ -60,8 +60,7 @@ from erp_agent_os.evidence_v2_1 import (
     System,
     surface_id_for,
 )
-from erp_agent_os.experiment import REFERENCE_FIELDS  # pure data reuse, no v1 behavior
-from erp_agent_os.handlers import HANDLERS, SKILL_MODELS
+from erp_agent_os.handlers import HANDLERS, REFERENCE_FIELDS, SKILL_MODELS
 from erp_agent_os.llm_client import (
     EXTRACTION_SYSTEM_PROMPT,
     SELECTION_SYSTEM_PROMPT,
@@ -279,12 +278,10 @@ def _observe_delta(
         before_fields = before_rows[rid]
         diffs = {k: v for k, v in fields.items() if before_fields.get(k) != v}
         if diffs:
-            field_name, field_value = next(iter(diffs.items()))
             return {
                 "operation_kind": "update_one_allowed_field",
                 "match": before_fields,
-                "field_name": field_name,
-                "field_value": field_value,
+                "new_fields": diffs,
             }
 
     if risk_class == "R3":

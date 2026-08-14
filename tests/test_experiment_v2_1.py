@@ -202,45 +202,43 @@ def test_run_c_produces_a_structurally_and_semantically_valid_main_row():
     validate_arm_semantics(observation)  # does not raise
 
 
-def test_KNOWN_GAP_gold_state_delta_omits_handler_derived_fields():
-    """Real, measured, NOT fixed here: found while wiring Task 8, not
-    while auditing a published result. scenarios_v2_1._delta_for builds
-    `expected_state_delta.new_fields` as a literal copy of the scenario's
-    OWN arguments -- but several of the 12 real, frozen handlers
-    (erp_agent_os.handlers) write additional or differently-named fields
-    (e.g. crm_create_opportunity also writes state="open";
-    sales_add_quote_line writes last_line_product/last_line_quantity,
-    not product_name/quantity; sales_confirm_order writes state=
-    "confirmed", a field that never appears in its arguments at all).
-    Task 8's `_observe_delta` reads the REAL post-execution state and is
-    accurate; the mismatch is entirely upstream, in already-committed
-    Task 4 gold construction. Fixing it needs the same real-handler-
-    aware delta derivation for BOTH scenarios_v2_1.py and
-    security_scenarios_v2_1.py, plus re-verifying every existing test
-    that asserts a specific expected_state_delta shape -- deliberately
-    scoped OUT of this task rather than rushed.
-
-    This test locks in the CURRENT, measured extent of the gap so it
-    cannot silently grow unnoticed: of the 60 "normal" scenarios with an
-    expected skill, run through the real system with perfect argument
-    extraction, most currently do NOT reach a fully accurate STSR --
-    if this number changes, something about the gap changed too."""
+def test_gold_state_delta_matches_real_handler_output_whenever_retrieval_succeeds():
+    """Regression for a real gap found while wiring this module (fixed in
+    scenarios_v2_1.sandbox_execute, not here): `expected_state_delta`
+    used to be built as a literal copy of a scenario's own arguments,
+    but several of the 12 real, frozen handlers write additional or
+    differently-named fields (crm_create_opportunity also writes
+    state="open"; sales_add_quote_line writes last_line_product/
+    last_line_quantity, not product_name/quantity; sales_confirm_order
+    writes state="confirmed", absent from its arguments entirely).
+    Measured before the fix: only 23/60 "normal" scenarios reached a
+    fully accurate STSR with perfect argument extraction; after it,
+    every single scenario the retriever actually identifies correctly
+    does (44/44) -- the remaining 16/60 fail on retrieval margin/
+    confusability between near-synonymous skill descriptions (TF-IDF's
+    own, separately-documented limitation, H5's concern, not gold
+    accuracy), never on a state-delta mismatch. This test locks in that
+    100% conditional rate so gold accuracy cannot silently regress."""
     scenarios = [
         s
         for s in generate_scenarios()
         if s.case_kind == CASE_KIND_NORMAL and s.expected_skill is not None
     ]
     context = _context(max_call_attempts=1)
-    successes = 0
+    retrieved_correctly = 0
+    fully_successful = 0
     for scenario in scenarios:
         surface = render_surface(scenario, SurfaceKind.S1_TEMPLATE)
         llm = _CountingFakeLLM(extraction=dict(scenario.arguments))
         observation = run_c(scenario, surface, context, llm)
-        if observation.evaluator_components["success"]:
-            successes += 1
+        if observation.evaluator_components["action_correct"]:
+            retrieved_correctly += 1
+            if observation.evaluator_components["success"]:
+                fully_successful += 1
 
     assert len(scenarios) == 60
-    assert successes == 23  # measured on 2026-08-15; see docstring above
+    assert retrieved_correctly == 44  # measured 2026-08-15; TF-IDF's own limitation
+    assert fully_successful == retrieved_correctly
 
 
 def test_run_c_records_exactly_one_extraction_call_and_zero_selection_calls():
@@ -281,7 +279,31 @@ def test_run_a_maps_its_generic_tool_call_back_onto_the_catalog_skill():
 
     assert observation.system == "A"
     assert observation.selected_skill_id == scenario.expected_skill
-    assert observation.evaluator_components["success"] is True
+    assert observation.evaluator_components["action_correct"] is True
+
+
+def test_run_a_final_state_diverges_from_a_governed_handlers_real_output():
+    """System A writes raw arguments straight to FakeERPAdapter, bypassing
+    the real handler entirely (CLAUDE.md section 18: no skill registry,
+    no governance at all) -- so for a skill whose real handler derives an
+    extra field (crm.create_opportunity also writes state="open"), A's
+    record is legitimately INCOMPLETE relative to what a governed
+    execution actually produces. Gold now reflects the real handler's
+    output (scenarios_v2_1.sandbox_execute); this is what exposes the
+    gap, not a bug in this test or in System A's own wiring."""
+    scenario, _ = _normal_r1_scenario()
+    assert scenario.expected_skill == "crm.create_opportunity"
+    surface = render_surface(scenario, SurfaceKind.S1_TEMPLATE)
+    llm = _CountingFakeLLM(tool_name="create_record")
+    context = _context()
+
+    observation = run_a(scenario, surface, context, llm)
+
+    written_record = next(
+        iter(observation.final_state["records"]["crm.opportunity"].values())
+    )
+    assert observation.evaluator_components["final_state_correct"] is False
+    assert "state" not in written_record
 
 
 # --------------------------------------------- comparable inputs (step 2)

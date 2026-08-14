@@ -34,7 +34,7 @@ from erp_agent_os.evidence import (
     execution_record_from_dict,
     execution_record_to_dict,
 )
-from erp_agent_os.handlers import HANDLERS, SKILL_MODELS
+from erp_agent_os.handlers import HANDLERS, REFERENCE_FIELDS, SKILL_MODELS
 from erp_agent_os.llm_client import CachingLLMClient, LLMClient
 from erp_agent_os.metrics import ExecutionRecord
 from erp_agent_os.parser import structure_proposal
@@ -53,14 +53,6 @@ logger = logging.getLogger(__name__)
 
 ROLE = "erp_user"
 REPETITIONS = 3
-
-REFERENCE_FIELDS: dict[str, list[str]] = {
-    "crm.update_expected_revenue": ["opportunity_id"],
-    "sales.add_quote_line": ["quote_id"],
-    "sales.confirm_order": ["order_id"],
-    "product.update_field": ["product_name"],
-    "inventory.check_availability": ["product_name"],
-}
 
 
 @dataclass(frozen=True)

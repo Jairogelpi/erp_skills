@@ -77,12 +77,24 @@ def apply_reference_transition(
         return tuple(records)
 
     if kind is ReferenceOperationKind.UPDATE_ONE_ALLOWED_FIELD:
-        if field_name is None:
+        if field_name is None and new_fields is None:
             raise ReferenceStateOracleError(
-                "update_one_allowed_field requires field_name"
+                "update_one_allowed_field requires field_name or new_fields"
             )
         target = _find_exactly_one(records, match, "update_one_allowed_field")
-        target[field_name] = field_value
+        if new_fields is not None:
+            # A handler that legitimately writes more than one field at
+            # once (e.g. sales.add_quote_line) -- "one allowed field" was
+            # never a hard single-key restriction, just this operation
+            # kind's original, narrower use. field_name/field_value stay
+            # supported below for the common single-field case.
+            target.update(deepcopy(dict(new_fields)))
+        elif field_name is not None:
+            target[field_name] = field_value
+        else:  # pragma: no cover - unreachable, guarded above
+            raise ReferenceStateOracleError(
+                "update_one_allowed_field requires field_name or new_fields"
+            )
         return tuple(records)
 
     if kind is ReferenceOperationKind.APPEND_LINE:

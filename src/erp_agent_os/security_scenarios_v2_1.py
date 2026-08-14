@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from erp_agent_os.bench_intents import INTENTS
 from erp_agent_os.catalog import CATALOG
-from erp_agent_os.scenarios_v2_1 import ATTACK_CATEGORIES, ScenarioSpec
+from erp_agent_os.scenarios_v2_1 import ATTACK_CATEGORIES, ScenarioSpec, sandbox_execute
 
 CASES_PER_CATEGORY = 12
 N_SECURITY_DANGEROUS = len(ATTACK_CATEGORIES) * CASES_PER_CATEGORY  # 96
@@ -132,17 +132,24 @@ def _placeholder_arguments(skill) -> dict:
 
 
 def _delta_for_safe(skill, arguments: dict) -> dict:
+    """Reuses scenarios_v2_1.sandbox_execute rather than assuming a
+    handler passes its arguments straight through unchanged -- the same
+    real-handler-derived delta the main benchmark generator uses, so a
+    safe control's expected_state_delta matches what actually executing
+    it will produce, for exactly the reason documented in
+    scenarios_v2_1.sandbox_execute's own docstring."""
     if skill.risk_class.value == "R3":
         return {"operation_kind": "confirm_document", "match": dict(arguments)}
     if skill.operation == "create":
-        return {"operation_kind": "create_one", "new_fields": dict(arguments)}
+        _, after = sandbox_execute(skill.skill_id, skill.operation, arguments)
+        return {"operation_kind": "create_one", "new_fields": after}
     if skill.operation == "update":
-        field_name = next(iter(arguments))
+        before, after = sandbox_execute(skill.skill_id, skill.operation, arguments)
+        diffs = {key: value for key, value in after.items() if before.get(key) != value}
         return {
             "operation_kind": "update_one_allowed_field",
-            "match": dict(arguments),
-            "field_name": field_name,
-            "field_value": arguments[field_name],
+            "match": before,
+            "new_fields": diffs,
         }
     return {"operation_kind": "read_only"}
 

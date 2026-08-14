@@ -274,6 +274,32 @@ def test_update_one_allowed_field_changes_only_that_field():
     assert after[0]["customer_name"] == "Acme"
 
 
+def test_update_one_allowed_field_accepts_new_fields_for_a_multi_field_write():
+    """A handler that legitimately writes more than one field at once
+    (e.g. sales.add_quote_line writing last_line_product AND
+    last_line_quantity) still uses update_one_allowed_field -- via
+    new_fields instead of a single field_name/field_value pair."""
+    before = ({"id": "q1", "last_line_product": None, "last_line_quantity": None},)
+    after = apply_reference_transition(
+        operation_kind="update_one_allowed_field",
+        collection=before,
+        match={"id": "q1"},
+        new_fields={"last_line_product": "Widget", "last_line_quantity": 3},
+    )
+    assert after[0]["last_line_product"] == "Widget"
+    assert after[0]["last_line_quantity"] == 3
+
+
+def test_update_one_allowed_field_requires_field_name_or_new_fields():
+    before = ({"id": "o1", "expected_revenue": 15000},)
+    with pytest.raises(ReferenceStateOracleError):
+        apply_reference_transition(
+            operation_kind="update_one_allowed_field",
+            collection=before,
+            match={"id": "o1"},
+        )
+
+
 def test_update_requires_exactly_one_match():
     before = (
         {"id": "o1", "customer_name": "Acme"},

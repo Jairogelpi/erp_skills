@@ -121,8 +121,65 @@ def _pick_arguments(intent: IntentSpec, rng: random.Random) -> dict[str, Any]:
     return arguments
 
 
+def sandbox_execute(
+    skill_id: str, operation: str, arguments: dict[str, Any]
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Runs the REAL, frozen handler (erp_agent_os.handlers) against a
+    throwaway FakeERPAdapter to derive what it actually writes, instead
+    of assuming a handler passes its arguments straight through
+    unchanged -- several of the 12 handlers do not (crm_create_
+    opportunity also writes state="open"; sales_add_quote_line writes
+    last_line_product/last_line_quantity, not product_name/quantity;
+    sales_confirm_order writes state="confirmed", a field absent from
+    its arguments entirely). Generation-time only: the evaluator
+    (erp_agent_os.evaluator_v2_1) and both reference oracles never
+    import this module for this reason, or erp_agent_os.handlers/
+    adapters at all -- see their own module docstrings.
+
+    Returns (before_fields, after_fields) for the one touched record.
+    """
+    from erp_agent_os.adapters import FakeERPAdapter
+    from erp_agent_os.handlers import HANDLERS, REFERENCE_FIELDS, SKILL_MODELS
+
+    model: str = SKILL_MODELS[skill_id]
+    handler = HANDLERS[skill_id]
+    erp = FakeERPAdapter(allowed_models={model})
+
+    if operation == "create":
+        created_id = handler(erp, dict(arguments))
+        # Every "create" skill's handler returns the new record's id as
+        # a plain string (erp_agent_os.handlers) -- asserted, not just
+        # assumed, since HANDLERS' shared type spans handlers that
+        # return other shapes (e.g. a dict of read results) for
+        # operations sandbox_execute does not call it for.
+        assert isinstance(created_id, str)
+        return {}, dict(erp.get(model, created_id))
+
+    if operation != "update":
+        raise ScenarioGenerationError(
+            f"sandbox_execute only supports create/update, got {operation!r}"
+        )
+
+    reference_id: str | None = None
+    for reference_field in REFERENCE_FIELDS.get(skill_id, []):
+        if arguments.get(reference_field):
+            reference_id = str(arguments[reference_field])
+            break
+    if reference_id is None:
+        raise ScenarioGenerationError(
+            f"cannot sandbox-execute update for {skill_id}: no reference id argument"
+        )
+    seed_fields = {"stock": 10} if model == "product.product" else {"seeded": True}
+    erp.create(model, seed_fields, record_id=reference_id)
+    before = dict(erp.get(model, reference_id))
+    handler(erp, dict(arguments))
+    after = dict(erp.get(model, reference_id))
+    return before, after
+
+
 def _delta_for(
     *,
+    skill_id: str,
     operation: str,
     risk_class: RiskClass,
     arguments: dict[str, Any],
@@ -133,16 +190,19 @@ def _delta_for(
     if risk_class is RiskClass.R3:
         return {"operation_kind": "confirm_document", "match": dict(arguments)}
     if operation == "create":
-        return {"operation_kind": "create_one", "new_fields": dict(arguments)}
+        _, after = sandbox_execute(skill_id, operation, arguments)
+        return {"operation_kind": "create_one", "new_fields": after}
     if operation == "update":
-        field_name = next(
-            f for f in arguments if f not in {"opportunity_id", "product_id"}
-        )
+        before, after = sandbox_execute(skill_id, operation, arguments)
+        diffs = {key: value for key, value in after.items() if before.get(key) != value}
+        if not diffs:
+            raise ScenarioGenerationError(
+                f"update handler for {skill_id} produced no observable diff"
+            )
         return {
             "operation_kind": "update_one_allowed_field",
-            "match": dict(arguments),
-            "field_name": field_name,
-            "field_value": arguments[field_name],
+            "match": before,
+            "new_fields": diffs,
         }
     return {"operation_kind": "read_only"}
 
@@ -193,6 +253,7 @@ def _compile_scenario(
             decision = "DENY"
 
     delta = _delta_for(
+        skill_id=skill.skill_id,
         operation=skill.operation,
         risk_class=skill.risk_class,
         arguments=arguments,
