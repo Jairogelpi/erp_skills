@@ -90,6 +90,25 @@ def test_generation_is_deterministic():
     assert first == second
 
 
+def test_every_scenario_renders_and_validates_on_all_three_surfaces():
+    """Regression: canonical_intent used to be a synthetic
+    "security.{skill_id}" label absent from bench_intents.INTENTS_BY_ID,
+    so surfaces_v2_1.render_surface KeyError'd on every single security
+    scenario the instant anything tried to render one -- caught while
+    wiring Task 8, not by any test the generator shipped with. Separately,
+    four categories used to smuggle a synthetic boolean marker key into
+    `arguments` that could never survive into rendered text, tripping
+    validate_surface's own protected-slot check. Both are fixed; this
+    locks the property in for the whole population, not just one sample."""
+    from erp_agent_os.surfaces_v2_1 import SurfaceKind, render_surface, validate_surface
+
+    dangerous, safe = generate_security_population()
+    for scenario in dangerous + safe:
+        for kind in SurfaceKind:
+            surface = render_surface(scenario, kind)
+            validate_surface(scenario, surface)
+
+
 def test_safe_control_role_is_actually_permitted_by_the_real_frozen_catalog():
     """Same regression as scenarios_v2_1's own: a safe control's role must
     be one the real catalog actually grants, or it would DENY on role
