@@ -1051,17 +1051,14 @@ def _primary_surfaces(scenarios: Sequence[ScenarioSpec]) -> dict[str, Surface]:
     }
 
 
-def run_main_arm(
-    scenarios: Sequence[ScenarioSpec],
-    llm_by_system: Mapping[System, LLMClient],
-    context: ArmRunContext,
-    *,
-    checkpoint_path: Path | None = None,
-) -> list[ObservationV21]:
+def build_main_arm_plan(scenarios: Sequence[ScenarioSpec]) -> list[dict[str, Any]]:
     """H1/H5/H6/H7: exactly one primary surface per scenario, one row
-    per (scenario, system)."""
+    per (scenario, system). A pure plan builder -- `len()` of its
+    result IS the arm's exact planned-unit count, with no separate
+    "count without executing" logic that could drift from what
+    `run_main_arm` actually runs, because it runs THIS SAME list."""
     surfaces = _primary_surfaces(scenarios)
-    plan = [
+    return [
         {
             "scenario": scenario,
             "surface": surfaces[scenario.scenario_id],
@@ -1071,16 +1068,20 @@ def run_main_arm(
         for scenario in scenarios
         for system in ("A", "B", "C")
     ]
-    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
 
 
-def run_h2_arm(
+def run_main_arm(
     scenarios: Sequence[ScenarioSpec],
     llm_by_system: Mapping[System, LLMClient],
     context: ArmRunContext,
     *,
     checkpoint_path: Path | None = None,
 ) -> list[ObservationV21]:
+    plan = build_main_arm_plan(scenarios)
+    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
+
+
+def build_h2_arm_plan(scenarios: Sequence[ScenarioSpec]) -> list[dict[str, Any]]:
     """Section 6.3: one predefined primary surface per scenario, one
     real uncached call per (system, case), only cases with an expected
     skill. Uses the SAME per-scenario primary surface as the main arm
@@ -1088,7 +1089,7 @@ def run_h2_arm(
     a different surface, only a different (token-measuring) purpose."""
     eligible = [s for s in scenarios if s.expected_skill is not None]
     surfaces = _primary_surfaces(scenarios)  # keyed by the FULL corpus's ordinals
-    plan = [
+    return [
         {
             "scenario": scenario,
             "surface": surfaces[scenario.scenario_id],
@@ -1098,21 +1099,25 @@ def run_h2_arm(
         for scenario in eligible
         for system in ("A", "B", "C")
     ]
-    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
 
 
-def run_h3a_arm(
+def run_h2_arm(
     scenarios: Sequence[ScenarioSpec],
     llm_by_system: Mapping[System, LLMClient],
     context: ArmRunContext,
     *,
     checkpoint_path: Path | None = None,
 ) -> list[ObservationV21]:
+    plan = build_h2_arm_plan(scenarios)
+    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
+
+
+def build_h3a_arm_plan(scenarios: Sequence[ScenarioSpec]) -> list[dict[str, Any]]:
     """H3a: all three surfaces of the SAME scenario, never treated as
     independent units -- the unit of inference stays the scenario; three
     rows sharing one scenario_id is what lets a caller later group them
     back into one "did all three surfaces agree" observation."""
-    plan = [
+    return [
         {
             "scenario": scenario,
             "surface": render_surface(scenario, kind),
@@ -1123,23 +1128,31 @@ def run_h3a_arm(
         for kind in SurfaceKind
         for system in ("A", "B", "C")
     ]
-    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
 
 
-def run_h3b_arm(
+def run_h3a_arm(
     scenarios: Sequence[ScenarioSpec],
     llm_by_system: Mapping[System, LLMClient],
     context: ArmRunContext,
     *,
     checkpoint_path: Path | None = None,
-    repetitions: int = 3,
 ) -> list[ObservationV21]:
+    plan = build_h3a_arm_plan(scenarios)
+    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
+
+
+def build_h3b_arm_plan(
+    scenarios: Sequence[ScenarioSpec], *, repetitions: int = 3
+) -> list[dict[str, Any]]:
     """H3b: `repetitions` independent, uncached calls on the SAME
     primary surface -- unique (scenario, system, repetition_index) keys,
     section 6.4's "no cache" applying here as much as everywhere else in
-    this module (this module has none, full stop)."""
+    this module (this module has none, full stop). `scenarios` here is
+    expected to already be the stratified section-6.4 sample (60 by
+    protocol default, see scenarios_v2_1.select_h3b_stratified_sample)
+    -- this function does not stratify or subsample by itself."""
     surfaces = _primary_surfaces(scenarios)
-    plan = [
+    return [
         {
             "scenario": scenario,
             "surface": surfaces[scenario.scenario_id],
@@ -1151,17 +1164,23 @@ def run_h3b_arm(
         for system in ("A", "B", "C")
         for repetition in range(repetitions)
     ]
-    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
 
 
-def run_h4_arm(
-    dangerous: Sequence[ScenarioSpec],
-    safe: Sequence[ScenarioSpec],
+def run_h3b_arm(
+    scenarios: Sequence[ScenarioSpec],
     llm_by_system: Mapping[System, LLMClient],
     context: ArmRunContext,
     *,
     checkpoint_path: Path | None = None,
+    repetitions: int = 3,
 ) -> list[ObservationV21]:
+    plan = build_h3b_arm_plan(scenarios, repetitions=repetitions)
+    return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
+
+
+def build_h4_arm_plan(
+    dangerous: Sequence[ScenarioSpec], safe: Sequence[ScenarioSpec]
+) -> list[dict[str, Any]]:
     """H4/H7: every power-selected dangerous scenario and its one-to-one
     safe control, through A/B/C once. security_pair_id/control_stratum
     are read straight off each ScenarioSpec's own scenario_id/
@@ -1203,7 +1222,40 @@ def run_h4_arm(
                         "control_stratum": stratum,
                     }
                 )
+    return plan
+
+
+def run_h4_arm(
+    dangerous: Sequence[ScenarioSpec],
+    safe: Sequence[ScenarioSpec],
+    llm_by_system: Mapping[System, LLMClient],
+    context: ArmRunContext,
+    *,
+    checkpoint_path: Path | None = None,
+) -> list[ObservationV21]:
+    plan = build_h4_arm_plan(dangerous, safe)
     return _run_plan(plan, llm_by_system, context, checkpoint_path=checkpoint_path)
+
+
+def build_h6_ablation_plan(scenarios: Sequence[ScenarioSpec]) -> list[dict[str, Any]]:
+    """H6: one row per scenario, system="C" (pre-relabel) -- the exact
+    plan `run_h6_ablation` executes before its own post-hoc relabel to
+    C_NO_ABSTENTION. `len()` of this equals `len(scenarios)`, always."""
+    surfaces = _primary_surfaces(scenarios)
+    return [
+        {
+            "scenario": scenario,
+            "surface": surfaces[scenario.scenario_id],
+            "system": "C",
+            "arm": "main",
+            "abstain": _h6_permissive_abstain,
+        }
+        for scenario in scenarios
+    ]
+
+
+def _h6_permissive_abstain(ranked: list[Any], missing: list[str]) -> bool:
+    return bool(missing) or not ranked
 
 
 def run_h6_ablation(
@@ -1219,18 +1271,7 @@ def run_h6_ablation(
     own ablation hook). Structurally there is nowhere else for a second
     difference to hide: this calls the identical `run_c`, with the
     identical llm/context, just a different `abstain` kwarg."""
-    surfaces = _primary_surfaces(scenarios)
-    permissive_abstain = lambda ranked, missing: bool(missing) or not ranked  # noqa: E731
-    plan = [
-        {
-            "scenario": scenario,
-            "surface": surfaces[scenario.scenario_id],
-            "system": "C",
-            "arm": "main",
-            "abstain": permissive_abstain,
-        }
-        for scenario in scenarios
-    ]
+    plan = build_h6_ablation_plan(scenarios)
     observations = _run_plan(
         plan,
         {"C": llm_c},

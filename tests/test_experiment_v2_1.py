@@ -13,6 +13,12 @@ from erp_agent_os.experiment_v2_1 import (
     RecordingLLMClient,
     _observe_delta,
     _side_effects,
+    build_h2_arm_plan,
+    build_h3a_arm_plan,
+    build_h3b_arm_plan,
+    build_h4_arm_plan,
+    build_h6_ablation_plan,
+    build_main_arm_plan,
     run_a,
     run_b,
     run_c,
@@ -105,12 +111,22 @@ def _known_fully_accurate_scenario():
     scenarios are not yet usable for this. crm.update_expected_revenue
     (R2) works here specifically because, unapproved, it never reaches
     execution at all -- both gold and the real observed delta correctly
-    agree on "no_change" without ever exercising the update-field gap."""
+    agree on "no_change" without ever exercising the update-field gap.
+    Looked up by property (skill/case_kind/risk), not a hardcoded
+    scenario_id -- the generator's exact id assignment is an
+    implementation detail (erp_agent_os.scenarios_v2_1's own
+    round-robin slot allocation), not a fixture contract."""
     scenarios = generate_scenarios()
     for scenario in scenarios:
-        if scenario.scenario_id == "scn-0002-0":
+        if (
+            scenario.expected_skill == "crm.update_expected_revenue"
+            and scenario.case_kind == CASE_KIND_NORMAL
+            and scenario.risk_class == "R2"
+        ):
             return scenario
-    raise AssertionError("expected fixture scenario scn-0002-0 not found")
+    raise AssertionError(
+        "expected a normal R2 crm.update_expected_revenue scenario, found none"
+    )
 
 
 # --------------------------------------------------------- retry telemetry
@@ -575,3 +591,55 @@ def test_h6_ablation_checkpoint_never_collides_with_main_arms(tmp_path):
 
     assert len(ablation) == 1
     assert ablation[0].system == "C_NO_ABSTENTION"
+
+
+# ============================================ plan-size-without-executing
+
+
+def test_build_main_arm_plan_size_matches_what_run_main_arm_actually_executes():
+    scenarios = _small_scenario_slice(3)
+    plan = build_main_arm_plan(scenarios)
+    observations = run_main_arm(scenarios, _llm_by_system(), _context())
+    assert len(plan) == len(observations) == len(scenarios) * 3
+
+
+def test_build_h2_arm_plan_size_matches_what_run_h2_arm_actually_executes():
+    scenarios = list(generate_scenarios())
+    no_skill = [s for s in scenarios if s.expected_skill is None]
+    sample = _small_scenario_slice(3) + no_skill[:1]
+    plan = build_h2_arm_plan(sample)
+    observations = run_h2_arm(sample, _llm_by_system(), _context())
+    assert len(plan) == len(observations) == 3 * 3  # the no_skill one excluded
+
+
+def test_build_h3a_arm_plan_size_matches_what_run_h3a_arm_actually_executes():
+    scenarios = _small_scenario_slice(2)
+    plan = build_h3a_arm_plan(scenarios)
+    observations = run_h3a_arm(scenarios, _llm_by_system(), _context())
+    assert (
+        len(plan) == len(observations) == len(scenarios) * 3 * 3
+    )  # surfaces x systems
+
+
+def test_build_h3b_arm_plan_size_matches_what_run_h3b_arm_actually_executes():
+    scenarios = _small_scenario_slice(2)
+    plan = build_h3b_arm_plan(scenarios, repetitions=3)
+    observations = run_h3b_arm(scenarios, _llm_by_system(), _context(), repetitions=3)
+    assert (
+        len(plan) == len(observations) == len(scenarios) * 3 * 3
+    )  # systems x repetitions
+
+
+def test_build_h4_arm_plan_size_matches_what_run_h4_arm_actually_executes():
+    dangerous, safe = generate_security_population()
+    plan = build_h4_arm_plan(dangerous[:2], safe[:2])
+    observations = run_h4_arm(dangerous[:2], safe[:2], _llm_by_system(), _context())
+    assert len(plan) == len(observations) == 2 * 2 * 3  # pairs x populations x systems
+
+
+def test_build_h6_ablation_plan_size_matches_what_run_h6_ablation_actually_executes():
+    scenarios = _small_scenario_slice(2)
+    plan = build_h6_ablation_plan(scenarios)
+    llm = _CountingFakeLLM(extraction={})
+    observations = run_h6_ablation(scenarios, llm, _context())
+    assert len(plan) == len(observations) == len(scenarios)

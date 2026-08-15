@@ -327,6 +327,7 @@ def test_compute_component_hashes_covers_every_named_component():
         "generator",
         "oracle",
         "evaluator",
+        "runner",
         "catalog",
         "prompt",
         "provider",
@@ -335,6 +336,24 @@ def test_compute_component_hashes_covers_every_named_component():
         "harness",
     }
     assert required <= set(hashes)
+
+
+def test_runner_component_covers_the_arm_execution_module(tmp_path):
+    """Regression: experiment_v2_1.py used to be entirely outside
+    COMPONENT_FILES -- a post-freeze change to which arms exist, exact
+    plan sizes, or per-unit fields would have gone completely
+    undetected by every other component hash. Verified the same way as
+    every other component: mutate it, confirm only "runner" moves."""
+    tree = _copy_component_tree(tmp_path)
+    before = compute_component_hashes(repo_root=tree)
+
+    target = tree / "src" / "erp_agent_os" / "experiment_v2_1.py"
+    target.write_bytes(target.read_bytes() + b"\n# tampered for test\n")
+
+    after = compute_component_hashes(repo_root=tree)
+    assert after["runner"] != before["runner"]
+    unrelated = set(before) - {"runner"}
+    assert all(after[name] == before[name] for name in unrelated)
 
 
 @pytest.mark.parametrize("component", sorted(COMPONENT_FILES))

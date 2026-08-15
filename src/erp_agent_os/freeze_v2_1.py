@@ -131,6 +131,15 @@ COMPONENT_FILES: dict[str, tuple[Path, ...]] = {
         Path("src") / "erp_agent_os" / "evaluator_v2_1.py",
         Path("src") / "erp_agent_os" / "audit_reconstruction.py",
     ),
+    # Not one of section 12's explicitly named categories, but a real
+    # gap closed here rather than left open: this is the code that
+    # decides WHAT gets executed and HOW (which arms exist, exact plan
+    # sizes, per-unit fields) -- a post-freeze change here would
+    # otherwise go completely undetected by every other component hash.
+    "runner": (
+        Path("src") / "erp_agent_os" / "experiment_v2_1.py",
+        Path("src") / "erp_agent_os" / "evidence_v2_1.py",
+    ),
     "catalog": (Path("src") / "erp_agent_os" / "catalog.py",),
     "prompt": (Path("src") / "erp_agent_os" / "llm_client.py",),
     "provider": (
@@ -374,8 +383,11 @@ def generate_holdout(
             "generate_holdout requires a real CodeFreezeManifest -- the "
             "holdout cannot be generated before CODE_FROZEN"
         )
-    main = generate_scenarios(seed=seed)
-    dangerous, safe = generate_security_population()
+    sizes = load_selected_sample_sizes()
+    main = generate_scenarios(seed=seed, n_main=sizes["n_main"])
+    dangerous, safe = generate_security_population(
+        n_dangerous=sizes["n_security_dangerous"]
+    )
     validate_full_corpus_concordance((*main, *dangerous, *safe))
 
     all_scenarios = sorted((*main, *dangerous, *safe), key=lambda s: s.scenario_id)
