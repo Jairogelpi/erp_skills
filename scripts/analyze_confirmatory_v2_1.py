@@ -2,10 +2,28 @@
 """Generate the v2.1 confirmatory report from raw JSONL only (Task 11).
 
     uv run python scripts/analyze_confirmatory_v2_1.py \\
-        --archive data/protocol_v2_1/runs/confirmatory_observations_<hash>.jsonl \\
+        --archive data/protocol_v2_1/runs/confirmatory_observations_v21_<hash>.jsonl \\
         --code-manifest-path data/protocol_v2_1/code_freeze_manifest.json \\
         --receipt-log data/protocol_v2_1/runs/receipts.jsonl \\
+        --protocol-hash <code_freeze_manifest.json's component_hashes.protocol> \\
+        --seed <the SAME --seed run_confirmatory_v2_1.py was launched with> \\
         --output data/protocol_v2_1/confirmatory_report.json
+
+`--protocol-hash` is read straight out of the already-generated
+`code_freeze_manifest.json`'s own `component_hashes.protocol` field --
+never recomputed here, so this report and `verify_code_freeze` can
+never silently disagree on what "the protocol" was.
+
+`--seed` should match the seed the real run's `generate_holdout` used
+(default 20260814 on both scripts). Verified empirically, not assumed:
+`scenario_id` and `expected_skill` assignment are seed-INVARIANT
+(section 5.1's ordinal/slot allocation depends only on n_main, never
+the seed; only argument VALUES are seeded) -- `gold_by_scenario_id`'s
+`expected_skill` lookup, the only gold field H5 reads, is therefore
+robust to an accidental seed mismatch here. Still pass the real one:
+it is what actually generated the campaign, and a future extension
+that reads a seed-sensitive gold field (arguments, expected_state_delta)
+would silently regress this guarantee if the value here were wrong.
 
 **Reads raw JSONL only.** Every number in the report is derived from
 `ObservationV21` rows loaded through `erp_agent_os.evidence_v2_1.
