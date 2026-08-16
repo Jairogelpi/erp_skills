@@ -122,6 +122,31 @@ def clopper_pearson_upper_bound(
     return float(stats.beta.ppf(confidence, successes + 1, trials - successes))
 
 
+def clopper_pearson_interval(
+    successes: int, trials: int, *, confidence: float = 0.95
+) -> tuple[float, float]:
+    """Two-sided Clopper-Pearson interval -- same method family as
+    `clopper_pearson_upper_bound` (never a different formula, e.g.
+    Wilson, for what is the same kind of single-proportion estimate),
+    used where a descriptive report needs both bounds rather than a
+    directional one-sided one (H3b, section 8: purely descriptive, no
+    comparator, no criterion)."""
+    if trials == 0:
+        raise StatisticsV21Error("cannot bound a rate over zero trials")
+    alpha = 1 - confidence
+    low = (
+        0.0
+        if successes == 0
+        else float(stats.beta.ppf(alpha / 2, successes, trials - successes + 1))
+    )
+    high = (
+        1.0
+        if successes == trials
+        else float(stats.beta.ppf(1 - alpha / 2, successes + 1, trials - successes))
+    )
+    return low, high
+
+
 # --------------------------------------------------------------- H3a
 
 
@@ -222,6 +247,88 @@ def analyze_h3a(
         effect_size_name="odds_ratio",
         criterion=f"C exceeds {comparator_name} in consistent-trio proportion",
         verdict="supported" if supported else "not_supported",
+    )
+
+
+# --------------------------------------------------------------- H3b
+
+
+def collapse_h3b_trio_consistency(
+    observations: Sequence[ObservationV21],
+) -> dict[tuple[str, str], bool]:
+    """Mirrors `collapse_h3a_trio_consistency` exactly, grouped by
+    (scenario_id, system) over the three independent `repetition_index`
+    values (0, 1, 2) of the SAME primary surface -- H3b's source of
+    variability is stochastic repetition (section 6.4: "tres llamadas
+    independientes, sin caché, con temperatura baja congelada"), not
+    paraphrase, so the group key differs (repetition_index instead of
+    surface_kind) but the per-row correctness check is identical."""
+    grouped: dict[tuple[str, str], list[ObservationV21]] = {}
+    for obs in observations:
+        if obs.arm != "h3b_repetition":
+            raise StatisticsV21Error(
+                f"collapse_h3b_trio_consistency received a non-h3b_repetition "
+                f"row (arm={obs.arm!r})"
+            )
+        grouped.setdefault((obs.scenario_id, obs.system), []).append(obs)
+
+    result: dict[tuple[str, str], bool] = {}
+    for key, rows in grouped.items():
+        if len(rows) != 3:
+            raise StatisticsV21Error(
+                f"expected exactly 3 repetition rows for {key}, got {len(rows)}"
+            )
+        indices = {row.repetition_index for row in rows}
+        if indices != {0, 1, 2}:
+            raise StatisticsV21Error(f"{key} is missing a repetition_index: {indices}")
+        consistent = all(
+            row.evaluator_components.get("action_correct")
+            and row.evaluator_components.get("arguments_correct")
+            and row.evaluator_components.get("final_state_correct")
+            for row in rows
+        )
+        result[key] = consistent
+    return result
+
+
+def analyze_h3b(consistency_c: Mapping[str, bool]) -> AnalysisResult:
+    """Secondary, purely descriptive (docs/tfm-closure-no-human-v2.1.md
+    section 8, H3b): "se reportará coincidencia de acción, argumentos y
+    estado final. No sustituye a H3a ni se promoverá a primaria después
+    de ver resultados." The protocol text states no criterion and names
+    no comparator -- unlike H3a, this is not "C exceeds A/B", it is
+    "how consistent is C's own behavior across repeated calls", which is
+    what a deployer of C actually needs to know operationally.
+
+    `verdict` is always the literal string "observed", which
+    `erp_agent_os.claims_v2_1.verdict_indicates_criterion_met`
+    deliberately does not recognize -- a caller MUST route this result
+    through `EvidenceState.OBSERVED_DESCRIPTIVE` directly rather than
+    the confirmatory supported/not_supported gate every other
+    hypothesis here uses; a comparative-sounding verdict string would
+    let this secondary, non-preregistered-criterion result masquerade
+    as a confirmatory one."""
+    n = len(consistency_c)
+    if n == 0:
+        raise StatisticsV21Error("cannot analyze H3b over zero scenarios")
+    successes = sum(consistency_c.values())
+    estimate = successes / n
+    ci_low, ci_high = clopper_pearson_interval(successes, n)
+    return AnalysisResult(
+        hypothesis="h3b",
+        population="main",
+        unit="scenario",
+        n=n,
+        estimate=estimate,
+        ci_low=ci_low,
+        ci_high=ci_high,
+        test="clopper_pearson",
+        p_value=float("nan"),
+        adjusted_p_value=None,
+        effect_size=estimate,
+        effect_size_name="trio_consistency_rate",
+        criterion="descriptive only -- section 8 H3b states no directional criterion",
+        verdict="observed",
     )
 
 

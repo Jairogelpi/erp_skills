@@ -15,6 +15,7 @@ from erp_agent_os.statistics_v2_1 import (
     analyze_h1b,
     analyze_h2,
     analyze_h3a,
+    analyze_h3b,
     analyze_h4_binary_endpoint,
     analyze_h4_unauthorized_mutation,
     analyze_h5,
@@ -22,9 +23,11 @@ from erp_agent_os.statistics_v2_1 import (
     analyze_h7,
     apply_h1b_holm_family,
     apply_h4_holm_family,
+    clopper_pearson_interval,
     clopper_pearson_upper_bound,
     cluster_bootstrap_one_sided,
     collapse_h3a_trio_consistency,
+    collapse_h3b_trio_consistency,
     compute_detection_confusion,
     compute_retrieval_metrics,
     practically_relevant,
@@ -268,6 +271,153 @@ def test_h3a_supported_when_c_strictly_more_consistent():
     a = dict.fromkeys(ids, False)
     result = analyze_h3a(c, a, comparator_name="A")
     assert result.verdict == "supported"
+
+
+# --------------------------------------------------------------------- H3b
+
+
+def _h3b_row(
+    scenario_id: str, system: str, repetition_index: int, *, consistent: bool
+) -> ObservationV21:
+    components = {
+        "action_correct": consistent,
+        "arguments_correct": consistent,
+        "policy_correct": True,
+        "final_state_correct": consistent,
+        "no_duplicate_mutation": True,
+        "no_unrelated_side_effect": True,
+        "success": consistent,
+    }
+    return ObservationV21(
+        protocol_version="2.1.0",
+        frozen_commit="abc",
+        dataset_hash="d",
+        scenario_id=scenario_id,
+        surface_id=f"{scenario_id}:S1",
+        surface_kind="S1",
+        security_pair_id=None,
+        population="main",
+        control_stratum=None,
+        system=system,
+        arm="h3b_repetition",
+        repetition_index=repetition_index,
+        provider="fake",
+        model="fake-model",
+        provider_config_hash="cfg",
+        selection_prompt_hash=None,
+        extraction_prompt_hash="ext",
+        started_at="2026-08-15T00:00:00Z",
+        completed_at="2026-08-15T00:00:01Z",
+        correlation_id=scenario_id,
+        request_text="texto",
+        extracted_arguments={},
+        selected_skill_id="crm.create_opportunity" if consistent else None,
+        ranked_skill_ids=(),
+        candidate_scores={},
+        policy_decision="ALLOW",
+        policy_reasons=(),
+        call_events=(),
+        latency_seconds=0.1,
+        initial_state={},
+        final_state={},
+        observed_state_delta={"operation_kind": "no_change"},
+        postcondition_evidence={},
+        side_effects=(),
+        raw_trace={"x": 1},
+        normalized_trace={"x": 1},
+        evaluator_components=components,
+        code_version_hash="code",
+        dependency_lock_hash="lock",
+    )
+
+
+def test_collapse_h3b_trio_consistency_requires_all_three_agreeing():
+    rows = [
+        _h3b_row("scn-1", "C", 0, consistent=True),
+        _h3b_row("scn-1", "C", 1, consistent=True),
+        _h3b_row("scn-1", "C", 2, consistent=False),
+    ]
+    collapsed = collapse_h3b_trio_consistency(rows)
+    assert collapsed[("scn-1", "C")] is False
+
+
+def test_collapse_h3b_trio_consistency_true_when_all_three_agree():
+    rows = [
+        _h3b_row("scn-1", "C", 0, consistent=True),
+        _h3b_row("scn-1", "C", 1, consistent=True),
+        _h3b_row("scn-1", "C", 2, consistent=True),
+    ]
+    collapsed = collapse_h3b_trio_consistency(rows)
+    assert collapsed[("scn-1", "C")] is True
+
+
+def test_collapse_h3b_rejects_a_non_h3b_row():
+    row = _h3b_row("scn-1", "C", 0, consistent=True)
+    bad = ObservationV21(**{**row.model_dump(mode="json"), "arm": "main"})
+    with pytest.raises(StatisticsV21Error):
+        collapse_h3b_trio_consistency([bad])
+
+
+def test_collapse_h3b_rejects_incomplete_trios():
+    rows = [_h3b_row("scn-1", "C", 0, consistent=True)]
+    with pytest.raises(StatisticsV21Error):
+        collapse_h3b_trio_consistency(rows)
+
+
+def test_collapse_h3b_rejects_a_duplicate_repetition_index():
+    rows = [
+        _h3b_row("scn-1", "C", 0, consistent=True),
+        _h3b_row("scn-1", "C", 0, consistent=True),
+        _h3b_row("scn-1", "C", 2, consistent=True),
+    ]
+    with pytest.raises(StatisticsV21Error):
+        collapse_h3b_trio_consistency(rows)
+
+
+def test_clopper_pearson_interval_contains_the_point_estimate():
+    low, high = clopper_pearson_interval(45, 50)
+    assert low <= 0.9 <= high
+
+
+def test_clopper_pearson_interval_is_zero_to_one_bounded_at_extremes():
+    low_all_success, high_all_success = clopper_pearson_interval(50, 50)
+    assert high_all_success == 1.0
+    low_all_failure, high_all_failure = clopper_pearson_interval(0, 50)
+    assert low_all_failure == 0.0
+
+
+def test_clopper_pearson_interval_rejects_zero_trials():
+    with pytest.raises(StatisticsV21Error):
+        clopper_pearson_interval(0, 0)
+
+
+def test_analyze_h3b_is_descriptive_never_a_confirmatory_verdict():
+    """H3b is secondary/descriptive (docs/tfm-closure-no-human-v2.1.md
+    section 8): "se reportará coincidencia... No sustituye a H3a ni se
+    promoverá a primaria". Its verdict must never be one of the
+    confirmatory supported/not_supported strings claims_v2_1 maps to a
+    CONFIRMATORY_* evidence state -- only a report generator that
+    explicitly bypasses that gate (OBSERVED_DESCRIPTIVE) may publish it."""
+    ids = _scenarios(50)
+    consistency_c = _uniform(ids, True)
+    result = analyze_h3b(consistency_c)
+    assert result.verdict == "observed"
+    assert result.hypothesis == "h3b"
+    assert result.n == 50
+    assert result.estimate == 1.0
+
+
+def test_analyze_h3b_estimate_matches_the_observed_rate():
+    ids = _scenarios(20)
+    consistency_c = {**_uniform(ids[:15], True), **_uniform(ids[15:], False)}
+    result = analyze_h3b(consistency_c)
+    assert result.estimate == pytest.approx(0.75)
+    assert result.ci_low <= result.estimate <= result.ci_high
+
+
+def test_analyze_h3b_rejects_an_empty_population():
+    with pytest.raises(StatisticsV21Error):
+        analyze_h3b({})
 
 
 # --------------------------------------------------------------------- H4

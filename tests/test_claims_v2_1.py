@@ -149,6 +149,18 @@ def test_verdict_indicates_criterion_met_rejects_an_unknown_verdict():
         verdict_indicates_criterion_met("definitely_not_a_real_verdict")
 
 
+def test_verdict_indicates_criterion_met_rejects_observed():
+    """H3b/H8 (docs/tfm-closure-no-human-v2.1.md section 8/10) are
+    descriptive, not confirmatory: erp_agent_os.statistics_v2_1.
+    analyze_h3b always sets verdict="observed" specifically so it
+    CANNOT pass through this confirmatory gate -- a report generator
+    must route it through EvidenceState.OBSERVED_DESCRIPTIVE directly.
+    If "observed" were ever added to a recognized verdict set, this
+    protection would silently disappear."""
+    with pytest.raises(ClaimsV21Error):
+        verdict_indicates_criterion_met("observed")
+
+
 def test_evidence_state_for_result_wires_a_real_analysis_result_through():
     result = _result("superior")
     assert (
