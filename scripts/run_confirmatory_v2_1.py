@@ -277,10 +277,31 @@ def _run_dry(args: argparse.Namespace) -> int:
     return 0 if result.ok else 1
 
 
+def _count_checkpointed_units(checkpoint_dir: Path) -> int:
+    """Sums real, already-persisted rows across every arm's checkpoint
+    file -- the only trustworthy source of "how much actually completed"
+    when a process was killed hard enough that no Python-level count
+    (like the in-memory `all_observations` list) ever got a chance to
+    be read. A file that does not exist yet contributes zero, not an
+    error -- an interruption during the very first arm is a normal case,
+    not a broken one."""
+    total = 0
+    for name in ("main", "h2", "h3a", "h3b", "h4", "h6"):
+        path = checkpoint_dir / f"{name}.jsonl"
+        if path.exists():
+            total += sum(
+                1
+                for line in path.read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            )
+    return total
+
+
 def _run_real(args: argparse.Namespace) -> int:
     code_manifest = _load_code_manifest(args.code_manifest_path)
     protocol = load_protocol(args.protocol_path)
     receipt_log = args.receipt_log
+    checkpoint_dir = args.output_dir / "checkpoints"
     state = current_state(receipt_log)
 
     # A fresh receipt log has no CODE_FROZEN receipt yet -- nothing else
@@ -293,20 +314,51 @@ def _run_real(args: argparse.Namespace) -> int:
         record_code_frozen(receipt_log, code_manifest)
         state = current_state(receipt_log)
 
-    if state.value == "CODE_FROZEN":
+    # The state machine has no RUN_STARTED -> RUN_STARTED edge (section
+    # 12's transitions only allow RUN_STARTED -> {RUN_INTERRUPTED_
+    # RESUMABLE, RUN_COMPLETED, RUN_FAILED_EXTERNAL}) -- reaching
+    # RUN_INTERRUPTED_RESUMABLE is normally this script's own
+    # `except KeyboardInterrupt` handler below, which requires a Python
+    # exception to actually run. A hard external kill (SIGKILL, the
+    # process being reaped) never gets that chance: the receipt log is
+    # left stuck at RUN_STARTED with no record of what happened. Record
+    # that missed transition honestly here, from what the checkpoint
+    # files actually show completed -- never from a number nobody
+    # observed -- before falling through to the normal resume path.
+    if state.value == "RUN_STARTED":
+        mark_interrupted(
+            receipt_log,
+            error_class="ExternalKill",
+            error_message=(
+                "process ended without a caught Python exception (a hard "
+                "external kill, not KeyboardInterrupt/an internal failure); "
+                "resumed by re-invoking this script"
+            ),
+            n_completed_units=_count_checkpointed_units(checkpoint_dir),
+        )
+        state = current_state(receipt_log)
+
+    resuming = state.value == "RUN_INTERRUPTED_RESUMABLE"
+    if resuming or state.value == "CODE_FROZEN":
+        # generate_holdout is a pure function of (code_manifest, seed) --
+        # verified empirically this session (scenario_id/expected_skill
+        # assignment does not even depend on the seed; only argument
+        # values do). Regenerating it on resume reproduces the EXACT
+        # same holdout, never a new one -- start_run's own resume branch
+        # additionally verifies the manifest hash matches before
+        # accepting it, so this is checked, not merely assumed.
         holdout, main, dangerous, safe = generate_holdout(code_manifest, seed=args.seed)
-        record_holdout_generated(receipt_log, holdout)
+        if not resuming:
+            record_holdout_generated(receipt_log, holdout)
     else:
         raise FreezeV21Error(
-            f"expected receipt log state CODE_FROZEN to generate a fresh holdout, "
-            f"got {state.value} -- this script does not re-derive an already-"
-            "generated holdout from the log alone in this version"
+            f"expected receipt log state CODE_FROZEN or RUN_INTERRUPTED_"
+            f"RESUMABLE, got {state.value}"
         )
 
     client, model, provider_config = _build_client(args.provider)
     context = _build_context(code_manifest, args.provider, model, provider_config)
 
-    checkpoint_dir = args.output_dir / "checkpoints"
     n_planned = _exact_planned_unit_count(main, dangerous, safe, protocol)
     start_run(
         receipt_log,
