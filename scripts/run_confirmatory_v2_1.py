@@ -74,6 +74,7 @@ from erp_agent_os.freeze_v2_1 import (
     load_selected_sample_sizes,
     mark_failed_external,
     mark_interrupted,
+    record_code_frozen,
     record_holdout_generated,
     start_run,
 )
@@ -281,6 +282,16 @@ def _run_real(args: argparse.Namespace) -> int:
     protocol = load_protocol(args.protocol_path)
     receipt_log = args.receipt_log
     state = current_state(receipt_log)
+
+    # A fresh receipt log has no CODE_FROZEN receipt yet -- nothing else
+    # in this repo's CLI tooling ever writes one (freeze_protocol_v2_1.py
+    # deliberately does not: "that is scripts/run_confirmatory_v2_1.py's
+    # job", by its own docstring). Recording it here, once, from
+    # DRAFT_PROTOCOL, is what actually fulfills that division of labor
+    # -- without this, a real run could never start at all.
+    if state.value == "DRAFT_PROTOCOL":
+        record_code_frozen(receipt_log, code_manifest)
+        state = current_state(receipt_log)
 
     if state.value == "CODE_FROZEN":
         holdout, main, dangerous, safe = generate_holdout(code_manifest, seed=args.seed)
