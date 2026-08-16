@@ -4,7 +4,7 @@
   "n_test_cases": 120,
   "n_total_cases": 480,
   "prompt_hash": "2d7042574cce0bcb4aa0a27d38fdd1d44a5ef19d6026ab2a260f0cf185241a95",
-  "provider_config_hash": "c1c2d1d7f7a0623b36ba97698ce27d8a3b6a1661117793d9d820663ef72f4fd3",
+  "provider_config_hash": "cc58aaeee0a7fc2d459ef25880cb9728f60b79dcd749edaacada92b9b4a659f5",
   "schema_version": "1.1",
   "seed": 20260805,
   "test_split_hash": "a7ae907e9952474ef77255c40ada71b7c5c9834b88ec4baf0434e3160b6574eb"

@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -100,6 +101,26 @@ def _load_code_manifest(path: Path) -> CodeFreezeManifest:
     return CodeFreezeManifest(**payload)
 
 
+def _min_interval_override(env_var: str, default: float) -> float:
+    """Lets an operator tune a provider's self-imposed call pacing
+    without a code change (and therefore without re-committing/
+    re-tagging/re-freezing) once real per-account rate limits are known
+    -- e.g. after upgrading to a paid tier, the free-tier-calibrated
+    hardcoded default in the client module can be far more conservative
+    than the account actually needs, adding hours to a real run for no
+    safety benefit. Missing or invalid input silently falls back to the
+    client module's own default -- never crashes a run over a malformed
+    env var."""
+    raw = os.environ.get(env_var)
+    if raw is None:
+        return default
+    try:
+        value = float(raw)
+    except ValueError:
+        return default
+    return value if value >= 0 else default
+
+
 def _build_client(provider: Provider) -> tuple[LLMClient, str, dict[str, object]]:
     """Returns (client, model, provider_config_dict). Imports the real
     provider module lazily so `--dry-run` never needs the SDK or API key
@@ -107,17 +128,30 @@ def _build_client(provider: Provider) -> tuple[LLMClient, str, dict[str, object]
     if provider == "groq":
         from erp_agent_os.groq_client import GroqClient, GroqConfig
 
-        config = GroqConfig()
+        config = GroqConfig(
+            min_interval_seconds=_min_interval_override(
+                "GROQ_MIN_INTERVAL_SECONDS", GroqConfig().min_interval_seconds
+            )
+        )
         return GroqClient(config), config.model, config.__dict__
     if provider == "gemini":
         from erp_agent_os.gemini_client import GeminiClient, GeminiConfig
 
-        config = GeminiConfig()
+        config = GeminiConfig(
+            min_interval_seconds=_min_interval_override(
+                "GEMINI_MIN_INTERVAL_SECONDS", GeminiConfig().min_interval_seconds
+            )
+        )
         return GeminiClient(config), config.model, config.__dict__
     if provider == "openrouter":
         from erp_agent_os.openrouter_client import OpenRouterClient, OpenRouterConfig
 
-        config = OpenRouterConfig()
+        config = OpenRouterConfig(
+            min_interval_seconds=_min_interval_override(
+                "OPENROUTER_MIN_INTERVAL_SECONDS",
+                OpenRouterConfig().min_interval_seconds,
+            )
+        )
         return OpenRouterClient(config), config.model, config.__dict__
     raise FreezeV21Error(f"unknown provider: {provider!r}")
 
