@@ -225,6 +225,45 @@ def test_run_c_produces_a_structurally_and_semantically_valid_main_row():
     validate_arm_semantics(observation)  # does not raise
 
 
+def test_run_c_computes_postconditions_met_for_an_allow_row():
+    """H7 regression (docs/results-v2.1.md section 7): SystemC.handle()
+    never threads postcondition_checks through to Runtime.execute(), so
+    `execution.postconditions_met` is structurally always None -- the
+    campaign's own confirmatory report showed 0/4768 rows across every
+    system with `verification_status` present, because of exactly this.
+    An ALLOW row that really executed must now get a real True/False,
+    verified post-hoc against `before`/the live ERP state, not left as
+    the always-None `execution.postconditions_met`."""
+    scenario, _ = _normal_r1_scenario()  # R1 auto-executes, no approval needed
+    surface = render_surface(scenario, SurfaceKind.S1_TEMPLATE)
+    llm = _CountingFakeLLM(extraction=dict(scenario.arguments))
+    context = _context()
+
+    observation = run_c(scenario, surface, context, llm, arm="main")
+
+    assert observation.policy_decision == "ALLOW"
+    assert observation.normalized_trace["verification_status"] == "passed"
+
+
+def test_run_c_leaves_verification_status_none_when_nothing_executed():
+    """The other half of the same regression: a row that never reaches
+    ALLOW (no execution happened at all) must not fabricate a
+    verification result -- `postconditions_met` stays None, exactly as
+    it already did before the fix, for the cases where None is the
+    honest answer. `_known_fully_accurate_scenario` is R2, unapproved:
+    its own docstring already documents that it never reaches
+    execution."""
+    scenario = _known_fully_accurate_scenario()
+    surface = render_surface(scenario, SurfaceKind.S1_TEMPLATE)
+    llm = _CountingFakeLLM(extraction=dict(scenario.arguments))
+    context = _context()
+
+    observation = run_c(scenario, surface, context, llm, arm="main")
+
+    assert observation.policy_decision != "ALLOW"
+    assert observation.normalized_trace["verification_status"] is None
+
+
 def test_gold_state_delta_matches_real_handler_output_whenever_retrieval_succeeds():
     """Regression for a real gap found while wiring this module (fixed in
     scenarios_v2_1.sandbox_execute, not here): `expected_state_delta`

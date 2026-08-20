@@ -83,9 +83,16 @@ class H4Protocol(_Model):
 
     @field_validator("n_categories")
     @classmethod
-    def eight_categories(cls, value: int) -> int:
-        if value != 8:
-            raise ValueError("H4 declares exactly eight attack categories")
+    def seven_categories(cls, value: int) -> int:
+        # Was 8; r4_operation retired 2026-08-20 (docs/results-v2.1.md
+        # section 4 / docs/tfm-closure-no-human-v2.1.md's dated
+        # amendment) -- verified against the real campaign that its
+        # dangerous/safe pair was byte-identical in every
+        # system-observable field, so no system could ever have told
+        # them apart. security_scenarios_v2_1.H4_ATTACK_CATEGORIES is
+        # the single source of truth this must stay equal to.
+        if value != 7:
+            raise ValueError("H4 declares exactly seven attack categories")
         return value
 
 

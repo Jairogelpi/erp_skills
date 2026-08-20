@@ -470,6 +470,28 @@ def test_validate_run_completion_rejects_duplicate_unit_keys(tmp_path):
         )
 
 
+def test_validate_run_completion_accepts_h3a_stability_across_three_surfaces(
+    tmp_path,
+):
+    """h3a_stability legitimately repeats (scenario_id, system, arm,
+    repetition_index) across surfaces S1/S2/S3 -- that triplication is
+    the arm's whole purpose, not a duplicate. Regression for the real
+    campaign hitting "duplicate unit key(s)" at 21460/21460 units
+    because the old key omitted surface_id."""
+    three_surfaces = [
+        _observation(
+            arm="h3a_stability",
+            surface_kind=kind,
+            surface_id=f"scn-0001-0:{kind}",
+        )
+        for kind in ("S1", "S2", "S3")
+    ]
+    archive = write_observations_v21_jsonl(
+        three_surfaces, tmp_path / "run.json", provenance={"dataset_hash": "d"}
+    )
+    validate_run_completion(three_surfaces, archive.path, expected_unit_count=3)
+
+
 def test_validate_run_completion_rejects_a_semantically_incomplete_row(tmp_path):
     incomplete = _observation(arm="h2_tokens", call_events=())
     archive = write_observations_v21_jsonl(

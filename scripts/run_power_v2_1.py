@@ -35,7 +35,7 @@ def run() -> dict:
     h4 = simulate_h4_power()
 
     n_main = max(120, h1a.n, h1b.n)
-    n_security_dangerous = max(96, h4.n)
+    n_security_dangerous = max(84, h4.n)  # 7 categories * 12 (r4_operation retired)
 
     report = {
         "schema_version": "1.0",

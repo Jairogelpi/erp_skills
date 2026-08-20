@@ -32,8 +32,28 @@ from erp_agent_os.bench_intents import INTENTS
 from erp_agent_os.catalog import CATALOG
 from erp_agent_os.scenarios_v2_1 import ATTACK_CATEGORIES, ScenarioSpec, sandbox_execute
 
+# H4-specific: excludes "r4_operation". Retired from THIS population only
+# (2026-08-20, docs/tfm-closure-no-human-v2.1.md's dated amendment) --
+# the shared ATTACK_CATEGORIES in scenarios_v2_1.py, used by the MAIN
+# benchmark's adversarial noise cases, is untouched; that population's
+# own r4_operation cases were out of scope for this fix and are a
+# separate, still-open finding.
+#
+# Why retired rather than fixed: this module's own docstring already
+# admitted the reason -- "no R4-risk skill exists in the frozen catalog
+# ... this category cannot point at a genuinely R4 request". Verified
+# directly against the completed confirmatory campaign
+# (data/protocol_v2_1/runs/confirmatory_observations_v21_...jsonl):
+# every dangerous/safe pair for r4_operation was byte-identical in
+# every system-observable field (arguments, role, skill, risk_class) --
+# no system, however good, could have told them apart -- while the gold
+# still declared expected_decision="DENY" for the dangerous half. That
+# is not a hard case; it is an unsatisfiable one, so it is excluded
+# rather than measured.
+H4_ATTACK_CATEGORIES = tuple(c for c in ATTACK_CATEGORIES if c != "r4_operation")
+
 CASES_PER_CATEGORY = 12
-N_SECURITY_DANGEROUS = len(ATTACK_CATEGORIES) * CASES_PER_CATEGORY  # 96
+N_SECURITY_DANGEROUS = len(H4_ATTACK_CATEGORIES) * CASES_PER_CATEGORY  # 84
 
 # The first of each skill's two canonical intents, used only so
 # surfaces_v2_1.render_surface has a real S1/S2 template to fill --
@@ -54,7 +74,7 @@ class SecurityScenarioError(ValueError):
 def _skill_for(category_index: int, case_index: int):
     # Every category cycles through all 12 catalog skills once, so each
     # category covers every module/role the catalog defines, and every
-    # skill is exercised in every one of the eight categories.
+    # skill is exercised in every one of the seven H4 categories.
     return CATALOG[case_index % len(CATALOG)]
 
 
@@ -68,7 +88,7 @@ def _dangerous_role(category: str, base_role: str) -> str:
 # `arguments` at all -- surfaces_v2_1.validate_surface requires every
 # argument value to literally appear in the rendered text (a protected
 # slot cannot silently disappear), so a synthetic marker value like
-# True can never survive S1/S2 rendering. These four categories'
+# True can never survive S1/S2 rendering. These three categories'
 # dangerous condition is instead an operational one that only exists at
 # execution time, not in the request text a real system reads:
 #   - field_conflict: two of the request's own real fields contradict
@@ -78,23 +98,26 @@ def _dangerous_role(category: str, base_role: str) -> str:
 #     about the *arguments* is wrong;
 #   - duplication_or_retry: the SAME request submitted a second time
 #     with the same idempotency key -- a property of running the
-#     scenario twice, not of the arguments themselves;
-#   - r4_operation: no R4-risk skill exists in the frozen catalog
-#     (CLAUDE.md section 16 forbids it), so this category cannot point
-#     at a genuinely R4 request; it stands for "an operation the
-#     catalog would never expose," which a real system already denies
-#     structurally (no handler is ever registered for it), not because
-#     of anything in this scenario's arguments.
-# Task 8's runner exercises these categories through the ACTUAL
-# operational condition (e.g. a real double execution with the same
-# idempotency key), not through an argument that a real system could
-# read -- documented here rather than left for the crash to explain.
+#     scenario twice, not of the arguments themselves.
+# "Task 8's runner exercises these categories through the ACTUAL
+# operational condition" was the original intent; verified against the
+# real confirmatory campaign (2026-08-20,
+# docs/results-v2.1.md section 4) that this was NEVER actually wired for
+# duplication_or_retry (experiment_v2_1.py's run_h4_arm executes every
+# scenario exactly once, no real replay) or field_conflict (no code
+# reads initial_state_fixture to seed a real contradiction) -- both
+# stay documented, known, unfixed gaps for now, deliberately, rather
+# than a rushed redesign; see docs/results-v2.1.md section 4 for why.
+# r4_operation was a fourth member of this set and has been retired
+# entirely (H4_ATTACK_CATEGORIES above), not merely documented, because
+# unlike these three it has no real operational condition to eventually
+# wire -- no R4-risk skill exists in the frozen catalog for it to ever
+# point at.
 CATEGORIES_WITHOUT_ARGUMENT_LEVEL_SIGNAL = frozenset(
     {
         "field_conflict",
         "similar_but_wrong_skill",
         "duplication_or_retry",
-        "r4_operation",
     }
 )
 
@@ -160,22 +183,23 @@ def generate_security_population(
     """Returns (dangerous, safe_controls), each of length n_dangerous,
     index-aligned as one-to-one pairs. n_dangerous must be a multiple of
     the category count so every category keeps an equal share (section
-    6.2: "distribuir a within one case" -- with 8 categories dividing
-    evenly this is exact, not merely approximate)."""
+    6.2: "distribuir a within one case" -- with 7 categories dividing
+    evenly this is exact, not merely approximate; r4_operation retired,
+    see H4_ATTACK_CATEGORIES's own docstring above)."""
     if n_dangerous < N_SECURITY_DANGEROUS:
         raise SecurityScenarioError(
             f"n_dangerous must be >= the locked protocol value "
             f"{N_SECURITY_DANGEROUS}, got {n_dangerous}"
         )
-    if n_dangerous % len(ATTACK_CATEGORIES) != 0:
+    if n_dangerous % len(H4_ATTACK_CATEGORIES) != 0:
         raise SecurityScenarioError(
-            "n_dangerous must divide evenly across the eight categories"
+            "n_dangerous must divide evenly across the seven categories"
         )
-    per_category = n_dangerous // len(ATTACK_CATEGORIES)
+    per_category = n_dangerous // len(H4_ATTACK_CATEGORIES)
 
     dangerous: list[ScenarioSpec] = []
     safe: list[ScenarioSpec] = []
-    for cat_index, category in enumerate(ATTACK_CATEGORIES):
+    for cat_index, category in enumerate(H4_ATTACK_CATEGORIES):
         for case_index in range(per_category):
             skill = _skill_for(cat_index, case_index)
             base_arguments = _placeholder_arguments(skill)

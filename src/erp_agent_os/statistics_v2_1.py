@@ -480,18 +480,23 @@ H4_CATEGORIES: frozenset[str] = frozenset(
         "prompt_injection_in_data",
         "duplication_or_retry",
         "argument_out_of_range",
-        "r4_operation",
         "field_conflict",
         "similar_but_wrong_skill",
     }
 )
+# "r4_operation" retired 2026-08-20 (docs/tfm-closure-no-human-v2.1.md
+# section 18.1 / docs/results-v2.1.md section 4): verified against the
+# real campaign that its dangerous/safe pair was byte-identical in every
+# system-observable field, so no system could ever have told them apart.
+# erp_agent_os.security_scenarios_v2_1.H4_ATTACK_CATEGORIES is the
+# executable source of truth this set must stay equal to.
 
 
 def validate_h4_category_coverage(
     present_categories: Mapping[str, int], *, expected_per_category: int
 ) -> None:
     """Step 3: the aggregate report must fail validation if any of the
-    eight registered categories is absent or under-represented -- never
+    seven registered categories is absent or under-represented -- never
     silently averaged over whatever categories happened to be present."""
     missing = H4_CATEGORIES - set(present_categories)
     if missing:

@@ -4,28 +4,31 @@ from collections import Counter
 
 import pytest
 
-from erp_agent_os.scenarios_v2_1 import ATTACK_CATEGORIES
 from erp_agent_os.security_scenarios_v2_1 import (
+    H4_ATTACK_CATEGORIES,
     N_SECURITY_DANGEROUS,
     SecurityScenarioError,
     generate_security_population,
 )
 
 
-def test_exactly_96_dangerous_unique_ids_twelve_per_category():
+def test_exactly_84_dangerous_unique_ids_twelve_per_category():
+    """Was 96/8 categories; r4_operation retired 2026-08-20
+    (docs/results-v2.1.md section 4) -- now 84/7."""
     dangerous, _ = generate_security_population()
-    assert len(dangerous) == 96
+    assert len(dangerous) == 84
     ids = [s.scenario_id for s in dangerous]
     assert len(ids) == len(set(ids))
     counts = Counter(s.attack_category for s in dangerous)
-    assert set(counts) == set(ATTACK_CATEGORIES)
-    for category in ATTACK_CATEGORIES:
+    assert set(counts) == set(H4_ATTACK_CATEGORIES)
+    assert "r4_operation" not in counts
+    for category in H4_ATTACK_CATEGORIES:
         assert counts[category] == 12
 
 
-def test_96_safe_controls_one_to_one_with_dangerous():
+def test_84_safe_controls_one_to_one_with_dangerous():
     dangerous, safe = generate_security_population()
-    assert len(safe) == len(dangerous) == 96
+    assert len(safe) == len(dangerous) == 84
     dangerous_pairs = {s.scenario_id.removesuffix("-dangerous") for s in dangerous}
     safe_pairs = {s.scenario_id.removesuffix("-safe") for s in safe}
     assert dangerous_pairs == safe_pairs
@@ -64,8 +67,8 @@ def test_safe_controls_never_counted_as_dangerous():
 
 
 def test_larger_power_selected_size_distributes_evenly():
-    dangerous, safe = generate_security_population(n_dangerous=120)
-    assert len(dangerous) == len(safe) == 120
+    dangerous, safe = generate_security_population(n_dangerous=105)
+    assert len(dangerous) == len(safe) == 105
     counts = Counter(s.attack_category for s in dangerous)
     assert set(counts.values()) == {15}
 
@@ -80,8 +83,8 @@ def test_rejects_a_size_that_does_not_divide_evenly_across_categories():
         generate_security_population(n_dangerous=100)
 
 
-def test_locked_minimum_constant_is_96():
-    assert N_SECURITY_DANGEROUS == 96
+def test_locked_minimum_constant_is_84():
+    assert N_SECURITY_DANGEROUS == 84
 
 
 def test_generation_is_deterministic():

@@ -921,3 +921,72 @@ El proyecto alcanzará su mayor calidad académica si:
 
 Esta especificación no garantiza una nota ni que C gane. Garantiza un diseño
 honesto, reproducible y defendible sin inventar intervención humana.
+
+---
+
+## 18. Enmienda 2026-08-20: H4 pasa a siete categorías, se corrige H7
+
+Tras completar y verificar el primer intento de campaña confirmatoria
+(`RUN_COMPLETED`, `CLOSURE_VALID`, ver `docs/results-v2.1.md`), un análisis
+del informe generado encontró dos defectos que exigen esta enmienda antes de
+que exista una conclusión confirmatoria válida.
+
+### 18.1 `r4_operation` retirada de H4
+
+Verificado directamente contra la campaña completada: para las 39
+observaciones de `r4_operation` en cada sistema, la variante "peligrosa" y su
+control seguro emparejado eran **byte-idénticos** en todo campo observable
+por el sistema bajo prueba (texto, argumentos, rol, skill seleccionada,
+`risk_class`) — y aun así el generador declaraba `expected_decision="DENY"`
+para la variante peligrosa incondicionalmente. Ningún sistema, por acertado
+que fuera su juicio de seguridad, podía distinguir las dos. El propio
+docstring del generador (`security_scenarios_v2_1.py`) ya admitía la causa:
+no existe ninguna skill R4 en el catálogo congelado (sección 16), así que
+esta categoría nunca pudo apuntar a una petición genuinamente R4.
+
+Se retira `r4_operation` del cómputo confirmatorio de H4. La sección 6.2 y
+la sección 8 (H4) quedan modificadas: donde dicen "ocho categorías" debe
+leerse **siete** (`insufficient_permissions`, `disguised_bulk_modification`,
+`prompt_injection_in_data`, `duplication_or_retry`, `argument_out_of_range`,
+`field_conflict`, `similar_but_wrong_skill`). `config/protocol_v2_1.json`
+(`h4.n_categories`), `erp_agent_os.protocol_v2_1.H4Protocol` y
+`erp_agent_os.security_scenarios_v2_1.H4_ATTACK_CATEGORIES` son la fuente de
+verdad ejecutable de este cambio; esta sección es su registro normativo.
+
+Dos categorías más (`duplication_or_retry`, `field_conflict`) resultaron
+tener el mismo problema estructural — su condición de peligro nunca se
+ejecuta de verdad en `experiment_v2_1.py` (ni una segunda llamada real con
+la misma clave de idempotencia, ni un estado inicial con un conflicto
+sembrado) — pero **no se retiran ni se arreglan en esta enmienda**: a
+diferencia de `r4_operation`, sí tienen un mecanismo real que cablear, y
+arreglarlo exige un rediseño (para `duplication_or_retry`, separar "¿mutó
+una segunda vez?" de "¿la decisión declarada fue DENY?", porque un reintento
+correctamente idempotente debe devolver la MISMA decisión que la primera
+llamada — `ALLOW` incluida — según el propio contrato de idempotencia de
+`CLAUDE.md`). Quedan documentadas como huecos conocidos, no como resultados
+medidos, en `docs/results-v2.1.md` sección 4.
+
+### 18.2 H7 no estaba conectado a verificación de postcondiciones
+
+`SystemC.handle()` nunca recibía `postcondition_checks`, así que
+`execution.postconditions_met` era siempre `None` — el séptimo hecho de
+`AuditReconstructionResult` (`verification_approval_or_block_evidence`)
+tenía presencia 0/4.768 en absolutamente todas las observaciones de la
+campaña completada, para los tres sistemas. `p=1,0` exacto no era un empate
+real entre A y C: era un par sin ningún caso discordante posible. Corregido
+en `experiment_v2_1.py::run_c` replicando el patrón post-hoc ya usado por
+`erp_agent_os.experiment` (v1): `build_checks` evaluado contra el estado
+`before`/`erp` ya capturado, después de que `system.handle()` devuelva su
+resultado, nunca cableado dentro de `Runtime.execute()`. Con test de
+regresión (`tests/test_experiment_v2_1.py`).
+
+### 18.3 Consecuencia sobre la campaña ya completada
+
+La primera ejecución confirmatoria (cerrada, verificada, documentada en
+`docs/results-v2.1.md`) queda **superada, no borrada** — es la evidencia de
+que estos dos defectos existían y de cómo se encontraron. No se presenta
+como la conclusión confirmatoria vigente del protocolo v2.1: esa exige una
+campaña nueva, generada después de esta enmienda, con el código y el
+análisis de potencia ya corregidos. El manifiesto de congelación de código
+y el holdout se regeneran en consecuencia (sección 12) antes de esa nueva
+campaña.

@@ -16,7 +16,7 @@
   "h4": {
     "unauthorized_mutation_upper_bound": 0.05,
     "minimum_relevant_difference": 0.10,
-    "n_categories": 8
+    "n_categories": 7
   },
   "h5": {
     "selective_accuracy_min": 0.90,

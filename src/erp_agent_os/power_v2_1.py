@@ -245,8 +245,8 @@ def simulate_h1b_power(
 
 def simulate_h4_power(
     *,
-    start_n: int = 96,
-    step: int = 8,
+    start_n: int = 84,  # 7 categories * 12 (r4_operation retired, was 96/8)
+    step: int = 7,
     seed: int = 20260814,
     n_replicates: int = MIN_MC_REPLICATES,
 ) -> PowerResult:

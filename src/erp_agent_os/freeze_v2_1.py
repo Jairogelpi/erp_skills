@@ -609,12 +609,26 @@ def validate_run_completion(
     completeness (Task 7B), and the archive's own content-hash integrity
     (load_observations_v21_jsonl already rejects a filename whose hash
     does not match its bytes, and a row_count mismatch against its own
-    manifest)."""
+    manifest).
+
+    The unit key MUST include `surface_id`: h3a_stability legitimately
+    runs the SAME (scenario_id, system, arm, repetition_index) across
+    three surfaces (S1/S2/S3) -- that is the whole point of a stability
+    arm across paraphrase/surface variants, not a duplicate. Without
+    surface_id here, a real, fully-checkpointed 21460-unit h3a_stability
+    run was rejected as "21460 duplicate unit keys" (only 3576 of its
+    10728 rows are unique under the coarser tuple) -- found by running
+    the real campaign to completion, not by a test, because the only
+    prior regression test compared an observation to an exact copy of
+    itself (same surface_id included), which this bug could not fail."""
     if len(observations) != expected_unit_count:
         raise FreezeV21Error(
             f"expected {expected_unit_count} completed units, got {len(observations)}"
         )
-    keys = [(o.scenario_id, o.system, o.arm, o.repetition_index) for o in observations]
+    keys = [
+        (o.scenario_id, o.system, o.arm, o.surface_id, o.repetition_index)
+        for o in observations
+    ]
     if len(set(keys)) != len(keys):
         raise FreezeV21Error("duplicate unit key(s) among completed observations")
     for observation in observations:

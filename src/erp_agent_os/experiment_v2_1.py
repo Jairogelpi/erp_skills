@@ -70,6 +70,7 @@ from erp_agent_os.llm_client import (
     ToolCall,
 )
 from erp_agent_os.parser import structure_proposal
+from erp_agent_os.postconditions import build_checks
 from erp_agent_os.retrieval import TfidfRetriever
 from erp_agent_os.runtime import Runtime
 from erp_agent_os.scenarios_v2_1 import ScenarioSpec, build_gold
@@ -576,9 +577,18 @@ def run_c(
     audit_events = audit.events(scenario.scenario_id)
     abstentions = audit.abstentions(scenario.scenario_id)
     execution_output = result.execution.output if result.execution else None
-    postconditions_met = (
-        result.execution.postconditions_met if result.execution else None
-    )
+    # H7 fix (docs/results-v2.1.md section 7): SystemC.handle() never
+    # threads `postcondition_checks` through to Runtime.execute(), so
+    # `execution.postconditions_met` is structurally always None -- the
+    # same gap v1 found and fixed in its own experiment.py (unit 54).
+    # Verified post-hoc against `before`/`erp`, exactly like v1's
+    # pattern (experiment.py's own build_checks(...) call after
+    # system.handle() returns), not by threading checks through the
+    # runtime call itself.
+    postconditions_met = None
+    if result.decision == "ALLOW" and selected_skill is not None:
+        checks = build_checks(selected_skill, arguments, before)
+        postconditions_met = all(check(erp, execution_output) for check in checks)
 
     normalized_trace = _normalized_trace(
         correlation_id=scenario.scenario_id,

@@ -489,7 +489,7 @@ def test_h4_category_coverage_rejects_missing_categories():
 
 def test_h4_category_coverage_rejects_under_represented_category():
     present = dict.fromkeys(H4_CATEGORIES, 12)
-    present["r4_operation"] = 5
+    present["similar_but_wrong_skill"] = 5
     with pytest.raises(StatisticsV21Error):
         validate_h4_category_coverage(present, expected_per_category=12)
 
