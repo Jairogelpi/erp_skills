@@ -218,9 +218,11 @@ def _build_full_archive(
             )
         )
 
-    # ---- h2_tokens: A and C only (per H2's own registered comparison).
+    # ---- h2_tokens: A, B and C (H2 requires C to beat BOTH comparators
+    # jointly -- section 8; a synthetic archive missing B silently made
+    # H2's own regression test unable to catch a single-comparator bug).
     for scenario in scorable[:10]:
-        for system, tokens in (("A", (120, 60)), ("C", (30, 10))):
+        for system, tokens in (("A", (120, 60)), ("B", (150, 80)), ("C", (30, 10))):
             rows.append(
                 _row(
                     scenario_id=scenario.scenario_id,

@@ -443,14 +443,23 @@ def analyze_h2(
     *,
     comparator_name: str,
     seed: int = 20260814,
+    alpha: float = 0.05,
 ) -> AnalysisResult:
     """H2: the UPPER bound of (C - comparator) must be below zero (C
     uses fewer tokens) -- section 8's own direction, not a two-sided
-    "is different" test."""
+    "is different" test.
+
+    `alpha` defaults to 0.05 for a single comparator, but section 8
+    requires BOTH C-A and C-B to hold jointly with Holm -- since this
+    test produces a bootstrap CI, not a p-value, there is no p-value
+    for `holm_correction` to adjust. The caller (`apply_h2_joint_gate`)
+    instead passes alpha=0.025 (Bonferroni, the special case of Holm's
+    step-down procedure for exactly two simultaneous non-sequential
+    one-sided bounds) to each of the two calls before combining them."""
     scenario_ids = sorted(set(tokens_c) & set(tokens_comparator))
     pairs = {s: (tokens_c[s], tokens_comparator[s]) for s in scenario_ids}
     point, upper = cluster_bootstrap_one_sided(
-        pairs, alpha=0.05, tail="upper", seed=seed
+        pairs, alpha=alpha, tail="upper", seed=seed
     )
     verdict = "fewer_tokens" if upper < 0.0 else "not_fewer_tokens"
     return AnalysisResult(
@@ -466,8 +475,39 @@ def analyze_h2(
         adjusted_p_value=None,
         effect_size=point,
         effect_size_name="mean_difference",
-        criterion=f"upper bound of (C - {comparator_name}) < 0",
+        criterion=f"upper bound of (C - {comparator_name}) < 0 (alpha={alpha})",
         verdict=verdict,
+    )
+
+
+def apply_h2_joint_gate(h2_a: AnalysisResult, h2_b: AnalysisResult) -> AnalysisResult:
+    """Section 8's H2 confirmatory event: BOTH C-A and C-B must show an
+    upper bound below zero. `h2_a`/`h2_b` must already have been computed
+    with alpha=0.025 each (see `analyze_h2`'s docstring) -- this function
+    only combines their verdicts, it does not re-run the bootstrap or
+    silently accept results computed at the wrong alpha."""
+    if h2_a.hypothesis != "h2" or h2_b.hypothesis != "h2":
+        raise StatisticsV21Error("apply_h2_joint_gate expects two h2 results")
+    joint_verdict = (
+        "fewer_tokens"
+        if h2_a.verdict == "fewer_tokens" and h2_b.verdict == "fewer_tokens"
+        else "not_fewer_tokens"
+    )
+    return AnalysisResult(
+        hypothesis="h2",
+        population="main",
+        unit="scenario",
+        n=min(h2_a.n, h2_b.n),
+        estimate=max(h2_a.estimate, h2_b.estimate),
+        ci_low=float("-inf"),
+        ci_high=max(h2_a.ci_high, h2_b.ci_high),
+        test="cluster_bootstrap_bonferroni_joint",
+        p_value=float("nan"),
+        adjusted_p_value=None,
+        effect_size=max(h2_a.effect_size, h2_b.effect_size),
+        effect_size_name="mean_difference",
+        criterion="upper bound of (C-A) AND (C-B) both < 0, alpha=0.025 each",
+        verdict=joint_verdict,
     )
 
 

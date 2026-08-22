@@ -95,6 +95,7 @@ from erp_agent_os.statistics_v2_1 import (
     analyze_h5,
     analyze_h6,
     analyze_h7,
+    apply_h2_joint_gate,
     apply_h4_holm_family,
     collapse_h3a_trio_consistency,
     collapse_h3b_trio_consistency,
@@ -489,11 +490,29 @@ def generate_report(
         protocol_hash=protocol_hash,
     )
 
+    # H2 requires BOTH C-A and C-B to hold jointly (section 8) -- each
+    # leg is computed at alpha=0.025 (Bonferroni, the two-comparison
+    # special case of Holm) and then combined by apply_h2_joint_gate.
+    # A single-comparator test (only C-A) was the actual defect found
+    # reading this campaign's first report: it let H2 read
+    # "confirmatory_supported" without ever checking C-B, which section
+    # 8 requires just as much as C-A.
     tokens_a = total_tokens_by_scenario(observations, system="A")
+    tokens_b = total_tokens_by_scenario(observations, system="B")
     tokens_c = total_tokens_by_scenario(observations, system="C")
-    h2_result = (
-        analyze_h2(tokens_c, tokens_a, comparator_name="A")
+    h2_a_result = (
+        analyze_h2(tokens_c, tokens_a, comparator_name="A", alpha=0.025)
         if tokens_a and tokens_c
+        else None
+    )
+    h2_b_result = (
+        analyze_h2(tokens_c, tokens_b, comparator_name="B", alpha=0.025)
+        if tokens_b and tokens_c
+        else None
+    )
+    h2_result = (
+        apply_h2_joint_gate(h2_a_result, h2_b_result)
+        if h2_a_result is not None and h2_b_result is not None
         else None
     )
     entries["h2"] = _entry_for(
@@ -501,6 +520,24 @@ def generate_report(
         h2_result,
         gate=gate,
         claim_text=_safe_claim_text("h2", h2_result),
+        archive_hash=archive_hash,
+        analysis_code_hash=analysis_code_hash,
+        protocol_hash=protocol_hash,
+    )
+    entries["h2_vs_a"] = _entry_for(
+        "h2_vs_a",
+        h2_a_result,
+        gate=gate,
+        claim_text=_safe_claim_text("h2_vs_a", h2_a_result),
+        archive_hash=archive_hash,
+        analysis_code_hash=analysis_code_hash,
+        protocol_hash=protocol_hash,
+    )
+    entries["h2_vs_b"] = _entry_for(
+        "h2_vs_b",
+        h2_b_result,
+        gate=gate,
+        claim_text=_safe_claim_text("h2_vs_b", h2_b_result),
         archive_hash=archive_hash,
         analysis_code_hash=analysis_code_hash,
         protocol_hash=protocol_hash,
