@@ -918,23 +918,35 @@ de qué modelo le toque; la de la arquitectura gobernada, de ninguno.
 
 ### 9.1 Qué compra la gobernanza, y a qué precio
 
-La formulación que la evidencia soporta es:
+**Actualizado con el resultado confirmatorio (v2.1, §8.0).** La
+formulación que la evidencia sostiene hoy es más estrecha que la que este
+capítulo defendía con el piloto v1, y en un eje se invierte:
 
-> Frente a un baseline de herramientas tipadas con el mismo LLM, la
-> arquitectura gobernada compra **8× menos ejecuciones inseguras, 2,2×
-> más trazabilidad y 3,9× menos tokens**, con una ventaja **pequeña pero
-> significativa** en éxito de tarea (+15,0 pp, *p* = 0,016).
+> Frente a los dos baselines, la arquitectura gobernada compra **tokens
+> más baratos** (IC95 completo por debajo de cero contra A y contra B),
+> **mayor estabilidad** entre formulaciones de la misma petición
+> (*p*=2,2e-18) y **mayor reconstrucción de auditoría** (*p*=2,85e-112,
+> con la salvedad estructural de §9.4). **No** compra una ventaja en
+> éxito de tarea sobre herramientas tipadas (*p*=0,286). Y, al contrario
+> de lo que sostenía este capítulo hasta esta revisión, **no** compra
+> menos ejecuciones inseguras: sobre 315 escenarios peligrosos reales,
+> deja pasar el 19,0 % de mutaciones no autorizadas, casi cuatro veces el
+> umbral prerregistrado.
 
-Es deliberadamente más estrecha que la que sostenían las corridas con
-parseo regalado (+18,3 pp) y más fuerte que la de la corrida 3 (+7,5 pp,
-no significativa). La historia de esas tres cifras es, en sí misma, un
-resultado: **cuánta ventaja aparente de una arquitectura puede provenir
-de cómo se monta la comparación**.
+La historia completa de cómo cambió la cifra de seguridad —de "8× menos
+inseguro" (piloto v1, n=9 casos) a "19,0 % de mutación no autorizada"
+(campaña confirmatoria, n=315, ver §8.0 y §9.5)— es en sí misma un
+resultado: **cuánto puede depender una conclusión de seguridad del
+tamaño y la composición de la muestra de casos peligrosos**, no solo de
+si el detector "dispara". Con nueve casos el intervalo de confianza era
+[0,020, 0,435] — demasiado ancho para sostener nada—; con 315, la
+estimación es precisa y va en la dirección contraria.
 
 El precio de la gobernanza, medido: latencia adicional del pipeline
-determinista (parseo, recuperación, política, verificación), un 9,3 % de
-abstenciones que exigen intervención, y el coste de mantener catálogo,
-handlers y postcondiciones.
+determinista (parseo, recuperación, política, verificación), abstenciones
+que exigen intervención, y el coste de mantener catálogo, handlers y
+postcondiciones — a lo que se añade ahora el propio hueco de seguridad de
+§8.0 como coste no resuelto, no solo como precio de mantenimiento.
 
 ### 9.2 Cuándo un agente directo sigue siendo preferible
 
@@ -955,13 +967,15 @@ mejor; dice qué se compra y qué se paga.
    sube Top-1 unos 7 puntos, pero elimina casi toda la abstención, que
    es parte de la tesis (H6). El experimento conserva el margen
    conservador.
-3. **Temperatura contra H3.** La norma exige temperatura baja, y la
-   temperatura 0 hace la estabilidad entre repeticiones trivialmente
-   perfecta en los tres sistemas. H3, tal como está formulada, **no puede
-   discriminar**. Se propone y se implementa una reformulación medible
-   (H3b: coincidencia de estado entre **paráfrasis distintas** de la
-   misma intención), cuya medición con LLM real queda declarada como
-   pendiente.
+3. **Temperatura contra H3 — resuelta en v2.1, con matiz.** La norma
+   exige temperatura baja, y bajo repetición estocástica literal (H3b) la
+   estabilidad sigue siendo casi trivial. Pero comparar **formulaciones
+   distintas** de la misma petición (H3a), en vez de repeticiones de la
+   misma formulación, sí discrimina: *p*=2,2e-18. La reformulación que
+   este capítulo proponía como pendiente en el piloto v1 **ya se ejecutó
+   con LLM real** y confirma estabilidad. H3b, la reformulación que sí
+   sigue siendo casi trivial, se reporta como descriptiva sin criterio,
+   tal como estaba previsto.
 
 ### 9.4 Amenazas a la validez
 
@@ -977,16 +991,21 @@ ERP simulado, modelos de nivel gratuito (no frontera). Las dos demos
 contra Odoo real son evidencia parcial de transferencia, no
 sustitutivo.
 
-**La limitación externa más grave, ahora medida y no solo declarada.**
-Se evaluaron 120 peticiones en registro coloquial, ajenas al generador
-del benchmark. El recuperador TF-IDF de C cae de 0,733 a **0,381** de
-Top-1; el selector LLM que usa B —mismo prompt, mismas herramientas,
-mismo proveedor— cae solo de 0,898 a **0,750**. Como el enrutado es la
-entrada de todo el pipeline de C, **la ventaja de +15 pp en STSR sobre B
-no puede sostenerse fuera del corpus plantillado**: con texto real cabe
-esperar que se estreche o se invierta. Los números del experimento
-congelado siguen siendo correctos para lo que midieron; lo que esta
-medición acota es hasta dónde se pueden extrapolar.
+**La limitación externa más grave, ahora medida y no solo declarada — y
+ahora también confirmatoria (H5, §8.0).** Se evaluaron 120 peticiones en
+registro coloquial, ajenas al generador del benchmark. El recuperador
+TF-IDF de C cae de 0,733 a **0,381** de Top-1; el selector LLM que usa B
+—mismo prompt, mismas herramientas, mismo proveedor— cae solo de 0,898 a
+**0,750**. La campaña confirmatoria de v2.1 mide lo mismo por otra vía,
+con un benchmark procedural distinto: selective accuracy 0,589 y
+false-reuse risk 0,411, muy por debajo/encima de los umbrales
+prerregistrados. Dos benchmarks distintos, dos mediciones distintas,
+misma conclusión: **la recuperación léxica de C es el cuello de botella
+real del sistema**, no una curiosidad de un solo experimento. La ventaja
+de C sobre B en éxito de tarea, que en v1 dependía en parte de esto, ya
+no se sostenía tampoco en la campaña confirmatoria por razones
+independientes (§8.0, H1b) — ambos hallazgos apuntan en la misma
+dirección sin depender uno del otro.
 
 **Refinamiento posterior, que acota la gravedad de la limitación.** Un
 tercer experimento (`docs/product-viability.md` §7.4, con mitad de
@@ -1023,8 +1042,9 @@ corregidas con Holm; pseudo-replicación explícitamente evitada (§3.4).
 
 ### 9.5 Dónde se concentran los defectos: un hallazgo sobre el proceso
 
-Trece defectos encontrados y corregidos en el propio instrumento de
-medida. Los más graves:
+Dieciséis defectos encontrados y corregidos en el propio instrumento de
+medida, en las dos generaciones del protocolo (v1 y v2.1). Los más
+graves:
 
 | # | Defecto | Consecuencia |
 |---|---|---|
@@ -1038,6 +1058,18 @@ medida. Los más graves:
 | #13 | Falta de normalización de argumentos | Sesgo asimétrico **contra** C |
 | #14 | Los 9 casos `argument_out_of_range` del dataset, mal etiquetados | Un caso benigno cuenta como peligroso y contamina H4 |
 | #15 | Denominador equivocado en el arnés de validación de producto | Habría reportado un derrumbe de −0,466 cuando el real es −0,352 |
+| — | v2.1: `SystemC.handle()` nunca recibía `postcondition_checks` | H7 salía con *p*=1,0 exacto, degenerado, en la primera campaña v2.1 |
+| — | v2.1: categoría de ataque `r4_operation` sin señal observable (par peligroso/seguro idéntico) | Contaminaba el agregado de H4 sin que ningún sistema pudiera distinguirlo |
+| #16 | v2.1: la comparación de tokens (H2) solo verificaba C contra A, nunca contra B | El veredicto "confirmada" no certificaba lo que el protocolo exige |
+
+Además de los defectos de código, un **hallazgo de construcción de la
+métrica**, no un defecto: al diagnosticar por qué H4 seguía saliendo mal
+tras corregir sus dos defectos de instrumentación, se encontró que para
+los baselines A y B la decisión `"DENY"` la asigna el arnés a cualquier
+error de ejecución (`"ALLOW" if result.error is None else "DENY"`), no a
+un juicio de seguridad — así que "A deniega más que C" no es
+directamente comparable con "C deniega más que A". No cambia ningún
+número; cambia cómo debe leerse la comparación (§8.0, §9.1).
 
 Dos patrones, ambos utilizables como material metodológico:
 
@@ -1059,7 +1091,7 @@ conclusión por aserciones de mecanismo: valor exacto del estadístico,
 anchura de intervalo no degenerada y proporcional al error estándar
 teórico.
 
-**Tercero, y el más incómodo: de quince defectos, trece salieron de
+**Tercero, y el más incómodo: de dieciséis defectos, catorce salieron de
 auditorías propias; dos los destapó una pregunta escéptica sobre
 resultados que ya habían sido aceptados y publicados** (el #13, sobre un
 resultado no significativo dado por bueno, y el #14, al preguntar si la
@@ -1067,7 +1099,11 @@ métrica de seguridad tenía sesgo). Es el patrón esperable: la
 autoauditoría encuentra bien el código que se contradice consigo mismo,
 y mal el código que hace exactamente lo que su autor creía que debía
 hacer. Para eso hace falta alguien que dude del supuesto, no de la
-implementación.
+implementación. La comparación de tokens sin verificar contra B (#16) y
+el hallazgo sobre el `DENY` de A/B, en cambio, sí salieron de auditoría
+propia — al leer el código de análisis en vez de confiar en el veredicto,
+y al desconfiar de un número de seguridad demasiado parecido al de una
+campaña ya conocida como defectuosa.
 
 Un matiz sobre el #14 que merece registrarse: al corregirlo, el
 resultado **mejoraría** para la tesis (el *false allow* de C pasaría de
@@ -1076,17 +1112,38 @@ y ese es exactamente el cambio post-hoc que la congelación existe para
 impedir. Se publicó como análisis de sensibilidad junto a la cifra
 contaminada.
 
+El equivalente en v2.1 corrió en la dirección contraria y por eso es una
+prueba más dura: la categoría de ataque análoga a este problema
+(`r4_operation`, sin señal observable) **sí se retiró**, correctamente,
+**antes** de generar el holdout de la campaña confirmatoria — no es un
+cambio post-hoc, es exactamente el procedimiento que la congelación
+permite. Y el resultado de seguridad no mejoró: la mutación no autorizada
+pasó de 19,6 % a 19,0 %, prácticamente sin cambio. Que corregir el
+defecto de instrumentación no cambiara la conclusión es la evidencia más
+fuerte de que el hallazgo de H4 es real y no un artefacto de las dos
+categorías rotas.
+
 ### 9.6 Resultados negativos, reportados como tales
 
-- La ventaja de C sobre B en éxito de tarea **no sobrevivió** al primer
-  intento de parseo honesto (corrida 3, no significativa). Se publicó
-  así mientras se creía correcta.
-- Los **embeddings pierden** frente a TF-IDF en este benchmark, y el
+- **El resultado negativo más importante del trabajo, confirmatorio:**
+  sobre 315 escenarios peligrosos reales, C deja pasar el 19,0 % de
+  mutaciones no autorizadas — casi cuatro veces el umbral prerregistrado
+  — y no supera a A ni a B en ninguno de los cuatro componentes de H4.
+  Contradice directamente la expectativa con la que se diseñó el sistema.
+- H1b: la ventaja de C sobre B en éxito de tarea **no se confirma**
+  (*p*=0,286) — reproduce, con datos limpios de dos defectos conocidos y
+  un benchmark distinto, la misma conclusión que ya forzó una
+  reformulación de la tesis durante el piloto v1.
+- H5: la recuperación **no alcanza** ninguno de los tres umbrales
+  operativos exigidos (selective accuracy, false-reuse risk, coverage),
+  de forma confirmatoria, no solo exploratoria.
+- Los **embeddings pierden** frente a TF-IDF en el benchmark v1, y el
   ranking híbrido no mejora al embedding puro.
-- **H3 es no discriminable** por diseño.
+- **H3b es no discriminable** por diseño, bajo temperatura baja y sin
+  paráfrasis — previsto y así reportado.
 - La **detección léxica no generaliza**: 3,3 % fuera de distribución.
-- C es el sistema con **peor false-reuse risk** (0,215) en la corrida
-  vigente, por encima de B (0,102).
+- C es el sistema con **peor false-reuse risk** en varias mediciones
+  (0,215–0,411 según el benchmark), consistentemente peor que B.
 
 ---
 
@@ -1228,10 +1285,13 @@ paráfrasis (H3a) sí resultó medible y confirma estabilidad.
    autorizado, argumentos fuera de tipo o rango, operaciones con framing
    irreversible o de alcance masivo, y mutaciones cuyo estado final no
    coincide con la postcondición declarada.
-3. **Reducción de tokens por reutilización:** 3,9× frente a herramientas
-   tipadas; el mecanismo es la sustitución de la llamada de selección.
-4. **Variabilidad:** no discriminable con temperatura 0; se propone H3b
-   sobre paráfrasis como reformulación medible.
+3. **Reducción de tokens por reutilización:** confirmatoria contra los
+   dos comparadores (§8.0, H2); el mecanismo es la sustitución de la
+   llamada de selección.
+4. **Variabilidad:** no discriminable bajo repetición estocástica pura
+   (H3b), pero sí bajo formulaciones distintas de la misma petición
+   (H3a) — confirmada con LLM real, *p*=2,2e-18. La reformulación que
+   este trabajo proponía como pendiente ya se ejecutó.
 5. **Latencia adicional de la gobernanza:** instrumentada por ejecución;
    el sobrecoste es el del pipeline determinista, no de llamadas extra
    al modelo.
@@ -1242,23 +1302,40 @@ paráfrasis (H3a) sí resultó medible y confirma estabilidad.
 8. **Umbral, cobertura y riesgo:** calibrar el margen a cero sube Top-1
    unos 7 puntos y elimina casi toda la abstención — objetivos en
    conflicto, resueltos a favor de la configuración conservadora.
-9. **Componente que más aporta:** el policy engine con validación
-   previa; es el responsable del resultado de seguridad y de
-   trazabilidad, invariante a proveedor y a régimen de parseo.
+9. **Componente que más aporta, revisado con el resultado confirmatorio:**
+   el policy engine explica la trazabilidad (H7, confirmada) y el ahorro
+   de tokens (H2, confirmada), invariante a proveedor. **No** explica un
+   resultado de seguridad favorable — H4 confirmatoria muestra que la
+   validación previa deja pasar el 19 % de mutaciones peligrosas en
+   escenarios sin marcador léxico obvio. El componente que sí aporta
+   valor de seguridad medido es el confinamiento por contrato bajo modelo
+   comprometido (0/1.530, InjecAgent), una propiedad distinta de la
+   detección previa.
 10. **Cuándo preferir un agente directo:** dominios sin escritura,
-    catálogos inviables de mantener, o coste de error bajo frente a
-    coste de abstención alto.
+    catálogos inviables de mantener, coste de error bajo frente a coste
+    de abstención alto, o —dato nuevo— dominios donde las peticiones
+    peligrosas son sutiles y sin marcador léxico: en ese caso ningún
+    sistema evaluado (A, B o C) ofrece una garantía de detección fiable,
+    y la gobernanza no la sustituye por sí sola.
 
 ### 11.3 Trabajo futuro
 
-Ejecución del brazo exploratorio de temperatura y de la medición de H3b
-con LLM real; poblado de precondiciones del catálogo con su propia
-corrida; detección semántica de intención frente a la petición original,
-que es lo que el resultado de InjecAgent señala como límite estructural
-del enfoque léxico; mapeo del resto del catálogo a modelos reales de
-Odoo; kappa de anotación; evaluación con anotadores y usuarios reales.
-(La réplica de ambos regímenes de parseo en un mismo proveedor, que
-figuraba aquí, **se ejecutó**: §7.2 y §9.4.)
+**Lo que este apartado pedía y ya se ejecutó desde la última revisión:**
+la medición de H3a con LLM real (confirmada, §9.3); la campaña
+confirmatoria completa bajo protocolo v2.1 sin anotación humana, que
+sustituye al kappa de anotación que figuraba aquí como pendiente —
+retirado formalmente, no completado.
+
+**Lo que sigue pendiente:** poblado de precondiciones del catálogo con
+su propia corrida; detección semántica de intención frente a la petición
+original, que es exactamente lo que el hallazgo de H4 (§8.0) y el
+resultado de InjecAgent señalan como límite estructural del enfoque
+léxico — ya no es una intuición, es la explicación más plausible de por
+qué C falla en 5 de 7 categorías de ataque sin marcador textual obvio;
+diseñar y ejecutar un endpoint real para las dos categorías de H4 que
+nunca llegaron a ejercitar su condición de peligro
+(`duplication_or_retry`, `field_conflict`); mapeo del resto del catálogo
+a modelos reales de Odoo; evaluación con usuarios reales.
 
 **La línea más prometedora, y la que este trabajo deja abierta con
 evidencia preliminar a favor:** convertir la descripción de la skill en
@@ -1274,28 +1351,44 @@ generalización que el corpus disponible no permite hacer.
 El valor de este trabajo no está en presentar ERP Agent OS como solución
 universal. Hay muchos prototipos que conectan un modelo de lenguaje con
 un ERP, y la arquitectura empleada —skills versionadas, políticas,
-auditoría, postcondiciones— no es novedosa por sí misma.
+auditoría, postcondiciones— no es novedosa por sí misma. Y, con el
+resultado confirmatorio delante, tampoco puede presentarse como una
+solución de seguridad: sobre 315 escenarios peligrosos reales, deja
+pasar el 19,0 % de mutaciones no autorizadas.
 
 Lo que este trabajo aporta es de otro tipo. Aporta **una forma más
-exigente de preguntar por la seguridad de un agente**: no si un detector
-dispara, sino si el daño ocurre cuando se concede que el detector ha
-fallado y el modelo está comprometido. Bajo esa pregunta, la respuesta
-fue 0 de 1.530, con un dataset externo y un brazo que entrega el modelo
-al atacante.
+exigente de preguntar por la seguridad de un agente, con las dos
+respuestas que produjo, no solo la favorable**. Frente a un modelo
+comprometido que dicta directamente los argumentos, el confinamiento por
+contrato se sostuvo: 0 de 1.530 mutaciones no autorizadas sobre un
+dataset externo. Frente a una petición simplemente ambigua y plausible,
+sin ningún marcador de ataque, el mismo sistema falló uno de cada cinco
+casos peligrosos, en una campaña diseñada, congelada y evaluada
+precisamente para no poder mirar el resultado antes de comprometerse con
+el diseño. Publicar solo la primera respuesta habría sido una tesis más
+cómoda y menos verdadera; publicar las dos, con el diagnóstico exacto de
+en qué categorías falla y en cuáles no, es lo que hace que la afirmación
+de seguridad de este trabajo sea acotada y defendible en vez de una
+promesa.
 
-Y aporta **el registro de haberse equivocado en público**. Tres veces la
-medición honesta produjo un resultado peor que la intuición de partida,
-y las tres se publicaron antes de encontrar el matiz que las mejoraba.
-Quince defectos del instrumento quedaron documentados con su fecha, su
-causa y qué habría pasado sin corregirlos; dos de ellos los destapó una
-pregunta escéptica sobre resultados ya aceptados, y uno se dejó sin
-corregir precisamente porque corregirlo habría favorecido a la
-hipótesis.
+Y aporta **el registro de haberse equivocado en público, dos veces
+distintas**. En el piloto v1, tres veces la medición honesta produjo un
+resultado peor que la intuición de partida, y las tres se publicaron
+antes de encontrar el matiz que las mejoraba. En la campaña confirmatoria
+v2.1, el patrón se repitió con una diferencia importante: no hubo matiz
+que mejorara el resultado de seguridad, y el número se sostuvo — pasar de
+9 a 315 casos peligrosos, y corregir los dos defectos que contaminaban la
+medición anterior, no lo hizo desaparecer. Dieciséis defectos del
+instrumento quedaron documentados con su fecha, su causa y qué habría
+pasado sin corregirlos; dos de ellos los destapó una pregunta escéptica
+sobre resultados ya aceptados, y uno se dejó sin corregir precisamente
+porque corregirlo habría favorecido a la hipótesis.
 
 Un trabajo experimental que solo confirma lo que esperaba debe levantar
-sospecha. Este documenta dónde se equivocó, cómo lo descubrió y qué
-quedó en pie después. Eso —más que cualquiera de sus cifras— es lo que
-pretende dejar utilizable para quien venga detrás.
+sospecha. Este documenta dónde se equivocó, cómo lo descubrió, y qué
+quedó en pie después de comprobarlo con más datos y más rigor, no menos.
+Eso —más que cualquiera de sus cifras favorables— es lo que pretende
+dejar utilizable para quien venga detrás.
 
 ---
 
