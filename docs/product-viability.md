@@ -1,14 +1,22 @@
 # De los resultados a un producto: qué sostiene la evidencia y qué no
 
-> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion**
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion** (marcador exigido
+> por el contrato automático `src/erp_agent_os/claims.py` — ver la nota
+> siguiente antes de leerlo como el estado real)
 >
-> Las cifras de este documento son señales exploratorias o pruebas de
-> factibilidad; no respaldan aún afirmaciones causales ni confirmatorias ante un
-> cliente. Véase `docs/hypotheses-and-theses.md`.
+> **Actualizado 2026-08-23.** La campaña confirmatoria v2.1
+> (`docs/results-v2.1.md`) ya terminó y cambia lo que se puede afirmar
+> ante un cliente en un punto central: **la detección activa de peligro
+> sobre peticiones ambiguas no se sostiene** (H4, 19,0 % de mutación no
+> autorizada sobre 315 casos reales). Lo que sí sigue de pie es más
+> estrecho — confinamiento bajo modelo comprometido, coste, trazabilidad
+> — y este documento se ha revisado para no vender la parte que ya no
+> aguanta.
 
 Documento de **transferencia**, no de investigación. Traduce los
-resultados medidos (`docs/results.md`) a qué se puede afirmar ante un
-cliente, qué producto sostienen y qué falta construir.
+resultados medidos (`docs/results-v2.1.md`, la campaña confirmatoria) a
+qué se puede afirmar ante un cliente, qué producto sostienen y qué falta
+construir.
 
 Regla que gobierna todo lo que sigue: **cada afirmación comercial debe
 apuntar a un número reproducible de este repositorio**. Lo que no
@@ -21,20 +29,27 @@ cumpla eso, no se dice.
 | Afirmación | Número que la sostiene | Dónde |
 |---|---|---|
 | **Aunque el modelo esté comprometido, no puede escribir fuera de contrato** | **0 / 1.530** mutaciones no autorizadas, con 510 payloads externos por tres canales, incluido un brazo que **concede el LLM entero al atacante** (510/510 `DENY`) | `docs/injecagent-stress-test.md`, `data/injection_resistance_results.json` |
-| **Una llamada al LLM menos por petición** | 67,6 tokens/ejecución frente a 265,3 del baseline tipado; el incremento por parsear es +67,68/+67,67/+67,62 en A/B/C, luego el gasto **total** de C *es* la extracción y nada más | `docs/results.md` § Ejecución 5 |
-| **La decisión no depende del modelo** | *False allow* de C = 0,111 con los tres proveedores probados; el de A oscila 0,333 ↔ 0,889 según proveedor | `docs/results.md` § Ejecución 5 |
+| **Una llamada al LLM menos por petición** | Confirmatorio: C consume 468 y 648 tokens menos que A y B respectivamente por ejecución, IC95 completo por debajo de cero contra ambos | `docs/results-v2.1.md` §3, H2 |
+| **Cada acción queda reconstruible** | Confirmatorio: +42,7 puntos porcentuales de reconstrucción completa de auditoría frente a A (*p*=2,85e-112), aunque con la salvedad de que A/B no tienen esa capacidad por diseño (§7 del mismo documento) | `docs/results-v2.1.md` §7, H7 |
 | **El bloqueo funciona contra un ERP real, no solo en simulador** | Escritura R2 sin aprobación bloqueada contra Odoo 19, verificada por **relectura independiente**; tras conceder aprobación, la misma petición escribe | `docs/odoo-demo.md`, `data/odoo_governed_demo_results.json` |
-| **Cada acción queda reconstruible** | Rúbrica de trazabilidad 0,820 frente a 0,356 / 0,374 | `docs/results.md` § H7 |
+
+**Retirada de esta tabla, con la campaña confirmatoria delante:** «la
+decisión no depende del modelo» (*false allow* 0,111 con los tres
+proveedores). Era una cifra de v1, nunca probada en la campaña
+confirmatoria de v2.1 (un solo proveedor), y en todo caso la definición
+estricta de *false allow* de v2.1 muestra que C falla el 19 % de las
+veces sobre peticiones ambiguas — ver §2.
 
 ## 2. Evidencia que NO aguanta, y que por tanto no se usa
 
 | Lo que sería tentador decir | Por qué no se dice |
 |---|---|
-| «Detectamos ataques de inyección de prompts» | **3,3 %** de detección fuera de distribución. Y en el test propio, **8 de 9** casos peligrosos los bloquea un patrón léxico escrito mirando ese mismo corpus. Es detección dentro de distribución, no una capacidad general |
-| «8× más seguro» a secas | **n = 9** casos peligrosos. IC de Wilson para C: [0,020, **0,435**]. Es una estimación puntual, no una medición precisa |
-| «+15 pp de éxito de tarea» | Efecto modesto sobre un baseline concreto, n = 120 unidades de inferencia. Verdadero, pero no es el argumento |
+| **«Detectamos peticiones peligrosas» / «somos más seguros que un agente sin gobierno»** | **Confirmatorio, no solo prudencia:** sobre 315 escenarios peligrosos reales, C deja pasar una mutación no autorizada en el **19,0 %** de los casos — casi 4× el umbral que se prerregistró. Localizado en 5 de 7 categorías de ataque; las otras 2 (permisos insuficientes, modificación masiva disfrazada) funcionan sin fallos. Este es el hallazgo que más debe pesar en cualquier conversación comercial |
+| «Detectamos ataques de inyección de prompts» | **3,3 %** de detección fuera de distribución (InjecAgent, 510 casos externos). Es detección dentro de distribución, no una capacidad general |
+| «8× más seguro» a secas | Era la cifra exploratoria de v1 (**n = 9** casos peligrosos, IC de Wilson [0,020, 0,435]). La campaña confirmatoria (n=315) mide lo contrario — ver arriba |
+| «+15 pp de éxito de tarea» | La campaña confirmatoria de v2.1 muestra que C **no** supera a un baseline con herramientas tipadas en éxito de tarea (*p*=0,286) |
 | «Ahorra X € al año» | H8 es **análisis de sensibilidad con tarifa declarada**, no gasto observado — los proveedores usados son gratuitos |
-| «Más estable entre ejecuciones» | H3 sale 1,000 en los tres sistemas porque la temperatura 0 los hace deterministas. No discrimina nada |
+| «Más estable entre ejecuciones» sin matiz | Bajo repetición estocástica pura y temperatura baja, sí sale trivial (H3b). Lo que sí es confirmatorio es la estabilidad **entre formulaciones distintas** de la misma petición (H3a) |
 
 **Consecuencia de diseño, no solo de marketing:** el producto no puede
 apoyarse en que el sistema *entienda* mejor. Debe apoyarse en que
@@ -55,6 +70,13 @@ El argumento de venta es literalmente el brazo experimental más fuerte:
 
 > Suponga que su agente está completamente comprometido y el atacante
 > dicta los argumentos. En **510 de 510** intentos, no escribió nada.
+
+**Y el matiz que hay que dar en la misma frase, no en la letra
+pequeña:** ese resultado es sobre ataques explícitos. Sobre una petición
+simplemente ambigua y plausible —sin que nadie esté atacando nada—, la
+capa deja pasar una de cada cinco. El producto vendible hoy es «confina
+incluso lo peor», no «detecta lo peligroso» — son cosas distintas, y
+conviene que lo sepa el cliente antes que su auditor de seguridad.
 
 ### Componentes, todos ya existentes en el prototipo
 
@@ -91,6 +113,7 @@ aburrido ya empezado, que un genérico no hará.
 
 | Hueco | Esfuerzo | Nota |
 |---|---|---|
+| **Cerrar la brecha de H4 en las 5 categorías que fallan** | **Alto, y previo a vender seguridad** | Sin esto, cualquier afirmación de seguridad activa (no solo confinamiento) es falsa. `duplication_or_retry` y `field_conflict` ni siquiera tienen su condición de peligro bien construida en el benchmark — hay que diseñarla antes de poder medir si se arregló |
 | Autoría de skills sin escribir Python | **Alto** | Es el producto real. Hoy solo existe `skill_proposal.py`, en sandbox y con aprobación humana |
 | 10 de 12 skills sin mapear a modelos reales de Odoo | Medio | Repetitivo e ineludible; es el coste que hay que medir (§5) |
 | Multi-tenant, autenticación real, `SqlAuditStore` cableado a la API | Medio | Hoy la API usa clave de demo y almacén en memoria |
@@ -121,11 +144,13 @@ respondido y su respuesta cambió el diseño propuesto.
 
 ## 6. La conclusión transferible, en una frase
 
-> El trabajo no demuestra que un agente gobernado haga mejor la tarea.
-> Demuestra que hace **la misma** tarea sin poder salirse del contrato
-> aunque el modelo falle o esté comprometido, con una llamada al LLM
+> El trabajo no demuestra que un agente gobernado haga mejor la tarea, ni
+> que detecte mejor el peligro. Demuestra que **confina** incluso cuando
+> el modelo falla o está comprometido del todo, con una llamada al LLM
 > menos por petición y con una traza que permite reconstruir cada
-> decisión. Eso —y no el éxito de tarea— es lo que sostiene un producto.
+> decisión — y demuestra, con la misma campaña, que ese confinamiento no
+> sustituye a un buen juicio sobre lo ambiguo. Eso —confinamiento medido,
+> no detección prometida— es lo que sostiene un producto.
 
 ---
 

@@ -166,7 +166,7 @@ las políticas del runtime.
 
 1. **Técnica.** Una arquitectura modular que transforma peticiones ERP
    en acciones controladas mediante skills versionadas, implementada y
-   ejecutable (`src/erp_agent_os/`, 38 módulos, 393 tests).
+   ejecutable (`src/erp_agent_os/`, 60 módulos, 822 tests).
 2. **De datos.** **ERP-Skills-Bench**, benchmark sintético anotado de 480
    peticiones con estado inicial, decisión esperada y etiquetas
    adversariales, con split de test congelado y verificado sin fuga.
@@ -453,7 +453,7 @@ pytest, Hypothesis, Ruff, mypy, pre-commit, GitHub Actions.
 Cada unidad de trabajo se construyó con TDD estricto
 RED → GREEN → TRIANGULATE → REFACTOR **contra un requisito normativo
 explícito**, con artefactos de especificación previos al código
-(`openspec/changes/*`). Estado de calidad actual: **393 tests**,
+(`openspec/changes/*`). Estado de calidad actual: **822 tests**,
 cobertura **96 %** global (2.456 sentencias, 90 sin cubrir), `ruff` y
 `mypy` limpios sobre 38 módulos, CI verde incluyendo validación de
 dataset, verificación de congelación y *smoke benchmark*.

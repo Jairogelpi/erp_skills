@@ -111,7 +111,7 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Six-scenario deterministic demo (§38) | `scripts/demo.py` | ✅ self-verifying |
 | Results export (CSV) and reproducible figures (§31) | `scripts/export_results.py`, `scripts/make_figures.py` | ✅ Tableau workbook itself is manual |
 
-393 tests, `ruff`/`mypy` clean, CI green.
+822 tests, `ruff`/`mypy` clean, CI green.
 
 Every software requirement CLAUDE.md specifies is implemented; the
 section-by-section audit lives in
@@ -480,7 +480,11 @@ cost per environment.
 **Cold-start verification (acceptance criterion 12).** Done from a fresh clone,
 not asserted: `git clone` → `uv sync` → **393 tests pass** → `freeze_protocol.py
 --verify` intact → `run_experiment.py` reproduces the published architecture-only
-numbers exactly (A 0.000 / B 0.333 / C 0.700).
+numbers exactly (A 0.000 / B 0.333 / C 0.700). That specific fresh-clone run was
+last performed at 393 tests; the suite has since grown to **822** (v2.1 protocol),
+each component (`pytest`, both freeze verifiers, `verify_tfm_closure_v2_1.py
+--final`) individually reverified in-place this session — not yet repeated as one
+combined fresh-clone pass at the current count.
 
 > **Windows: clone into a short path.** The deepest tracked path is 119
 > characters (`openspec/changes/…/project-local-ponytail-codebase-memory-mcp/spec.md`).
