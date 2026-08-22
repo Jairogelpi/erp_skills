@@ -658,6 +658,12 @@ exigidos; y la promesa de detección activa de peligro no se sostiene. Es
 un resultado mixto, y §16 del protocolo lo permite explícitamente: el
 cierre depende del proceso, no de que todo salga favorable.
 
+Tres figuras reproducibles resumen esta sección (Anexo A, `make_figures_v2_1.py`):
+`reports/figures/v21_hypotheses_forest` (las 9 pruebas, estimación e
+IC95), `reports/figures/v21_h4_categories` (mutación no autorizada de C
+por categoría, con la línea del umbral del 5 %) y
+`reports/figures/v21_h2_tokens` (ahorro de tokens contra A y contra B).
+
 ---
 
 Las secciones siguientes (8.1–8.x) documentan el piloto v1, con sus
@@ -1443,12 +1449,40 @@ uv run python scripts/injection_resistance_test.py
 uv run python scripts/odoo_governed_demo.py
 uv run python scripts/odoo_adversarial_demo.py
 
-# Exportación y figuras
+# Exportación y figuras (piloto v1)
 uv run python scripts/export_results.py
 make figures
+
+# Campaña confirmatoria v2.1 (sustituye a lo anterior como resultado
+# vigente -- congelada, RUN_COMPLETED/CLOSURE_VALID, no reproducible sin
+# gastar API real: el archivo crudo ya está commiteado)
+uv run python scripts/freeze_protocol_v2_1.py --verify
+uv run python scripts/verify_tfm_closure_v2_1.py --final \
+    --receipt-log data/protocol_v2_1/runs_v2/receipts_2.jsonl \
+    --code-manifest-path data/protocol_v2_1/code_freeze_manifest.json \
+    --report-path data/protocol_v2_1/confirmatory_report_v2_1_2.json
+
+# Figuras del capítulo confirmatorio (§8.0)
+uv sync --group figures
+uv run python scripts/make_figures_v2_1.py
 ```
 
 ### Anexo B. Artefactos de datos
+
+**Campaña confirmatoria v2.1 (vigente):**
+
+| Fichero | Contenido |
+|---|---|
+| `data/protocol_v2_1/runs_v2/confirmatory_observations_v21_2d36433e...jsonl` | 21.478 observaciones crudas, fila a fila |
+| `data/protocol_v2_1/code_freeze_manifest.json` | Manifiesto congelado vigente (`tfm-protocol-v2.1.2`) |
+| `data/protocol_v2_1/code_freeze_manifest_v2_1_1.json` | Manifiesto anterior, archivado por procedencia |
+| `data/protocol_v2_1/confirmatory_report_v2_1_2.json` | Informe vigente — H1a-H8, 13 entradas, sin `protocol_violation` |
+| `data/protocol_v2_1/confirmatory_report_v2_1_1.json` / `..._PRE_H2_FIX.json` | Informes anteriores al arreglo de H2, conservados |
+| `reports/figures/v21_hypotheses_forest.{png,svg}` | Las 9 pruebas, estimación e IC95, confirmada/no confirmada |
+| `reports/figures/v21_h4_categories.{png,svg}` | Mutación no autorizada de C por las 7 categorías de H4 |
+| `reports/figures/v21_h2_tokens.{png,svg}` | Ahorro de tokens de C contra A y contra B |
+
+**Piloto v1 (exploratorio, contexto):**
 
 | Fichero | Contenido |
 |---|---|
