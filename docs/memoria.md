@@ -1185,32 +1185,39 @@ PNG/SVG regeneradas desde el JSON versionado. El workbook de Tableau es
 trabajo manual pendiente y se declara como tal.
 
 **Valor empresarial.** Con supuestos declarados: menor coste de
-inferencia (3,9× frente a B), menor coste esperado de error (8× menos
-ejecuciones inseguras), y capacidad de auditoría que permite reconstruir
-por qué se tomó cada decisión. No se presenta como ahorro medido ni como
-satisfacción de usuario, que no se han observado.
+inferencia (confirmatorio, H2) y capacidad de auditoría que permite
+reconstruir por qué se tomó cada decisión (confirmatorio, H7, con la
+salvedad de §9.1). El menor coste esperado de error **no** se sostiene
+igual que en el piloto v1: la campaña confirmatoria muestra un 19,0 % de
+mutación no autorizada sobre escenarios peligrosos reales (§8.0), así
+que el coste de error esperado de C no es automáticamente menor. No se
+presenta como ahorro medido ni como satisfacción de usuario, que no se
+han observado.
 
 ### 10.1 Transferencia a producto: qué sostiene la evidencia
 
-El análisis completo está en
-[`docs/product-viability.md`](product-viability.md). Su tesis central es
-que **la evidencia que aguanta ante un tribunal y la que aguanta ante un
-cliente no son la misma**, y que confundirlas produciría afirmaciones
-comerciales falsas.
+**Actualizado con la campaña confirmatoria (v2.1).** El análisis
+completo está en [`docs/product-viability.md`](product-viability.md),
+ya revisado con estas cifras. Su tesis central es que **la evidencia que
+aguanta ante un tribunal y la que aguanta ante un cliente no son la
+misma**, y que confundirlas produciría afirmaciones comerciales falsas.
 
 **Sostiene un producto:** que ninguna inyección consiga una mutación no
-autorizada por ninguno de los tres canales de ataque (0/1.530, incluido
-el brazo que concede el LLM entero al atacante); que la arquitectura
-elimine una llamada al LLM por petición, demostrado por aritmética; que
-la decisión sea invariante al proveedor mientras la de un agente sin
-gobernanza no lo es; que el bloqueo se sostenga contra un ERP real
-verificado por relectura independiente; y la trazabilidad de 0,820.
+autorizada por ninguno de los tres canales de ataque cuando se concede
+el modelo entero al atacante (0/1.530); que la arquitectura elimine una
+llamada al LLM por petición, demostrado por aritmética y confirmado en
+v2.1 (H2); que el bloqueo se sostenga contra un ERP real verificado por
+relectura independiente; y la reconstrucción de auditoría, confirmatoria
+(H7, con la salvedad de §9.1).
 
-**No sostiene nada comercial:** la detección léxica de ataques (3,3 %
-fuera de distribución, y 8 de 9 casos del test bloqueados por patrones
-escritos sobre ese mismo corpus), el «8×» sin su intervalo (n = 9, IC
-[0,020, 0,435]), la ventaja de éxito de tarea (+15 pp, modesta), y
-cualquier cifra de ahorro (H8 es sensibilidad, no gasto medido).
+**No sostiene nada comercial:** «detectamos peligro» o «somos más
+seguros que un agente sin gobierno» — **confirmatoriamente falso** (H4:
+19,0 % de mutación no autorizada sobre 315 casos reales, casi 4× el
+umbral); la detección léxica de ataques (3,3 % fuera de distribución);
+el «8×» de v1, superado por el resultado confirmatorio de arriba; la
+invarianza al proveedor (nunca probada en la campaña confirmatoria); la
+ventaja de éxito de tarea (v2.1 confirma que C no supera a B, *p*=0,286);
+y cualquier cifra de ahorro (H8 es sensibilidad, no gasto medido).
 
 La consecuencia es de diseño, no solo de discurso: **el producto no
 puede apoyarse en que el sistema entienda mejor, sino en que restrinja

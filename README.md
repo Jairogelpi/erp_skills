@@ -61,6 +61,17 @@ is reported in full — but a system built to block blocking things is a
 weaker claim than this one, and its task-success edge does not transfer
 to real user text. Both facts are stated wherever the numbers appear.
 
+**Updated 2026-08-23 — the confirmatory v2.1 campaign found the harder
+version of this same question, and the answer is worse.** Over 315 real
+dangerous scenarios (not the 9-case exploratory sample below), the
+governed system lets through **19.0% unauthorized mutations** — nearly
+4× the preregistered 5% threshold. It is a different attack surface
+(plausible, ambiguous requests with no lexical attack marker, vs. this
+section's explicit compromised-model scenario) and the finding above
+still holds for what it measures — but "the defence is architectural"
+does not extend to active danger detection. Full breakdown in
+[`docs/results-v2.1.md`](docs/results-v2.1.md) §4.
+
 ## What this is
 
 ERP Agent OS separates the *probabilistic* interpretation of a natural-language ERP
@@ -157,7 +168,16 @@ and reuses one real call across a case's 3 repetitions
 `temperature=0.0` was empirically confirmed reproducible across three
 independent real runs (H3 = 1.0 every time).
 
-### Measured result: the confirmatory A/B/C experiment (real LLM)
+### Measured result: the v1 pilot A/B/C experiment (real LLM, exploratory)
+
+**This section's title said "confirmatory" until 2026-08-23 — it
+described the v1 pilot, and by this project's own later audit, a piloto
+whose analysis code was corrected after inspecting its own results
+cannot honestly claim that word. The real confirmatory campaign is v2.1,
+reported in [`docs/results-v2.1.md`](docs/results-v2.1.md) (21,478
+observations, `RUN_COMPLETED`/`CLOSURE_VALID`).** This section is kept
+as exploratory context: it is where several of the project's documented
+defects were found and fixed.
 
 **1.080 executions** (120 frozen-test cases × 3 systems × 3 repetitions),
 randomized order, `FakeERPAdapter` rebuilt per observation, A/B/C sharing
@@ -364,8 +384,9 @@ uv run python scripts/demo_completa.py --pausa   # step through it
 ```
 
 Eleven scenes. Each runs the **same request** against System A (generic
-tools, no governance — the same code the 1,080-observation experiment
-uses) and System C, from the same initial state with the same arguments.
+tools, no governance — the same code the 21,478-observation v2.1
+confirmatory campaign uses) and System C, from the same initial state
+with the same arguments.
 Covers: R1 happy path with postconditions · R2 approval with actor,
 scope and expiry · **mandatory R3 simulation** with mutation preview ·
 prompt injection · type validation · role denial · CLARIFY vs ABSTAIN ·
@@ -395,17 +416,27 @@ evidence that would survive a customer conversation from the evidence
 that would not — because they are not the same set, and conflating them
 would produce false commercial claims.
 
-**Survives:** no unauthorized mutation through any attack channel
-(0/1530, including the arm that hands the attacker the whole LLM); one
-fewer LLM call per request, shown by arithmetic; a decision that is
-invariant to the provider while an ungoverned agent's is not; a real
-Odoo block verified by independent re-read; traceability 0.820.
+**Survives (v1 pilot framing, exploratory):** no unauthorized mutation
+through any attack channel (0/1530, including the arm that hands the
+attacker the whole LLM — this one is confirmed independently, see
+below); one fewer LLM call per request, shown by arithmetic; a real Odoo
+block verified by independent re-read.
 
 **Does not survive:** lexical attack detection (3.3% out of distribution,
 and 8 of the 9 dangerous test cases are caught by patterns written
 against that same corpus); "8× safer" without its interval (n = 9, CI
-[0.020, 0.435]); the task-success edge (+15 pp, modest); any savings
-figure (H8 is a declared-rate sensitivity analysis, not measured spend).
+[0.020, 0.435]) — **and per the v2.1 confirmatory campaign below, not
+just "without its interval": the opposite, 19.0% unauthorized mutation
+on n = 315**; "invariant to the provider" (never tested in the v2.1
+confirmatory campaign, single provider); the task-success edge (+15 pp,
+modest — v2.1 confirms C does *not* beat B on task success, *p* = 0.286);
+any savings figure (H8 is a declared-rate sensitivity analysis, not
+measured spend).
+
+**Confirmed independently (v2.1, `docs/results-v2.1.md`):** cheaper
+tokens (vs. both A and B), more stable across paraphrases, more complete
+audit reconstruction (with the caveat that A/B lack that capability by
+design), and the compromised-model confinement result above.
 
 The design consequence: a product built on this cannot lean on the
 system *understanding* better, only on it *constraining* better — which
