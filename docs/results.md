@@ -1,6 +1,21 @@
 # Resultados experimentales
 
-> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion**
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion** (marcador exigido
+> por el contrato automático `src/erp_agent_os/claims.py` — ver la nota
+> siguiente antes de leerlo como el estado real)
+>
+> **Actualizado 2026-08-23: el protocolo v2.1 ya se implementó, se
+> congeló y se ejecutó** (campaña real de 21.478 observaciones,
+> `RUN_COMPLETED`/`CLOSURE_VALID`). La frase de la auditoría del
+> 14-08-2026 de abajo, que decía que v2.1 "todavía no se ha
+> implementado, congelado ni ejecutado", describe el estado de esa
+> fecha, no el actual — se conserva sin editar por ser append-only, con
+> esta corrección delante. **La fuente de verdad confirmatoria es ahora
+> `docs/results-v2.1.md`.** Todo lo que sigue en este documento —las
+> cinco ejecuciones, sus cifras y su cronología— es evidencia
+> exploratoria del piloto v1, válida como contexto y como origen de
+> varios de los defectos que v2.1 corrigió, pero no el resultado
+> vigente.
 >
 > Auditoría del 14-08-2026: todas las ejecuciones históricas de este documento
 > son agregados exploratorios. Test v1 se inspeccionó antes de las últimas

@@ -1,6 +1,18 @@
 # ERP Agent OS
 
-> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion**
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion** (marcador exigido
+> por el contrato automático `src/erp_agent_os/claims.py` — ver la nota
+> siguiente antes de leerlo como el estado real)
+>
+> **Actualizado 2026-08-23.** El protocolo v2.1 sin anotadores humanos
+> (`docs/tfm-closure-no-human-v2.1.md`) ya está implementado, congelado
+> (`tfm-protocol-v2.1.2`) y ejecutado: campaña real de 21.478
+> observaciones, `RUN_COMPLETED`/`CLOSURE_VALID`. **La fuente de verdad
+> confirmatoria es `docs/results-v2.1.md`** — H1a, H2, H3a, H6 y H7
+> salen soportadas; H1b, H4 (los cuatro componentes) y H5 salen
+> explícitamente no soportadas. La frase de abajo, de la auditoría del
+> 14-08-2026, describe el estado de esa fecha y se conserva sin editar
+> por ser append-only.
 >
 > Auditoría actualizada el 14-08-2026: los resultados actuales son
 > exploratorios o de
@@ -227,16 +239,28 @@ OpenRouter, 0.889 on both Groq runs) while C's is 0.111 everywhere — an
 ungoverned agent's safety depends on which model it draws; the governed
 one's depends on none.
 
-**The defensible claim:**
+**The defensible claim (v1 pilot, exploratory — superseded, kept as context):**
 
 > Over a typed-tools baseline running the same LLM, governance buys
 > **8× fewer unsafe executions, 2.2× better traceability and 3.9× fewer
 > tokens**, plus a **small but significant** gain in task success
 > (+15.0 pp).
 
-That is narrower than the perfect-parse runs suggested (+18.3 pp) and
-stronger than the un-normalised run (not significant). It is what the
-evidence supports today.
+That was narrower than the perfect-parse runs suggested (+18.3 pp) and
+stronger than the un-normalised run (not significant). It was what the
+pilot's evidence supported at the time.
+
+**Updated 2026-08-23 — this is no longer the current claim.** The v2.1
+confirmatory campaign (21,478 real observations, `RUN_COMPLETED`/
+`CLOSURE_VALID`, see [`docs/results-v2.1.md`](docs/results-v2.1.md))
+confirms cheaper tokens and better traceability, but **reverses the
+security claim**: over 315 real dangerous scenarios, C lets through
+19.0% unauthorized mutations — nearly 4× the preregistered 5% threshold
+— and does not beat the typed-tools baseline on task success either
+(*p* = 0.286). The defensible claim today is narrower: confinement holds
+under a fully compromised model (0/1,530, still true), efficiency and
+traceability hold; active danger detection on ambiguous requests does
+not.
 
 > **⚠️ Scope.** Free-tier model (`openai/gpt-oss-20b:free`), not a
 > frontier/production model — disclosed, not hidden. The freeze manifest

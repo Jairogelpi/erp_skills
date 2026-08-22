@@ -1,11 +1,16 @@
 # Hoja de ruta operativa — ERP Agent OS
 
-> **ESTADO 14-08-2026 — HOJA HISTÓRICA PENDIENTE DE MIGRACIÓN:** la anotación
-> humana y el kappa ya no forman parte del cierre. Las tareas incompatibles de
-> esta hoja están sustituidas por `tfm-closure-no-human-v2.1.md` y por el plan
-> `superpowers/plans/2026-08-14-tfm-closure-no-human-v2-1.md`. Hasta implementar
-> ese plan, v2.1 está especificado pero no ejecutado y H1-H8 siguen sin
-> conclusión confirmatoria.
+> **ESTADO 14-08-2026 — HOJA HISTÓRICA:** la anotación humana y el kappa ya no
+> forman parte del cierre. Las tareas incompatibles de esta hoja están
+> sustituidas por `tfm-closure-no-human-v2.1.md`.
+>
+> **Actualizado 2026-08-23:** el plan ya se implementó, se congeló
+> (`tfm-protocol-v2.1.2`) y se ejecutó — campaña real de 21.478
+> observaciones, `RUN_COMPLETED`/`CLOSURE_VALID`. H1-H8 tienen veredicto
+> confirmatorio explícito en `docs/results-v2.1.md` (H1a, H2, H3a, H6,
+> H7 soportadas; H1b, H4, H5 no soportadas). La "tesis defendible" citada
+> más abajo en este documento es del piloto v1 y está superada — ver
+> `docs/results-v2.1.md` §9 de `docs/memoria.md`.
 
 Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLAUDE.md) **y las prioridades/riesgos de evaluación de [`../evaluacion_tfm.md`](../evaluacion_tfm.md)** en trabajo trazable y gobernado. Sirve para planificar, ejecutar y aceptar unidades de trabajo; no modifica el alcance, las hipótesis ni el protocolo normativo. La bitácora canónica, append-only, está en [`../CLAUDE.md#bitácora-operativa`](../CLAUDE.md#bitácora-operativa).
 
@@ -69,7 +74,7 @@ C−A = +0,700 IC95 [+0,617, +0,783], Holm *p* = 2,71×10⁻¹⁹, OR 169. C−B
 
 **Historia de esta cifra, porque importa más que la cifra:** al quitar el parseo regalado, C−B cayó a +0,075 (*p* = 0,212) y **se publicó así, como no significativo**. Una pregunta escéptica posterior reveló que ese resultado arrastraba un sesgo **contra** C —una unidad monetaria sin normalizar que solo penalizaba al sistema que valida tipos, defecto #13—. Corregido, la ventaja volvió, pero menor que la original. Detalle en `docs/results.md` § Ejecución 4.
 
-**Tesis defendible:** frente a un baseline de herramientas tipadas con el mismo LLM, la gobernanza compra **8× menos ejecuciones inseguras, 2,2× más trazabilidad y 3,9× menos tokens**, con una ventaja **pequeña pero significativa** en éxito de tarea que **no transfiere a texto real** (`docs/results.md`, amenaza 3c).
+**Tesis defendible (piloto v1, superada — ver el aviso al principio de este documento):** frente a un baseline de herramientas tipadas con el mismo LLM, la gobernanza compra **8× menos ejecuciones inseguras, 2,2× más trazabilidad y 3,9× menos tokens**, con una ventaja **pequeña pero significativa** en éxito de tarea que **no transfiere a texto real** (`docs/results.md`, amenaza 3c). **Vigente, confirmatorio (v2.1):** tokens y trazabilidad se confirman; la seguridad se invierte — 19,0 % de mutación no autorizada sobre 315 escenarios reales, ver `docs/results-v2.1.md`.
 
 **Doce defectos encontrados y corregidos por auditoría propia** (unidades 21–31, detalle completo en [`docs/audit.md`](audit.md)): fuga del test congelado; validador de fuga tautológico; dos conjuntos vacíos de STSR; pseudo-replicación; dos huecos en la suite estadística (mutation testing); caveat del manifiesto inconsistente con `is_confirmatory_run`; caveat con el nombre del proveedor hardcodeado; error de varianza de `Callable` al retipar contra `ErpAdapter`; dos clases de error homónimas entre `odoo_client` y `adapters`; y **el #12, caché de extracción compartido entre A/B/C**, que hacía que los tokens por sistema midieran orden de ejecución. Once correcciones **no cambiaron el signo de ninguna conclusión**; la doceava **sí** — es la que reformuló la tesis. Mutation testing acumulado: 40 mutantes, 40 muertos, cobertura de los 23 módulos con lógica de antes de esta sesión.
 
