@@ -156,12 +156,16 @@ más cuesta y la que más vale.
 
 ### Toma 5 — Los números *(2:45–3:40)*
 
-**Pantalla:** dos tablas seguidas.
+**Pantalla:** dos figuras seguidas.
 
-Primero **el dato flojo**, de `data/injecagent_stress_test_results.json`:
-0 % → 3,3 %.
+Primero **el dato flojo, y es confirmatorio**: `reports/figures/v21_h4_categories.png`
+(o regenerarla en vivo con `uv run python scripts/make_figures_v2_1.py`)
+— 19,0 % de mutación no autorizada sobre 315 escenarios peligrosos
+reales, casi 4× el umbral del 5 %. El dato antiguo de InjecAgent
+(0 % → 3,3 %) mide otra cosa (detección léxica fuera de distribución) y
+puede citarse de pasada, no como titular.
 
-Después **el fuerte**:
+Después **el fuerte**, que sigue de pie:
 
 ```sh
 uv run python scripts/injection_resistance_test.py
@@ -183,14 +187,20 @@ la ejecución completa y se corta.
 
 ### Toma 6 — Valor y límite *(3:40–4:20)*
 
-**Pantalla:** dos cifras enfrentadas, diapositiva.
+**Pantalla:** `reports/figures/v21_hypotheses_forest.png` — las nueve
+pruebas de la campaña confirmatoria, confirmada/no confirmada.
 
-- Agente sin gobierno: false allow **0,333** (OpenRouter) ↔ **0,889**
-  (Groq).
-- Sistema gobernado: **0,111** con los tres.
+- Valor confirmado: tokens más baratos (H2, vs A y vs B), más estable
+  entre formulaciones (H3a), auditoría más completa (H7).
+- Límite confirmado: no supera en éxito de tarea a un baseline con
+  herramientas tipadas (H1b) ni reduce el riesgo de seguridad frente a
+  ninguno de los dos comparadores (H4).
 
-Y debajo, el límite: la ventaja en éxito de tarea **no transfiere** a
-texto real (0,733 → 0,381 de recuperación).
+**Nota:** la cifra antigua de sensibilidad al proveedor (false allow
+0,333 ↔ 0,889) es del piloto v1 con selector LLM real y **no** se probó
+en la campaña confirmatoria v2.1 (un solo proveedor). No usarla aquí sin
+esa salvedad — puede citarse como diapositiva de reserva (R8), no en el
+tramo principal.
 
 **Duración de rodaje:** montaje.
 

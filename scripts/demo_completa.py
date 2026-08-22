@@ -6,7 +6,8 @@ para cada uno, ejecuta la misma petición contra:
 
   - **Sistema A**: agente con herramientas ERP genéricas y sin
     gobernanza (§18) — el baseline del experimento, no un hombre de
-    paja: es el mismo código que corre las 1.080 observaciones;
+    paja: es el mismo código que corre las 21.478 observaciones de la
+    campaña confirmatoria v2.1;
   - **Sistema C**: el pipeline gobernado completo.
 
 Ambos parten del mismo estado de `FakeERPAdapter` y reciben los mismos
@@ -17,8 +18,8 @@ exactamente lo que la demo quiere aislar.
 LLM real, para que la demo sea reproducible sin red ni credenciales. Eso
 es válido aquí porque lo que se demuestra es qué ocurre **después** de
 elegir la herramienta: A no tiene motor de políticas, así que ejecuta lo
-que se le pide. Las cifras confirmatorias con LLM real están en
-`docs/results.md`; esta demo no produce ninguna métrica.
+que se le pide. Las cifras confirmatorias están en
+`docs/results-v2.1.md`; esta demo no produce ninguna métrica.
 
     uv run python scripts/demo_completa.py
     uv run python scripts/demo_completa.py --pausa   # se detiene entre escenas
@@ -410,9 +411,12 @@ def escena_6_permisos(pausa: bool) -> None:
     print()
     print("  -> El resultado de seguridad es el mismo (no se ejecuta nada),")
     print("     pero el motivo reportado NO es 'rol no permitido' sino 'sin")
-    print("     candidato'. Ese matiz de orden del pipeline está medido: el")
-    print("     recall de detección de 0,889 se descompone en 0,778 de")
-    print("     detección real y 0,111 de abstención (docs/results.md).")
+    print("     candidato'. Ese matiz de orden del pipeline está medido en la")
+    print("     campaña confirmatoria v2.1: en la categoría de permisos")
+    print("     insuficientes (45 casos), C nunca emite DENY explícito —")
+    print("     84% ABSTAIN, 16% CLARIFY (docs/results-v2.1.md §4.2). El")
+    print("     resultado de seguridad es correcto (0% de mutación en esa")
+    print("     categoría); el motivo reportado, no.")
 
     _check(r.decision != "ALLOW", "escena 6: un rol no permitido no debe ejecutar")
     _check(
@@ -627,7 +631,8 @@ def escena_11_auditoria(pausa: bool) -> None:
     print(f"    postcondiciones  : {evento.postconditions_met}")
     print("\n  -> El almacén no expone borrado ni modificación: es append-only")
     print("     por superficie pública, no por convención.")
-    print("  -> Medido: trazabilidad 0,820 frente a 0,356 (A) y 0,374 (B).")
+    print("  -> Medido, confirmatorio (v2.1): C reconstruye los 7 hechos de")
+    print("     auditoría +42,7 puntos porcentuales más que A (p=2,85e-112).")
 
     _check(
         evento.skill_version is not None,
@@ -678,7 +683,8 @@ def main() -> None:
         print("=" * WIDTH)
         sys.exit(1)
     print("  Los 11 controles se comportaron como esta demo afirma.")
-    print("  Cifras confirmatorias: docs/results.md · Método: docs/demo-explicada.md")
+    print("  Cifras confirmatorias: docs/results-v2.1.md")
+    print("  Método: docs/demo-explicada.md")
     print("=" * WIDTH)
 
 

@@ -86,48 +86,45 @@ el registro.
 
 ## 2:45 – 3:40 · Los números
 
-**Pantalla:** primero la tabla de detección (0 % → 3,3 %). Después, la
-tabla de los tres canales con el 0 / 1.530 destacado.
+**Pantalla:** primero la figura `v21_h4_categories` (19,0 % de mutación
+no autorizada, umbral del 5 % marcado). Después, la tabla de los tres
+canales con el 0 / 1.530 destacado.
 
-> Ahora los datos, empezando por mi peor número.
+> Ahora los datos, empezando por el peor, y este es confirmatorio, no un
+> piloto: sobre trescientas quince peticiones peligrosas reales, mi
+> sistema deja pasar una mutación no autorizada en una de cada cinco.
+> Casi cuatro veces el umbral que fijé antes de ver el resultado.
 >
-> Cogí quinientos diez ataques reales de inyección de un benchmark
-> externo y los pasé por mis detectores. Detectan el tres coma tres por
-> ciento. Es un mal resultado y lo reporto como tal.
+> Así que hice otra pregunta, sobre otro tipo de ataque. En vez de una
+> petición ambigua y plausible: **concedido que el ataque ha ganado por
+> completo — el modelo comprometido, el atacante escribiendo
+> directamente los argumentos —, ¿se llega a escribir algo?**
 >
-> Así que hice otra pregunta. En vez de «¿salta el detector?»:
-> **concedido que el ataque ha ganado — el modelo comprometido, el
-> atacante escribiendo directamente los argumentos —, ¿se llega a
-> escribir algo?**
+> Quinientos diez ataques externos, por los tres canales que un atacante
+> controla de verdad. **Cero mutaciones no autorizadas en mil quinientas
+> treinta.**
 >
-> Los mismos quinientos diez ataques, por los tres canales que un
-> atacante controla de verdad. **Cero mutaciones no autorizadas en mil
-> quinientas treinta.** Quinientas diez de quinientas diez denegadas en
-> el caso en que le regalo el modelo entero al atacante.
->
-> La defensa no era el detector. Era la arquitectura.
+> Son dos preguntas distintas, con dos respuestas distintas. El
+> confinamiento aguanta cuando el modelo falla del todo. No sustituye a
+> un buen juicio sobre lo ambiguo, y eso también lo mido.
 
 ---
 
 ## 3:40 – 4:20 · Valor, y el límite
 
-**Pantalla:** dos cifras enfrentadas. False allow del agente sin
-gobierno: 0,333 con un proveedor, 0,889 con otro. Del sistema gobernado:
-0,111 con los tres.
+**Pantalla:** la figura `v21_hypotheses_forest` — nueve pruebas,
+confirmadas en azul, no confirmadas en rojo.
 
-> Esto tiene una consecuencia práctica. La seguridad de un agente sin
-> gobierno **depende de qué modelo le toque**: entre dos proveedores se
-> mueve del treinta y tres al ochenta y nueve por ciento de fallos
-> peligrosos. La del sistema gobernado no se mueve: once por ciento con
-> los tres.
+> Esto tiene una consecuencia práctica, medida en la misma campaña
+> confirmatoria: mi sistema es más barato en tokens que los dos
+> sistemas de comparación, más estable entre formulaciones distintas de
+> la misma petición, y su auditoría se reconstruye con más completitud.
+> Eso se sostiene con intervalo de confianza y no por casualidad.
 >
-> Es decir, la gobernanza te permite usar un modelo barato sin heredar
-> su riesgo.
->
-> Y el límite, porque también lo medí: la ventaja en tasa de éxito
-> frente a un baseline de herramientas tipadas es modesta, y **no
-> sobrevive** al texto real de usuario. Está escrito en los resultados,
-> no escondido en una nota al pie.
+> Y el límite, con la misma claridad: no supera en tasa de éxito a un
+> agente con herramientas tipadas, y no reduce el riesgo de seguridad
+> frente a ninguno de los dos sistemas de comparación. Está escrito en
+> los resultados, no escondido en una nota al pie.
 
 ---
 
