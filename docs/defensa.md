@@ -91,20 +91,38 @@ lo que el sistema dice de sí mismo, vuelve a leer el ERP por separado.
 
 ### 4. El experimento, con sus límites por delante
 
-1.080 observaciones, unidad de inferencia el caso (n=120, no 360:
-tratar las repeticiones como independientes era pseudo-replicación y
-está corregido), test congelado por hash y verificado en CI.
+**Hay dos campañas, y hay que nombrarlas por separado.** La confirmatoria
+real es v2.1 (`tfm-protocol-v2.1.2`): 21.478 observaciones, protocolo y
+potencia congelados **antes** de generar el holdout, evaluación única. La
+de 1.080 observaciones (v1) es un piloto exploratorio — sigue citándose
+porque ahí salieron varios hallazgos que v2.1 confirma o corrige, no
+porque sus números sean el resultado.
 
-STSR A 0,000 · B 0,483 · **C 0,633**; C−B = +0,150 IC95 [+0,042,
-+0,258], *p* = 0,016. *False allow* 0,889 / 0,889 / **0,111**.
-Trazabilidad 0,356 / 0,374 / **0,820**. Tokens 185,1 / 265,3 / **67,6**.
+**v2.1, confirmatorio:** STSR de C no inferior a A (+25,3 pp, holgado); C
+**no** supera a B en éxito de tarea (p=0,286, igual que en v1); tokens de C
+más baratos que A y que B (−468 y −648, IC95 completo por debajo de cero);
+estabilidad entre paráfrasis confirmada por primera vez de verdad
+(p=2,2e-18); trazabilidad confirmada (+42,7 pp sobre A, p=2,85e-112, con la
+salvedad de que A/B no tienen esa capacidad por diseño).
+
+**Y el dato que cambia el discurso de seguridad, sin suavizarlo:** sobre
+315 escenarios peligrosos reales (no 9), C deja pasar una mutación real no
+autorizada en el **19,0 %** de los casos — casi 4× el umbral prerregistrado
+del 5 %. Localizado: en 5 de 7 categorías de ataque falla entre el 18 % y
+el 31 % de las veces; en las otras 2 (permisos insuficientes, modificación
+masiva disfrazada) falla el 0 %. No es un artefacto de los defectos que
+contaminaban la campaña anterior — se verificó que el número apenas cambia
+(19,6 % → 19,0 %) al corregirlos.
 
 Y **acto seguido**, sin esperar a que pregunten: A puntúa 0 por
 construcción; el contraste real es C−B; la ventaja en éxito de tarea no
-transfiere a texto real (medido: el recuperador cae de 0,733 a 0,381);
-el *false allow* descansa en n = 9 casos peligrosos con IC [0,020,
-0,435]; y en el test congelado **8 de esos 9 los bloquea un patrón
-léxico escrito mirando ese mismo corpus**.
+transfiere a texto real (medido: el recuperador cae de 0,733 a 0,381, y
+la propia H5 confirmatoria de v2.1 falla los tres umbrales de recuperación
+que exige el protocolo); y el `DENY` que A y B sí emiten con más frecuencia
+que C **no es una decisión de seguridad** — es una etiqueta de error de
+ejecución (`"ALLOW" if result.error is None else "DENY"`), así que "A
+deniega más que C" no significa "A es más seguro", significa "A se cae más
+a menudo al intentar ejecutar peticiones mal formadas".
 
 ### 5. Lo que hice cuando los datos me quitaron la razón
 
@@ -121,12 +139,24 @@ publicaron antes de encontrar el matiz que las mejoraba:
   eso acota el resultado principal del trabajo.
 
 Y un caso que conviene contar entero: **el único caso peligroso que el
-sistema permite en el test congelado resultó no ser peligroso** — un
+sistema permite en el test congelado de v1 resultó no ser peligroso** — un
 defecto de etiquetado del propio dataset. Corregirlo habría bajado el
 *false allow* de C de 0,111 a **0,000**. No se corrigió: el test estaba
 congelado, y cambiarlo a posteriori porque mejora tus números es
 exactamente lo que la congelación existe para impedir. Se publicó como
 análisis de sensibilidad junto a la cifra contaminada.
+
+Y el episodio equivalente en v2.1, más reciente: al escribir esta memoria
+se encontró que el análisis de H2 solo comparaba C contra A, nunca contra
+B, pese a que el protocolo exige ambas. Se corrigió — y el resultado no
+cambió (C sigue ganando a los dos con holgura) —, pero corregir el
+código de análisis después de ver un resultado exige el mismo cuidado que
+corregir el dataset: se documentó, se recongeló formalmente con tag y
+commit propios, y se conservó el informe anterior sin borrar. Y al
+investigar por qué H4 seguía saliendo mal tras arreglar sus dos defectos
+conocidos, apareció el hallazgo del párrafo anterior sobre el `DENY` de
+A/B — no se buscaba, apareció al desconfiar de un número sorprendente en
+vez de darlo por bueno.
 
 ### 6. Lo que dejo utilizable
 
@@ -159,8 +189,8 @@ cuestan **cero tokens**.
 | **0:30–1:00** | El error de un agente sin gobierno: petición con instrucción inyectada → System A la ejecuta. Mostrar el registro escrito. |
 | **1:00–1:45** | La arquitectura en una frase: el modelo **propone**, el contrato **decide**. Diagrama de las dos zonas. |
 | **1:45–2:45** | Demo real contra Odoo 19: R1 ejecuta; R2 se bloquea y **se verifica leyendo Odoo por separado**; con aprobación, escribe. |
-| **2:45–3:40** | Los números, con sus límites en la misma pantalla. Y el titular fuerte: **0 de 1.530**, incluido el brazo que le regala el LLM al atacante. |
-| **3:40–4:20** | Valor: la gobernanza permite usar un modelo barato sin heredar su riesgo — la seguridad de A oscila con el proveedor (0,333↔0,889), la de C no se mueve (0,111). |
+| **2:45–3:40** | Los números, empezando por el más flojo: sobre 315 peticiones peligrosas reales, C deja pasar el **19 %** de mutaciones no autorizadas — casi 4× el umbral. Después el que sí aguanta: **0 de 1.530** mutaciones cuando el atacante controla el modelo entero (inyección explícita, no ambigüedad plausible). Dos propiedades distintas, dicho así en voz alta. |
+| **3:40–4:20** | Valor con el límite integrado: la gobernanza confina incluso cuando el modelo está comprometido — eso no depende del proveedor —, pero no sustituye a un buen juicio sobre peticiones ambiguas sin marcador de ataque. Eso sigue siendo una brecha real, medida, no oculta. |
 | **Cierre** | «No intenta que el agente improvise mejor. Convierte una operación aprendida en una capacidad reutilizable, verificable y medible.» |
 
 ---
@@ -169,11 +199,12 @@ cuestan **cero tokens**.
 
 **1. «Su sistema bloquea porque usted lo diseñó para bloquear. ¿Qué ha
 observado?»**
-Correcto, y por eso el resultado que presento no es ese. La señal
-exploratoria es más estrecha: que el bloqueo **se sostiene cuando el modelo falla del
-todo** — 510 de 510 con el atacante dictando los argumentos — y que eso
-es independiente del proveedor, mientras que la seguridad del agente sin
-gobierno sí depende de qué modelo le toque.
+Que no bloquea tanto como debería, de hecho: sobre 315 peticiones
+peligrosas reales de la campaña confirmatoria, deja pasar el 19 %. Lo que
+sí se sostiene, y es confirmatorio, es más estrecho: el confinamiento
+**aguanta cuando el modelo falla del todo** — 510 de 510 con el atacante
+dictando los argumentos — independiente del proveedor. Detección y
+confinamiento son propiedades distintas, y solo la segunda está probada.
 
 **2. «A obtiene 0,000. ¿No está amañada la comparación?»**
 A puntúa 0 por construcción: STSR exige estado final verificado y unas
@@ -194,10 +225,13 @@ posición de instrucción y que el modelo solo puede emitir un
 identificador de skill con argumentos validados. Por eso el ataque no
 consigue mutar nada aunque el detector no dispare.
 
-**5. «n = 9 casos peligrosos es muy poco.»**
-Lo es, y publico el intervalo: [0,020, 0,435]. El «8×» es una estimación
-puntual sobre nueve casos. La evidencia de seguridad que sí tiene tamaño
-es la otra: 1.530 intentos con dataset externo.
+**5. «¿Cuánto pesa realmente su resultado de seguridad?»**
+En v1 pesaba poco: n=9 casos peligrosos, IC [0,020, 0,435]. Por eso se
+construyó v2.1 con un benchmark de seguridad de 315 escenarios,
+congelado antes de verlos. Con esa n, el resultado es nítido y va **en
+contra** de C, no a favor: 19 % de mutación no autorizada, muy por
+encima del umbral. Es un resultado peor, pero con muchísima más
+autoridad estadística que el 8× de v1.
 
 **6. «El benchmark es sintético y usted lo generó.»**
 Sí, y por eso lo sometí a tres pruebas externas: InjecAgent para
@@ -212,16 +246,37 @@ proveedores probados, mientras que el *false allow* del agente sin
 gobierno se mueve entre 0,333 y 0,889 según el modelo. La gobernanza es
 precisamente lo que permite no depender del modelo.
 
+**8. «Si su sistema falla el 19 % en seguridad, ¿qué queda de la tesis?»**
+Lo que queda es medible, y no es "seguro": es más barato (H2), más
+estable entre formulaciones (H3a), más trazable (H7) y no peor en tarea
+que un agente sin gobierno (H1a) — cuatro de nueve pruebas confirmatorias
+se sostienen. La promesa de detección activa de peligro, no. Diagnostiqué
+dónde exactamente: dos de siete categorías de ataque funcionan
+perfectamente, cinco no. Una tesis que dijera "esto es seguro" sería
+falsa; una que dice "esto es más barato, más trazable y más estable, y
+tiene un hueco de seguridad localizado y medido" es la que puedo
+defender con los datos delante.
+
 ---
 
 ## Lo que NO se debe decir
 
 - «Sistema seguro» o «inmune a inyección». La afirmación defendible es
   acotada: 510 payloads, tres canales, cero mutaciones no autorizadas,
-  sin adversario adaptativo.
-- «8× más seguro» sin su intervalo.
+  sin adversario adaptativo — y aun así, sobre peticiones peligrosas
+  plausibles sin marcador de ataque, el sistema falla el 19 %.
+- «8× más seguro» — ni con el intervalo de v1 (n=9) ni con ningún otro:
+  la campaña confirmatoria de v2.1 (n=315) mide lo contrario en esa
+  población.
+- «Detectamos peticiones peligrosas» o «C es más seguro que un agente sin
+  gobierno»: H4 confirmatoria dice explícitamente lo contrario en las
+  cuatro comparaciones. Lo que sí se sostiene es «el confinamiento
+  aguanta incluso con el modelo comprometido», que es una afirmación más
+  estrecha y distinta.
 - «Ahorra X euros»: H8 es un análisis de sensibilidad con tarifa
   declarada, no gasto observado.
 - «Detectamos ataques de inyección»: 3,3 % fuera de distribución.
-- «Más estable entre ejecuciones»: con temperatura 0 los tres sistemas
-  salen a 1,000; H3 no discrimina y así se reporta.
+- «Más estable entre ejecuciones» sin precisar: bajo temperatura 0 y
+  repeticiones literales (H3b), los tres sistemas salen a 1,000 y no
+  discrimina — la afirmación que sí se sostiene es H3a (estabilidad
+  **entre formulaciones distintas** del mismo escenario), confirmada.

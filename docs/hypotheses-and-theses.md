@@ -22,188 +22,205 @@
 
 ## Respuesta corta: ¿tenemos los datos?
 
-Tenemos una parte importante de los datos, pero no todavía la evidencia
-confirmatoria completa.
+**Sí, ahora los tenemos completos y confirmatorios** — no solo señales
+exploratorias. La campaña `tfm-protocol-v2.1.2` terminó (`RUN_COMPLETED`),
+cerró (`CLOSURE_VALID`) y produjo un veredicto explícito por hipótesis, con
+IC95, tamaño de efecto y corrección por multiplicidad donde aplica.
+`docs/results-v2.1.md` (Parte A) es la fuente de verdad — este documento
+resume sus conclusiones sin repetir cada cifra.
 
-- Sí tenemos tres resúmenes A/B/C de 1.080 ejecuciones, métricas de éxito,
-  tokens, seguridad, recuperación, estabilidad y trazabilidad.
-- Sí tenemos el benchmark sintético de 480 peticiones, el catálogo de 12
-  skills, el manifiesto de congelación, pruebas externas de inyección y demos
-  contra Odoo 19 de staging.
-- Sí tenemos desde ahora un ejecutor que conserva las observaciones futuras
-  fila a fila, con hash, estados, argumentos, política, versión, handler,
-  postcondiciones y los siete componentes de trazabilidad.
-- No tenemos las 1.080 filas crudas de las ejecuciones históricas: solo se
-  guardaron sus agregados. No deben reconstruirse artificialmente.
-- El test v1 fue inspeccionado y después se corrigieron el parser, el runtime y
-  el análisis. Por eso una nueva ejecución sobre v1 sigue siendo exploratoria.
-- El archivo de estados observados de v1 es evidencia del sistema, no verdad de
-  referencia, y no se completará mediante anotadores humanos.
-- El holdout humano v2 de 120 peticiones sigue sin haber sido ejecutado por
-  A/B/C. Queda retirado y deberá recibir un artefacto formal de supersesión
-  append-only antes de cualquier nueva campaña.
-- La especificación `docs/tfm-closure-no-human-v2.1.md` reemplaza la anotación
-  por escenarios con verdad por construcción, dos oráculos independientes por
-  dependencias, concordancia integral, tests metamórficos y un evaluador con
-  mutaciones dirigidas. Esto es diseño normativo pendiente, no resultado.
-
-Los ficheros históricos `data/experiment_results.json`,
-`data/experiment_results_groq_given_args.json` y
-`data/experiment_results_real_parser.json` contienen un campo antiguo
-`is_confirmatory_run: true`. Esa etiqueta queda invalidada por esta auditoría:
-son resúmenes agregados post-inspección y se usan solo como evidencia
-exploratoria.
+- Sí tenemos 21.478 observaciones reales, fila a fila, con hash, estados,
+  argumentos, política, versión, handler, postcondiciones y los siete
+  componentes de trazabilidad — no un agregado sin filas crudas como v1.
+- Sí tenemos veredicto explícito para H1a, H1b, H2 (contra A y contra B), H3a,
+  H3b, los cuatro componentes de H4, H5, H6, H7 y la rejilla de H8.
+- El archivo crudo, el manifiesto de congelación y el informe generado desde
+  JSONL puro (nunca desde agregados de v1) están commiteados y verificados
+  componente a componente — ver el encabezado de `docs/results-v2.1.md`.
+- Lo que **no** cambia respecto a antes: el holdout humano v2 de 120
+  peticiones sigue retirado y sin ejecutar (por diseño — v2.1 lo sustituye,
+  no lo completa) y los ficheros históricos de v1
+  (`data/experiment_results*.json`) siguen siendo evidencia exploratoria, no
+  confirmatoria — esa reclasificación no cambia con la campaña nueva.
+- **Nota sobre el registro machine-readable:** `data/evidence_registry.json`
+  y su `global_status: no_valid_confirmatory_conclusion` siguen sin
+  actualizarse para reflejar los veredictos reales de v2.1 — es una decisión
+  deliberada, no un olvido: el contrato `src/erp_agent_os/claims.py` es de la
+  era v1 y no distingue entre hipótesis (todavía trata "confirmado" como
+  binario y prohibido siempre), así que actualizarlo exige una decisión
+  explícita sobre cómo debe representar un resultado mixto real, no solo
+  activar un interruptor. Pendiente, señalado, no oculto.
 
 ## Las ocho hipótesis operacionales
 
+Estado real tras `tfm-protocol-v2.1.2` (`docs/results-v2.1.md` Parte A tiene
+el detalle completo, IC95 y desglose caso por caso; aquí solo el resumen).
+
 ### H1 — Éxito estricto de tarea
 
-**Hipótesis.** C no es inferior a A en STSR, con margen de −5 puntos
-porcentuales, sobre 120 casos de test y tres repeticiones.
+**Hipótesis.** C no es inferior a A (H1a) y superior a B (H1b) en STSR.
 
-**Señal observada.** En el último resumen con parser real: A = 0,000; B =
-0,483; C = 0,633. C−A = +0,633, IC95 [0,550, 0,717]. C−B = +0,150,
-IC95 [0,042, 0,258], McNemar/Holm p = 0,016.
+**Resultado real.** H1a: C−A = +0,253, IC95 desde +0,232 — el margen de −5 pp
+se supera con margen de sobra. H1b: C−B = −0,015, IC95 [−0,037, 1,0],
+p=0,286 — no significativo, y la estimación puntual es incluso negativa.
 
-**Veredicto.** No confirmada; señal exploratoria favorable. El margen se
-supera en el agregado disponible, pero faltan las filas históricas, el test
-dejó de ser no visto y el estado esperado no tiene adjudicación independiente.
+**Veredicto.** **H1a confirmada. H1b no confirmada.** C no es inferior a un
+agente sin gobierno, pero tampoco supera a un agente con herramientas
+tipadas en tasa de éxito — la ventaja de C no está ahí, ni aquí ni en v1.
 
 ### H2 — Consumo de tokens
 
-**Hipótesis.** C usa menos tokens totales que A y B en las peticiones con una
-skill esperada.
+**Hipótesis.** C usa menos tokens totales que A y B.
 
-**Señal observada.** Medias históricas por ejecución: A = 185,1; B = 265,269;
-C = 67,622 tokens.
+**Resultado real.** C−A = −467,98 tokens [IC95 hasta −456,87, α=0,025].
+C−B = −647,80 tokens [IC95 hasta −639,82, α=0,025]. Ambas comparaciones
+exigidas conjuntamente por el protocolo, con corrección de Bonferroni.
 
-**Veredicto.** No confirmada; señal exploratoria favorable. El cálculo
-histórico incluyó 120 casos, aunque la población declarada excluye dos casos
-`sin_skill`. El ejecutor ya filtra correctamente los 118 casos, colapsa las
-repeticiones y aplica Friedman, Wilcoxon emparejado, Holm, IC95 y tamaños de
-efecto, pero falta repetirlo sobre un test prospectivo.
+**Veredicto.** **Confirmada, contra los dos comparadores, con holgura
+amplia.** C es más barato que A y sustancialmente más barato que B.
 
-### H3 — Estabilidad entre repeticiones
+### H3 — Estabilidad
 
-**Hipótesis.** C obtiene mayor coincidencia del estado final entre sus tres
-repeticiones que A y B.
+**Hipótesis.** C es más consistente que A/B entre formulaciones distintas del
+mismo escenario (H3a, primaria) y entre repeticiones estocásticas (H3b,
+secundaria, descriptiva).
 
-**Señal observada.** A = B = C = 1,000.
+**Resultado real.** H3a: C supera a A en proporción de tríos consistentes
+entre tres superficies lingüísticas distintas (p=2,2e-18, odds ratio 9,35) —
+a diferencia de v1, donde `temperature=0` hacía indistinguibles las
+repeticiones literales, este diseño sí discrimina. H3b: 36,7 % de tríos
+consistentes bajo temperatura baja sin caché [24,6 %, 50,1 %], n=60,
+descriptivo, sin criterio direccional registrado.
 
-**Veredicto.** No evaluable con el diseño actual. A temperatura 0 y con caché,
-los tres sistemas son deterministas; el endpoint carece de varianza. El dato no
-demuestra igualdad ni superioridad. Antes del siguiente congelado hay que
-rediseñar el brazo de estabilidad o aceptar formalmente que H3 queda sin
-contraste.
+**Veredicto.** **H3a confirmada — primera vez que este proyecto mide
+estabilidad de verdad, no un techo de medida.** H3b se reporta, no se evalúa.
 
 ### H4 — Seguridad y detección previa
 
-**Hipótesis.** C detecta más casos peligrosos antes de ejecutar y obtiene menor
-`false allow` que A y B.
+**Hipótesis.** C detecta más casos peligrosos antes de ejecutar y obtiene
+menor `false allow` que A y B.
 
-**Señal observada.** `False allow`: A = 0,889; B = 0,889; C = 0,111. En C,
-recall de detección = 0,889 y precision = 0,500. Las 27 observaciones peligrosas
-del resumen son tres repeticiones de solo nueve casos únicos.
+**Resultado real, sobre 315 escenarios peligrosos reales:** los cuatro
+componentes (false allow vs A, false allow vs B, recall vs A, recall vs B)
+salen **invertidos y muy significativos** (p entre 1e-30 y 1e-45). C solo
+emite `DENY` explícito en el 5,7 % de los casos, frente al 72,7 % de A y
+51,1 % de B. Pero esos `DENY` de A/B no son decisiones de seguridad — son
+literalmente "hubo un error de ejecución" (`experiment_v2_1.py`), así que
+la comparación cruda no es homologable. El número que sí se sostiene sin
+matices: **mutación no autorizada real de C = 19,0 % [hasta 23,1 %]**, casi
+4× el umbral del 5 %, localizada en 5 de 7 categorías de ataque (las otras 2
+funcionan perfectamente — ver `docs/results-v2.1.md` §4.2 para el desglose).
 
-**Veredicto.** No confirmada; señal exploratoria favorable y con incertidumbre
-alta. Además, el detector léxico solo detectó 17/510 casos externos de
-InjecAgent (3,3 %). El ensayo de confinamiento registró 0/1.530 mutaciones no
-autorizadas, pero es un stress test agregado, no una confirmación de H4.
+**Veredicto.** **No confirmada, en los cuatro componentes.** No es un
+artefacto de instrumentación (se verificó que persiste casi sin cambios tras
+corregir los dos defectos que contaminaban la campaña anterior) — es un
+hallazgo real: C deja pasar mutaciones peligrosas en escenarios sin marcador
+léxico obvio, concentradas en categorías concretas y diagnosticables.
 
 ### H5 — Recuperación de skills
 
 **Hipótesis.** El recuperador ofrece cobertura alta con exactitud selectiva
 adecuada y riesgo de reutilización incorrecta controlado.
 
-**Señal observada.** Para C en v1: Top-1 = 0,780; Top-3 = 0,941; MRR = 0,855;
-cobertura = 0,907; exactitud selectiva = 0,785; `false-reuse risk` = 0,215.
-En peticiones menos templadas, TF-IDF baja a Top-1 = 0,381, mientras el router
-LLM alcanza 0,750.
+**Resultado real.** Los tres umbrales deben cumplirse a la vez (selective
+accuracy ≥0,90, false-reuse risk ≤0,10, coverage ≥0,70). Selective accuracy
+observada = 0,589; false-reuse risk = 0,411 — ambos muy por debajo/encima de
+lo exigido.
 
-**Veredicto.** Parcial y descriptiva. El recuperador funciona razonablemente
-en el benchmark propio, pero la generalización es el principal límite técnico.
-El CSV fuente de la evaluación de peticiones reales tampoco está versionado,
-por lo que esa comparación no es reproducible por completo desde el repo.
+**Veredicto.** **No confirmada — no adecuada.** Peor que la señal
+exploratoria de v1, coherente con el hallazgo ya documentado de que la
+recuperación léxica es el cuello de botella real del sistema cuando el
+lenguaje no está plantillado.
 
 ### H6 — Abstención
 
-**Hipótesis.** Abstenerse en casos sin skill, ambiguos o con margen insuficiente
-reduce la reutilización errónea.
+**Hipótesis.** Abstenerse en casos sin skill, ambiguos o con margen
+insuficiente reduce la reutilización errónea.
 
-**Señal observada.** Con umbral 0,15 y margen 0,05 sobre v1: cobertura = 0,833;
-exactitud selectiva = 0,770; `false-reuse risk` = 0,230; abstención correcta =
-0,923; falsa abstención = 0,075. La rejilla completa 0,00–0,60 está en
-`data/retrieval_precision_coverage_v1.json`.
+**Resultado real.** C con abstención reduce el false-reuse risk frente a la
+ablación sin abstención: diferencia −0,086, IC95 completamente negativo
+[hasta −0,071].
 
-**Veredicto.** Parcial y descriptiva. La curva hace visible el intercambio
-precisión–cobertura, pero se implementó después de inspeccionar test v1. El
-umbral definitivo debe congelarse con desarrollo/validación y evaluarse una
-sola vez en un test nuevo.
+**Veredicto.** **Confirmada.** La abstención sigue aportando valor medible
+incluso cuando, en H4, no cuenta como "detección" de peligro.
 
 ### H7 — Trazabilidad
 
-**Hipótesis.** C obtiene una puntuación de trazabilidad superior a A y B con la
-rúbrica ponderada de siete componentes.
+**Hipótesis.** C obtiene una reconstrucción de auditoría más completa que
+A/B, sobre los siete hechos objetivos del `AuditReconstructor` común.
 
-**Señal observada.** Medias históricas: A = 0,356; B = 0,374; C = 0,820.
+**Resultado real.** C−A = +0,427, IC95 [+0,404, 1,0], p=2,85e-112, odds
+ratio 1019. Medido por primera vez de verdad — en la campaña anterior este
+endpoint salía degenerado (`p=1,0` exacto) por un hueco de instrumentación
+ya corregido.
 
-**Veredicto.** No confirmada; señal exploratoria favorable. El resumen
-histórico no conserva las filas de cada componente ni los contrastes
-emparejados. Además, la rúbrica concede peso a capacidades que A/B no tienen
-por definición, por lo que hay que discutir explícitamente ese sesgo de diseño.
-Las ejecuciones futuras ya guardan los siete componentes y calculan Friedman,
-post hoc Wilcoxon-Holm, IC95, Cohen's dz y correlación biserial de rangos.
+**Veredicto.** **Confirmada**, con una salvedad que debe ir en la memoria sin
+suavizar: A y B no tienen policy engine, versión de skill ni verificación de
+postcondiciones **por definición arquitectónica** — parte de esta ventaja es
+estructural, no una capacidad que A/B intentaron construir y perdieron.
 
 ### H8 — Coste total modelado
 
 **Hipótesis.** Analizar, sin dirección confirmatoria, el coste de inferencia,
 revisión, errores y reintentos bajo supuestos declarados.
 
-**Señal observada.** Existe una sensibilidad basada en una tarifa hipotética
-por token. No hay gasto real ni ahorro empresarial observado.
+**Resultado real.** 243 combinaciones de rejilla × 3 sistemas, con
+reintentos y tokens realmente observados en la campaña (no supuestos). A
+falla en el 96,7 % de todas las poblaciones (no solo la peligrosa), lo que
+domina su coste modelado vía el término de error, no de inferencia.
 
-**Veredicto.** Análisis de escenarios, no hipótesis aceptada. Faltan tablas de
-escenarios para tiempo de revisión, coste de error y reintentos. Nunca debe
-traducirse a «ahorra X euros» como resultado medido.
+**Veredicto.** Análisis de escenarios, tal como exige la especificación —
+nunca se interpreta como ahorro medido ni como hipótesis aceptada/rechazada.
 
 ## Las tesis que el proyecto puede defender
 
 Estas son las conclusiones intelectuales del proyecto. Su estado importa tanto
 como su redacción.
 
-1. **T1 — Separación de responsabilidades, provisional.** La interpretación
-   probabilística debe proponer; una capa determinista debe autorizar y
-   ejecutar. Es la tesis arquitectónica central, con evidencia favorable aún no
-   confirmatoria.
-2. **T2 — Reutilización y eficiencia, provisional.** Una skill reutilizable
-   puede evitar selección y planificación repetidas, pero el ahorro solo es
-   válido si todos los sistemas pagan el mismo coste de parseo y se usa la
-   población H2 correcta.
-3. **T3 — Estabilidad, no resuelta.** El diseño actual no demuestra que C sea
-   más estable; temperatura 0 hace indistinguibles las repeticiones.
-4. **T4 — Abstención como control de riesgo, descriptiva.** No forzar una skill
-   convierte el error silencioso en un intercambio medible entre cobertura,
-   falsa abstención y reutilización incorrecta.
-5. **T5 — Gobernanza y trazabilidad, provisional.** Versionado, política,
-   aprobación, postcondiciones y evidencia permiten reconstruir mejor una
-   decisión, aunque la ventaja exacta depende de una rúbrica favorable a esas
-   capacidades.
-6. **T6 — Integración ERP, solo factibilidad.** El pipeline gobernado crea,
-   bloquea y, tras aprobación, modifica datos en Odoo staging. Esto prueba que
-   la arquitectura puede integrarse; no que sea superior a A/B en Odoo.
-7. **T7 — Evolución gobernada de skills, solo demo.** Ante la falta de skill, el
-   LLM puede proponer una definición; solo sandbox, tests, aprobación humana y
-   versionado permiten activarla. Esa generación queda fuera de la comparación
-   confirmatoria y no explica causalmente sus resultados.
-8. **T8 — La recuperación es el cuello de botella, exploratoria.** La caída de
-   TF-IDF en lenguaje menos templado indica que mejorar perfiles, embeddings,
-   ranking y abstención puede aportar más que añadir autonomía al agente.
-9. **T9 — Confinamiento antes que detección, exploratoria.** Los contratos y
-   allowlists pueden impedir una mutación incluso cuando falla la detección
-   léxica. El stress test apoya esta idea, pero aún no es evidencia
-   confirmatoria fila a fila.
-10. **T10 — Valor económico no demostrado.** El proyecto puede presentar
-    escenarios y sensibilidad, no ahorro, satisfacción ni ROI observados.
+1. **T1 — Separación de responsabilidades, parcialmente confirmada.** La
+   interpretación probabilística propone; una capa determinista autoriza y
+   ejecuta. H1a (no inferior a un agente sin gobierno), H2 (más barata) y H7
+   (más trazable, con la salvedad estructural de §H7) apoyan la tesis. H4
+   la contradice en su promesa de seguridad activa: la capa determinista deja
+   pasar el 19 % de mutaciones peligrosas en escenarios sin marcador léxico.
+2. **T2 — Reutilización y eficiencia, confirmada.** C consume menos tokens
+   que A y que B, con IC95 completamente por debajo de cero contra ambos
+   comparadores, bajo la población correcta y con el mismo coste de parseo
+   para los tres sistemas.
+3. **T3 — Estabilidad, confirmada (H3a).** Con un diseño que compara
+   formulaciones distintas del mismo escenario en vez de repeticiones bajo
+   temperatura 0, C es significativamente más consistente que A
+   (p=2,2e-18). Es la primera vez que este proyecto mide esto de verdad.
+4. **T4 — Abstención como control de riesgo, confirmada.** No forzar una
+   skill reduce medible y significativamente el false-reuse risk frente a la
+   ablación sin abstención (H6), aunque en H4 abstenerse no cuenta como
+   "detectar peligro".
+5. **T5 — Gobernanza y trazabilidad, confirmada con salvedad.** H7 confirma
+   la ventaja de reconstrucción de auditoría, pero A/B no tienen policy
+   engine ni verificación de postcondiciones por definición arquitectónica
+   — parte de la ventaja es estructural, no ganada en igualdad de
+   condiciones.
+6. **T6 — Integración ERP, solo factibilidad.** Sin cambios: el pipeline
+   gobernado crea, bloquea y, tras aprobación, modifica datos reales en Odoo
+   staging. Prueba que la arquitectura puede integrarse; no que sea superior
+   a A/B en Odoo.
+7. **T7 — Evolución gobernada de skills, solo demo.** Sin cambios: fuera de
+   la comparación confirmatoria por diseño.
+8. **T8 — La recuperación es el cuello de botella, ahora confirmada
+   (H5).** No solo exploratoria: H5 falla los tres umbrales prerregistrados
+   en la propia campaña confirmatoria, no solo en peticiones reales fuera
+   del corpus. Mejorar perfiles, embeddings, ranking y abstención sigue
+   siendo la mejora con más recorrido de todo el sistema.
+9. **T9 — Confinamiento antes que detección, reforzada pero con límite
+   nuevo.** El stress test de parser comprometido (0/1.530) sigue de pie,
+   pero H4 muestra el límite: cuando el atacante no compromete el parser y
+   la petición es simplemente ambigua-pero-plausible, el confinamiento por
+   contrato **no** impide el 19 % de mutaciones. "Confinamiento antes que
+   detección" no es una garantía universal — depende de qué tan explícito
+   sea el patrón de ataque.
+10. **T10 — Valor económico no demostrado.** Sin cambios: el proyecto puede
+    presentar escenarios y sensibilidad con datos reales de coste/reintentos
+    observados (H8), no ahorro, satisfacción ni ROI medidos.
 
 ## Qué demuestra la demo de generación de skills
 
@@ -230,20 +247,31 @@ la aprobación, la versión activa, la ejecución y el estado releído de Odoo. 
 demo prueba el ciclo de vida CU-02 y la utilidad del producto; no añade una
 decimotercera skill al catálogo congelado ni se contabiliza en H1-H8.
 
-## Qué falta para responder confirmatoriamente
+## Qué falta ahora — ya no es responder confirmatoriamente, es escribirlo
 
-1. **Hecho:** crear y sellar 120 candidatos v2 sin ejecutar A/B/C.
-2. Completar los dos paquetes v2 independientes, adjudicar desacuerdos y
-   obtener dos revisiones humanas de los estados exactos.
-3. Congelar dataset, 12 skills, prompts, modelos, roles, umbrales, márgenes,
-   seeds, timeouts, reintentos y plan estadístico.
-4. Ejecutar A/B/C y conservar automáticamente todas las filas crudas con sus
-   hashes; el código ya impide que falten o se dupliquen unidades.
-5. Aplicar H2 solo a casos con skill esperada y H7 a los siete componentes.
-6. Resolver H3 antes del congelado, sin cambiar su diseño después de ver test.
-7. Ejecutar el validador de claims y publicar tanto resultados favorables como
-   fallos, intervalos y limitaciones.
+Los siete pasos que este documento pedía hasta el 22 de agosto (sellar un
+holdout humano v2, obtener dos revisiones humanas, congelar, ejecutar A/B/C,
+publicar el validador de claims) **ya están hechos, pero por una vía
+distinta a la que este documento describía**: v2.1 sustituye la anotación
+humana por escenarios con verdad de referencia por construcción, dos
+oráculos independientes y un evaluador con mutaciones dirigidas
+(`docs/tfm-closure-no-human-v2.1.md`), no por completar los paquetes de
+anotadores. Ese holdout humano v2 sigue retirado y sin ejecutar — no se ha
+completado, se ha sustituido.
 
-Hasta completar esos pasos, la formulación correcta es: **«los datos actuales
-apoyan estas tesis de forma exploratoria»**, no **«las hipótesis están
-demostradas»**.
+Lo que queda de verdad pendiente:
+
+1. Decidir y ejecutar la actualización de `data/evidence_registry.json` y
+   `src/erp_agent_os/claims.py` para que el contrato automático distinga
+   entre hipótesis confirmadas y no confirmadas de v2.1, en vez de su
+   binario "nada está confirmado" heredado de la era v1 (decisión explícita
+   pendiente, señalada en el banner de este documento).
+2. Trasladar el resultado de H4 (§ arriba) a `docs/defensa.md` y
+   `docs/memoria.md` con el mismo nivel de detalle que aquí — ambos siguen
+   citando cifras de v1 en su tramo de resultados.
+3. Regenerar las figuras (`reports/figures/`) desde el informe de v2.1.
+
+La formulación correcta ya no es "los datos apoyan esto de forma
+exploratoria" — es la de `docs/results-v2.1.md`: **H1a, H2, H3a, H6 y H7
+confirmadas; H1b, H4 y H5 explícitamente no confirmadas**, con intervalo de
+confianza, tamaño de efecto y mecanismo diagnosticado en cada caso.

@@ -43,25 +43,40 @@ de políticas con clasificación de riesgo, aprobación humana cuando
 procede, un runtime que solo ejecuta handlers registrados, idempotencia,
 verificación de postcondiciones y auditoría append-only.
 
-La evaluación compara tres sistemas sobre el mismo benchmark propio
-(**ERP-Skills-Bench**, 480 peticiones sintéticas en español, 120 de test
-congelado) con un diseño emparejado de **1.080 ejecuciones** (120 casos ×
-3 sistemas × 3 repeticiones): **A**, agente directo; **B**, herramientas
-tipadas; **C**, ERP Agent OS completo.
+El resultado confirmatorio se estableció en dos etapas. Primero, un
+piloto exploratorio (**ERP-Skills-Bench v1**, 480 peticiones sintéticas,
+120 de test) con diseño emparejado de 1.080 ejecuciones (120 × 3
+sistemas × 3 repeticiones) — cuyos números se citan aquí como contexto,
+nunca como confirmación, porque su código de análisis se corrigió después
+de inspeccionar sus propios resultados. Después, el **protocolo v2.1 sin
+anotación humana** (verdad de referencia por construcción, dos oráculos
+independientes, potencia y protocolo congelados **antes** de generar el
+holdout, evaluación única): una campaña real de **21.478 observaciones**
+sobre nueve pruebas de hipótesis, cerrada y verificada
+(`RUN_COMPLETED`/`CLOSURE_VALID`).
 
-Con un LLM real compartido por los tres sistemas y sin regalar el parseo
-de argumentos a ninguno, el resultado es: STSR A = 0,000 · B = 0,483 ·
-**C = 0,633** (C−B = +0,150, IC95 [+0,042, +0,258], *p* = 0,016); *false
-allow rate* A = 0,889 · B = 0,889 · **C = 0,111** (8×); trazabilidad
-0,356 / 0,374 / **0,820** (2,2×); consumo 185,1 / 265,3 / **67,6**
-tokens por ejecución (3,9× menos que B).
+**El resultado confirmatorio (v2.1), sin suavizar:** C no es inferior a
+un agente directo en éxito de tarea (+25,3 pp), pero tampoco lo supera un
+agente con herramientas tipadas (*p* = 0,286); C es más barato en tokens
+que ambos comparadores (IC95 completo por debajo de cero); C es más
+estable entre formulaciones de la misma petición (*p* = 2,2e-18) y más
+trazable (*p* = 2,85e-112, con la salvedad de que A/B carecen de esa
+capacidad por diseño); y **C deja pasar el 19,0 % de mutaciones no
+autorizadas sobre 315 peticiones peligrosas reales**, casi cuatro veces
+el umbral prerregistrado — localizado en cinco de siete categorías de
+ataque, con las otras dos funcionando sin fallos. Este último resultado
+**no** es un artefacto de instrumentación: se verificó que persiste casi
+sin cambio (19,6 % → 19,0 %) tras corregir los dos defectos que
+contaminaban una campaña anterior. Cuatro de nueve pruebas confirmatorias
+salen a favor de la arquitectura; tres, incluida la promesa central de
+detección activa de peligro, no.
 
 Ese contraste, sin embargo, **no es el resultado más informativo del
-trabajo**, y decirlo forma parte de reportarlo con honestidad. Que un
-sistema diseñado para bloquear bloquee está cerca de la tautología, la
-ventaja en éxito de tarea es modesta y —medido después— **no transfiere
-a texto de usuario real**. Los dos hallazgos que sí resisten el
-escrutinio surgieron de auditar el propio trabajo:
+trabajo**, y decirlo forma parte de reportarlo con honestidad. La ventaja
+en éxito de tarea es modesta y no se sostiene frente a un baseline con
+herramientas tipadas; y —medido aparte— tampoco transfiere a texto de
+usuario real. Los dos hallazgos que sí resisten el escrutinio surgieron
+de auditar el propio trabajo:
 
 **Primero, una forma distinta de preguntar por la seguridad.** La
 literatura de inyección de prompts mide si un detector dispara; el
@@ -76,15 +91,22 @@ al atacante. La defensa efectiva resultó ser arquitectónica, no
 detectiva, y eso es medible con independencia del modelo empleado.
 
 **Segundo, una observación sobre el propio proceso de medir.** El
-trabajo documenta **quince defectos hallados en su instrumento de
-medida**, y el patrón que los explica: *el desarrollo dirigido por
-pruebas protege bien lo que se implementa contra un requisito explícito
-y protege mal lo que solo se calcula a partir de una fórmula*, porque en
+trabajo documenta **dieciséis defectos hallados en su instrumento de
+medida** (el más reciente: la comparación de consumo de tokens solo
+verificaba un comparador de los dos que exige el protocolo v2.1),
+y el patrón que los explica: *el desarrollo dirigido por pruebas
+protege bien lo que se implementa contra un requisito explícito y
+protege mal lo que solo se calcula a partir de una fórmula*, porque en
 el segundo caso es fácil verificar la conclusión del cálculo sin
-verificar el mecanismo. Cinco de esos defectos comparten forma —una
+verificar el mecanismo. Seis de esos defectos comparten forma —una
 comprobación que no podía fallar— y uno, al corregirse, **habría
-mejorado los resultados** del sistema propuesto; no se corrigió, porque
-el conjunto de test estaba congelado.
+mejorado los resultados** del sistema propuesto en v1; no se corrigió,
+porque el conjunto de test estaba congelado. En v2.1, el patrón se
+repitió en dirección contraria: diagnosticar por qué fallaba la
+seguridad reveló que la métrica de comparación con los baselines
+confundía "denegar por seguridad" con "fallar por un error de
+ejecución" — un hallazgo que no mejora ni empeora el número de C, pero
+que cambia cómo debe leerse la comparación con A y B.
 
 **Palabras clave:** agentes LLM, automatización ERP, gobernanza de
 agentes, recuperación semántica, evaluación selectiva, inyección de
@@ -572,8 +594,74 @@ en una medida del orden de ejecución (defecto #12, §9.5).
 
 ## 8. Resultados
 
-Todas las cifras proceden de `data/experiment_results_real_parser.json`
-(corrida 4, vigente) salvo indicación contraria.
+### 8.0 Resultado confirmatorio vigente (protocolo v2.1)
+
+**Las secciones 8.1 en adelante describen el piloto exploratorio v1**
+(1.080 ejecuciones, código de análisis corregido después de inspeccionar
+sus propios resultados) y se conservan como contexto y como origen de
+varios de los defectos discutidos en §9.5 — no como el resultado
+confirmatorio del trabajo. **El resultado confirmatorio real es el
+protocolo v2.1 sin anotación humana** (`docs/tfm-closure-no-human-v2.1.md`):
+verdad de referencia por construcción, dos oráculos independientes del
+código evaluado, potencia y protocolo congelados antes de generar el
+holdout, evaluación única. Campaña real de **21.478 observaciones**,
+`RUN_COMPLETED` / `CLOSURE_VALID`, detalle completo en
+`docs/results-v2.1.md`.
+
+| Hipótesis | Resultado | Veredicto |
+|---|---|---|
+| H1a (C no inferior a A) | +25,3 pp, IC95 desde +23,2 pp | **confirmada** |
+| H1b (C superior a B) | −1,5 pp, *p*=0,286 | no confirmada |
+| H2 (tokens, vs A y vs B) | −468 y −648 tokens, IC95 completo <0 | **confirmada** |
+| H3a (estabilidad entre paráfrasis) | *p*=2,2e-18, OR=9,35 | **confirmada** |
+| H3b (variabilidad estocástica) | 36,7 % [24,6, 50,1] | descriptiva |
+| H4 (seguridad, 4 componentes) | ver más abajo | no confirmada |
+| H5 (recuperación selectiva) | selective_acc=0,589, false_reuse=0,411 | no confirmada |
+| H6 (valor de la abstención) | IC95 completo <0 | **confirmada** |
+| H7 (auditoría, 7 hechos) | +42,7 pp, *p*=2,85e-112 | **confirmada**¹ |
+| H8 (coste modelado) | rejilla de sensibilidad, sin criterio | descriptiva |
+
+¹ Con la salvedad de que A/B carecen de policy engine, versión de skill y
+verificación de postcondiciones por definición arquitectónica — parte de
+la ventaja es estructural, no ganada en igualdad de condiciones.
+
+**H4, el resultado que más pesa:** sobre 315 escenarios peligrosos reales,
+C deja pasar una mutación no autorizada en el **19,0 %** de los casos
+[IC95 hasta 23,1 %] — casi cuatro veces el umbral prerregistrado del 5 %.
+Desglosado por las siete categorías de ataque: **cero** mutaciones en
+`insufficient_permissions` y `disguised_bulk_modification` (el filtro de
+rol y la clarificación funcionan); entre el **18 % y el 31 %** de fallo en
+las cinco categorías restantes (`argument_out_of_range`,
+`duplication_or_retry`, `field_conflict`, `prompt_injection_in_data`,
+`similar_but_wrong_skill`). No es un artefacto de los dos defectos que
+contaminaban una campaña anterior de esta misma familia de protocolo
+(H7 sin cablear, una categoría de ataque sin señal observable): verificado
+que el número apenas cambia (19,6 % → 19,0 %) al corregirlos.
+
+La comparación cruda con A/B necesita un matiz que cambia su lectura: para
+A y B, `"DENY"` no es una decisión de seguridad — es la etiqueta que el
+harness asigna a cualquier error de ejecución
+(`"ALLOW" if result.error is None else "DENY"`, `experiment_v2_1.py`), sin
+distinguir un rechazo deliberado de un identificador de registro
+inexistente o una herramienta mal elegida. Por eso A "deniega" el 72,7 %
+de las peticiones peligrosas y C solo el 5,7 %, pero esa diferencia no es
+comparable: mide sobre todo si la petición estaba bien formada, no si el
+sistema entendió que era peligrosa. El único número de H4 libre de esta
+ambigüedad es la mutación no autorizada de C, medida sobre el estado
+observado, no sobre la decisión declarada.
+
+**Lectura de conjunto:** cuatro de nueve pruebas confirmatorias apoyan la
+arquitectura (eficiencia, estabilidad, trazabilidad, valor de la
+abstención); el éxito de tarea no mejora sobre un baseline con
+herramientas tipadas; la recuperación no alcanza los umbrales operativos
+exigidos; y la promesa de detección activa de peligro no se sostiene. Es
+un resultado mixto, y §16 del protocolo lo permite explícitamente: el
+cierre depende del proceso, no de que todo salga favorable.
+
+---
+
+Las secciones siguientes (8.1–8.x) documentan el piloto v1, con sus
+propias cifras y contexto, tal como se registraron en su momento.
 
 ### 8.1 H1 — Strict Task Success Rate
 
@@ -1112,14 +1200,24 @@ estos números no permiten afirmar, está en
 
 ### 11.1 Respuesta a la pregunta principal
 
-Una arquitectura que separa la interpretación probabilística de la
-ejecución determinista **sí** reduce errores de seguridad de forma
-contundente (8× menos *false allow*, sin aumentar los falsos bloqueos),
-**sí** reduce el consumo de tokens (3,9× frente a herramientas tipadas,
-sustituyendo la llamada de selección por recuperación léxica), y **mejora
-modestamente** el éxito de tarea (+15,0 pp, IC95 [+4,2, +25,8]). La
-variabilidad entre ejecuciones no es medible con la formulación original
-de H3 porque la temperatura exigida por la norma la vuelve trivial.
+**Actualizado con el resultado confirmatorio (v2.1, §8.0) — sustituye la
+respuesta exploratoria de v1 que seguía aquí hasta esta revisión.** Una
+arquitectura que separa la interpretación probabilística de la ejecución
+determinista **sí** reduce el consumo de tokens frente a los dos
+baselines (IC95 completamente por debajo de cero), **sí** es más estable
+entre formulaciones distintas de la misma petición (*p*=2,2e-18) y **sí**
+produce una reconstrucción de auditoría más completa (*p*=2,85e-112, con
+la salvedad de que A/B carecen de esa capacidad por diseño). **No** mejora
+el éxito de tarea frente a un baseline con herramientas tipadas
+(*p*=0,286) — la mejora de +15,0 pp que reportaba el piloto v1 no se
+sostiene en la campaña confirmatoria. Y, de forma más importante que
+cualquiera de los resultados favorables: **no** reduce el riesgo de
+seguridad frente a los baselines — sobre 315 escenarios peligrosos reales,
+deja pasar el 19,0 % de mutaciones no autorizadas, casi cuatro veces el
+umbral prerregistrado, localizado en cinco de siete categorías de ataque.
+La variabilidad bajo repetición estocástica pura (H3b) sigue sin ser
+discriminable a temperatura baja, tal como se anticipaba; el diseño de
+paráfrasis (H3a) sí resultó medible y confirma estabilidad.
 
 ### 11.2 Respuestas a las preguntas secundarias
 
