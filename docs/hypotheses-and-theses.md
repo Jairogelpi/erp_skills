@@ -1,13 +1,24 @@
 # Hipótesis, evidencia y tesis defendibles de ERP Agent OS
 
-> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion**
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion** (marcador exigido por
+> el contrato automático `src/erp_agent_os/claims.py`/`tests/test_claims.py`,
+> escrito en la era v1 antes de que existiera el sistema de estados por
+> hipótesis de v2.1 — **ver la nota siguiente antes de leer este marcador
+> como el estado real**)
 >
-> Corte de evidencia: 14 de agosto de 2026. Actualmente existen señales
-> exploratorias, pruebas de factibilidad y resultados descriptivos, pero
-> ninguna de H1-H8 puede declararse confirmada. El registro canónico y
-> legible por máquina es `data/evidence_registry.json`. El protocolo de cierre
-> v2.1 sin anotadores humanos está especificado, pero aún no implementado,
-> congelado ni ejecutado.
+> **Corte de evidencia: 2026-08-23, actualizado.** El protocolo v2.1 sin
+> anotadores humanos ya está implementado, congelado (`tfm-protocol-v2.1.2`)
+> y ejecutado: campaña real de 21.478 observaciones, `RUN_COMPLETED` /
+> `CLOSURE_VALID`. **`docs/results-v2.1.md` (Parte A) es ahora la fuente de
+> verdad confirmatoria** — H1a, H2, H3a, H6 y H7 salen soportadas; H1b, H4
+> (los cuatro componentes) y H5 salen explícitamente no soportadas, con el
+> desglose caso por caso de por qué en cada una. **El resto de este
+> documento (la sección de las ocho hipótesis y el "qué falta para responder
+> confirmatoriamente" de más abajo) sigue describiendo el estado exploratorio
+> anterior al 14 de agosto y NO se ha reescrito todavía línea por línea** —
+> tratarlo como historial, no como el estado vigente, hasta que se actualice.
+> No se está afirmando que la sección de abajo sea correcta hoy; se declara
+> explícitamente obsoleta en vez de dejarla pasar por vigente.
 
 ## Respuesta corta: ¿tenemos los datos?
 

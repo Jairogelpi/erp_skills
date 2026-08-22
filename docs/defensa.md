@@ -1,10 +1,21 @@
 # Guion de defensa y vídeo: qué contar y en qué orden
 
-> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion**
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion** (marcador exigido por
+> el contrato automático `src/erp_agent_os/claims.py`/`tests/test_claims.py`,
+> escrito en la era v1 — **ver la nota siguiente antes de leerlo como el
+> estado real**)
 >
-> Este guion debe presentar las cifras A/B/C como señales exploratorias y las
-> pruebas de Odoo como factibilidad. Ninguna de H1-H8 está confirmada todavía;
-> el estado canónico está en `docs/hypotheses-and-theses.md`.
+> Actualizado 2026-08-23: la campaña confirmatoria v2.1.2 ya terminó
+> (`RUN_COMPLETED`/`CLOSURE_VALID`, 21.478 observaciones reales). El guion de
+> abajo se escribió el 12-ago sobre señales exploratorias de v1 y sigue sin
+> reescribirse con las cifras confirmatorias reales — dos de sus tres pilares
+> (la demo de Odoo y el stress test de inyección 0/1.530) no dependen de la
+> campaña y siguen de pie, pero el tramo "Los números" (2:45-3:40) cita false
+> allow de v1 (0,111 con los tres proveedores), no el hallazgo confirmatorio
+> de H4 de v2.1 (mutación no autorizada real del 19,0 %, casi 4× el umbral
+> — ver `docs/results-v2.1.md` Parte A §4). **Ese tramo necesita reescribirse
+> antes de grabar nada** — el estado canónico ya no es
+> `docs/hypotheses-and-theses.md` en solitario, es `docs/results-v2.1.md`.
 
 Documento de **presentación**, no de investigación. No introduce ningún
 resultado nuevo ni reformula ninguna hipótesis: H1–H8 quedan como se
