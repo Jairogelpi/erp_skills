@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ERP Agent OS — consola de gobernanza</title>
+<style>
+  @font-face {
+    font-family: "Spline Sans Mono";
+    src: local("Consolas"), local("SFMono-Regular"), local("Menlo");
+  }
+
+  :root {
+    --ink: #10141c;
+    --ink-2: #1c2230;
+    --paper: #f5f6f8;
+    --paper-2: #ffffff;
+    --line: #dde1e8;
+    --muted: #5c6577;
+    --accent: #1f6f6b;
+    --accent-ink: #0e3d3a;
+    --accent-soft: #e2f0ee;
+    --allow: #1c7a4d;
+    --allow-soft: #e2f5ea;
+    --deny: #b0342b;
+    --deny-soft: #fbe8e6;
+    --approval: #a5680e;
+    --approval-soft: #fbf0dc;
+    --neutral-state: #5c6577;
+    --neutral-soft: #eaecf1;
+    --radius: 10px;
+    --font-display: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --font-body: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "Spline Sans Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #eef0f4;
+      --ink-2: #c7ccd8;
+      --paper: #0d1016;
+      --paper-2: #151a23;
+      --line: #2a3140;
+      --muted: #8b93a5;
+      --accent: #4fb8b1;
+      --accent-ink: #bdece7;
+      --accent-soft: #16302e;
+      --allow: #52c98a;
+      --allow-soft: #113023;
+      --deny: #ef7a72;
+      --deny-soft: #351817;
+      --approval: #e3ab52;
+      --approval-soft: #372a10;
+      --neutral-state: #8b93a5;
+      --neutral-soft: #1c212b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #eef0f4; --ink-2: #c7ccd8; --paper: #0d1016; --paper-2: #151a23;
+    --line: #2a3140; --muted: #8b93a5; --accent: #4fb8b1; --accent-ink: #bdece7;
+    --accent-soft: #16302e; --allow: #52c98a; --allow-soft: #113023;
+    --deny: #ef7a72; --deny-soft: #351817; --approval: #e3ab52; --approval-soft: #372a10;
+    --neutral-state: #8b93a5; --neutral-soft: #1c212b;
+  }
+  :root[data-theme="light"] {
+    --ink: #10141c; --ink-2: #1c2230; --paper: #f5f6f8; --paper-2: #ffffff;
+    --line: #dde1e8; --muted: #5c6577; --accent: #1f6f6b; --accent-ink: #0e3d3a;
+    --accent-soft: #e2f0ee; --allow: #1c7a4d; --allow-soft: #e2f5ea;
+    --deny: #b0342b; --deny-soft: #fbe8e6; --approval: #a5680e; --approval-soft: #fbf0dc;
+    --neutral-state: #5c6577; --neutral-soft: #eaecf1;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent-soft); color: var(--accent-ink); }
+
+  a { color: var(--accent); }
+
+  .shell {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 28px 80px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  header.top .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  header.top h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0;
+    letter-spacing: 0.2px;
+    text-wrap: balance;
+  }
+  header.top .tag {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .target-pill {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 5px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .target-pill .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 920px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .panel + .panel { margin-top: 20px; }
+
+  .panel h2 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 14px;
+    font-weight: 600;
+  }
+
+  label {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--ink-2);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  textarea, select, input[type="text"] {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    resize: vertical;
+  }
+  textarea:focus, select:focus, input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+  textarea { min-height: 84px; }
+  .field { margin-bottom: 16px; }
+
+  button {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.92rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 10px 16px;
+    cursor: pointer;
+  }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--paper-2);
+    width: 100%;
+  }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-primary:disabled { opacity: 0.55; cursor: default; }
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--ink-2);
+  }
+  .btn-approve {
+    background: var(--approval);
+    color: #211505;
+  }
+
+  .catalog-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .catalog-item {
+    font-size: 0.8rem;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .catalog-item .id { font-family: var(--font-mono); color: var(--ink-2); }
+  .wired-chip, .risk-chip {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    padding: 2px 7px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .wired-chip.yes { background: var(--allow-soft); color: var(--allow); }
+  .wired-chip.no { background: var(--neutral-soft); color: var(--neutral-state); }
+  .risk-chip { background: var(--neutral-soft); color: var(--muted); margin-left: 6px; }
+
+  .trace-empty {
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    padding: 8px 2px;
+  }
+
+  .event {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper-2);
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .event-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .event-head .query {
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    color: var(--ink);
+  }
+  .state {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .state.ALLOW { background: var(--allow-soft); color: var(--allow); }
+  .state.DENY { background: var(--deny-soft); color: var(--deny); }
+  .state.REQUIRE_APPROVAL { background: var(--approval-soft); color: var(--approval); }
+  .state.ABSTAIN, .state.CLARIFY, .state.NOT_WIRED, .state.ERROR { background: var(--neutral-soft); color: var(--neutral-state); }
+
+  .stages { padding: 4px 16px 16px; }
+  .stage {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 14px;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+    font-size: 0.86rem;
+  }
+  .stage:first-child { border-top: none; }
+  .stage .label {
+    color: var(--muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding-top: 2px;
+  }
+  .stage .body { min-width: 0; }
+  .stage .body code, .kv code {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    background: var(--neutral-soft);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .candidates { display: flex; flex-wrap: wrap; gap: 6px; }
+  .candidate {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px 8px;
+    color: var(--ink-2);
+  }
+  .candidate.top { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
+
+  .kv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px 16px; }
+  .kv { font-size: 0.85rem; }
+  .kv .k { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .note-box {
+    font-size: 0.84rem;
+    background: var(--neutral-soft);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .reread-box {
+    font-size: 0.84rem;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    border-radius: 8px;
+    padding: 10px 12px;
+    line-height: 1.5;
+  }
+  .reread-box strong { display: block; margin-bottom: 4px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .approve-row { display: flex; gap: 10px; align-items: center; margin-top: 4px; flex-wrap: wrap; }
+  .approve-row button { width: auto; }
+
+  footer.legal {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .spinner {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    border: 2px solid var(--neutral-soft);
+    border-top-color: var(--accent);
+    display: inline-block;
+    animation: spin 0.7s linear infinite;
+    vertical-align: -2px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="top">
+    <div class="brand">
+      <h1>ERP Agent OS</h1>
+      <span class="tag">consola de gobernanza — pipeline real, Odoo real</span>
+    </div>
+    <span class="target-pill"><span class="dot"></span><span id="target-label">verificando instancia…</span></span>
+  </header>
+
+  <div class="layout">
+
+    <div>
+      <div class="panel">
+        <h2>Petición</h2>
+        <form id="request-form">
+          <div class="field">
+            <label for="text">Escribe la petición en lenguaje natural</label>
+            <textarea id="text" placeholder="Crea una oportunidad para Acme por 15000 euros." required></textarea>
+          </div>
+          <div class="field">
+            <label for="role">Rol</label>
+            <select id="role">
+              <option value="erp_user">erp_user (permitido)</option>
+              <option value="becario_sin_permisos">becario_sin_permisos (sin permiso)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary" id="send-btn">Enviar al pipeline gobernado</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>Catálogo — qué escribe en Odoo de verdad</h2>
+        <div class="catalog-list" id="catalog-list">
+          <div class="trace-empty">cargando catálogo…</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h2>Traza en vivo</h2>
+        <div id="trace-stream">
+          <div class="trace-empty">Todavía no se ha enviado ninguna petición. Cada envío pasa por recuperación → extracción de argumentos (LLM real) → política de riesgo → aprobación si hace falta → ejecución contra Odoo → relectura independiente.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="legal">
+    Cada petición corre contra la instancia de <strong>desarrollo</strong> de Odoo (nunca producción — bloqueado por <code>require_development_instance()</code> antes de que salga ninguna escritura de este proceso). Solo 2 de las 12 skills del catálogo tienen handler real de Odoo; el resto se resuelve por política pero no ejecuta. Servidor en <code>127.0.0.1</code> únicamente, no accesible desde red. Fuente: <code>scripts/product_demo_server.py</code>.
+  </footer>
+
+</div>
+
+<script>
+const API = "";
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+async function loadCatalog() {
+  const list = document.getElementById("catalog-list");
+  try {
+    const res = await fetch(API + "/api/skills");
+    const skills = await res.json();
+    list.innerHTML = "";
+    for (const s of skills) {
+      const row = el("div", "catalog-item");
+      const left = el("span", "id", s.skill_id);
+      const right = el("span");
+      const risk = el("span", "risk-chip", s.risk_class);
+      const wired = el("span", "wired-chip " + (s.odoo_wired ? "yes" : "no"),
+        s.odoo_wired ? "escribe en Odoo" : "solo política");
+      right.appendChild(wired);
+      right.appendChild(risk);
+      row.appendChild(left);
+      row.appendChild(right);
+      list.appendChild(row);
+    }
+    document.getElementById("target-label").textContent = "instancia de desarrollo verificada";
+  } catch (err) {
+    list.innerHTML = "";
+    list.appendChild(el("div", "trace-empty", "No se pudo cargar el catálogo: " + err));
+    document.getElementById("target-label").textContent = "backend no disponible";
+  }
+}
+
+function stageRow(label, bodyEl) {
+  const row = el("div", "stage");
+  row.appendChild(el("div", "label", label));
+  const body = el("div", "body");
+  body.appendChild(bodyEl);
+  row.appendChild(body);
+  return row;
+}
+
+function candidatesEl(candidates) {
+  const wrap = el("div", "candidates");
+  candidates.forEach((c, i) => {
+    const chip = el("span", "candidate" + (i === 0 ? " top" : ""), c.skill_id + "  " + c.score.toFixed(3));
+    wrap.appendChild(chip);
+  });
+  return wrap;
+}
+
+function kvGrid(pairs) {
+  const grid = el("div", "kv-grid");
+  for (const [k, v] of pairs) {
+    const item = el("div", "kv");
+    item.appendChild(el("div", "k", k));
+    const val = el("div");
+    val.innerHTML = "<code>" + String(v) + "</code>";
+    item.appendChild(val);
+    grid.appendChild(item);
+  }
+  return grid;
+}
+
+async function grantApproval(scope, statusEl, retryFn) {
+  statusEl.textContent = "concediendo aprobación…";
+  try {
+    const res = await fetch(API + "/api/approvals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scope, ttl_seconds: 120 }),
+    });
+    const data = await res.json();
+    statusEl.textContent = "aprobado por " + data.actor + ", expira " + data.expires_at;
+    retryFn();
+  } catch (err) {
+    statusEl.textContent = "error concediendo aprobación: " + err;
+  }
+}
+
+function renderEvent(text, role, data) {
+  const stream = document.getElementById("trace-stream");
+  const first = stream.querySelector(".trace-empty");
+  if (first) first.remove();
+
+  const card = el("div", "event");
+  const head = el("div", "event-head");
+  head.appendChild(el("span", "query", "“" + text + "”  ·  " + role));
+  head.appendChild(el("span", "state " + data.decision, data.decision));
+  card.appendChild(head);
+
+  const stages = el("div", "stages");
+
+  if (data.candidates && data.candidates.length) {
+    stages.appendChild(stageRow("Recuperación", candidatesEl(data.candidates)));
+  }
+  if (data.extracted_arguments && Object.keys(data.extracted_arguments).length) {
+    const pairs = Object.entries(data.extracted_arguments);
+    const tokenNote = data.extraction_tokens
+      ? [`tokens LLM`, `${data.extraction_tokens.prompt} + ${data.extraction_tokens.completion}`]
+      : null;
+    if (tokenNote) pairs.push(tokenNote);
+    stages.appendChild(stageRow("Extracción (LLM real)", kvGrid(pairs)));
+  }
+  if (data.reasons && data.reasons.length) {
+    const box = el("div", "note-box", data.reasons.join(" · "));
+    stages.appendChild(stageRow("Política", box));
+  }
+  if (data.note) {
+    stages.appendChild(stageRow("Aviso", el("div", "note-box", data.note)));
+  }
+  if (data.decision === "REQUIRE_APPROVAL" && data.selected_skill_id) {
+    const wrap = el("div");
+    const status = el("div", "note-box", "pendiente de aprobación humana");
+    wrap.appendChild(status);
+    const row = el("div", "approve-row");
+    const btn = el("button", "btn-approve", "Conceder aprobación y reintentar");
+    btn.type = "button";
+    btn.addEventListener("click", () => {
+      grantApproval(data.selected_skill_id, status, () => submitRequest(text, role));
+    });
+    row.appendChild(btn);
+    wrap.appendChild(row);
+    stages.appendChild(stageRow("Aprobación", wrap));
+  }
+  if (data.execution) {
+    const pairs = [
+      ["salida", data.execution.output ?? "—"],
+      ["replay idempotente", data.execution.idempotent_replay],
+    ];
+    if (data.execution.handler_error) pairs.push(["error", data.execution.handler_error]);
+    stages.appendChild(stageRow("Ejecución", kvGrid(pairs)));
+  }
+  if (data.independent_reread) {
+    const box = el("div", "reread-box");
+    box.innerHTML = "<strong>Relectura independiente de Odoo (cliente nuevo)</strong>" +
+      Object.entries(data.independent_reread).map(([k, v]) => `${k}: <code>${v}</code>`).join(" · ");
+    stages.appendChild(stageRow("Verificación", box));
+  }
+
+  card.appendChild(stages);
+  stream.insertBefore(card, stream.firstChild);
+}
+
+async function submitRequest(text, role) {
+  const btn = document.getElementById("send-btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> enviando…';
+  try {
+    const res = await fetch(API + "/api/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, role }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      renderEvent(text, role, { decision: "ERROR", reasons: [data.detail || "error desconocido"] });
+    } else {
+      renderEvent(text, role, data);
+    }
+  } catch (err) {
+    renderEvent(text, role, { decision: "ERROR", reasons: [String(err)] });
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Enviar al pipeline gobernado";
+  }
+}
+
+document.getElementById("request-form").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const text = document.getElementById("text").value.trim();
+  const role = document.getElementById("role").value;
+  if (!text) return;
+  submitRequest(text, role);
+});
+
+loadCatalog();
+</script>
+</body>
+</html>
