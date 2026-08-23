@@ -543,6 +543,17 @@ piloto v1, no como trabajo pendiente del proyecto.
 
 ## 7. Experimentos
 
+**Este capítulo describe el piloto exploratorio v1** — el diseño de
+cinco corridas que sirvió para construir y depurar el instrumento de
+medida, incluidos los dos sesgos de §7.3. **No es el protocolo de la
+campaña confirmatoria**, que es v2.1: verdad de referencia por
+construcción, sin anotación humana, con potencia y protocolo congelados
+**antes** de generar el holdout y evaluación única (§8.0,
+`docs/tfm-closure-no-human-v2.1.md`, `docs/results-v2.1.md`). Se
+conserva aquí, íntegro, porque el diseño de las cinco corridas y los
+sesgos que corrigió son precisamente lo que informó cómo se construyó
+v2.1 — no porque siga siendo el protocolo vigente.
+
 ### 7.1 Protocolo
 
 120 casos de test congelado × 3 sistemas × 3 repeticiones = **1.080
