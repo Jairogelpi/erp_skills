@@ -218,15 +218,31 @@
   .catalog-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
   .catalog-item {
     font-size: 0.8rem;
-    padding: 8px 10px;
     border: 1px solid var(--line);
     border-radius: 8px;
+    overflow: hidden;
+  }
+  .catalog-item summary {
+    padding: 8px 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 8px;
+    cursor: pointer;
+    list-style: none;
   }
+  .catalog-item summary::-webkit-details-marker { display: none; }
+  .catalog-item summary::after {
+    content: "ver parámetros";
+    font-size: 0.68rem;
+    color: var(--accent);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .catalog-item[open] summary::after { content: "ocultar parámetros"; }
   .catalog-item .id { font-family: var(--font-mono); color: var(--ink-2); }
+  .catalog-item .summary-chips { display: flex; align-items: center; flex-shrink: 0; }
+  .catalog-item .param-list { border-top: 1px solid var(--line); padding: 10px 12px 12px; }
   .wired-chip, .risk-chip {
     font-family: var(--font-mono);
     font-size: 0.66rem;
@@ -238,6 +254,44 @@
   .wired-chip.yes { background: var(--allow-soft); color: var(--allow); }
   .wired-chip.no { background: var(--neutral-soft); color: var(--neutral-state); }
   .risk-chip { background: var(--neutral-soft); color: var(--muted); margin-left: 6px; }
+
+  /* Parameters rendered from a skill's input_schema, in plain language --
+     used in the catalog, on proposal cards, and (as an editable form) in
+     the CU-02 sandbox-test step. See humanizeField()/typeCaption() below. */
+  .param-list { display: flex; flex-direction: column; gap: 8px; }
+  .param-caption {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .param-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 0.83rem;
+    padding: 5px 0;
+    border-top: 1px solid var(--line);
+  }
+  .param-row:first-of-type { border-top: none; }
+  .param-label { color: var(--ink-2); font-weight: 500; }
+  .param-required {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 1px 6px;
+    margin-left: 6px;
+    vertical-align: 1px;
+  }
+  .param-hint { color: var(--muted); font-size: 0.78rem; text-align: right; flex-shrink: 0; }
+  .param-form .field { margin-bottom: 12px; }
+  .param-form .field label { display: flex; align-items: baseline; gap: 6px; }
+  .param-form .field .param-hint { text-align: left; font-size: 0.74rem; margin-top: 3px; }
+  .param-form input[type="checkbox"] { width: auto; }
 
   .trace-empty {
     color: var(--muted);
@@ -281,6 +335,67 @@
   .state.DENY { background: var(--deny-soft); color: var(--deny); }
   .state.REQUIRE_APPROVAL { background: var(--approval-soft); color: var(--approval); }
   .state.ABSTAIN, .state.CLARIFY, .state.NOT_WIRED, .state.ERROR { background: var(--neutral-soft); color: var(--neutral-state); }
+  .state.ACTIVE { background: var(--allow-soft); color: var(--allow); }
+  .state.QUARANTINED { background: var(--deny-soft); color: var(--deny); }
+  .state.DRAFT, .state.VALIDATED, .state.TESTED, .state.APPROVED { background: var(--approval-soft); color: var(--approval); }
+
+  .admin-section { margin-top: 28px; }
+  .admin-section > h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.15rem;
+    margin: 0 0 4px;
+  }
+  .admin-section > .sub {
+    color: var(--muted);
+    font-size: 0.84rem;
+    line-height: 1.55;
+    margin: 0 0 16px;
+    max-width: 74ch;
+  }
+  .admin-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 920px) {
+    .admin-layout { grid-template-columns: 1fr; }
+  }
+  textarea.code {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    min-height: 220px;
+    white-space: pre;
+  }
+  .lifecycle-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .lifecycle-steps span:not(:last-child)::after { content: " \2192 "; }
+  .proposal-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .proposal-card .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .proposal-card .id { font-family: var(--font-mono); font-size: 0.85rem; }
+  .proposal-card .desc { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+  .approver-row { display: flex; gap: 8px; margin-top: 10px; }
+  .approver-row input { flex: 1; }
+  .approver-row button { width: auto; white-space: nowrap; }
 
   .stages { padding: 4px 16px 16px; }
   .stage {
@@ -416,6 +531,66 @@
 
   </div>
 
+  <div class="admin-section">
+    <h2>Administrar automatizaciones — crear una skill nueva (CU-02)</h2>
+    <p class="sub">
+      El modelo redacta un <strong>contrato</strong> de la automatización (esquema de entrada, riesgo,
+      roles, postcondiciones) a partir de una descripción — nunca código ejecutable. Puedes editar ese
+      contrato a mano antes de probarlo. La prueba corre en una caja de arena desechable, nunca contra
+      Odoo. Activar aquí no escribe en Odoo: dice "gobernada y lista para que un ingeniero le conecte un
+      handler real", igual que las otras 10 skills del catálogo que hoy solo tienen política, no ejecución.
+    </p>
+    <div class="lifecycle-steps">
+      <span>DRAFT</span><span>VALIDATED</span><span>TESTED</span><span>APPROVED</span><span>ACTIVE</span>
+    </div>
+
+    <div class="admin-layout" style="margin-top:18px;">
+      <div>
+        <div class="panel">
+          <h2>1 · Redactar</h2>
+          <div class="field">
+            <label for="propose-desc">Describe la automatización en lenguaje natural</label>
+            <textarea id="propose-desc" placeholder="Cuando un cliente pide una demo, crea una tarea interna con su nombre y la fecha límite."></textarea>
+          </div>
+          <button type="button" class="btn-primary" id="draft-btn">Redactar contrato con IA</button>
+        </div>
+
+        <div class="panel">
+          <h2>2 · Editar contrato (técnico, JSON)</h2>
+          <div class="field">
+            <label for="contract-json">Contrato — editable a mano antes de probar</label>
+            <textarea id="contract-json" class="code" placeholder="Redacta primero un borrador arriba."></textarea>
+          </div>
+          <button type="button" class="btn-ghost" id="resync-form-btn" style="width:100%;">
+            Actualizar el formulario de abajo con este contrato
+          </button>
+        </div>
+
+        <div class="panel">
+          <h2>3 · Rellenar parámetros para probar</h2>
+          <p style="font-size:0.82rem; color:var(--muted); margin:0 0 14px; line-height:1.5;">
+            Así es como cualquier persona del negocio usaría esta automatización: un campo por
+            parámetro, con su nombre en claro y lo que espera cada uno — no hace falta tocar JSON.
+          </p>
+          <div id="sample-form" class="param-form">
+            <div class="trace-empty">Redacta primero un borrador arriba.</div>
+          </div>
+          <button type="button" class="btn-primary" id="test-btn" disabled>Probar en sandbox y registrar</button>
+          <div id="test-result" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <h2>Automatizaciones propuestas</h2>
+          <div id="proposals-list">
+            <div class="trace-empty">Ninguna propuesta todavía en esta sesión.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="legal">
     Cada petición corre contra la instancia de <strong>desarrollo</strong> de Odoo (nunca producción — bloqueado por <code>require_development_instance()</code> antes de que salga ninguna escritura de este proceso). Solo 2 de las 12 skills del catálogo tienen handler real de Odoo; el resto se resuelve por política pero no ejecuta. Servidor en <code>127.0.0.1</code> únicamente, no accesible desde red. Fuente: <code>scripts/product_demo_server.py</code>.
   </footer>
@@ -432,6 +607,155 @@ function el(tag, cls, text) {
   return e;
 }
 
+// --- Rendering a skill's input_schema in plain language --------------------
+// The point: any business user should be able to look at a skill and know
+// exactly what to fill in, without reading JSON or a field's raw key name
+// ("customer_name"). Used read-only in the catalog and on proposal cards,
+// and as a live editable form in the CU-02 sandbox-test step below.
+
+const FIELD_LABELS = {
+  customer_name: "Nombre del cliente",
+  expected_revenue: "Importe esperado (€)",
+  opportunity_id: "ID de la oportunidad",
+  query: "Búsqueda (nombre, email o teléfono)",
+  quote_id: "ID del presupuesto",
+  product_name: "Nombre del producto",
+  quantity: "Cantidad",
+  order_id: "ID del pedido",
+  supplier_name: "Nombre del proveedor",
+  field: "Campo a modificar",
+  value: "Nuevo valor",
+  title: "Título de la tarea",
+};
+
+// Field names outside the frozen catalog (a CU-02 draft) are invented by
+// the model and can't be dictionary-covered -- this fallback is what makes
+// an unknown name readable: "nombre_cliente" -> "Nombre cliente".
+function humanizeField(name) {
+  if (FIELD_LABELS[name]) return FIELD_LABELS[name];
+  const spaced = name.replace(/[_-]+/g, " ").trim();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+function typeCaption(prop) {
+  if (!prop || Object.keys(prop).length === 0) return "texto";
+  if (prop.enum && prop.enum.length) return "una de: " + prop.enum.join(", ");
+  const t = prop.type;
+  let base;
+  if (t === "number" || t === "integer") base = "número";
+  else if (t === "boolean") base = "sí / no";
+  else if (t === "string" && prop.format === "email") base = "email";
+  else base = "texto";
+  const bounds = [];
+  if (prop.minimum !== undefined) bounds.push("mín " + prop.minimum);
+  if (prop.maximum !== undefined) bounds.push("máx " + prop.maximum);
+  if (prop.minLength !== undefined) bounds.push("mín " + prop.minLength + " caracteres");
+  return bounds.length ? base + " (" + bounds.join(", ") + ")" : base;
+}
+
+function schemaFieldNames(schema) {
+  const required = new Set((schema && schema.required) || []);
+  const properties = (schema && schema.properties) || {};
+  return { required, names: Array.from(new Set([...required, ...Object.keys(properties)])), properties };
+}
+
+// Read-only rendering (catalog, proposal cards): a plain list of "this is
+// what you need to tell it, and what kind of value it expects".
+function paramListEl(schema, caption) {
+  const { required, names, properties } = schemaFieldNames(schema);
+  const wrap = el("div");
+  if (caption) wrap.appendChild(el("div", "param-caption", caption));
+  if (!names.length) {
+    wrap.appendChild(el("div", "trace-empty", "Esta automatización no necesita ningún parámetro."));
+    return wrap;
+  }
+  const list = el("div", "param-list");
+  for (const name of names) {
+    const row = el("div", "param-row");
+    const label = el("div", "param-label");
+    label.appendChild(document.createTextNode(humanizeField(name)));
+    if (required.has(name)) label.appendChild(el("span", "param-required", "obligatorio"));
+    row.appendChild(label);
+    row.appendChild(el("div", "param-hint", typeCaption(properties[name])));
+    list.appendChild(row);
+  }
+  wrap.appendChild(list);
+  return wrap;
+}
+
+// Editable rendering (CU-02 sandbox-test step): one real input control per
+// parameter, typed from the schema (number/checkbox/select/text), so
+// filling in test values means typing into labelled fields, never JSON.
+// Returns { collect() } to read the typed-back values.
+function buildParamForm(schema, containerEl, values) {
+  values = values || {};
+  containerEl.innerHTML = "";
+  const { required, names, properties } = schemaFieldNames(schema);
+  if (!names.length) {
+    containerEl.appendChild(el("div", "trace-empty", "Esta automatización no necesita ningún parámetro."));
+    return { collect: () => ({}) };
+  }
+  const controls = {};
+  for (const name of names) {
+    const prop = properties[name] || {};
+    const field = el("div", "field");
+    const label = el("label");
+    label.htmlFor = "param-" + name;
+    label.appendChild(document.createTextNode(humanizeField(name)));
+    if (required.has(name)) label.appendChild(el("span", "param-required", "obligatorio"));
+    field.appendChild(label);
+
+    let input;
+    if (prop.enum && prop.enum.length) {
+      input = document.createElement("select");
+      for (const opt of prop.enum) {
+        const o = document.createElement("option");
+        o.value = opt;
+        o.textContent = opt;
+        input.appendChild(o);
+      }
+    } else if (prop.type === "boolean") {
+      input = document.createElement("input");
+      input.type = "checkbox";
+    } else if (prop.type === "number" || prop.type === "integer") {
+      input = document.createElement("input");
+      input.type = "number";
+      if (prop.type === "integer") input.step = "1";
+      if (prop.minimum !== undefined) input.min = String(prop.minimum);
+      if (prop.maximum !== undefined) input.max = String(prop.maximum);
+    } else {
+      input = document.createElement("input");
+      input.type = "text";
+    }
+    input.id = "param-" + name;
+    if (values[name] !== undefined) {
+      if (input.type === "checkbox") input.checked = !!values[name];
+      else input.value = values[name];
+    }
+    field.appendChild(input);
+    field.appendChild(el("div", "param-hint", typeCaption(prop)));
+    containerEl.appendChild(field);
+    controls[name] = { input, type: prop.type };
+  }
+  return {
+    collect() {
+      const out = {};
+      for (const [name, { input, type }] of Object.entries(controls)) {
+        if (input.type === "checkbox") {
+          out[name] = input.checked;
+          continue;
+        }
+        const raw = input.value;
+        if (raw === "") continue; // an empty optional field is simply omitted
+        if (type === "number") out[name] = Number(raw);
+        else if (type === "integer") out[name] = parseInt(raw, 10);
+        else out[name] = raw;
+      }
+      return out;
+    },
+  };
+}
+
 async function loadCatalog() {
   const list = document.getElementById("catalog-list");
   try {
@@ -439,16 +763,20 @@ async function loadCatalog() {
     const skills = await res.json();
     list.innerHTML = "";
     for (const s of skills) {
-      const row = el("div", "catalog-item");
+      const row = document.createElement("details");
+      row.className = "catalog-item";
+      const summary = document.createElement("summary");
       const left = el("span", "id", s.skill_id);
-      const right = el("span");
+      const chips = el("span", "summary-chips");
       const risk = el("span", "risk-chip", s.risk_class);
       const wired = el("span", "wired-chip " + (s.odoo_wired ? "yes" : "no"),
         s.odoo_wired ? "escribe en Odoo" : "solo política");
-      right.appendChild(wired);
-      right.appendChild(risk);
-      row.appendChild(left);
-      row.appendChild(right);
+      chips.appendChild(wired);
+      chips.appendChild(risk);
+      summary.appendChild(left);
+      summary.appendChild(chips);
+      row.appendChild(summary);
+      row.appendChild(paramListEl(s.input_schema, "Para usar esta automatización necesitas indicar:"));
       list.appendChild(row);
     }
     document.getElementById("target-label").textContent = "instancia de desarrollo verificada";
@@ -602,7 +930,170 @@ document.getElementById("request-form").addEventListener("submit", (ev) => {
   submitRequest(text, role);
 });
 
+// --- CU-02: propose / edit / test / approve a new skill -------------------
+// Separate lane from the request pipeline above: nothing here ever touches
+// CATALOG or Odoo. See scripts/skill_admin.py's module docstring.
+
+async function renderProposals() {
+  const list = document.getElementById("proposals-list");
+  let proposals;
+  try {
+    const res = await fetch(API + "/api/proposals");
+    proposals = await res.json();
+  } catch (err) {
+    list.innerHTML = "";
+    list.appendChild(el("div", "trace-empty", "No se pudo cargar la lista: " + err));
+    return;
+  }
+  list.innerHTML = "";
+  if (!proposals.length) {
+    list.appendChild(el("div", "trace-empty", "Ninguna propuesta todavía en esta sesión."));
+    return;
+  }
+  for (const p of proposals) {
+    const card = el("div", "proposal-card");
+    const head = el("div", "head");
+    head.appendChild(el("span", "id", p.skill_id + "@" + p.version));
+    head.appendChild(el("span", "state " + p.state, p.state));
+    card.appendChild(head);
+    card.appendChild(el("div", "desc", p.description));
+    card.appendChild(paramListEl(p.input_schema, "Para usar esta automatización hace falta indicar:"));
+
+    const steps = el("div", "lifecycle-steps");
+    for (const h of p.history) {
+      steps.appendChild(el("span", null, h.to));
+    }
+    card.appendChild(steps);
+
+    if (p.state === "TESTED") {
+      const row = el("div", "approver-row");
+      const input = el("input");
+      input.type = "text";
+      input.placeholder = "nombre de quien aprueba (persona real)";
+      const btn = el("button", "btn-approve", "Aprobar y activar");
+      btn.type = "button";
+      btn.addEventListener("click", async () => {
+        const approver = input.value.trim();
+        if (!approver) { input.focus(); return; }
+        btn.disabled = true;
+        try {
+          const res = await fetch(API + "/api/proposals/approve", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ skill_id: p.skill_id, version: p.version, approver }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "error desconocido");
+          renderProposals();
+        } catch (err) {
+          btn.disabled = false;
+          alert("No se pudo aprobar: " + err);
+        }
+      });
+      row.appendChild(input);
+      row.appendChild(btn);
+      card.appendChild(row);
+    } else if (p.state === "ACTIVE") {
+      card.appendChild(el("div", "note-box",
+        "Gobernada y activa en el registro de propuestas de esta demo. " +
+        "No escribe en Odoo hasta que un ingeniero le conecte un handler real, " +
+        "igual que 10 de las 12 skills del catálogo congelado."));
+    }
+
+    list.appendChild(card);
+  }
+}
+
+// Holds the { collect() } handle of the currently-rendered sample-args
+// form (step 3), rebuilt every time a contract is (re)drafted or the
+// "actualizar formulario" button resyncs it from a manually-edited
+// contract JSON.
+let sampleFormApi = null;
+
+function rebuildSampleForm(inputSchema, presetValues) {
+  const container = document.getElementById("sample-form");
+  sampleFormApi = buildParamForm(inputSchema, container, presetValues || {});
+  document.getElementById("test-btn").disabled = false;
+}
+
+document.getElementById("draft-btn").addEventListener("click", async () => {
+  const desc = document.getElementById("propose-desc").value.trim();
+  if (!desc) return;
+  const btn = document.getElementById("draft-btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> redactando…';
+  try {
+    const res = await fetch(API + "/api/proposals/draft", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ description: desc }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "error desconocido");
+    document.getElementById("contract-json").value = JSON.stringify(data.contract, null, 2);
+    rebuildSampleForm(data.contract.input_schema, data.sample_arguments);
+  } catch (err) {
+    alert("No se pudo redactar el contrato: " + err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Redactar contrato con IA";
+  }
+});
+
+document.getElementById("resync-form-btn").addEventListener("click", () => {
+  let contract;
+  try {
+    contract = JSON.parse(document.getElementById("contract-json").value);
+  } catch (err) {
+    alert("El contrato tiene un JSON inválido, no se puede regenerar el formulario: " + err);
+    return;
+  }
+  // Manual edits to the contract's own field names/types should be
+  // reflected in the form -- rebuilding from scratch (rather than
+  // patching) is what keeps the two from silently drifting apart.
+  rebuildSampleForm(contract.input_schema, {});
+});
+
+document.getElementById("test-btn").addEventListener("click", async () => {
+  const resultEl = document.getElementById("test-result");
+  let contract;
+  try {
+    contract = JSON.parse(document.getElementById("contract-json").value);
+  } catch (err) {
+    resultEl.innerHTML = "";
+    resultEl.appendChild(el("div", "note-box", "El contrato tiene un JSON inválido: " + err));
+    return;
+  }
+  const sample = sampleFormApi ? sampleFormApi.collect() : {};
+  const btn = document.getElementById("test-btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> probando en sandbox…';
+  try {
+    const res = await fetch(API + "/api/proposals/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contract, sample_arguments: sample }),
+    });
+    const data = await res.json();
+    resultEl.innerHTML = "";
+    if (!res.ok) {
+      resultEl.appendChild(el("div", "note-box", "Prueba rechazada: " + (data.detail || "error desconocido")));
+    } else {
+      resultEl.appendChild(el("div", "reread-box",
+        "Registrada y probada en sandbox: estado " + data.state + "."));
+      renderProposals();
+    }
+  } catch (err) {
+    resultEl.innerHTML = "";
+    resultEl.appendChild(el("div", "note-box", "Error: " + err));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Probar en sandbox y registrar";
+  }
+});
+
 loadCatalog();
+renderProposals();
 </script>
 </body>
 </html>

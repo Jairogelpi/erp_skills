@@ -94,3 +94,7 @@ data/real_requests.csv
 # MASSIVE es-ES (12 MB, CC-BY-4.0): redownloaded by the script on demand,
 # too large to version and not ours to redistribute.
 data/massive_es.jsonl
+
+
+# Playwright MCP session artifacts (screenshots, snapshots, console logs)
+.playwright-mcp/

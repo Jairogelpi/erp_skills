@@ -1,12 +1,22 @@
 # ERP Agent OS: diseño y evaluación experimental de un sistema de recuperación y ejecución segura de skills reutilizables para la automatización de procesos ERP mediante agentes de inteligencia artificial
 
-> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion**
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion** (marcador exigido
+> literalmente por el contrato automático `src/erp_agent_os/claims.py` /
+> `tests/test_claims.py`, escrito en la era v1 antes de que existiera el
+> veredicto por hipótesis de v2.1 — el marcador se conserva porque
+> `data/evidence_registry.json` todavía no distingue hipótesis confirmadas
+> de no confirmadas bajo el nuevo protocolo, decisión de política declarada
+> como pendiente en el Anexo D; **no leer el texto siguiente, heredado de
+> la auditoría del 14-08-2026, como el estado real**).
 >
-> Auditoría del 14-08-2026: ninguna de H1-H8 está confirmada todavía. Las
-> etiquetas históricas de «confirmatorio» quedan invalidadas; las cifras se
-> conservan como evidencia exploratoria. Véase `docs/hypotheses-and-theses.md`
-> y `data/evidence_registry.json`. El cierre vigente será v2.1 sin anotadores
-> humanos; está especificado, pero no implementado, congelado ni ejecutado.
+> **Corte de evidencia: 2026-08-23, actualizado.** El protocolo v2.1 sin
+> anotadores humanos está implementado, congelado (`tfm-protocol-v2.1.2`)
+> y ejecutado: campaña real de 21.478 observaciones, `RUN_COMPLETED` /
+> `CLOSURE_VALID`. `docs/results-v2.1.md` (Parte A) es la fuente de verdad
+> confirmatoria y el §8.0 de este documento la resume con veredicto
+> explícito por hipótesis (H1a, H2, H3a, H6 y H7 soportadas; H1b, H4 y H5
+> no soportadas, con desglose caso por caso). Véase también
+> `docs/hypotheses-and-theses.md`.
 
 **Autor:** Jairo Gelpi Moreno
 **Programa:** Máster en Data Science, Inteligencia Artificial y Big Data
@@ -1519,7 +1529,7 @@ uv run python scripts/make_figures_v2_1.py
 | `data/protocol_v2_1/code_freeze_manifest.json` | Manifiesto congelado vigente (`tfm-protocol-v2.1.2`) |
 | `data/protocol_v2_1/code_freeze_manifest_v2_1_1.json` | Manifiesto anterior, archivado por procedencia |
 | `data/protocol_v2_1/confirmatory_report_v2_1_2.json` | Informe vigente — H1a-H8, 13 entradas, sin `protocol_violation` |
-| `data/protocol_v2_1/confirmatory_report_v2_1_1.json` / `..._PRE_H2_FIX.json` | Informes anteriores al arreglo de H2, conservados |
+| `data/protocol_v2_1/confirmatory_report_v2_1_1.json` / `confirmatory_report_v2_1_1_PRE_H2_FIX.json` | Informes anteriores al arreglo de H2, conservados |
 | `reports/figures/v21_hypotheses_forest.{png,svg}` | Las 9 pruebas, estimación e IC95, confirmada/no confirmada |
 | `reports/figures/v21_h4_categories.{png,svg}` | Mutación no autorizada de C por las 7 categorías de H4 |
 | `reports/figures/v21_h2_tokens.{png,svg}` | Ahorro de tokens de C contra A y contra B |

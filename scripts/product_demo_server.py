@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import uuid
 from pathlib import Path
 from typing import Any
@@ -40,6 +41,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from skill_admin import (
+    SkillAdmin,
+    SkillAdminError,
+    draft_skill_contract,
+    synthesize_sample_arguments,
+)
 
 from erp_agent_os import odoo_handlers
 from erp_agent_os.approval import ApprovalService
@@ -72,6 +79,21 @@ class RequestBody(BaseModel):
 class ApprovalBody(BaseModel):
     scope: str
     ttl_seconds: int = 120
+
+
+class ProposalDraftBody(BaseModel):
+    description: str
+
+
+class ProposalTestBody(BaseModel):
+    contract: dict[str, Any]
+    sample_arguments: dict[str, Any] | None = None
+
+
+class ProposalApproveBody(BaseModel):
+    skill_id: str
+    version: str
+    approver: str
 
 
 def _build_system() -> tuple[SystemC, TfidfRetriever, ApprovalService, AuditStore]:
@@ -109,6 +131,7 @@ def _extraction_client() -> OpenRouterClient:
 def create_app() -> FastAPI:
     system, retriever, approval, audit = _build_system()
     llm = _extraction_client()
+    skill_admin = SkillAdmin()
 
     app = FastAPI(title="ERP Agent OS — product demo")
     # Same-origin only in practice (frontend is served by this app), but
@@ -128,7 +151,15 @@ def create_app() -> FastAPI:
                 "skill_id": s.skill_id,
                 "description": s.description,
                 "risk_class": s.risk_class.value,
-                "required_fields": s.input_schema["required"],
+                # Full input_schema, not just the required-field names: the
+                # frontend renders each parameter as a labelled control, and
+                # needs the declared type (and any constraint such as
+                # minimum/maximum/enum) to pick the right one. The frozen
+                # catalog (catalog.py) does not declare "properties" per
+                # field -- only "required" -- so these 12 skills render
+                # every field as free text; a CU-02 proposal's LLM-drafted
+                # contract does declare types, and renders richer controls.
+                "input_schema": s.input_schema,
                 "allowed_roles": list(s.permissions.allowed_roles),
                 "odoo_wired": s.skill_id in ODOO_WIRED_SKILLS,
             }
@@ -257,6 +288,55 @@ def create_app() -> FastAPI:
             "scope": granted.scope,
             "expires_at": granted.expires_at.isoformat(),
         }
+
+    # --- CU-02: propose / edit / test / approve a new skill --------------
+    # Entirely separate lane from /api/request above: proposals here never
+    # touch CATALOG, never touch Odoo, and Runtime never sees them. See
+    # skill_admin.py's module docstring for why (§15: a generated skill
+    # is never auto-activated; the LLM drafts a contract, never code).
+
+    @app.post("/api/proposals/draft")
+    def draft_proposal(body: ProposalDraftBody) -> dict[str, Any]:
+        api_key = os.environ.get("OPENROUTER_API_KEY")
+        if not api_key:
+            raise HTTPException(500, "OPENROUTER_API_KEY is not set")
+        try:
+            contract = draft_skill_contract(body.description, api_key=api_key)
+        except SkillAdminError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        sample = synthesize_sample_arguments(contract.get("input_schema", {}))
+        # A draft is shown, never registered: the human still has to
+        # review/edit it in the frontend and explicitly send it to
+        # /api/proposals/test before it enters the registry at DRAFT.
+        return {"contract": contract, "sample_arguments": sample}
+
+    @app.post("/api/proposals/test")
+    def test_proposal(body: ProposalTestBody) -> dict[str, Any]:
+        sample = body.sample_arguments or synthesize_sample_arguments(
+            body.contract.get("input_schema", {})
+        )
+        try:
+            return skill_admin.propose(body.contract, sample)
+        except SkillAdminError as exc:
+            # A rejected/failed proposal is a real, expected outcome (a
+            # bad schema, or a handler whose postconditions don't hold in
+            # sandbox) -- reported as 422 with the reason, not swallowed.
+            raise HTTPException(422, str(exc)) from exc
+
+    @app.post("/api/proposals/approve")
+    def approve_proposal(body: ProposalApproveBody) -> dict[str, Any]:
+        if not body.approver.strip():
+            raise HTTPException(422, "activation requires a named human approver")
+        try:
+            return skill_admin.approve(
+                body.skill_id, body.version, approver=body.approver
+            )
+        except SkillAdminError as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+    @app.get("/api/proposals")
+    def list_proposals() -> list[dict[str, Any]]:
+        return skill_admin.list_proposals()
 
     @app.get("/api/audit")
     def full_audit() -> list[dict[str, Any]]:
