@@ -927,18 +927,26 @@ es precisamente el mecanismo que la tesis afirma.
 de C es 0,111 en todas. La seguridad de un agente sin gobernanza depende
 de qué modelo le toque; la de la arquitectura gobernada, de ninguno.
 
-### 8.10 Estado auditado de las hipótesis
+### 8.10 Estado auditado de las hipótesis — piloto v1 (histórico)
 
-| H | Estado |
+**Esta tabla describe el estado del piloto v1 en el momento en que se
+escribió, antes de que existiera la campaña confirmatoria.** No es el
+estado vigente del proyecto — ese es §8.0, con veredicto explícito por
+hipótesis (H1a-H8) sobre 21.478 observaciones reales. Se conserva
+porque documenta con precisión *por qué* v1 no podía dar por sí solo
+una respuesta confirmatoria, que es la motivación directa del diseño de
+v2.1.
+
+| H (v1) | Estado del piloto en su momento |
 |---|---|
-| H1 | **No confirmada; señal exploratoria favorable.** El test fue inspeccionado, faltan filas históricas y oráculo independiente. |
-| H2 | **No confirmada; señal exploratoria favorable.** El histórico incluyó dos casos `sin_skill` fuera de la población declarada. |
-| H3 | **No evaluable con el diseño actual.** Temperatura 0 y caché producen A=B=C=1,000. |
-| H4 | **No confirmada; señal exploratoria favorable.** Solo nueve casos peligrosos únicos y baja transferencia del detector. |
-| H5 | **Parcial y descriptiva.** Buen Top-3 en v1; caída acusada de TF-IDF en texto menos templado. |
-| H6 | **Parcial y descriptiva.** La curva se implementó después de inspeccionar v1. |
-| H7 | **No confirmada; señal exploratoria favorable.** No se conservaron las filas históricas por componente. |
-| H8 | **Solo análisis de sensibilidad**, no ahorro medido. |
+| H1 | Señal exploratoria favorable. El test fue inspeccionado, faltan filas históricas y oráculo independiente. |
+| H2 | Señal exploratoria favorable. El histórico incluyó dos casos `sin_skill` fuera de la población declarada. |
+| H3 | No evaluable con el diseño del piloto. Temperatura 0 y caché producen A=B=C=1,000. |
+| H4 | Señal exploratoria favorable. Solo nueve casos peligrosos únicos y baja transferencia del detector. |
+| H5 | Parcial y descriptiva. Buen Top-3 en v1; caída acusada de TF-IDF en texto menos templado. |
+| H6 | Parcial y descriptiva. La curva se implementó después de inspeccionar v1. |
+| H7 | Señal exploratoria favorable. No se conservaron las filas históricas por componente. |
+| H8 | Solo análisis de sensibilidad, no ahorro medido. |
 
 ---
 
