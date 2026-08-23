@@ -1,8 +1,8 @@
 # Auditoría del instrumento de medida
 
 Este documento registra las auditorías hechas **sobre el propio aparato de
-evaluación**, no sobre el sistema evaluado. Existe porque quince rondas
-sucesivas encontraron diecisiete defectos reales, y casi todos compartían
+evaluación**, no sobre el sistema evaluado. Existe porque dieciséis rondas
+sucesivas encontraron dieciocho defectos reales, y casi todos compartían
 la misma forma: **código (o texto) que pasaba en silencio**, no código
 que fallaba a gritos.
 
@@ -47,10 +47,13 @@ este tipo de escrutinio.
 
 | **17** | **`make verify-tfm-closure` ejecutaba el modo equivocado desde que la campaña real terminó**: el target llamaba a `verify_tfm_closure_v2_1.py --pre-run`, que por diseño exige que **no exista ningún recibo v2.1 todavía** (`DRAFT_PROTOCOL`, según su propio docstring) — es la puerta de "listo para lanzar", no la de "cerrado correctamente". Como la campaña real ya completó (`RUN_COMPLETED`, recibos comiteados), `--pre-run` no puede volver a pasar nunca en el historial de este repositorio; el modo correcto para verificar una campaña ya terminada es `--final`, exactamente como documenta el Anexo A de `docs/memoria.md` | Al resolver el #16 y volver a ejecutar `make verify-tfm-closure` en local, el mensaje de error cambió de «found 2» a «expected no v2.1 receipts yet ... found state=RUN_COMPLETED» — un síntoma distinto del mismo hecho: nadie había actualizado este target desde que el Task 12 (la puerta de pre-vuelo) se escribió, antes de que la campaña real se ejecutara | Este target de CI **nunca había verificado de verdad el cierre real de la campaña** — solo podía fallar, de una forma u otra, desde que el #16 dejó de enmascararlo. Corregido apuntando el target a `--final` con las rutas exactas de recibo/manifiesto/informe que Anexo A documenta; verificado en local que produce `CLOSURE_VALID` |
 
+| **18** | **La evidencia cruda de la campaña real (recibos + 21.478 observaciones, ~80 MB) nunca llegó a git**: `data/protocol_v2_1/runs*/` está en `.gitignore` por una razón real y documentada (`auto_resume.sh` lleva una API key en claro), pero la regla ignoraba el directorio entero, arrastrando con ella `receipts_2.jsonl` y el fichero de observaciones — los dos artefactos que SÍ son evidencia, no scaffolding de ejecución. `docs/memoria.md` (Anexo A/B) ya afirmaba que "el archivo crudo... está comiteado", y no lo estaba: solo existía en el disco de la máquina donde corrió la campaña | Corriendo `--final` en local funcionaba (`CLOSURE_VALID`) pero fallaba en un checkout limpio de CI con «found DRAFT_PROTOCOL» — comparar `git show HEAD:receipts_2.jsonl` (vacío, `fatal: ... not in 'HEAD'`) contra el fichero real en disco confirmó que nunca se había comiteado | El cierre confirmatorio **no era reproducible desde un clon limpio del repositorio**, contradiciendo lo ya escrito. Corregido con una excepción quirúrgica en `.gitignore` (dos ficheros por nombre exacto, no un comodín — un comodín inicial también habría desprotegido el fichero de observaciones de un intento anterior interrumpido, con hash distinto, verificado y corregido antes de comitear) y comitiendo los dos ficheros reales, verificados sin secretos por grep antes de subirlos |
+
 Las conclusiones del experimento **sobrevivieron a trece de las quince
-correcciones de la era v1 sin cambiar de signo** (el #16 y el #17
-pertenecen a la infraestructura de cierre de v2.1, no al experimento
-v1: ninguno de los dos cambia ninguna cifra de `docs/results-v2.1.md`,
+correcciones de la era v1 sin cambiar de signo** (el #16, el #17 y el
+#18 pertenecen a la infraestructura de cierre de v2.1, no al
+experimento v1: ninguno de los tres cambia ninguna cifra de
+`docs/results-v2.1.md`,
 solo si CI puede verificar la campaña real que ya ocurrió). Las dos
 excepciones son el **#12** y el **#13**, y afectan al mismo contraste en
 direcciones opuestas:
@@ -75,7 +78,7 @@ motivo correcto.
 
 ### Nota de método: quién encuentra qué
 
-De los diecisiete defectos, quince salieron de auditorías que yo mismo
+De los dieciocho defectos, dieciséis salieron de auditorías que yo mismo
 lancé sobre mi propio trabajo. **Dos los destapó una pregunta escéptica
 del usuario sobre resultados que yo ya había aceptado**: el #13 (un
 resultado no significativo dado por bueno) y el #14 (al preguntar si la
@@ -84,17 +87,18 @@ contradice consigo mismo, y mala encontrando código que hace
 exactamente lo que yo creía que debía hacer. Para eso hace falta
 alguien que dude del supuesto, no de la implementación.
 
-Los defectos 16 y 17 son una **cuarta** categoría: ninguno de los dos
-salió de auditar un resultado, del sistema de tipos ni de una pregunta
-ajena — salieron de **ejecutar por primera vez, de principio a fin, un
-camino de CI que llevaba commits enteros existiendo sin correr nunca de
-verdad**. Un componente puede pasar `pytest` en local, tener sentido al
-leerlo y aun así no ser reproducible o estar comprobando la fase
-equivocada del proyecto en el único entorno (Linux, sin terminal
-interactiva, después de que la campaña real ya terminó) donde de verdad
-importa que sea correcto — hasta que algo lo obliga a ejecutarse allí.
-El #17 en concreto solo se hizo visible al corregir el #16: resolver un
-fallo destapó el siguiente, escondido detrás.
+Los defectos 16, 17 y 18 son una **cuarta** categoría: ninguno salió de
+auditar un resultado, del sistema de tipos ni de una pregunta ajena —
+salieron de **ejecutar por primera vez, de principio a fin, un camino de
+CI que llevaba commits enteros existiendo sin correr nunca de verdad**.
+Un componente puede pasar `pytest` en local, tener sentido al leerlo y
+aun así no ser reproducible, estar comprobando la fase equivocada del
+proyecto, o depender de un fichero que nunca llegó al repositorio — en
+el único entorno (Linux, sin terminal interactiva, con un clon limpio,
+después de que la campaña real ya terminó) donde de verdad importa que
+sea correcto — hasta que algo lo obliga a ejecutarse allí. Los tres se
+destaparon en cadena: corregir el #16 reveló el #17, y corregir el #17
+reveló el #18.
 
 El #15 añade un matiz que conviene registrar: estaba en código escrito
 **el mismo día**, en un arnés de validación de producto, y lo delató un
