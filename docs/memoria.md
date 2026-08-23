@@ -18,10 +18,12 @@
 > los artefactos y resultados reales del repositorio**, no de
 > expectativas. Toda cifra que aparece aquí procede de un fichero
 > versionado (`data/*.json`) y es reproducible con los comandos del
-> anexo A. Las referencias posteriores a kappa o segundo anotador describen el
-> protocolo histórico retirado y serán sustituidas al implementar v2.1. El
-> workbook y la defensa siguen siendo entregables pendientes y **no se dan por
-> hechos**.
+> anexo A. Las referencias posteriores a kappa o segundo anotador
+> describen el protocolo histórico **retirado y ya sustituido**: la
+> campaña confirmatoria v2.1 (verdad de referencia por construcción, sin
+> anotación humana) está implementada, congelada y ejecutada —
+> `docs/results-v2.1.md`. El workbook, el vídeo y la defensa siguen
+> siendo entregables pendientes y **no se dan por hechos**.
 
 ---
 
@@ -522,12 +524,20 @@ los resultados de recuperación en particular (§8.5) están condicionados
 por el alto solape léxico entre petición y descripción de skill que las
 plantillas producen.
 
-**Pendiente humano declarado:** la revisión por segundo anotador y el
-kappa de Cohen que exige el plan estadístico. El instrumento existe
+**Revisión por segundo anotador y kappa de Cohen: retirados
+formalmente, no completados.** El plan estadístico original de este
+benchmark (v1) los exigía; el instrumento llegó a construirse
 (`data/annotation_review_sheet.csv`, 96 casos estratificados que
 sobrerrepresentan adversariales y alto riesgo) y el script de cálculo
-**se niega a emitir un kappa** mientras la columna del segundo anotador
-esté vacía. No se ha fabricado un número.
+se negaba a emitir un kappa mientras la columna del segundo anotador
+estuviera vacía —nunca se fabricó un número—, pero ese paso humano no
+se va a completar. La razón no es abandono: el protocolo v2.1
+(`docs/tfm-closure-no-human-v2.1.md`) sustituye la anotación humana por
+verdad de referencia construida algorítmicamente y dos oráculos
+independientes del código evaluado, y esa campaña **ya está
+implementada, congelada y ejecutada** (§8.0, `docs/results-v2.1.md`).
+El acuerdo entre anotadores queda como una limitación declarada del
+piloto v1, no como trabajo pendiente del proyecto.
 
 ---
 
@@ -1508,7 +1518,7 @@ uv run python scripts/make_figures_v2_1.py
 | `data/real_requests_llm_eval.json` | Router LLM sobre las mismas peticiones, 120 llamadas reales |
 | `data/router_designs_eval.json` | Cinco diseños de enrutado, calibrados en dev y juzgados held-out |
 | `data/skill_profiles.json` | Descripciones enriquecidas, **fuera** del catálogo congelado |
-| `data/annotation_review_sheet.csv` | Muestra estratificada para el segundo anotador (**pendiente**) |
+| `data/annotation_review_sheet.csv` | Muestra estratificada para el segundo anotador — instrumento construido, paso **retirado formalmente** por v2.1, no completado |
 | `data/real_requests.csv` | Peticiones reales — **gitignorado**, puede contener datos de clientes |
 
 ### Anexo C. Documentación técnica complementaria
@@ -1528,9 +1538,17 @@ resultados y cómo responder las siete preguntas difíciles),
 
 ### Anexo D. Trabajo pendiente declarado
 
-1. **Kappa de anotación** — instrumento generado, paso humano pendiente.
+1. **Kappa de anotación** — retirado formalmente, no completado. El
+   instrumento se construyó (`data/annotation_review_sheet.csv`) pero
+   el paso humano no se va a ejecutar; el protocolo v2.1 sin anotación
+   humana lo sustituye y ya está implementado, congelado y ejecutado
+   (§6.3, §8.0).
 2. **Workbook de Tableau** — insumos generados, montaje manual.
-3. **Ejecución del brazo de temperatura y medición de H3b con LLM real.**
+3. **Actualización de `data/evidence_registry.json` y
+   `src/erp_agent_os/claims.py`** para que el contrato automático de
+   afirmaciones distinga hipótesis confirmadas de no confirmadas de
+   v2.1, en vez de su binario heredado de la era v1 (decisión de
+   política pendiente, no una tarea de escritura).
 4. **Vídeo de competición y presentación de defensa** — guion y
    contenido escritos (`docs/video-guion.md`, `docs/presentacion.md`);
    falta grabar y maquetar.
