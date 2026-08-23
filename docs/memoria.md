@@ -1321,9 +1321,14 @@ paráfrasis (H3a) sí resultó medible y confirma estabilidad.
 
 ### 11.2 Respuestas a las preguntas secundarias
 
-1. **Precisión de recuperación ante paráfrasis:** Top-1 = 0,780,
-   Top-3 = 0,941, MRR = 0,855 en test, con TF-IDF superando a embeddings
-   y a ranking híbrido en dev y validación.
+1. **Precisión de recuperación ante paráfrasis:** en el piloto v1,
+   Top-1 = 0,780, Top-3 = 0,941, MRR = 0,855, con TF-IDF superando a
+   embeddings y a ranking híbrido en dev y validación. **La campaña
+   confirmatoria lo contradice**: H5 (§8.0) mide selective accuracy
+   0,589 y false-reuse risk 0,411, muy fuera de los tres umbrales
+   operativos exigidos — no adecuada. La respuesta confirmatoria a esta
+   pregunta es que la recuperación **no** ofrece la precisión que el
+   piloto sugería.
 2. **Errores que previene el verificador:** ejecuciones bajo rol no
    autorizado, argumentos fuera de tipo o rango, operaciones con framing
    irreversible o de alcance masivo, y mutaciones cuyo estado final no
