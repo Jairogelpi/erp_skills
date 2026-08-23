@@ -454,9 +454,10 @@ Cada unidad de trabajo se construyó con TDD estricto
 RED → GREEN → TRIANGULATE → REFACTOR **contra un requisito normativo
 explícito**, con artefactos de especificación previos al código
 (`openspec/changes/*`). Estado de calidad actual: **822 tests**,
-cobertura **96 %** global (2.456 sentencias, 90 sin cubrir), `ruff` y
-`mypy` limpios sobre 38 módulos, CI verde incluyendo validación de
-dataset, verificación de congelación y *smoke benchmark*.
+cobertura **95 %** global (5.377 sentencias, 267 sin cubrir — el
+proyecto casi duplicó su tamaño con el protocolo v2.1), `ruff` y `mypy`
+limpios sobre 60 módulos, CI verde incluyendo validación de dataset,
+verificación de congelación y *smoke benchmark*.
 
 Las propiedades de seguridad se verifican con *property-based testing*
 (Hypothesis): una skill R4 nunca es registrable; una clave de
