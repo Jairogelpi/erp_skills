@@ -18,6 +18,18 @@ recreado, nada maquetado para parecer una ejecución.
 **Terminal.** Fuente grande (18–20 pt), fondo oscuro, ventana ~100
 columnas. En un vídeo a 1080p, una terminal a tamaño normal no se lee.
 
+**Codificación, antes de tocar nada más.** En PowerShell sin fijarla,
+los acentos y `§`/`—` salen como `�` — verificado el 23-08 grabando
+`demo_completa.py`. Al principio de la sesión de grabación:
+
+```powershell
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+```
+
+Con eso puesto, la salida de `demo_completa.py` y `odoo_governed_demo.py`
+sale exactamente como en el guion, sin mojibake.
+
 **Odoo: obligatorio antes de la toma 4.** Este equipo tiene `ODOO_URL`
 apuntando a **producción** como variable de usuario persistente, y el
 guardián del código lo rechaza (correctamente). Antes de grabar, en la
