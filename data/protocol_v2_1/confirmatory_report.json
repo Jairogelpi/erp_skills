@@ -1,0 +1,4807 @@
+{
+  "campaign_state": "RUN_COMPLETED",
+  "h8_cost_sensitivity": {
+    "breakdowns": [
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65210.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652100.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521000.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65210.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652100.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521000.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65210.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652100.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521000.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65210.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652100.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521000.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65210.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652100.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521000.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65210.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652100.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521000.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65210.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652100.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521000.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65210.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652100.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521000.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65210.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652100.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.47419880000000003,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521000.4741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65214.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652104.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521004.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65214.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652104.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521004.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65214.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652104.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521004.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65214.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652104.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521004.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65214.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652104.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521004.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65214.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652104.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521004.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65214.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652104.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521004.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65214.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652104.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521004.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65214.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652104.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 4.741988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521004.741988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65257.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652147.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521047.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65257.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652147.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521047.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65257.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652147.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521047.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65257.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652147.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521047.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65257.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652147.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521047.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65257.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652147.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521047.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65257.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652147.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521047.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65257.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652147.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521047.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 65210.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 65257.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 652100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 652147.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 6521000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 47.41988,
+        "n_observed_errors": 6521,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "A",
+        "total_cost_eur": 6521047.41988,
+        "total_tokens": 4741988
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47110.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471100.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711000.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47110.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471100.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711000.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47110.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471100.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711000.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47110.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471100.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711000.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47110.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471100.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711000.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47110.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471100.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711000.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47110.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471100.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711000.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47110.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471100.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711000.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47110.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471100.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.5922265000000001,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711000.5922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47115.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471105.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711005.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47115.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471105.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711005.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47115.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471105.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711005.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47115.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471105.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711005.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47115.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471105.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711005.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47115.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471105.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711005.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47115.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471105.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711005.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47115.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471105.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711005.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47115.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471105.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 5.922265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711005.922265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47169.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471159.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711059.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47169.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471159.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711059.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47169.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471159.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711059.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47169.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471159.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711059.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47169.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471159.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711059.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47169.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471159.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711059.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47169.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471159.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711059.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47169.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471159.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711059.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 47110.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 47169.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 471100.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 471159.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 4711000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 59.22265,
+        "n_observed_errors": 4711,
+        "n_retries": 6724,
+        "n_review_required": 0,
+        "n_scenarios": 6756,
+        "review_cost_eur": 0.0,
+        "system": "B",
+        "total_cost_eur": 4711059.22265,
+        "total_tokens": 5922265
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 680.6666666666666,
+        "system": "C",
+        "total_cost_eur": 48920.816847966664,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 680.6666666666666,
+        "system": "C",
+        "total_cost_eur": 483080.8168479667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 680.6666666666666,
+        "system": "C",
+        "total_cost_eur": 4824680.816847967,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2042.0000000000002,
+        "system": "C",
+        "total_cost_eur": 50282.1501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2042.0000000000002,
+        "system": "C",
+        "total_cost_eur": 484442.1501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2042.0000000000002,
+        "system": "C",
+        "total_cost_eur": 4826042.1501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 6806.666666666666,
+        "system": "C",
+        "total_cost_eur": 55046.816847966664,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 6806.666666666666,
+        "system": "C",
+        "total_cost_eur": 489206.8168479667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 6806.666666666666,
+        "system": "C",
+        "total_cost_eur": 4830806.816847967,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 1361.3333333333333,
+        "system": "C",
+        "total_cost_eur": 49601.483514633335,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 1361.3333333333333,
+        "system": "C",
+        "total_cost_eur": 483761.4835146333,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 1361.3333333333333,
+        "system": "C",
+        "total_cost_eur": 4825361.483514633,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 4084.0000000000005,
+        "system": "C",
+        "total_cost_eur": 52324.1501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 4084.0000000000005,
+        "system": "C",
+        "total_cost_eur": 486484.1501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 4084.0000000000005,
+        "system": "C",
+        "total_cost_eur": 4828084.1501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 13613.333333333332,
+        "system": "C",
+        "total_cost_eur": 61853.483514633335,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 13613.333333333332,
+        "system": "C",
+        "total_cost_eur": 496013.4835146333,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 13613.333333333332,
+        "system": "C",
+        "total_cost_eur": 4837613.483514633,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2722.6666666666665,
+        "system": "C",
+        "total_cost_eur": 50962.816847966664,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2722.6666666666665,
+        "system": "C",
+        "total_cost_eur": 485122.8168479667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2722.6666666666665,
+        "system": "C",
+        "total_cost_eur": 4826722.816847967,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 8168.000000000001,
+        "system": "C",
+        "total_cost_eur": 56408.1501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 8168.000000000001,
+        "system": "C",
+        "total_cost_eur": 490568.1501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 8168.000000000001,
+        "system": "C",
+        "total_cost_eur": 4832168.1501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 27226.666666666664,
+        "system": "C",
+        "total_cost_eur": 75466.81684796666,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 27226.666666666664,
+        "system": "C",
+        "total_cost_eur": 509626.81684796663,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 0.1,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 0.15018130000000002,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 27226.666666666664,
+        "system": "C",
+        "total_cost_eur": 4851226.816847967,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 680.6666666666666,
+        "system": "C",
+        "total_cost_eur": 48922.16847966667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 680.6666666666666,
+        "system": "C",
+        "total_cost_eur": 483082.16847966664,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 680.6666666666666,
+        "system": "C",
+        "total_cost_eur": 4824682.168479667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2042.0000000000002,
+        "system": "C",
+        "total_cost_eur": 50283.501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2042.0000000000002,
+        "system": "C",
+        "total_cost_eur": 484443.501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2042.0000000000002,
+        "system": "C",
+        "total_cost_eur": 4826043.501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 6806.666666666666,
+        "system": "C",
+        "total_cost_eur": 55048.16847966667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 6806.666666666666,
+        "system": "C",
+        "total_cost_eur": 489208.16847966664,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 6806.666666666666,
+        "system": "C",
+        "total_cost_eur": 4830808.168479667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 1361.3333333333333,
+        "system": "C",
+        "total_cost_eur": 49602.83514633333,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 1361.3333333333333,
+        "system": "C",
+        "total_cost_eur": 483762.8351463333,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 1361.3333333333333,
+        "system": "C",
+        "total_cost_eur": 4825362.835146333,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 4084.0000000000005,
+        "system": "C",
+        "total_cost_eur": 52325.501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 4084.0000000000005,
+        "system": "C",
+        "total_cost_eur": 486485.501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 4084.0000000000005,
+        "system": "C",
+        "total_cost_eur": 4828085.501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 13613.333333333332,
+        "system": "C",
+        "total_cost_eur": 61854.83514633333,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 13613.333333333332,
+        "system": "C",
+        "total_cost_eur": 496014.8351463333,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 13613.333333333332,
+        "system": "C",
+        "total_cost_eur": 4837614.835146333,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2722.6666666666665,
+        "system": "C",
+        "total_cost_eur": 50964.16847966667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2722.6666666666665,
+        "system": "C",
+        "total_cost_eur": 485124.16847966664,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2722.6666666666665,
+        "system": "C",
+        "total_cost_eur": 4826724.168479667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 8168.000000000001,
+        "system": "C",
+        "total_cost_eur": 56409.501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 8168.000000000001,
+        "system": "C",
+        "total_cost_eur": 490569.501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 8168.000000000001,
+        "system": "C",
+        "total_cost_eur": 4832169.501813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 27226.666666666664,
+        "system": "C",
+        "total_cost_eur": 75468.16847966667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 27226.666666666664,
+        "system": "C",
+        "total_cost_eur": 509628.16847966664,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 1.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 1.501813,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 27226.666666666664,
+        "system": "C",
+        "total_cost_eur": 4851228.168479667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 680.6666666666666,
+        "system": "C",
+        "total_cost_eur": 48935.68479666667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 680.6666666666666,
+        "system": "C",
+        "total_cost_eur": 483095.68479666667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 680.6666666666666,
+        "system": "C",
+        "total_cost_eur": 4824695.684796667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2042.0000000000002,
+        "system": "C",
+        "total_cost_eur": 50297.01813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2042.0000000000002,
+        "system": "C",
+        "total_cost_eur": 484457.01813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2042.0000000000002,
+        "system": "C",
+        "total_cost_eur": 4826057.01813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 6806.666666666666,
+        "system": "C",
+        "total_cost_eur": 55061.68479666667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 6806.666666666666,
+        "system": "C",
+        "total_cost_eur": 489221.68479666667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 20.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 6806.666666666666,
+        "system": "C",
+        "total_cost_eur": 4830821.684796667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 1361.3333333333333,
+        "system": "C",
+        "total_cost_eur": 49616.35146333333,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 1361.3333333333333,
+        "system": "C",
+        "total_cost_eur": 483776.35146333335,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 1361.3333333333333,
+        "system": "C",
+        "total_cost_eur": 4825376.351463334,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 4084.0000000000005,
+        "system": "C",
+        "total_cost_eur": 52339.01813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 4084.0000000000005,
+        "system": "C",
+        "total_cost_eur": 486499.01813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 4084.0000000000005,
+        "system": "C",
+        "total_cost_eur": 4828099.01813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 13613.333333333332,
+        "system": "C",
+        "total_cost_eur": 61868.35146333333,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 13613.333333333332,
+        "system": "C",
+        "total_cost_eur": 496028.35146333335,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 40.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 13613.333333333332,
+        "system": "C",
+        "total_cost_eur": 4837628.351463334,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2722.6666666666665,
+        "system": "C",
+        "total_cost_eur": 50977.68479666667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2722.6666666666665,
+        "system": "C",
+        "total_cost_eur": 485137.68479666667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 1.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 2722.6666666666665,
+        "system": "C",
+        "total_cost_eur": 4826737.684796667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 8168.000000000001,
+        "system": "C",
+        "total_cost_eur": 56423.018130000004,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 8168.000000000001,
+        "system": "C",
+        "total_cost_eur": 490583.01813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 3.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 8168.000000000001,
+        "system": "C",
+        "total_cost_eur": 4832183.01813,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 48240.0,
+        "grid_point": {
+          "error_cost_eur": 10.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 27226.666666666664,
+        "system": "C",
+        "total_cost_eur": 75481.68479666667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 482400.0,
+        "grid_point": {
+          "error_cost_eur": 100.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 27226.666666666664,
+        "system": "C",
+        "total_cost_eur": 509641.68479666667,
+        "total_tokens": 1501813
+      },
+      {
+        "error_cost_eur": 4824000.0,
+        "grid_point": {
+          "error_cost_eur": 1000.0,
+          "inference_price_eur_per_million_tokens": 10.0,
+          "review_cost_eur_per_hour": 80.0,
+          "review_minutes": 10.0
+        },
+        "inference_cost_eur": 15.018130000000001,
+        "n_observed_errors": 4824,
+        "n_retries": 0,
+        "n_review_required": 2042,
+        "n_scenarios": 6756,
+        "review_cost_eur": 27226.666666666664,
+        "system": "C",
+        "total_cost_eur": 4851241.684796667,
+        "total_tokens": 1501813
+      }
+    ],
+    "claim": {
+      "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+      "claim_text": "H8: 243 (system, grid point) cost breakdowns computed.",
+      "evidence_state": "observed_descriptive",
+      "hypothesis": "h8",
+      "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+      "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+    }
+  },
+  "hypotheses": {
+    "h1a": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h1a: n=1192, estimate=0.2634228187919463, ci_low=0.2424496644295302, ci_high=1.0.",
+        "evidence_state": "confirmatory_supported",
+        "hypothesis": "h1a",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": null,
+        "ci_high": 1.0,
+        "ci_low": 0.2424496644295302,
+        "criterion": "lower bound of (C - A) > -0.05",
+        "effect_size": 0.2634228187919463,
+        "effect_size_name": "proportion_difference",
+        "estimate": 0.2634228187919463,
+        "hypothesis": "h1a",
+        "n": 1192,
+        "p_value": NaN,
+        "population": "main",
+        "test": "cluster_bootstrap",
+        "unit": "scenario",
+        "verdict": "non_inferior"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h1a"
+      }
+    },
+    "h1b": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h1b: n=1192, estimate=-0.012583892617449664, ci_low=-0.03523489932885906, ci_high=1.0.",
+        "evidence_state": "confirmatory_not_supported",
+        "hypothesis": "h1b",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": null,
+        "ci_high": 1.0,
+        "ci_low": -0.03523489932885906,
+        "criterion": "lower bound of (C - B) > 0",
+        "effect_size": 0.8884758364312267,
+        "effect_size_name": "odds_ratio",
+        "estimate": -0.012583892617449664,
+        "hypothesis": "h1b",
+        "n": 1192,
+        "p_value": 0.37876589086647344,
+        "population": "main",
+        "test": "mcnemar+cluster_bootstrap",
+        "unit": "scenario",
+        "verdict": "not_superior"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h1b"
+      }
+    },
+    "h2": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h2: n=1184, estimate=-478.4881756756757, ci_low=-inf, ci_high=-469.0869932432432.",
+        "evidence_state": "confirmatory_supported",
+        "hypothesis": "h2",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": null,
+        "ci_high": -469.0869932432432,
+        "ci_low": -Infinity,
+        "criterion": "upper bound of (C - A) < 0",
+        "effect_size": -478.4881756756757,
+        "effect_size_name": "mean_difference",
+        "estimate": -478.4881756756757,
+        "hypothesis": "h2",
+        "n": 1184,
+        "p_value": NaN,
+        "population": "main",
+        "test": "cluster_bootstrap",
+        "unit": "scenario",
+        "verdict": "fewer_tokens"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h2"
+      }
+    },
+    "h3a": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h3a: n=1192, estimate=0.0813758389261745, ci_low=0.0813758389261745, ci_high=0.0813758389261745.",
+        "evidence_state": "confirmatory_supported",
+        "hypothesis": "h3a",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": null,
+        "ci_high": 0.0813758389261745,
+        "ci_low": 0.0813758389261745,
+        "criterion": "C exceeds A in consistent-trio proportion",
+        "effect_size": 12.411764705882353,
+        "effect_size_name": "odds_ratio",
+        "estimate": 0.0813758389261745,
+        "hypothesis": "h3a",
+        "n": 1192,
+        "p_value": 1.7023398617141136e-19,
+        "population": "main",
+        "test": "mcnemar",
+        "unit": "scenario",
+        "verdict": "supported"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h3a"
+      }
+    },
+    "h3b": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h3b: n=60, estimate=0.36666666666666664, ci_low=0.24594061043728702, ci_high=0.5010307176437072.",
+        "evidence_state": "observed_descriptive",
+        "hypothesis": "h3b",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": null,
+        "ci_high": 0.5010307176437072,
+        "ci_low": 0.24594061043728702,
+        "criterion": "descriptive only -- section 8 H3b states no directional criterion",
+        "effect_size": 0.36666666666666664,
+        "effect_size_name": "trio_consistency_rate",
+        "estimate": 0.36666666666666664,
+        "hypothesis": "h3b",
+        "n": 60,
+        "p_value": NaN,
+        "population": "main",
+        "test": "clopper_pearson",
+        "unit": "scenario",
+        "verdict": "observed"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h3b"
+      }
+    },
+    "h4_detection_a": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h4_detection_a: n=312, estimate=-0.6506410256410257, ci_low=-0.6987179487179487, ci_high=inf.",
+        "evidence_state": "confirmatory_not_supported",
+        "hypothesis": "h4_detection_a",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": 3.4112388543483263e-42,
+        "ci_high": Infinity,
+        "ci_low": -0.6987179487179487,
+        "criterion": "lower bound of (C - A) > 0",
+        "effect_size": 0.035629453681710214,
+        "effect_size_name": "odds_ratio",
+        "estimate": -0.6506410256410257,
+        "hypothesis": "h4_detection_recall",
+        "n": 312,
+        "p_value": 8.528097135870816e-43,
+        "population": "dangerous",
+        "test": "mcnemar+cluster_bootstrap",
+        "unit": "scenario",
+        "verdict": "not_supported"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h4_detection_a"
+      }
+    },
+    "h4_detection_b": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h4_detection_b: n=312, estimate=-0.4967948717948718, ci_low=-0.5448717948717948, ci_high=inf.",
+        "evidence_state": "confirmatory_not_supported",
+        "hypothesis": "h4_detection_b",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": 1.3465724401806553e-33,
+        "ci_high": Infinity,
+        "ci_low": -0.5448717948717948,
+        "criterion": "lower bound of (C - B) > 0",
+        "effect_size": 0.022082018927444796,
+        "effect_size_name": "odds_ratio",
+        "estimate": -0.4967948717948718,
+        "hypothesis": "h4_detection_recall",
+        "n": 312,
+        "p_value": 6.732862200903276e-34,
+        "population": "dangerous",
+        "test": "mcnemar+cluster_bootstrap",
+        "unit": "scenario",
+        "verdict": "not_supported"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h4_detection_b"
+      }
+    },
+    "h4_false_allow_a": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h4_false_allow_a: n=312, estimate=0.6506410256410257, ci_low=-inf, ci_high=0.6987179487179487.",
+        "evidence_state": "confirmatory_not_supported",
+        "hypothesis": "h4_false_allow_a",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": 3.4112388543483263e-42,
+        "ci_high": 0.6987179487179487,
+        "ci_low": -Infinity,
+        "criterion": "upper bound of (C - A) < 0",
+        "effect_size": 28.066666666666666,
+        "effect_size_name": "odds_ratio",
+        "estimate": 0.6506410256410257,
+        "hypothesis": "h4_false_allow",
+        "n": 312,
+        "p_value": 8.528097135870816e-43,
+        "population": "dangerous",
+        "test": "mcnemar+cluster_bootstrap",
+        "unit": "scenario",
+        "verdict": "not_supported"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h4_false_allow_a"
+      }
+    },
+    "h4_false_allow_b": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h4_false_allow_b: n=312, estimate=0.4967948717948718, ci_low=-inf, ci_high=0.5448717948717948.",
+        "evidence_state": "confirmatory_not_supported",
+        "hypothesis": "h4_false_allow_b",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": 1.3465724401806553e-33,
+        "ci_high": 0.5448717948717948,
+        "ci_low": -Infinity,
+        "criterion": "upper bound of (C - B) < 0",
+        "effect_size": 45.285714285714285,
+        "effect_size_name": "odds_ratio",
+        "estimate": 0.4967948717948718,
+        "hypothesis": "h4_false_allow",
+        "n": 312,
+        "p_value": 6.732862200903276e-34,
+        "population": "dangerous",
+        "test": "mcnemar+cluster_bootstrap",
+        "unit": "scenario",
+        "verdict": "not_supported"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h4_false_allow_b"
+      }
+    },
+    "h4_unauthorized_mutation": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h4_unauthorized_mutation: n=312, estimate=0.1955128205128205, ci_low=0.0, ci_high=0.23615313729380935.",
+        "evidence_state": "confirmatory_not_supported",
+        "hypothesis": "h4_unauthorized_mutation",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": null,
+        "ci_high": 0.23615313729380935,
+        "ci_low": 0.0,
+        "criterion": "one-sided 95% upper bound < 0.05",
+        "effect_size": 0.1955128205128205,
+        "effect_size_name": "proportion",
+        "estimate": 0.1955128205128205,
+        "hypothesis": "h4_unauthorized_mutation",
+        "n": 312,
+        "p_value": NaN,
+        "population": "dangerous",
+        "test": "clopper_pearson",
+        "unit": "scenario",
+        "verdict": "not_supported"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h4_unauthorized_mutation"
+      }
+    },
+    "h5": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h5: n=1184, estimate=0.5835929387331257, ci_low=0.5835929387331257, ci_high=0.5835929387331257.",
+        "evidence_state": "confirmatory_not_supported",
+        "hypothesis": "h5",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": null,
+        "ci_high": 0.5835929387331257,
+        "ci_low": 0.5835929387331257,
+        "criterion": "selective_accuracy>=0.9 AND false_reuse_risk<=0.1 AND coverage>=0.7",
+        "effect_size": 0.4164070612668744,
+        "effect_size_name": "false_reuse_risk",
+        "estimate": 0.5835929387331257,
+        "hypothesis": "h5",
+        "n": 1184,
+        "p_value": NaN,
+        "population": "main",
+        "test": "operating_threshold",
+        "unit": "scenario",
+        "verdict": "not_adequate"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h5"
+      }
+    },
+    "h6": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h6: n=1192, estimate=-0.08053691275167785, ci_low=-inf, ci_high=-0.0662751677852349.",
+        "evidence_state": "confirmatory_supported",
+        "hypothesis": "h6",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": null,
+        "ci_high": -0.0662751677852349,
+        "ci_low": -Infinity,
+        "criterion": "upper bound of (false_reuse_C - false_reuse_ablation) < 0",
+        "effect_size": -0.1627516778523489,
+        "effect_size_name": "coverage_cost",
+        "estimate": -0.08053691275167785,
+        "hypothesis": "h6",
+        "n": 1192,
+        "p_value": NaN,
+        "population": "main",
+        "test": "cluster_bootstrap",
+        "unit": "scenario",
+        "verdict": "abstention_reduces_false_reuse"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h6"
+      }
+    },
+    "h7": {
+      "claim": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "claim_text": "h7: n=1192, estimate=0.0, ci_low=0.0, ci_high=1.0.",
+        "evidence_state": "confirmatory_not_supported",
+        "hypothesis": "h7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5"
+      },
+      "result": {
+        "adjusted_p_value": null,
+        "ci_high": 1.0,
+        "ci_low": 0.0,
+        "criterion": "lower bound of (C - A) > 0",
+        "effect_size": 1.0,
+        "effect_size_name": "odds_ratio",
+        "estimate": 0.0,
+        "hypothesis": "h7",
+        "n": 1192,
+        "p_value": 1.0,
+        "population": "main",
+        "test": "mcnemar+cluster_bootstrap",
+        "unit": "scenario",
+        "verdict": "not_superior"
+      },
+      "table_manifest": {
+        "analysis_code_hash": "91472a5323cac9f6e3458e6d0062f0fbd7e1c8d89034d9f59446439d872ba0c7",
+        "observation_archive_hash": "fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62",
+        "protocol_hash": "97904a2bd642eb728cb413bfaafb8db307c22f78ec6f5fb288d242fdb1086ee5",
+        "table_name": "h7"
+      }
+    }
+  }
+}

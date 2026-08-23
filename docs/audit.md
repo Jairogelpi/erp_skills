@@ -1,10 +1,10 @@
 # Auditoría del instrumento de medida
 
 Este documento registra las auditorías hechas **sobre el propio aparato de
-evaluación**, no sobre el sistema evaluado. Existe porque trece rondas
-sucesivas encontraron quince defectos reales, y casi todos compartían la
-misma forma: **código (o texto) que pasaba en silencio**, no código que
-fallaba a gritos.
+evaluación**, no sobre el sistema evaluado. Existe porque dieciséis rondas
+sucesivas encontraron dieciocho defectos reales, y casi todos compartían
+la misma forma: **código (o texto) que pasaba en silencio**, no código
+que fallaba a gritos.
 
 **Los defectos #12 y #13 son los más consecuentes**: son los únicos que,
 al corregirse, **cambiaron un resultado publicado** — y ambos en la
@@ -43,9 +43,20 @@ este tipo de escrutinio.
 
 | **15** | **Denominador equivocado en el arnés de peticiones reales**: `eval_real_requests.py` metía las peticiones que **ninguna skill cubre** en el denominador de Top-1, donde no pueden puntuar por definición. Con 36 de 120 filas fuera de catálogo, el techo de la métrica era 0,70 y no 1,0, así que compararla con el 0,733 del benchmark —corpus casi enteramente contestable— no comparaba nada | Lectura de la salida antes de reportarla: un Top-1 de 0,267 frente a 0,733 era demasiado redondo para un corpus solo algo más difícil | **Habría reportado un derrumbe de −0,466 cuando el real es −0,352**, mezclando el fallo de recuperación con un artefacto de la métrica. Corregido separando las dos poblaciones: Top-1 sobre las contestables, y tasa de abstención correcta sobre las que ninguna skill cubre |
 
+| **16** | **Informe de mutation testing v2.1 no reproducible entre plataformas**: `run_targeted_mutations_v2_1.py` construía `failing_tests` capturando la línea `FAILED ...` completa de pytest, incluida la razón libre tras ` - `. Pytest trunca esa razón según el ancho de terminal detectado, así que el mismo fallo de mutante se capturaba como texto distinto en Windows y en el runner Linux de CI (o desaparecía del todo) — el informe está direccionado por el hash de su propio contenido, así que dos plataformas producían dos ficheros distintos y coexistentes para el mismo resultado científico (`all_mutants_killed=True` en ambas), y `verify_tfm_closure_v2_1.py --pre-run` correctamente se negó a elegir uno («expected exactly one ... found 2») | Al abrir el PR #3 se ejecutó por primera vez en CI la combinación `mutation-v2-1` + `verify-tfm-closure` — el *wiring* de CI se añadió en un commit posterior al que registró el informe, así que nunca se había comprobado de verdad hasta entonces | Ninguna conclusión científica estaba en riesgo (el resultado — todos los mutantes muertos — coincidía en ambas plataformas), pero el pipeline de cierre quedaba bloqueado por un artefacto no reproducible. Corregido extrayendo solo el node ID del test, descartando el texto de razón dependiente de plataforma — nada en el repo lo consumía (verificado por grep) |
+
+| **17** | **`make verify-tfm-closure` ejecutaba el modo equivocado desde que la campaña real terminó**: el target llamaba a `verify_tfm_closure_v2_1.py --pre-run`, que por diseño exige que **no exista ningún recibo v2.1 todavía** (`DRAFT_PROTOCOL`, según su propio docstring) — es la puerta de "listo para lanzar", no la de "cerrado correctamente". Como la campaña real ya completó (`RUN_COMPLETED`, recibos comiteados), `--pre-run` no puede volver a pasar nunca en el historial de este repositorio; el modo correcto para verificar una campaña ya terminada es `--final`, exactamente como documenta el Anexo A de `docs/memoria.md` | Al resolver el #16 y volver a ejecutar `make verify-tfm-closure` en local, el mensaje de error cambió de «found 2» a «expected no v2.1 receipts yet ... found state=RUN_COMPLETED» — un síntoma distinto del mismo hecho: nadie había actualizado este target desde que el Task 12 (la puerta de pre-vuelo) se escribió, antes de que la campaña real se ejecutara | Este target de CI **nunca había verificado de verdad el cierre real de la campaña** — solo podía fallar, de una forma u otra, desde que el #16 dejó de enmascararlo. Corregido apuntando el target a `--final` con las rutas exactas de recibo/manifiesto/informe que Anexo A documenta; verificado en local que produce `CLOSURE_VALID` |
+
+| **18** | **La evidencia cruda de la campaña real (recibos + 21.478 observaciones, ~80 MB) nunca llegó a git**: `data/protocol_v2_1/runs*/` está en `.gitignore` por una razón real y documentada (`auto_resume.sh` lleva una API key en claro), pero la regla ignoraba el directorio entero, arrastrando con ella `receipts_2.jsonl` y el fichero de observaciones — los dos artefactos que SÍ son evidencia, no scaffolding de ejecución. `docs/memoria.md` (Anexo A/B) ya afirmaba que "el archivo crudo... está comiteado", y no lo estaba: solo existía en el disco de la máquina donde corrió la campaña | Corriendo `--final` en local funcionaba (`CLOSURE_VALID`) pero fallaba en un checkout limpio de CI con «found DRAFT_PROTOCOL» — comparar `git show HEAD:receipts_2.jsonl` (vacío, `fatal: ... not in 'HEAD'`) contra el fichero real en disco confirmó que nunca se había comiteado | El cierre confirmatorio **no era reproducible desde un clon limpio del repositorio**, contradiciendo lo ya escrito. Corregido con una excepción quirúrgica en `.gitignore` (dos ficheros por nombre exacto, no un comodín — un comodín inicial también habría desprotegido el fichero de observaciones de un intento anterior interrumpido, con hash distinto, verificado y corregido antes de comitear) y comitiendo los dos ficheros reales, verificados sin secretos por grep antes de subirlos |
+
 Las conclusiones del experimento **sobrevivieron a trece de las quince
-correcciones sin cambiar de signo**. Las dos excepciones son el **#12**
-y el **#13**, y afectan al mismo contraste en direcciones opuestas:
+correcciones de la era v1 sin cambiar de signo** (el #16, el #17 y el
+#18 pertenecen a la infraestructura de cierre de v2.1, no al
+experimento v1: ninguno de los tres cambia ninguna cifra de
+`docs/results-v2.1.md`,
+solo si CI puede verificar la campaña real que ya ocurrió). Las dos
+excepciones son el **#12** y el **#13**, y afectan al mismo contraste en
+direcciones opuestas:
 
 1. Corregir el #12 (y quitar a la vez el sesgo del parseo perfecto)
    hizo que **C−B dejara de ser significativo**: +0,075, IC95 [−0,025,
@@ -67,14 +78,27 @@ motivo correcto.
 
 ### Nota de método: quién encuentra qué
 
-De los quince defectos, trece salieron de auditorías que yo mismo lancé
-sobre mi propio trabajo. **Dos los destapó una pregunta escéptica del
-usuario sobre resultados que yo ya había aceptado**: el #13 (un
+De los dieciocho defectos, dieciséis salieron de auditorías que yo mismo
+lancé sobre mi propio trabajo. **Dos los destapó una pregunta escéptica
+del usuario sobre resultados que yo ya había aceptado**: el #13 (un
 resultado no significativo dado por bueno) y el #14 (al preguntar si la
 métrica de seguridad tenía sesgo). Es el patrón esperable: la auditoría propia es buena encontrando código que se
 contradice consigo mismo, y mala encontrando código que hace
 exactamente lo que yo creía que debía hacer. Para eso hace falta
 alguien que dude del supuesto, no de la implementación.
+
+Los defectos 16, 17 y 18 son una **cuarta** categoría: ninguno salió de
+auditar un resultado, del sistema de tipos ni de una pregunta ajena —
+salieron de **ejecutar por primera vez, de principio a fin, un camino de
+CI que llevaba commits enteros existiendo sin correr nunca de verdad**.
+Un componente puede pasar `pytest` en local, tener sentido al leerlo y
+aun así no ser reproducible, estar comprobando la fase equivocada del
+proyecto, o depender de un fichero que nunca llegó al repositorio — en
+el único entorno (Linux, sin terminal interactiva, con un clon limpio,
+después de que la campaña real ya terminó) donde de verdad importa que
+sea correcto — hasta que algo lo obliga a ejecutarse allí. Los tres se
+destaparon en cadena: corregir el #16 reveló el #17, y corregir el #17
+reveló el #18.
 
 El #15 añade un matiz que conviene registrar: estaba en código escrito
 **el mismo día**, en un arnés de validación de producto, y lo delató un

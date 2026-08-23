@@ -14,6 +14,23 @@ call shape this repository already knows how to make (see
 
 The API key is read from the `OPENROUTER_API_KEY` environment variable
 and is never read from, or written to, any file this repository commits.
+
+**Model choice (v2.1 confirmatory campaign, n_main=1184).** `openai/
+gpt-oss-20b:free` (used for the v1 confirmatory run) is replaced by
+`deepseek/deepseek-v4-flash`, a paid, materially more capable model
+(DeepSeek V4 generation, GA 2026-08-13) -- chosen deliberately over a
+cheaper/weaker model: a stronger baseline model makes System B (which
+depends entirely on the model's own tool selection and argument
+extraction) a harder system for C to outperform, so any STSR advantage
+C still holds is a stronger claim, not a weaker one. This repository's
+own data already shows model quality shifts B's STSR by double digits
+(0.333 stub -> 0.483-0.517 across real providers) and can shrink or
+erase a fragile task-success gap -- see docs/results.md's "amenaza
+3b/3c". Declared risk, not hidden: OpenRouter previously produced 429
+storms at this project's campaign scale (~3h with interruptions vs
+~50min on Groq for a smaller v1 run); this module's per-arm checkpoint/
+resume (erp_agent_os.experiment_v2_1) is the mitigation, not a fix --
+expect this run may need more than one sitting.
 """
 
 import json
@@ -37,14 +54,25 @@ from erp_agent_os.llm_client import (
 
 logger = logging.getLogger(__name__)
 
-# openai/gpt-oss-20b:free: strong instruction-following for a small,
-# genuinely free (cost: 0 per OpenRouter's own usage report) model,
-# confirmed by a live smoke call before this was chosen.
-DEFAULT_MODEL = "openai/gpt-oss-20b:free"
+# deepseek/deepseek-v4-flash: paid, not the ":free" suffix -- the free
+# variant carries harsher/less predictable OpenRouter rate limits than
+# a funded paid model does, on top of the reliability risk already
+# declared in the module docstring above. See that docstring for why
+# this replaced openai/gpt-oss-20b:free (used for the v1 confirmatory
+# run).
+DEFAULT_MODEL = "deepseek/deepseek-v4-flash"
 DEFAULT_TEMPERATURE = 0.0  # low temperature: CLAUDE.md §23 ("temperatura baja")
 DEFAULT_MAX_RETRIES = 5
 DEFAULT_TIMEOUT_SECONDS = 30
-DEFAULT_MIN_INTERVAL_SECONDS = 3.0
+# Paid models carry no OpenRouter-side hard RPM cap (the underlying
+# provider's own ceiling applies instead, unknown in advance) -- 3.0s
+# was calibrated for the ":free" tier's own throttle, not this one.
+# 1.0s is a moderate speedup, not a measured-safe number: _retry_delay
+# already honors a 429's Retry-After header, so an operator who sees
+# real throttling can lower aggressiveness by raising
+# OPENROUTER_MIN_INTERVAL_SECONDS (scripts/run_confirmatory_v2_1.py)
+# without a code change or re-freeze.
+DEFAULT_MIN_INTERVAL_SECONDS = 1.0
 # This model reasons before answering (visible in `message.reasoning`);
 # too small a budget truncates the final JSON answer.
 DEFAULT_MAX_TOKENS = 400

@@ -1,0 +1,61 @@
+<h2>¿Qué arco debe tener el vídeo de competición?</h2>
+<p class="subtitle">Los tres caben en 4:30. Compáralos pensando en el criterio principal del jurado: aplicación y metodología del máster.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:18px;background:#f5f7fb">
+      <div style="display:grid;grid-template-columns:25fr 45fr 55fr 45fr 30fr;gap:4px;height:72px;color:white;font-size:12px;text-align:center">
+        <div style="background:#141d2f;padding:16px 4px">Riesgo<br>0:25</div>
+        <div style="background:#3059a6;padding:16px 4px">Método<br>0:45</div>
+        <div style="background:#287a78;padding:16px 4px">Arquitectura<br>0:55</div>
+        <div style="background:#d16a35;padding:16px 4px">Demo Odoo<br>0:45</div>
+        <div style="background:#6e4c91;padding:16px 4px">Resultados<br>0:30</div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <div style="flex:1;background:white;border:1px solid #d8deea;padding:10px"><b>480</b><br><small>casos</small></div>
+        <div style="flex:1;background:white;border:1px solid #d8deea;padding:10px"><b>1.080</b><br><small>ejecuciones</small></div>
+        <div style="flex:1;background:white;border:1px solid #d8deea;padding:10px"><b>IC 95 %</b><br><small>resultados</small></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · Método primero <span style="color:#287a78">— recomendado</span></h3>
+      <p>El jurado entiende primero qué se investigó y por qué los números son creíbles. La demo actúa como prueba visual, no como sustituto del experimento.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:18px;background:#f5f7fb">
+      <div style="display:grid;grid-template-columns:30fr 65fr 40fr 45fr 30fr;gap:4px;height:72px;color:white;font-size:12px;text-align:center">
+        <div style="background:#141d2f;padding:16px 4px">Impacto<br>0:30</div>
+        <div style="background:#d16a35;padding:16px 4px">Demo Odoo<br>1:05</div>
+        <div style="background:#287a78;padding:16px 4px">Cómo funciona<br>0:40</div>
+        <div style="background:#3059a6;padding:16px 4px">Experimento<br>0:45</div>
+        <div style="background:#6e4c91;padding:16px 4px">Cierre<br>0:30</div>
+      </div>
+      <div style="margin-top:14px;background:white;border:1px solid #d8deea;padding:10px;text-align:center"><b>REQUIRE_APPROVAL</b> → Odoo no cambia → aprobación → escritura</div>
+    </div>
+    <div class="card-body">
+      <h3>B · Demo primero</h3>
+      <p>Más cinematográfico y fácil de recordar. Riesgo: puede parecer una gran demo de producto y ocultar el trabajo de Data Science que más puntúa.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:18px;background:#f5f7fb">
+      <div style="display:grid;grid-template-columns:30fr 35fr 55fr 45fr 45fr;gap:4px;height:72px;color:white;font-size:12px;text-align:center">
+        <div style="background:#141d2f;padding:16px 4px">Riesgo<br>0:30</div>
+        <div style="background:#9c3c3c;padding:16px 4px">Peor dato<br>0:35</div>
+        <div style="background:#6e4c91;padding:16px 4px">0 / 1.530<br>0:55</div>
+        <div style="background:#287a78;padding:16px 4px">Arquitectura<br>0:45</div>
+        <div style="background:#3059a6;padding:16px 4px">Resultados<br>0:45</div>
+      </div>
+      <div style="margin-top:14px;background:white;border:1px solid #d8deea;padding:10px;text-align:center"><b>3,3 % detección</b> → <b>0 / 1.530 confinamiento</b></div>
+    </div>
+    <div class="card-body">
+      <h3>C · Auditoría primero — guion actual</h3>
+      <p>Transmite honestidad científica, pero exige demasiada explicación y concede el centro del vídeo a un resultado exploratorio difícil de interpretar.</p>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:22px">Haz clic en una opción. Si no eliges, avanzaré con A porque maximiza el criterio más importante sin perder la demo.</p>

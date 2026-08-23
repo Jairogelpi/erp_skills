@@ -33,6 +33,20 @@ SKILL_MODELS: dict[str, str] = {
     "billing.create_draft_invoice": "billing.invoice",
 }
 
+# skill_id -> argument field(s) naming the existing record's id, for
+# update/read skills only -- a create skill needs no such reference.
+# Single canonical copy: erp_agent_os.experiment and .bench_runner (v1)
+# and .scenarios_v2_1/.experiment_v2_1 (v2.1) all import this instead of
+# each declaring their own (v1's two copies had already silently
+# duplicated it verbatim before this consolidation).
+REFERENCE_FIELDS: dict[str, list[str]] = {
+    "crm.update_expected_revenue": ["opportunity_id"],
+    "sales.add_quote_line": ["quote_id"],
+    "sales.confirm_order": ["order_id"],
+    "product.update_field": ["product_name"],
+    "inventory.check_availability": ["product_name"],
+}
+
 
 def crm_create_opportunity(erp: FakeERPAdapter, args: Args) -> str:
     return erp.create(

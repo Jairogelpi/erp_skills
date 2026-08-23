@@ -1,6 +1,6 @@
 from erp_agent_os.adapters import FakeERPAdapter
 from erp_agent_os.catalog import CATALOG_BY_ID
-from erp_agent_os.handlers import HANDLERS, SKILL_MODELS
+from erp_agent_os.handlers import HANDLERS, REFERENCE_FIELDS, SKILL_MODELS
 
 
 def test_every_catalog_skill_has_a_handler():
@@ -36,3 +36,17 @@ def test_check_availability_reads_seeded_stock():
         erp, {"product_name": "Laptop Pro 14"}
     )
     assert result["available_units"] == 42
+
+
+def test_reference_fields_has_one_canonical_source():
+    """Regression: erp_agent_os.experiment and .bench_runner (v1) each
+    used to declare their own, independently copy-pasted REFERENCE_FIELDS
+    dict (identical by luck, not by construction). Both now import the
+    same object from here -- verified by identity, not just equal
+    content, so a future edit to one copy cannot silently diverge from
+    the other again."""
+    from erp_agent_os.bench_runner import REFERENCE_FIELDS as bench_runner_fields
+    from erp_agent_os.experiment import REFERENCE_FIELDS as experiment_fields
+
+    assert bench_runner_fields is REFERENCE_FIELDS
+    assert experiment_fields is REFERENCE_FIELDS

@@ -21,7 +21,7 @@ import logging
 import random
 import time
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass, replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -30,7 +30,11 @@ from erp_agent_os.audit import AuditStore
 from erp_agent_os.bench_intents import INTENTS_BY_ID
 from erp_agent_os.catalog import CATALOG, CATALOG_BY_ID
 from erp_agent_os.dataset import BenchmarkCase, DatasetSplit
-from erp_agent_os.handlers import HANDLERS, SKILL_MODELS
+from erp_agent_os.evidence import (
+    execution_record_from_dict,
+    execution_record_to_dict,
+)
+from erp_agent_os.handlers import HANDLERS, REFERENCE_FIELDS, SKILL_MODELS
 from erp_agent_os.llm_client import CachingLLMClient, LLMClient
 from erp_agent_os.metrics import ExecutionRecord
 from erp_agent_os.parser import structure_proposal
@@ -49,14 +53,6 @@ logger = logging.getLogger(__name__)
 
 ROLE = "erp_user"
 REPETITIONS = 3
-
-REFERENCE_FIELDS: dict[str, list[str]] = {
-    "crm.update_expected_revenue": ["opportunity_id"],
-    "sales.add_quote_line": ["quote_id"],
-    "sales.confirm_order": ["order_id"],
-    "product.update_field": ["product_name"],
-    "inventory.check_availability": ["product_name"],
-}
 
 
 @dataclass(frozen=True)
@@ -152,9 +148,8 @@ def _run_system_c(
     proposal = structure_proposal(
         case.canonical_intent, arguments, required, confidence=0.9
     )
-    ranked = tuple(
-        c.skill.skill_id for c in retriever.rank(case.request_text, role=ROLE)
-    )
+    candidates = retriever.rank(case.request_text, role=ROLE)
+    ranked = tuple(candidate.skill.skill_id for candidate in candidates)
     result = system.handle(
         case.request_id, case.request_text, proposal, ROLE, case.request_id
     )
@@ -168,13 +163,29 @@ def _run_system_c(
 
     audit_events = audit.events(case.request_id)
     abstentions = audit.abstentions(case.request_id)
-    trace_score = score_governed_execution(
+    trace_details = score_governed_execution(
         correlation_id=case.request_id,
         has_interpretation=bool(proposal.intent),
         ranked_skill_ids=ranked,
         abstention_reasons=abstentions[-1].reasons if abstentions else result.reasons,
         audit_event=audit_events[-1] if audit_events else None,
-    ).total
+    )
+    selected_skill = (
+        CATALOG_BY_ID[result.selected_skill_id] if result.selected_skill_id else None
+    )
+    output = result.execution.output if result.execution else None
+    if selected_skill is not None and result.decision == "ALLOW":
+        named_checks = build_checks(selected_skill, case.expected_arguments, before)
+        postcondition_evidence: dict[str, bool] | str = {
+            name: check(erp, output)
+            for name, check in zip(
+                selected_skill.postconditions, named_checks, strict=True
+            )
+        }
+    else:
+        postcondition_evidence = {
+            "state_unchanged_on_non_allow": _state_unchanged(before, erp)
+        }
 
     return ExecutionRecord(
         request_id=case.request_id,
@@ -188,13 +199,36 @@ def _run_system_c(
         ),
         handler_error=result.execution.handler_error if result.execution else None,
         ranked_skill_ids=ranked,
-        final_state=_state_signature(erp),
+        final_state=erp.snapshot(),
         state_unchanged=_state_unchanged(before, erp),
-        traceability_score=trace_score,
+        traceability_score=trace_details.total,
         # C's retrieval is TF-IDF, so its only LLM cost is the shared
         # argument parse -- zero unless `--real-parser` is on.
         prompt_tokens=parse_in,
         completion_tokens=parse_out,
+        initial_state=before,
+        normalized_arguments=dict(arguments),
+        candidate_scores={
+            candidate.skill.skill_id: candidate.score for candidate in candidates
+        },
+        role=ROLE,
+        policy_reasons=tuple(result.reasons),
+        permission_evidence=(
+            f"policy_evaluated_for_role:{ROLE}"
+            if audit_events
+            else "policy_not_reached_due_to_abstention_or_clarification"
+        ),
+        selected_skill_version=selected_skill.version if selected_skill else None,
+        handler_name=(
+            f"{HANDLERS[selected_skill.skill_id].__module__}."
+            f"{HANDLERS[selected_skill.skill_id].__name__}"
+            if selected_skill
+            else "not_applicable"
+        ),
+        postcondition_evidence=postcondition_evidence,
+        traceability_components={
+            name: float(present) for name, present in trace_details.components.items()
+        },
     )
 
 
@@ -220,6 +254,11 @@ def _run_system_b(
         )
         postconditions_met = all(check(erp, result.output) for check in checks)
 
+    trace_details = score_ungoverned_execution(
+        correlation_id=case.request_id,
+        tool_or_skill_id=result.skill_id,
+        output_present=result.output is not None,
+    )
     return ExecutionRecord(
         request_id=case.request_id,
         system="B",
@@ -230,16 +269,19 @@ def _run_system_b(
         side_effect_free=_side_effect_free(before, erp, decision, model),
         handler_error=result.error,
         ranked_skill_ids=(result.skill_id,) if result.skill_id else (),
-        final_state=_state_signature(erp),
+        final_state=erp.snapshot(),
         state_unchanged=_state_unchanged(before, erp),
         # Tool selection + (when enabled) the shared argument parse.
         prompt_tokens=result.prompt_tokens + parse_in,
         completion_tokens=result.completion_tokens + parse_out,
-        traceability_score=score_ungoverned_execution(
-            correlation_id=case.request_id,
-            tool_or_skill_id=result.skill_id,
-            output_present=result.output is not None,
-        ).total,
+        traceability_score=trace_details.total,
+        initial_state=before,
+        normalized_arguments=dict(arguments),
+        role=ROLE,
+        policy_reasons=("not_available",),
+        traceability_components={
+            name: float(present) for name, present in trace_details.components.items()
+        },
     )
 
 
@@ -281,6 +323,11 @@ def _run_system_a(
         )
         postconditions_met = all(check(erp, result.output) for check in checks)
 
+    trace_details = score_ungoverned_execution(
+        correlation_id=case.request_id,
+        tool_or_skill_id=result.tool_name,
+        output_present=result.output is not None,
+    )
     return ExecutionRecord(
         request_id=case.request_id,
         system="A",
@@ -297,16 +344,19 @@ def _run_system_a(
         side_effect_free=_side_effect_free(before, erp, decision, model),
         handler_error=result.error,
         ranked_skill_ids=(),
-        final_state=_state_signature(erp),
+        final_state=erp.snapshot(),
         state_unchanged=_state_unchanged(before, erp),
         # Tool selection + (when enabled) the shared argument parse.
         prompt_tokens=result.prompt_tokens + parse_in,
         completion_tokens=result.completion_tokens + parse_out,
-        traceability_score=score_ungoverned_execution(
-            correlation_id=case.request_id,
-            tool_or_skill_id=result.tool_name,
-            output_present=result.output is not None,
-        ).total,
+        traceability_score=trace_details.total,
+        initial_state=before,
+        normalized_arguments=dict(arguments),
+        role=ROLE,
+        policy_reasons=("not_available",),
+        traceability_components={
+            name: float(present) for name, present in trace_details.components.items()
+        },
     )
 
 
@@ -367,15 +417,11 @@ def _record_key(request_id: str, system: str, repetition: int) -> str:
 
 
 def _dump_record(record: ExecutionRecord) -> dict[str, Any]:
-    payload = asdict(record)
-    payload["ranked_skill_ids"] = list(record.ranked_skill_ids)
-    return payload
+    return execution_record_to_dict(record)
 
 
 def _load_record(payload: dict[str, Any]) -> ExecutionRecord:
-    payload = dict(payload)
-    payload["ranked_skill_ids"] = tuple(payload["ranked_skill_ids"])
-    return ExecutionRecord(**payload)
+    return execution_record_from_dict(payload)
 
 
 def _load_checkpoint(checkpoint_path: Path) -> dict[str, ExecutionRecord]:

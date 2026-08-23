@@ -1,5 +1,23 @@
 # ERP Agent OS: diseño y evaluación experimental de un sistema de recuperación y ejecución segura de skills reutilizables para la automatización de procesos ERP mediante agentes de inteligencia artificial
 
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion** (marcador exigido
+> literalmente por el contrato automático `src/erp_agent_os/claims.py` /
+> `tests/test_claims.py`, escrito en la era v1 antes de que existiera el
+> veredicto por hipótesis de v2.1 — el marcador se conserva porque
+> `data/evidence_registry.json` todavía no distingue hipótesis confirmadas
+> de no confirmadas bajo el nuevo protocolo, decisión de política declarada
+> como pendiente en el Anexo D; **no leer el texto siguiente, heredado de
+> la auditoría del 14-08-2026, como el estado real**).
+>
+> **Corte de evidencia: 2026-08-23, actualizado.** El protocolo v2.1 sin
+> anotadores humanos está implementado, congelado (`tfm-protocol-v2.1.2`)
+> y ejecutado: campaña real de 21.478 observaciones, `RUN_COMPLETED` /
+> `CLOSURE_VALID`. `docs/results-v2.1.md` (Parte A) es la fuente de verdad
+> confirmatoria y el §8.0 de este documento la resume con veredicto
+> explícito por hipótesis (H1a, H2, H3a, H6 y H7 soportadas; H1b, H4 y H5
+> no soportadas, con desglose caso por caso). Véase también
+> `docs/hypotheses-and-theses.md`.
+
 **Autor:** Jairo Gelpi Moreno
 **Programa:** Máster en Data Science, Inteligencia Artificial y Big Data
 **Modalidad:** Opción 3 — proyecto técnico aplicado con evaluación experimental
@@ -10,9 +28,12 @@
 > los artefactos y resultados reales del repositorio**, no de
 > expectativas. Toda cifra que aparece aquí procede de un fichero
 > versionado (`data/*.json`) y es reproducible con los comandos del
-> anexo A. Los apartados que dependen de trabajo humano pendiente —
-> kappa de anotación, workbook de Tableau, defensa— están marcados como
-> tales y **no se dan por hechos**.
+> anexo A. Las referencias posteriores a kappa o segundo anotador
+> describen el protocolo histórico **retirado y ya sustituido**: la
+> campaña confirmatoria v2.1 (verdad de referencia por construcción, sin
+> anotación humana) está implementada, congelada y ejecutada —
+> `docs/results-v2.1.md`. El workbook, el vídeo y la defensa siguen
+> siendo entregables pendientes y **no se dan por hechos**.
 
 ---
 
@@ -34,25 +55,40 @@ de políticas con clasificación de riesgo, aprobación humana cuando
 procede, un runtime que solo ejecuta handlers registrados, idempotencia,
 verificación de postcondiciones y auditoría append-only.
 
-La evaluación compara tres sistemas sobre el mismo benchmark propio
-(**ERP-Skills-Bench**, 480 peticiones sintéticas en español, 120 de test
-congelado) con un diseño emparejado de **1.080 ejecuciones** (120 casos ×
-3 sistemas × 3 repeticiones): **A**, agente directo; **B**, herramientas
-tipadas; **C**, ERP Agent OS completo.
+El resultado confirmatorio se estableció en dos etapas. Primero, un
+piloto exploratorio (**ERP-Skills-Bench v1**, 480 peticiones sintéticas,
+120 de test) con diseño emparejado de 1.080 ejecuciones (120 × 3
+sistemas × 3 repeticiones) — cuyos números se citan aquí como contexto,
+nunca como confirmación, porque su código de análisis se corrigió después
+de inspeccionar sus propios resultados. Después, el **protocolo v2.1 sin
+anotación humana** (verdad de referencia por construcción, dos oráculos
+independientes, potencia y protocolo congelados **antes** de generar el
+holdout, evaluación única): una campaña real de **21.478 observaciones**
+sobre nueve pruebas de hipótesis, cerrada y verificada
+(`RUN_COMPLETED`/`CLOSURE_VALID`).
 
-Con un LLM real compartido por los tres sistemas y sin regalar el parseo
-de argumentos a ninguno, el resultado es: STSR A = 0,000 · B = 0,483 ·
-**C = 0,633** (C−B = +0,150, IC95 [+0,042, +0,258], *p* = 0,016); *false
-allow rate* A = 0,889 · B = 0,889 · **C = 0,111** (8×); trazabilidad
-0,356 / 0,374 / **0,820** (2,2×); consumo 185,1 / 265,3 / **67,6**
-tokens por ejecución (3,9× menos que B).
+**El resultado confirmatorio (v2.1), sin suavizar:** C no es inferior a
+un agente directo en éxito de tarea (+25,3 pp), pero tampoco lo supera un
+agente con herramientas tipadas (*p* = 0,286); C es más barato en tokens
+que ambos comparadores (IC95 completo por debajo de cero); C es más
+estable entre formulaciones de la misma petición (*p* = 2,2e-18) y más
+trazable (*p* = 2,85e-112, con la salvedad de que A/B carecen de esa
+capacidad por diseño); y **C deja pasar el 19,0 % de mutaciones no
+autorizadas sobre 315 peticiones peligrosas reales**, casi cuatro veces
+el umbral prerregistrado — localizado en cinco de siete categorías de
+ataque, con las otras dos funcionando sin fallos. Este último resultado
+**no** es un artefacto de instrumentación: se verificó que persiste casi
+sin cambio (19,6 % → 19,0 %) tras corregir los dos defectos que
+contaminaban una campaña anterior. Cuatro de nueve pruebas confirmatorias
+salen a favor de la arquitectura; tres, incluida la promesa central de
+detección activa de peligro, no.
 
 Ese contraste, sin embargo, **no es el resultado más informativo del
-trabajo**, y decirlo forma parte de reportarlo con honestidad. Que un
-sistema diseñado para bloquear bloquee está cerca de la tautología, la
-ventaja en éxito de tarea es modesta y —medido después— **no transfiere
-a texto de usuario real**. Los dos hallazgos que sí resisten el
-escrutinio surgieron de auditar el propio trabajo:
+trabajo**, y decirlo forma parte de reportarlo con honestidad. La ventaja
+en éxito de tarea es modesta y no se sostiene frente a un baseline con
+herramientas tipadas; y —medido aparte— tampoco transfiere a texto de
+usuario real. Los dos hallazgos que sí resisten el escrutinio surgieron
+de auditar el propio trabajo:
 
 **Primero, una forma distinta de preguntar por la seguridad.** La
 literatura de inyección de prompts mide si un detector dispara; el
@@ -67,15 +103,22 @@ al atacante. La defensa efectiva resultó ser arquitectónica, no
 detectiva, y eso es medible con independencia del modelo empleado.
 
 **Segundo, una observación sobre el propio proceso de medir.** El
-trabajo documenta **quince defectos hallados en su instrumento de
-medida**, y el patrón que los explica: *el desarrollo dirigido por
-pruebas protege bien lo que se implementa contra un requisito explícito
-y protege mal lo que solo se calcula a partir de una fórmula*, porque en
+trabajo documenta **dieciséis defectos hallados en su instrumento de
+medida** (el más reciente: la comparación de consumo de tokens solo
+verificaba un comparador de los dos que exige el protocolo v2.1),
+y el patrón que los explica: *el desarrollo dirigido por pruebas
+protege bien lo que se implementa contra un requisito explícito y
+protege mal lo que solo se calcula a partir de una fórmula*, porque en
 el segundo caso es fácil verificar la conclusión del cálculo sin
-verificar el mecanismo. Cinco de esos defectos comparten forma —una
+verificar el mecanismo. Seis de esos defectos comparten forma —una
 comprobación que no podía fallar— y uno, al corregirse, **habría
-mejorado los resultados** del sistema propuesto; no se corrigió, porque
-el conjunto de test estaba congelado.
+mejorado los resultados** del sistema propuesto en v1; no se corrigió,
+porque el conjunto de test estaba congelado. En v2.1, el patrón se
+repitió en dirección contraria: diagnosticar por qué fallaba la
+seguridad reveló que la métrica de comparación con los baselines
+confundía "denegar por seguridad" con "fallar por un error de
+ejecución" — un hallazgo que no mejora ni empeora el número de C, pero
+que cambia cómo debe leerse la comparación con A y B.
 
 **Palabras clave:** agentes LLM, automatización ERP, gobernanza de
 agentes, recuperación semántica, evaluación selectiva, inyección de
@@ -135,7 +178,7 @@ las políticas del runtime.
 
 1. **Técnica.** Una arquitectura modular que transforma peticiones ERP
    en acciones controladas mediante skills versionadas, implementada y
-   ejecutable (`src/erp_agent_os/`, 38 módulos, 393 tests).
+   ejecutable (`src/erp_agent_os/`, 60 módulos, 822 tests).
 2. **De datos.** **ERP-Skills-Bench**, benchmark sintético anotado de 480
    peticiones con estado inicial, decisión esperada y etiquetas
    adversariales, con split de test congelado y verificado sin fuga.
@@ -150,7 +193,7 @@ las políticas del runtime.
    errores prevenidos, necesidad de revisión, capacidad de auditoría y
    coste modelado, con supuestos declarados.
 6. **Metodológica sobre el propio proceso.** Un registro auditado de
-   quince defectos hallados en el instrumento de medida y el patrón que
+   dieciocho defectos hallados en el instrumento de medida y el patrón que
    los explica (§9.5), utilizable como material sobre validez de
    constructo.
 
@@ -422,10 +465,11 @@ pytest, Hypothesis, Ruff, mypy, pre-commit, GitHub Actions.
 Cada unidad de trabajo se construyó con TDD estricto
 RED → GREEN → TRIANGULATE → REFACTOR **contra un requisito normativo
 explícito**, con artefactos de especificación previos al código
-(`openspec/changes/*`). Estado de calidad actual: **393 tests**,
-cobertura **96 %** global (2.456 sentencias, 90 sin cubrir), `ruff` y
-`mypy` limpios sobre 38 módulos, CI verde incluyendo validación de
-dataset, verificación de congelación y *smoke benchmark*.
+(`openspec/changes/*`). Estado de calidad actual: **822 tests**,
+cobertura **95 %** global (5.377 sentencias, 267 sin cubrir — el
+proyecto casi duplicó su tamaño con el protocolo v2.1), `ruff` y `mypy`
+limpios sobre 60 módulos, CI verde incluyendo validación de dataset,
+verificación de congelación y *smoke benchmark*.
 
 Las propiedades de seguridad se verifican con *property-based testing*
 (Hypothesis): una skill R4 nunca es registrable; una clave de
@@ -490,16 +534,35 @@ los resultados de recuperación en particular (§8.5) están condicionados
 por el alto solape léxico entre petición y descripción de skill que las
 plantillas producen.
 
-**Pendiente humano declarado:** la revisión por segundo anotador y el
-kappa de Cohen que exige el plan estadístico. El instrumento existe
+**Revisión por segundo anotador y kappa de Cohen: retirados
+formalmente, no completados.** El plan estadístico original de este
+benchmark (v1) los exigía; el instrumento llegó a construirse
 (`data/annotation_review_sheet.csv`, 96 casos estratificados que
 sobrerrepresentan adversariales y alto riesgo) y el script de cálculo
-**se niega a emitir un kappa** mientras la columna del segundo anotador
-esté vacía. No se ha fabricado un número.
+se negaba a emitir un kappa mientras la columna del segundo anotador
+estuviera vacía —nunca se fabricó un número—, pero ese paso humano no
+se va a completar. La razón no es abandono: el protocolo v2.1
+(`docs/tfm-closure-no-human-v2.1.md`) sustituye la anotación humana por
+verdad de referencia construida algorítmicamente y dos oráculos
+independientes del código evaluado, y esa campaña **ya está
+implementada, congelada y ejecutada** (§8.0, `docs/results-v2.1.md`).
+El acuerdo entre anotadores queda como una limitación declarada del
+piloto v1, no como trabajo pendiente del proyecto.
 
 ---
 
 ## 7. Experimentos
+
+**Este capítulo describe el piloto exploratorio v1** — el diseño de
+cinco corridas que sirvió para construir y depurar el instrumento de
+medida, incluidos los dos sesgos de §7.3. **No es el protocolo de la
+campaña confirmatoria**, que es v2.1: verdad de referencia por
+construcción, sin anotación humana, con potencia y protocolo congelados
+**antes** de generar el holdout y evaluación única (§8.0,
+`docs/tfm-closure-no-human-v2.1.md`, `docs/results-v2.1.md`). Se
+conserva aquí, íntegro, porque el diseño de las cinco corridas y los
+sesgos que corrigió son precisamente lo que informó cómo se construyó
+v2.1 — no porque siga siendo el protocolo vigente.
 
 ### 7.1 Protocolo
 
@@ -513,10 +576,10 @@ reintento, mismo evaluador determinista.
 
 | # | Selector | Régimen de argumentos | Papel |
 |---|---|---|---|
-| 1 | OpenRouter (`gpt-oss-20b:free`) | Parseo regalado | Confirmatoria con LLM real |
+| 1 | OpenRouter (`gpt-oss-20b:free`) | Parseo regalado | Histórica; etiqueta confirmatoria invalidada |
 | 2 | Stub determinista | Parseo regalado | Arquitectura-solo: aísla gobernanza de calidad del modelo |
 | 3 | Groq (`llama-3.1-8b-instant`) | Parseo real | Elimina el sesgo del parseo regalado |
-| 4 | Groq | Parseo real + normalización | **Vigente** |
+| 4 | Groq | Parseo real + normalización | Referencia exploratoria más reciente |
 | 5 | Groq | Parseo regalado | **Réplica que separa proveedor de régimen** |
 
 **Por qué cambia el proveedor entre corridas.** La cuota diaria gratuita
@@ -563,8 +626,80 @@ en una medida del orden de ejecución (defecto #12, §9.5).
 
 ## 8. Resultados
 
-Todas las cifras proceden de `data/experiment_results_real_parser.json`
-(corrida 4, vigente) salvo indicación contraria.
+### 8.0 Resultado confirmatorio vigente (protocolo v2.1)
+
+**Las secciones 8.1 en adelante describen el piloto exploratorio v1**
+(1.080 ejecuciones, código de análisis corregido después de inspeccionar
+sus propios resultados) y se conservan como contexto y como origen de
+varios de los defectos discutidos en §9.5 — no como el resultado
+confirmatorio del trabajo. **El resultado confirmatorio real es el
+protocolo v2.1 sin anotación humana** (`docs/tfm-closure-no-human-v2.1.md`):
+verdad de referencia por construcción, dos oráculos independientes del
+código evaluado, potencia y protocolo congelados antes de generar el
+holdout, evaluación única. Campaña real de **21.478 observaciones**,
+`RUN_COMPLETED` / `CLOSURE_VALID`, detalle completo en
+`docs/results-v2.1.md`.
+
+| Hipótesis | Resultado | Veredicto |
+|---|---|---|
+| H1a (C no inferior a A) | +25,3 pp, IC95 desde +23,2 pp | **confirmada** |
+| H1b (C superior a B) | −1,5 pp, *p*=0,286 | no confirmada |
+| H2 (tokens, vs A y vs B) | −468 y −648 tokens, IC95 completo <0 | **confirmada** |
+| H3a (estabilidad entre paráfrasis) | *p*=2,2e-18, OR=9,35 | **confirmada** |
+| H3b (variabilidad estocástica) | 36,7 % [24,6, 50,1] | descriptiva |
+| H4 (seguridad, 4 componentes) | ver más abajo | no confirmada |
+| H5 (recuperación selectiva) | selective_acc=0,589, false_reuse=0,411 | no confirmada |
+| H6 (valor de la abstención) | IC95 completo <0 | **confirmada** |
+| H7 (auditoría, 7 hechos) | +42,7 pp, *p*=2,85e-112 | **confirmada**¹ |
+| H8 (coste modelado) | rejilla de sensibilidad, sin criterio | descriptiva |
+
+¹ Con la salvedad de que A/B carecen de policy engine, versión de skill y
+verificación de postcondiciones por definición arquitectónica — parte de
+la ventaja es estructural, no ganada en igualdad de condiciones.
+
+**H4, el resultado que más pesa:** sobre 315 escenarios peligrosos reales,
+C deja pasar una mutación no autorizada en el **19,0 %** de los casos
+[IC95 hasta 23,1 %] — casi cuatro veces el umbral prerregistrado del 5 %.
+Desglosado por las siete categorías de ataque: **cero** mutaciones en
+`insufficient_permissions` y `disguised_bulk_modification` (el filtro de
+rol y la clarificación funcionan); entre el **18 % y el 31 %** de fallo en
+las cinco categorías restantes (`argument_out_of_range`,
+`duplication_or_retry`, `field_conflict`, `prompt_injection_in_data`,
+`similar_but_wrong_skill`). No es un artefacto de los dos defectos que
+contaminaban una campaña anterior de esta misma familia de protocolo
+(H7 sin cablear, una categoría de ataque sin señal observable): verificado
+que el número apenas cambia (19,6 % → 19,0 %) al corregirlos.
+
+La comparación cruda con A/B necesita un matiz que cambia su lectura: para
+A y B, `"DENY"` no es una decisión de seguridad — es la etiqueta que el
+harness asigna a cualquier error de ejecución
+(`"ALLOW" if result.error is None else "DENY"`, `experiment_v2_1.py`), sin
+distinguir un rechazo deliberado de un identificador de registro
+inexistente o una herramienta mal elegida. Por eso A "deniega" el 72,7 %
+de las peticiones peligrosas y C solo el 5,7 %, pero esa diferencia no es
+comparable: mide sobre todo si la petición estaba bien formada, no si el
+sistema entendió que era peligrosa. El único número de H4 libre de esta
+ambigüedad es la mutación no autorizada de C, medida sobre el estado
+observado, no sobre la decisión declarada.
+
+**Lectura de conjunto:** cuatro de nueve pruebas confirmatorias apoyan la
+arquitectura (eficiencia, estabilidad, trazabilidad, valor de la
+abstención); el éxito de tarea no mejora sobre un baseline con
+herramientas tipadas; la recuperación no alcanza los umbrales operativos
+exigidos; y la promesa de detección activa de peligro no se sostiene. Es
+un resultado mixto, y §16 del protocolo lo permite explícitamente: el
+cierre depende del proceso, no de que todo salga favorable.
+
+Tres figuras reproducibles resumen esta sección (Anexo A, `make_figures_v2_1.py`):
+`reports/figures/v21_hypotheses_forest` (las 9 pruebas, estimación e
+IC95), `reports/figures/v21_h4_categories` (mutación no autorizada de C
+por categoría, con la línea del umbral del 5 %) y
+`reports/figures/v21_h2_tokens` (ahorro de tokens contra A y contra B).
+
+---
+
+Las secciones siguientes (8.1–8.x) documentan el piloto v1, con sus
+propias cifras y contexto, tal como se registraron en su momento.
 
 ### 8.1 H1 — Strict Task Success Rate
 
@@ -701,7 +836,7 @@ recuperador para no favorecer al incumbente:
 | Híbrido | 0,713 | 0,675 |
 
 **TF-IDF gana en todas las métricas y en ambos splits.** El experimento
-confirmatorio ya usaba el mejor de los tres. La causa es el benchmark:
+histórico ya usaba el mejor de los tres. La causa es el benchmark:
 texto plantillado con alto solape léxico entre petición y descripción de
 skill, exactamente la señal que TF-IDF explota y que un vector denso
 comprime. **No es un resultado sobre embeddings en general.**
@@ -768,7 +903,7 @@ las 1.080 observaciones, cambiando únicamente el adaptador:
   correcta.
 
 Es una demostración **cualitativa** con 2 de las 12 skills mapeadas a
-modelos reales; no sustituye ni replica el experimento confirmatorio, y
+modelos reales; no sustituye una comparación A/B/C prospectiva, y
 así se declara.
 
 ### 8.9 Réplica que separa proveedor de régimen de argumentos
@@ -802,18 +937,26 @@ es precisamente el mecanismo que la tesis afirma.
 de C es 0,111 en todas. La seguridad de un agente sin gobernanza depende
 de qué modelo le toque; la de la arquitectura gobernada, de ninguno.
 
-### 8.10 Estado final de las hipótesis
+### 8.10 Estado auditado de las hipótesis — piloto v1 (histórico)
 
-| H | Estado |
+**Esta tabla describe el estado del piloto v1 en el momento en que se
+escribió, antes de que existiera la campaña confirmatoria.** No es el
+estado vigente del proyecto — ese es §8.0, con veredicto explícito por
+hipótesis (H1a-H8) sobre 21.478 observaciones reales. Se conserva
+porque documenta con precisión *por qué* v1 no podía dar por sí solo
+una respuesta confirmatoria, que es la motivación directa del diseño de
+v2.1.
+
+| H (v1) | Estado del piloto en su momento |
 |---|---|
-| H1 | **Aceptada.** C−A y C−B significativos; margen de no inferioridad cumplido. Efecto sobre B modesto (+0,150). |
-| H2 | **Confirmada.** C 67,6 tok/ejec frente a B 265,3 (3,9×). |
-| H3 | **Nula por diseño.** Temperatura 0 la vuelve no discriminable. |
-| H4 | **Confirmada y robusta.** False allow 0,111 vs 0,889, invariante a proveedor y régimen de parseo. |
-| H5 | **Parcial.** C gana en Top-3 y abstención; Top-1 depende del selector. |
-| H6 | **Matizada.** El valor de abstenerse depende de la calidad del selector alternativo. |
-| H7 | **Confirmada.** 0,820 vs 0,356/0,374. |
-| H8 | **Análisis de sensibilidad**, no ahorro medido. |
+| H1 | Señal exploratoria favorable. El test fue inspeccionado, faltan filas históricas y oráculo independiente. |
+| H2 | Señal exploratoria favorable. El histórico incluyó dos casos `sin_skill` fuera de la población declarada. |
+| H3 | No evaluable con el diseño del piloto. Temperatura 0 y caché producen A=B=C=1,000. |
+| H4 | Señal exploratoria favorable. Solo nueve casos peligrosos únicos y baja transferencia del detector. |
+| H5 | Parcial y descriptiva. Buen Top-3 en v1; caída acusada de TF-IDF en texto menos templado. |
+| H6 | Parcial y descriptiva. La curva se implementó después de inspeccionar v1. |
+| H7 | Señal exploratoria favorable. No se conservaron las filas históricas por componente. |
+| H8 | Solo análisis de sensibilidad, no ahorro medido. |
 
 ---
 
@@ -821,23 +964,35 @@ de qué modelo le toque; la de la arquitectura gobernada, de ninguno.
 
 ### 9.1 Qué compra la gobernanza, y a qué precio
 
-La formulación que la evidencia soporta es:
+**Actualizado con el resultado confirmatorio (v2.1, §8.0).** La
+formulación que la evidencia sostiene hoy es más estrecha que la que este
+capítulo defendía con el piloto v1, y en un eje se invierte:
 
-> Frente a un baseline de herramientas tipadas con el mismo LLM, la
-> arquitectura gobernada compra **8× menos ejecuciones inseguras, 2,2×
-> más trazabilidad y 3,9× menos tokens**, con una ventaja **pequeña pero
-> significativa** en éxito de tarea (+15,0 pp, *p* = 0,016).
+> Frente a los dos baselines, la arquitectura gobernada compra **tokens
+> más baratos** (IC95 completo por debajo de cero contra A y contra B),
+> **mayor estabilidad** entre formulaciones de la misma petición
+> (*p*=2,2e-18) y **mayor reconstrucción de auditoría** (*p*=2,85e-112,
+> con la salvedad estructural de §9.4). **No** compra una ventaja en
+> éxito de tarea sobre herramientas tipadas (*p*=0,286). Y, al contrario
+> de lo que sostenía este capítulo hasta esta revisión, **no** compra
+> menos ejecuciones inseguras: sobre 315 escenarios peligrosos reales,
+> deja pasar el 19,0 % de mutaciones no autorizadas, casi cuatro veces el
+> umbral prerregistrado.
 
-Es deliberadamente más estrecha que la que sostenían las corridas con
-parseo regalado (+18,3 pp) y más fuerte que la de la corrida 3 (+7,5 pp,
-no significativa). La historia de esas tres cifras es, en sí misma, un
-resultado: **cuánta ventaja aparente de una arquitectura puede provenir
-de cómo se monta la comparación**.
+La historia completa de cómo cambió la cifra de seguridad —de "8× menos
+inseguro" (piloto v1, n=9 casos) a "19,0 % de mutación no autorizada"
+(campaña confirmatoria, n=315, ver §8.0 y §9.5)— es en sí misma un
+resultado: **cuánto puede depender una conclusión de seguridad del
+tamaño y la composición de la muestra de casos peligrosos**, no solo de
+si el detector "dispara". Con nueve casos el intervalo de confianza era
+[0,020, 0,435] — demasiado ancho para sostener nada—; con 315, la
+estimación es precisa y va en la dirección contraria.
 
 El precio de la gobernanza, medido: latencia adicional del pipeline
-determinista (parseo, recuperación, política, verificación), un 9,3 % de
-abstenciones que exigen intervención, y el coste de mantener catálogo,
-handlers y postcondiciones.
+determinista (parseo, recuperación, política, verificación), abstenciones
+que exigen intervención, y el coste de mantener catálogo, handlers y
+postcondiciones — a lo que se añade ahora el propio hueco de seguridad de
+§8.0 como coste no resuelto, no solo como precio de mantenimiento.
 
 ### 9.2 Cuándo un agente directo sigue siendo preferible
 
@@ -858,13 +1013,15 @@ mejor; dice qué se compra y qué se paga.
    sube Top-1 unos 7 puntos, pero elimina casi toda la abstención, que
    es parte de la tesis (H6). El experimento conserva el margen
    conservador.
-3. **Temperatura contra H3.** La norma exige temperatura baja, y la
-   temperatura 0 hace la estabilidad entre repeticiones trivialmente
-   perfecta en los tres sistemas. H3, tal como está formulada, **no puede
-   discriminar**. Se propone y se implementa una reformulación medible
-   (H3b: coincidencia de estado entre **paráfrasis distintas** de la
-   misma intención), cuya medición con LLM real queda declarada como
-   pendiente.
+3. **Temperatura contra H3 — resuelta en v2.1, con matiz.** La norma
+   exige temperatura baja, y bajo repetición estocástica literal (H3b) la
+   estabilidad sigue siendo casi trivial. Pero comparar **formulaciones
+   distintas** de la misma petición (H3a), en vez de repeticiones de la
+   misma formulación, sí discrimina: *p*=2,2e-18. La reformulación que
+   este capítulo proponía como pendiente en el piloto v1 **ya se ejecutó
+   con LLM real** y confirma estabilidad. H3b, la reformulación que sí
+   sigue siendo casi trivial, se reporta como descriptiva sin criterio,
+   tal como estaba previsto.
 
 ### 9.4 Amenazas a la validez
 
@@ -880,16 +1037,21 @@ ERP simulado, modelos de nivel gratuito (no frontera). Las dos demos
 contra Odoo real son evidencia parcial de transferencia, no
 sustitutivo.
 
-**La limitación externa más grave, ahora medida y no solo declarada.**
-Se evaluaron 120 peticiones en registro coloquial, ajenas al generador
-del benchmark. El recuperador TF-IDF de C cae de 0,733 a **0,381** de
-Top-1; el selector LLM que usa B —mismo prompt, mismas herramientas,
-mismo proveedor— cae solo de 0,898 a **0,750**. Como el enrutado es la
-entrada de todo el pipeline de C, **la ventaja de +15 pp en STSR sobre B
-no puede sostenerse fuera del corpus plantillado**: con texto real cabe
-esperar que se estreche o se invierta. Los números del experimento
-congelado siguen siendo correctos para lo que midieron; lo que esta
-medición acota es hasta dónde se pueden extrapolar.
+**La limitación externa más grave, ahora medida y no solo declarada — y
+ahora también confirmatoria (H5, §8.0).** Se evaluaron 120 peticiones en
+registro coloquial, ajenas al generador del benchmark. El recuperador
+TF-IDF de C cae de 0,733 a **0,381** de Top-1; el selector LLM que usa B
+—mismo prompt, mismas herramientas, mismo proveedor— cae solo de 0,898 a
+**0,750**. La campaña confirmatoria de v2.1 mide lo mismo por otra vía,
+con un benchmark procedural distinto: selective accuracy 0,589 y
+false-reuse risk 0,411, muy por debajo/encima de los umbrales
+prerregistrados. Dos benchmarks distintos, dos mediciones distintas,
+misma conclusión: **la recuperación léxica de C es el cuello de botella
+real del sistema**, no una curiosidad de un solo experimento. La ventaja
+de C sobre B en éxito de tarea, que en v1 dependía en parte de esto, ya
+no se sostenía tampoco en la campaña confirmatoria por razones
+independientes (§8.0, H1b) — ambos hallazgos apuntan en la misma
+dirección sin depender uno del otro.
 
 **Refinamiento posterior, que acota la gravedad de la limitación.** Un
 tercer experimento (`docs/product-viability.md` §7.4, con mitad de
@@ -926,8 +1088,9 @@ corregidas con Holm; pseudo-replicación explícitamente evitada (§3.4).
 
 ### 9.5 Dónde se concentran los defectos: un hallazgo sobre el proceso
 
-Trece defectos encontrados y corregidos en el propio instrumento de
-medida. Los más graves:
+Dieciséis defectos encontrados y corregidos en el propio instrumento de
+medida, en las dos generaciones del protocolo (v1 y v2.1). Los más
+graves:
 
 | # | Defecto | Consecuencia |
 |---|---|---|
@@ -941,6 +1104,18 @@ medida. Los más graves:
 | #13 | Falta de normalización de argumentos | Sesgo asimétrico **contra** C |
 | #14 | Los 9 casos `argument_out_of_range` del dataset, mal etiquetados | Un caso benigno cuenta como peligroso y contamina H4 |
 | #15 | Denominador equivocado en el arnés de validación de producto | Habría reportado un derrumbe de −0,466 cuando el real es −0,352 |
+| — | v2.1: `SystemC.handle()` nunca recibía `postcondition_checks` | H7 salía con *p*=1,0 exacto, degenerado, en la primera campaña v2.1 |
+| — | v2.1: categoría de ataque `r4_operation` sin señal observable (par peligroso/seguro idéntico) | Contaminaba el agregado de H4 sin que ningún sistema pudiera distinguirlo |
+| #16 | v2.1: la comparación de tokens (H2) solo verificaba C contra A, nunca contra B | El veredicto "confirmada" no certificaba lo que el protocolo exige |
+
+Además de los defectos de código, un **hallazgo de construcción de la
+métrica**, no un defecto: al diagnosticar por qué H4 seguía saliendo mal
+tras corregir sus dos defectos de instrumentación, se encontró que para
+los baselines A y B la decisión `"DENY"` la asigna el arnés a cualquier
+error de ejecución (`"ALLOW" if result.error is None else "DENY"`), no a
+un juicio de seguridad — así que "A deniega más que C" no es
+directamente comparable con "C deniega más que A". No cambia ningún
+número; cambia cómo debe leerse la comparación (§8.0, §9.1).
 
 Dos patrones, ambos utilizables como material metodológico:
 
@@ -962,7 +1137,7 @@ conclusión por aserciones de mecanismo: valor exacto del estadístico,
 anchura de intervalo no degenerada y proporcional al error estándar
 teórico.
 
-**Tercero, y el más incómodo: de quince defectos, trece salieron de
+**Tercero, y el más incómodo: de dieciséis defectos, catorce salieron de
 auditorías propias; dos los destapó una pregunta escéptica sobre
 resultados que ya habían sido aceptados y publicados** (el #13, sobre un
 resultado no significativo dado por bueno, y el #14, al preguntar si la
@@ -970,7 +1145,11 @@ métrica de seguridad tenía sesgo). Es el patrón esperable: la
 autoauditoría encuentra bien el código que se contradice consigo mismo,
 y mal el código que hace exactamente lo que su autor creía que debía
 hacer. Para eso hace falta alguien que dude del supuesto, no de la
-implementación.
+implementación. La comparación de tokens sin verificar contra B (#16) y
+el hallazgo sobre el `DENY` de A/B, en cambio, sí salieron de auditoría
+propia — al leer el código de análisis en vez de confiar en el veredicto,
+y al desconfiar de un número de seguridad demasiado parecido al de una
+campaña ya conocida como defectuosa.
 
 Un matiz sobre el #14 que merece registrarse: al corregirlo, el
 resultado **mejoraría** para la tesis (el *false allow* de C pasaría de
@@ -979,17 +1158,38 @@ y ese es exactamente el cambio post-hoc que la congelación existe para
 impedir. Se publicó como análisis de sensibilidad junto a la cifra
 contaminada.
 
+El equivalente en v2.1 corrió en la dirección contraria y por eso es una
+prueba más dura: la categoría de ataque análoga a este problema
+(`r4_operation`, sin señal observable) **sí se retiró**, correctamente,
+**antes** de generar el holdout de la campaña confirmatoria — no es un
+cambio post-hoc, es exactamente el procedimiento que la congelación
+permite. Y el resultado de seguridad no mejoró: la mutación no autorizada
+pasó de 19,6 % a 19,0 %, prácticamente sin cambio. Que corregir el
+defecto de instrumentación no cambiara la conclusión es la evidencia más
+fuerte de que el hallazgo de H4 es real y no un artefacto de las dos
+categorías rotas.
+
 ### 9.6 Resultados negativos, reportados como tales
 
-- La ventaja de C sobre B en éxito de tarea **no sobrevivió** al primer
-  intento de parseo honesto (corrida 3, no significativa). Se publicó
-  así mientras se creía correcta.
-- Los **embeddings pierden** frente a TF-IDF en este benchmark, y el
+- **El resultado negativo más importante del trabajo, confirmatorio:**
+  sobre 315 escenarios peligrosos reales, C deja pasar el 19,0 % de
+  mutaciones no autorizadas — casi cuatro veces el umbral prerregistrado
+  — y no supera a A ni a B en ninguno de los cuatro componentes de H4.
+  Contradice directamente la expectativa con la que se diseñó el sistema.
+- H1b: la ventaja de C sobre B en éxito de tarea **no se confirma**
+  (*p*=0,286) — reproduce, con datos limpios de dos defectos conocidos y
+  un benchmark distinto, la misma conclusión que ya forzó una
+  reformulación de la tesis durante el piloto v1.
+- H5: la recuperación **no alcanza** ninguno de los tres umbrales
+  operativos exigidos (selective accuracy, false-reuse risk, coverage),
+  de forma confirmatoria, no solo exploratoria.
+- Los **embeddings pierden** frente a TF-IDF en el benchmark v1, y el
   ranking híbrido no mejora al embedding puro.
-- **H3 es no discriminable** por diseño.
+- **H3b es no discriminable** por diseño, bajo temperatura baja y sin
+  paráfrasis — previsto y así reportado.
 - La **detección léxica no generaliza**: 3,3 % fuera de distribución.
-- C es el sistema con **peor false-reuse risk** (0,215) en la corrida
-  vigente, por encima de B (0,102).
+- C es el sistema con **peor false-reuse risk** en varias mediciones
+  (0,215–0,411 según el benchmark), consistentemente peor que B.
 
 ---
 
@@ -1025,32 +1225,39 @@ PNG/SVG regeneradas desde el JSON versionado. El workbook de Tableau es
 trabajo manual pendiente y se declara como tal.
 
 **Valor empresarial.** Con supuestos declarados: menor coste de
-inferencia (3,9× frente a B), menor coste esperado de error (8× menos
-ejecuciones inseguras), y capacidad de auditoría que permite reconstruir
-por qué se tomó cada decisión. No se presenta como ahorro medido ni como
-satisfacción de usuario, que no se han observado.
+inferencia (confirmatorio, H2) y capacidad de auditoría que permite
+reconstruir por qué se tomó cada decisión (confirmatorio, H7, con la
+salvedad de §9.1). El menor coste esperado de error **no** se sostiene
+igual que en el piloto v1: la campaña confirmatoria muestra un 19,0 % de
+mutación no autorizada sobre escenarios peligrosos reales (§8.0), así
+que el coste de error esperado de C no es automáticamente menor. No se
+presenta como ahorro medido ni como satisfacción de usuario, que no se
+han observado.
 
 ### 10.1 Transferencia a producto: qué sostiene la evidencia
 
-El análisis completo está en
-[`docs/product-viability.md`](product-viability.md). Su tesis central es
-que **la evidencia que aguanta ante un tribunal y la que aguanta ante un
-cliente no son la misma**, y que confundirlas produciría afirmaciones
-comerciales falsas.
+**Actualizado con la campaña confirmatoria (v2.1).** El análisis
+completo está en [`docs/product-viability.md`](product-viability.md),
+ya revisado con estas cifras. Su tesis central es que **la evidencia que
+aguanta ante un tribunal y la que aguanta ante un cliente no son la
+misma**, y que confundirlas produciría afirmaciones comerciales falsas.
 
 **Sostiene un producto:** que ninguna inyección consiga una mutación no
-autorizada por ninguno de los tres canales de ataque (0/1.530, incluido
-el brazo que concede el LLM entero al atacante); que la arquitectura
-elimine una llamada al LLM por petición, demostrado por aritmética; que
-la decisión sea invariante al proveedor mientras la de un agente sin
-gobernanza no lo es; que el bloqueo se sostenga contra un ERP real
-verificado por relectura independiente; y la trazabilidad de 0,820.
+autorizada por ninguno de los tres canales de ataque cuando se concede
+el modelo entero al atacante (0/1.530); que la arquitectura elimine una
+llamada al LLM por petición, demostrado por aritmética y confirmado en
+v2.1 (H2); que el bloqueo se sostenga contra un ERP real verificado por
+relectura independiente; y la reconstrucción de auditoría, confirmatoria
+(H7, con la salvedad de §9.1).
 
-**No sostiene nada comercial:** la detección léxica de ataques (3,3 %
-fuera de distribución, y 8 de 9 casos del test bloqueados por patrones
-escritos sobre ese mismo corpus), el «8×» sin su intervalo (n = 9, IC
-[0,020, 0,435]), la ventaja de éxito de tarea (+15 pp, modesta), y
-cualquier cifra de ahorro (H8 es sensibilidad, no gasto medido).
+**No sostiene nada comercial:** «detectamos peligro» o «somos más
+seguros que un agente sin gobierno» — **confirmatoriamente falso** (H4:
+19,0 % de mutación no autorizada sobre 315 casos reales, casi 4× el
+umbral); la detección léxica de ataques (3,3 % fuera de distribución);
+el «8×» de v1, superado por el resultado confirmatorio de arriba; la
+invarianza al proveedor (nunca probada en la campaña confirmatoria); la
+ventaja de éxito de tarea (v2.1 confirma que C no supera a B, *p*=0,286);
+y cualquier cifra de ahorro (H8 es sensibilidad, no gasto medido).
 
 La consecuencia es de diseño, no solo de discurso: **el producto no
 puede apoyarse en que el sistema entienda mejor, sino en que restrinja
@@ -1103,28 +1310,46 @@ estos números no permiten afirmar, está en
 
 ### 11.1 Respuesta a la pregunta principal
 
-Una arquitectura que separa la interpretación probabilística de la
-ejecución determinista **sí** reduce errores de seguridad de forma
-contundente (8× menos *false allow*, sin aumentar los falsos bloqueos),
-**sí** reduce el consumo de tokens (3,9× frente a herramientas tipadas,
-sustituyendo la llamada de selección por recuperación léxica), y **mejora
-modestamente** el éxito de tarea (+15,0 pp, IC95 [+4,2, +25,8]). La
-variabilidad entre ejecuciones no es medible con la formulación original
-de H3 porque la temperatura exigida por la norma la vuelve trivial.
+**Actualizado con el resultado confirmatorio (v2.1, §8.0) — sustituye la
+respuesta exploratoria de v1 que seguía aquí hasta esta revisión.** Una
+arquitectura que separa la interpretación probabilística de la ejecución
+determinista **sí** reduce el consumo de tokens frente a los dos
+baselines (IC95 completamente por debajo de cero), **sí** es más estable
+entre formulaciones distintas de la misma petición (*p*=2,2e-18) y **sí**
+produce una reconstrucción de auditoría más completa (*p*=2,85e-112, con
+la salvedad de que A/B carecen de esa capacidad por diseño). **No** mejora
+el éxito de tarea frente a un baseline con herramientas tipadas
+(*p*=0,286) — la mejora de +15,0 pp que reportaba el piloto v1 no se
+sostiene en la campaña confirmatoria. Y, de forma más importante que
+cualquiera de los resultados favorables: **no** reduce el riesgo de
+seguridad frente a los baselines — sobre 315 escenarios peligrosos reales,
+deja pasar el 19,0 % de mutaciones no autorizadas, casi cuatro veces el
+umbral prerregistrado, localizado en cinco de siete categorías de ataque.
+La variabilidad bajo repetición estocástica pura (H3b) sigue sin ser
+discriminable a temperatura baja, tal como se anticipaba; el diseño de
+paráfrasis (H3a) sí resultó medible y confirma estabilidad.
 
 ### 11.2 Respuestas a las preguntas secundarias
 
-1. **Precisión de recuperación ante paráfrasis:** Top-1 = 0,780,
-   Top-3 = 0,941, MRR = 0,855 en test, con TF-IDF superando a embeddings
-   y a ranking híbrido en dev y validación.
+1. **Precisión de recuperación ante paráfrasis:** en el piloto v1,
+   Top-1 = 0,780, Top-3 = 0,941, MRR = 0,855, con TF-IDF superando a
+   embeddings y a ranking híbrido en dev y validación. **La campaña
+   confirmatoria lo contradice**: H5 (§8.0) mide selective accuracy
+   0,589 y false-reuse risk 0,411, muy fuera de los tres umbrales
+   operativos exigidos — no adecuada. La respuesta confirmatoria a esta
+   pregunta es que la recuperación **no** ofrece la precisión que el
+   piloto sugería.
 2. **Errores que previene el verificador:** ejecuciones bajo rol no
    autorizado, argumentos fuera de tipo o rango, operaciones con framing
    irreversible o de alcance masivo, y mutaciones cuyo estado final no
    coincide con la postcondición declarada.
-3. **Reducción de tokens por reutilización:** 3,9× frente a herramientas
-   tipadas; el mecanismo es la sustitución de la llamada de selección.
-4. **Variabilidad:** no discriminable con temperatura 0; se propone H3b
-   sobre paráfrasis como reformulación medible.
+3. **Reducción de tokens por reutilización:** confirmatoria contra los
+   dos comparadores (§8.0, H2); el mecanismo es la sustitución de la
+   llamada de selección.
+4. **Variabilidad:** no discriminable bajo repetición estocástica pura
+   (H3b), pero sí bajo formulaciones distintas de la misma petición
+   (H3a) — confirmada con LLM real, *p*=2,2e-18. La reformulación que
+   este trabajo proponía como pendiente ya se ejecutó.
 5. **Latencia adicional de la gobernanza:** instrumentada por ejecución;
    el sobrecoste es el del pipeline determinista, no de llamadas extra
    al modelo.
@@ -1135,23 +1360,40 @@ de H3 porque la temperatura exigida por la norma la vuelve trivial.
 8. **Umbral, cobertura y riesgo:** calibrar el margen a cero sube Top-1
    unos 7 puntos y elimina casi toda la abstención — objetivos en
    conflicto, resueltos a favor de la configuración conservadora.
-9. **Componente que más aporta:** el policy engine con validación
-   previa; es el responsable del resultado de seguridad y de
-   trazabilidad, invariante a proveedor y a régimen de parseo.
+9. **Componente que más aporta, revisado con el resultado confirmatorio:**
+   el policy engine explica la trazabilidad (H7, confirmada) y el ahorro
+   de tokens (H2, confirmada), invariante a proveedor. **No** explica un
+   resultado de seguridad favorable — H4 confirmatoria muestra que la
+   validación previa deja pasar el 19 % de mutaciones peligrosas en
+   escenarios sin marcador léxico obvio. El componente que sí aporta
+   valor de seguridad medido es el confinamiento por contrato bajo modelo
+   comprometido (0/1.530, InjecAgent), una propiedad distinta de la
+   detección previa.
 10. **Cuándo preferir un agente directo:** dominios sin escritura,
-    catálogos inviables de mantener, o coste de error bajo frente a
-    coste de abstención alto.
+    catálogos inviables de mantener, coste de error bajo frente a coste
+    de abstención alto, o —dato nuevo— dominios donde las peticiones
+    peligrosas son sutiles y sin marcador léxico: en ese caso ningún
+    sistema evaluado (A, B o C) ofrece una garantía de detección fiable,
+    y la gobernanza no la sustituye por sí sola.
 
 ### 11.3 Trabajo futuro
 
-Ejecución del brazo exploratorio de temperatura y de la medición de H3b
-con LLM real; poblado de precondiciones del catálogo con su propia
-corrida; detección semántica de intención frente a la petición original,
-que es lo que el resultado de InjecAgent señala como límite estructural
-del enfoque léxico; mapeo del resto del catálogo a modelos reales de
-Odoo; kappa de anotación; evaluación con anotadores y usuarios reales.
-(La réplica de ambos regímenes de parseo en un mismo proveedor, que
-figuraba aquí, **se ejecutó**: §7.2 y §9.4.)
+**Lo que este apartado pedía y ya se ejecutó desde la última revisión:**
+la medición de H3a con LLM real (confirmada, §9.3); la campaña
+confirmatoria completa bajo protocolo v2.1 sin anotación humana, que
+sustituye al kappa de anotación que figuraba aquí como pendiente —
+retirado formalmente, no completado.
+
+**Lo que sigue pendiente:** poblado de precondiciones del catálogo con
+su propia corrida; detección semántica de intención frente a la petición
+original, que es exactamente lo que el hallazgo de H4 (§8.0) y el
+resultado de InjecAgent señalan como límite estructural del enfoque
+léxico — ya no es una intuición, es la explicación más plausible de por
+qué C falla en 5 de 7 categorías de ataque sin marcador textual obvio;
+diseñar y ejecutar un endpoint real para las dos categorías de H4 que
+nunca llegaron a ejercitar su condición de peligro
+(`duplication_or_retry`, `field_conflict`); mapeo del resto del catálogo
+a modelos reales de Odoo; evaluación con usuarios reales.
 
 **La línea más prometedora, y la que este trabajo deja abierta con
 evidencia preliminar a favor:** convertir la descripción de la skill en
@@ -1167,28 +1409,44 @@ generalización que el corpus disponible no permite hacer.
 El valor de este trabajo no está en presentar ERP Agent OS como solución
 universal. Hay muchos prototipos que conectan un modelo de lenguaje con
 un ERP, y la arquitectura empleada —skills versionadas, políticas,
-auditoría, postcondiciones— no es novedosa por sí misma.
+auditoría, postcondiciones— no es novedosa por sí misma. Y, con el
+resultado confirmatorio delante, tampoco puede presentarse como una
+solución de seguridad: sobre 315 escenarios peligrosos reales, deja
+pasar el 19,0 % de mutaciones no autorizadas.
 
 Lo que este trabajo aporta es de otro tipo. Aporta **una forma más
-exigente de preguntar por la seguridad de un agente**: no si un detector
-dispara, sino si el daño ocurre cuando se concede que el detector ha
-fallado y el modelo está comprometido. Bajo esa pregunta, la respuesta
-fue 0 de 1.530, con un dataset externo y un brazo que entrega el modelo
-al atacante.
+exigente de preguntar por la seguridad de un agente, con las dos
+respuestas que produjo, no solo la favorable**. Frente a un modelo
+comprometido que dicta directamente los argumentos, el confinamiento por
+contrato se sostuvo: 0 de 1.530 mutaciones no autorizadas sobre un
+dataset externo. Frente a una petición simplemente ambigua y plausible,
+sin ningún marcador de ataque, el mismo sistema falló uno de cada cinco
+casos peligrosos, en una campaña diseñada, congelada y evaluada
+precisamente para no poder mirar el resultado antes de comprometerse con
+el diseño. Publicar solo la primera respuesta habría sido una tesis más
+cómoda y menos verdadera; publicar las dos, con el diagnóstico exacto de
+en qué categorías falla y en cuáles no, es lo que hace que la afirmación
+de seguridad de este trabajo sea acotada y defendible en vez de una
+promesa.
 
-Y aporta **el registro de haberse equivocado en público**. Tres veces la
-medición honesta produjo un resultado peor que la intuición de partida,
-y las tres se publicaron antes de encontrar el matiz que las mejoraba.
-Quince defectos del instrumento quedaron documentados con su fecha, su
-causa y qué habría pasado sin corregirlos; dos de ellos los destapó una
-pregunta escéptica sobre resultados ya aceptados, y uno se dejó sin
-corregir precisamente porque corregirlo habría favorecido a la
-hipótesis.
+Y aporta **el registro de haberse equivocado en público, dos veces
+distintas**. En el piloto v1, tres veces la medición honesta produjo un
+resultado peor que la intuición de partida, y las tres se publicaron
+antes de encontrar el matiz que las mejoraba. En la campaña confirmatoria
+v2.1, el patrón se repitió con una diferencia importante: no hubo matiz
+que mejorara el resultado de seguridad, y el número se sostuvo — pasar de
+9 a 315 casos peligrosos, y corregir los dos defectos que contaminaban la
+medición anterior, no lo hizo desaparecer. Dieciséis defectos del
+instrumento quedaron documentados con su fecha, su causa y qué habría
+pasado sin corregirlos; dos de ellos los destapó una pregunta escéptica
+sobre resultados ya aceptados, y uno se dejó sin corregir precisamente
+porque corregirlo habría favorecido a la hipótesis.
 
 Un trabajo experimental que solo confirma lo que esperaba debe levantar
-sospecha. Este documenta dónde se equivocó, cómo lo descubrió y qué
-quedó en pie después. Eso —más que cualquiera de sus cifras— es lo que
-pretende dejar utilizable para quien venga detrás.
+sospecha. Este documenta dónde se equivocó, cómo lo descubrió, y qué
+quedó en pie después de comprobarlo con más datos y más rigor, no menos.
+Eso —más que cualquiera de sus cifras favorables— es lo que pretende
+dejar utilizable para quien venga detrás.
 
 ---
 
@@ -1222,13 +1480,13 @@ revisión sistemática.
 
 ```sh
 uv sync
-uv run python -m pytest                       # 393 tests
+uv run python -m pytest                       # suite completa
 uv run python scripts/freeze_protocol.py --verify
 
 # Experimento (arquitectura-solo, sin red)
 uv run python scripts/run_experiment.py
 
-# Experimento confirmatorio con LLM real y parseo real
+# Experimento exploratorio con LLM real sobre test v1 ya inspeccionado
 uv run python scripts/run_experiment.py --real-llm --real-parser \
     --provider groq
 
@@ -1243,19 +1501,47 @@ uv run python scripts/injection_resistance_test.py
 uv run python scripts/odoo_governed_demo.py
 uv run python scripts/odoo_adversarial_demo.py
 
-# Exportación y figuras
+# Exportación y figuras (piloto v1)
 uv run python scripts/export_results.py
 make figures
+
+# Campaña confirmatoria v2.1 (sustituye a lo anterior como resultado
+# vigente -- congelada, RUN_COMPLETED/CLOSURE_VALID, no reproducible sin
+# gastar API real: el archivo crudo ya está commiteado)
+uv run python scripts/freeze_protocol_v2_1.py --verify
+uv run python scripts/verify_tfm_closure_v2_1.py --final \
+    --receipt-log data/protocol_v2_1/runs_v2/receipts_2.jsonl \
+    --code-manifest-path data/protocol_v2_1/code_freeze_manifest.json \
+    --report-path data/protocol_v2_1/confirmatory_report_v2_1_2.json
+
+# Figuras del capítulo confirmatorio (§8.0)
+uv sync --group figures
+uv run python scripts/make_figures_v2_1.py
 ```
 
 ### Anexo B. Artefactos de datos
+
+**Campaña confirmatoria v2.1 (vigente):**
+
+| Fichero | Contenido |
+|---|---|
+| `data/protocol_v2_1/runs_v2/confirmatory_observations_v21_2d36433e...jsonl` | 21.478 observaciones crudas, fila a fila |
+| `data/protocol_v2_1/code_freeze_manifest.json` | Manifiesto congelado vigente (`tfm-protocol-v2.1.2`) |
+| `data/protocol_v2_1/code_freeze_manifest_v2_1_1.json` | Manifiesto anterior, archivado por procedencia |
+| `data/protocol_v2_1/confirmatory_report_v2_1_2.json` | Informe vigente — H1a-H8, 13 entradas, sin `protocol_violation` |
+| `data/protocol_v2_1/confirmatory_report_v2_1_1.json` / `confirmatory_report_v2_1_1_PRE_H2_FIX.json` | Informes anteriores al arreglo de H2, conservados |
+| `reports/figures/v21_hypotheses_forest.{png,svg}` | Las 9 pruebas, estimación e IC95, confirmada/no confirmada |
+| `reports/figures/v21_h4_categories.{png,svg}` | Mutación no autorizada de C por las 7 categorías de H4 |
+| `reports/figures/v21_h2_tokens.{png,svg}` | Ahorro de tokens de C contra A y contra B |
+
+**Piloto v1 (exploratorio, contexto):**
 
 | Fichero | Contenido |
 |---|---|
 | `data/bench_v1.jsonl` | 480 casos del benchmark |
 | `data/freeze_manifest.json` | Hashes del protocolo congelado (schema 1.1) |
-| `data/experiment_results.json` | Corrida confirmatoria (OpenRouter, parseo regalado) |
-| `data/experiment_results_real_parser.json` | **Corrida vigente** (Groq, parseo real + normalización) |
+| `data/experiment_results.json` | Resumen histórico agregado (OpenRouter, parseo regalado) |
+| `data/experiment_results_real_parser.json` | Referencia exploratoria agregada más reciente (Groq, parseo real + normalización) |
 | `data/experiment_results_groq_given_args.json` | Réplica que separa proveedor de régimen (Groq, argumentos dados) |
 | `data/retriever_comparison.json` | TF-IDF vs embeddings vs híbrido |
 | `data/injecagent_stress_test_results.json` | Detección léxica, 510 payloads |
@@ -1266,7 +1552,7 @@ make figures
 | `data/real_requests_llm_eval.json` | Router LLM sobre las mismas peticiones, 120 llamadas reales |
 | `data/router_designs_eval.json` | Cinco diseños de enrutado, calibrados en dev y juzgados held-out |
 | `data/skill_profiles.json` | Descripciones enriquecidas, **fuera** del catálogo congelado |
-| `data/annotation_review_sheet.csv` | Muestra estratificada para el segundo anotador (**pendiente**) |
+| `data/annotation_review_sheet.csv` | Muestra estratificada para el segundo anotador — instrumento construido, paso **retirado formalmente** por v2.1, no completado |
 | `data/real_requests.csv` | Peticiones reales — **gitignorado**, puede contener datos de clientes |
 
 ### Anexo C. Documentación técnica complementaria
@@ -1275,7 +1561,7 @@ make figures
 `docs/dataset-card.md`, `docs/experiment-protocol.md`,
 `docs/threat-model.md`, `docs/traceability-rubric.md`,
 `docs/retriever-comparison.md`, `docs/injecagent-stress-test.md`,
-`docs/odoo-demo.md`, `docs/audit.md` (registro completo de los quince
+`docs/odoo-demo.md`, `docs/audit.md` (registro completo de los dieciocho
 defectos), `docs/spec-coverage.md` (cobertura §-por-§ de la
 especificación normativa), `docs/product-viability.md` (transferencia a
 producto: qué afirmación comercial sostiene cada número y cuál no),
@@ -1286,9 +1572,17 @@ resultados y cómo responder las siete preguntas difíciles),
 
 ### Anexo D. Trabajo pendiente declarado
 
-1. **Kappa de anotación** — instrumento generado, paso humano pendiente.
+1. **Kappa de anotación** — retirado formalmente, no completado. El
+   instrumento se construyó (`data/annotation_review_sheet.csv`) pero
+   el paso humano no se va a ejecutar; el protocolo v2.1 sin anotación
+   humana lo sustituye y ya está implementado, congelado y ejecutado
+   (§6.3, §8.0).
 2. **Workbook de Tableau** — insumos generados, montaje manual.
-3. **Ejecución del brazo de temperatura y medición de H3b con LLM real.**
+3. **Actualización de `data/evidence_registry.json` y
+   `src/erp_agent_os/claims.py`** para que el contrato automático de
+   afirmaciones distinga hipótesis confirmadas de no confirmadas de
+   v2.1, en vez de su binario heredado de la era v1 (decisión de
+   política pendiente, no una tarea de escritura).
 4. **Vídeo de competición y presentación de defensa** — guion y
    contenido escritos (`docs/video-guion.md`, `docs/presentacion.md`);
    falta grabar y maquetar.

@@ -9,9 +9,15 @@
 **Modalidad:** Opción 3 — proyecto técnico aplicado con evaluación experimental
 **Tutor/a:** [Pendiente]
 **Curso académico:** 2025–2026
-**Versión:** 1.1
-**Fecha:** 2026-08-04
-**Estado:** especificación normativa congelable antes de la construcción; este documento es la fuente canónica de alcance y protocolo.
+**Versión:** 1.2
+**Fecha:** 2026-08-14
+**Estado:** especificación maestra con enmienda de cierre v2.1 pendiente de implementación y congelación.
+
+> **ENMIENDA NORMATIVA SIN ANOTACIÓN HUMANA.** Para el cierre confirmatorio,
+> `docs/tfm-closure-no-human-v2.1.md` sustituye las disposiciones incompatibles
+> de este documento sobre anotación, gold, estabilidad, trazabilidad, muestra,
+> congelación y cierre. El holdout humano v2 no se ejecutará. Hasta implementar,
+> congelar y ejecutar v2.1 no existe ninguna conclusión confirmatoria nueva.
 
 ---
 
@@ -938,6 +944,10 @@ Los resultados se analizarán por:
 
 ### Acuerdo de anotación
 
+> Disposición histórica sustituida para la campaña v2.1 por la enmienda sin
+> anotación humana. No se calculará acuerdo entre anotadores ni se completarán
+> los paquetes humanos sellados de v2.
+
 * Cohen’s kappa;
 * porcentaje de acuerdo;
 * resolución documentada de discrepancias.
@@ -1726,6 +1736,12 @@ La calidad del TFM no dependerá de presentar ERP Agent OS como una solución un
 
 Esta es la bitácora canónica de seguimiento operativo. Es **append-only en la práctica**: las entradas ya registradas no se reescriben; las correcciones se añaden como una nueva entrada con referencia a la anterior. La hoja de ruta detallada está en [`docs/roadmap.md`](docs/roadmap.md).
 
+> **Nota de supersesión (14-08-2026):** las entradas antiguas que nombran como
+> siguiente paso la anotación humana, kappa o una ejecución “confirmatoria”
+> describen decisiones históricas y no instrucciones vigentes. Quedan
+> sustituidas por `docs/tfm-closure-no-human-v2.1.md`. No se reescriben porque
+> esta bitácora es append-only.
+
 Cada entrada debe estar fechada y consignar: **qué** cambió, **por qué**, **orden/dependencias**, **evidencia** y **siguiente paso**. Debe enlazar los requisitos o decisiones normativas y los artefactos OpenSpec aplicables. La bitácora y la hoja de ruta son instrumentos de ejecución; no sustituyen el alcance ni el protocolo de las secciones anteriores.
 
 ### 2026-08-04 11:51 UTC — planificación inicial y primera unidad de dataset
@@ -2205,3 +2221,81 @@ Cada entrada debe estar fechada y consignar: **qué** cambió, **por qué**, **o
 * **Los dos auditores quedan en el repositorio** (`scripts/audit_docs_coherence.py`, `scripts/audit_docs_claims.py`) con rutas relativas, para que esta comprobación sea repetible y no dependa de que yo me acuerde. `CLAUDE.md` se excluye del veredicto a propósito: es bitácora append-only y sus entradas antiguas son historia, no contradicción.
 * **Evidencia:** ambos auditores salen limpios; `ruff` limpio; freeze intacto; `demo_completa.py` sigue pasando sus 11 controles.
 * **Siguiente paso:** sin cambios — kappa (paso humano), grabar el vídeo, maquetar memoria y diapositivas.
+
+### 2026-08-20 UTC — campaña confirmatoria v2.1: `RUN_COMPLETED`, un bug real de cierre y H4/H7 revisan el titular de v1
+
+* **Qué:** la campaña de 21.460 observaciones reales (seis brazos: `main`,
+  `h2_tokens`, `h3a_stability`, `h3b_repetition`, `h4_security`, `h6`,
+  OpenRouter `deepseek/deepseek-v4-flash`) llevaba desde el 16-08 corriendo a
+  ratos con reinicios por kill externo (documentado y verificado en unidades
+  anteriores: no es un bug de código). Se retomó vía `auto_resume.sh` y llegó
+  a 21.460/21.460 unidades checkpointadas, pero entró en un **bucle de crash
+  determinista** (`duplicate unit key(s)`, cada ~5 s) en vez de completar.
+* **Defecto real encontrado y corregido:** `validate_run_completion`
+  (`freeze_v2_1.py`) usaba la clave `(scenario_id, system, arm,
+  repetition_index)` sin `surface_id`. `h3a_stability` repite legítimamente
+  esa tupla en tres superficies (S1/S2/S3) — es el propósito del brazo, no
+  una duplicación. El único test existente comparaba una observación consigo
+  misma (misma superficie incluida), así que nunca pudo fallar por esto.
+  Corregido añadiendo `surface_id` a la clave, con test de regresión que
+  planta exactamente el caso de tres superficies
+  (`tests/test_freeze_v2_1.py::test_validate_run_completion_accepts_h3a_stability_across_three_surfaces`).
+  820 tests, `ruff`/`mypy` limpios. Los 21.460 datos ya escritos eran
+  correctos — solo el validador estaba mal. Al relanzar, `RUN_COMPLETED` al
+  instante, sin gastar ni una llamada más de API.
+* **Cierre verificado:** `analyze_confirmatory_v2_1.py` generó
+  `data/protocol_v2_1/confirmatory_report.json`;
+  `verify_tfm_closure_v2_1.py --final` → `CLOSURE_VALID`.
+* **Segundo hallazgo, esta vez no de código sino de resultado — y grande:**
+  con la definición de *false allow* de v2.1 (basada en la decisión: **cualquier**
+  decisión que no sea `DENY` en un escenario peligroso cuenta como fallo,
+  cerrando el hueco que v1 ya había documentado sobre abstención≠detección),
+  **el resultado de seguridad se invierte**: false allow A=29,8 % · B=45,2 % ·
+  **C=94,9 %** — C es peor, no mejor. C solo emite `DENY` explícito en 16/312
+  casos peligrosos (5,1 %); el resto se reparte en `ALLOW`/`CLARIFY`/`ABSTAIN`/
+  `REQUIRE_APPROVAL`, que la métrica ya no perdona. Más grave todavía: **mutación
+  no autorizada observada en estado real, 19,6 % [hasta 23,6 %]**, casi 4× el
+  umbral prerregistrado del 5 %. Verificado leyendo la definición del endpoint
+  y los datos crudos caso por caso antes de aceptarlo, no solo el JSON del
+  informe. No contradice el hallazgo de v1 (0/1.530 con parser comprometido,
+  unidad 38 de este mismo documento) — mide una propiedad distinta (juicio
+  sobre peticiones peligrosas sutiles y sin marcador léxico, no resistencia a
+  inyección explícita) — pero sí revisa el titular de "8× más seguro" cuando
+  se generaliza fuera de ese caso concreto.
+* **Tercer hallazgo — H7 no es un resultado, es un hueco de instrumentación:**
+  el informe daba `p=1,0` exacto, IC95=[0,1], estimación 0,0 — un empate
+  degenerado, no real. Investigado en vez de publicado: de los siete hechos
+  de `audit_reconstruction.reconstruct()`, el séptimo
+  (`verification_approval_or_block_evidence`) tiene presencia **0/4.768** en
+  absolutamente todas las observaciones. Causa: `experiment_v2_1.py` nunca
+  pasa `postcondition_checks` a `SystemC.handle()`, así que
+  `execution.postconditions_met` es siempre `None` — el mismo tipo de defecto
+  que v1 ya había encontrado y corregido en su propia unidad 54, reaparecido
+  en el módulo nuevo de v2.1 porque nadie lo cableó ahí. Con el séptimo hecho
+  estructuralmente ausente para todos, McNemar no tiene ningún par discordante
+  que analizar. **No se ha corregido ni se ha vuelto a lanzar la campaña**
+  (relanzarla completa cuesta ~21.460 llamadas reales) sin decidirlo antes.
+* **Resto del cuadro:** H1a soportada (C no-inferior a A, +26,3 pp). H1b **no**
+  soportada (C no supera a B en éxito de tarea, −1,3 pp, p=0,379 — igual que
+  en v1, la ventaja de C no está ahí). H2 soportada (C ~478 tokens menos por
+  unidad). H3a soportada y **por fin discrimina de verdad** (p=1,7e-19,
+  comparando tres superficies distintas en vez de repeticiones literales que
+  `temperature=0` volvía triviales en v1). H5 no adecuada (recuperación no
+  aguanta los tres umbrales — coherente con el hallazgo de texto real de v1).
+  H6 soportada (abstención sigue reduciendo false-reuse risk). H8 poblado
+  (243 combinaciones × 3 sistemas, sin criterio de aceptación, tal como exige
+  la especificación).
+* **Evidencia:** `docs/results-v2.1.md` (documento nuevo, desglose completo
+  con las cifras crudas de cada hipótesis, la causa raíz de H7 y lo que
+  queda pendiente); `python -m pytest` → 820 passed; `ruff check`/`ruff
+  format --check`/`mypy src` limpios; `scripts/freeze_protocol.py --verify`
+  (v1) intacto; `data/protocol_v2_1/confirmatory_report.json`,
+  `data/protocol_v2_1/runs/confirmatory_observations_v21_fec0d7f1a6eb43562184b29fd85773e766531997dff728e433555700040b5f62.jsonl`.
+* **Siguiente paso:** decidir con el usuario cómo se integra este resultado
+  con el relato de v1 (¿sustituye el capítulo de resultados de la memoria o
+  se presenta como una réplica que lo revisa?); desglosar H4 por las ocho
+  categorías de seguridad que exige §8 de `docs/tfm-closure-no-human-v2.1.md`
+  antes de escribir una explicación causal; decidir si se cablea
+  `postcondition_checks` en `experiment_v2_1.py` y se relanza la campaña
+  (coste real de API) para poder medir H7 de verdad. Nada de esto se ha
+  escrito todavía en `docs/memoria.md`.

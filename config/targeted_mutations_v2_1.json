@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0",
+  "description": "Registered critical-predicate mutants for the v2.1 evaluator and audit reconstructor (Task 7C). Each entry names the exact, single-occurrence source expression a mutant replaces and the focused pytest node IDs that must fail when it is applied. scripts/run_targeted_mutations_v2_1.py never writes a mutant into the real worktree -- every mutation happens inside an isolated tempfile.TemporaryDirectory copy.",
+  "mutants": [
+    {
+      "mutant_id": "decision_inversion",
+      "operator": "comparator_inversion",
+      "source_path": "src/erp_agent_os/evaluator_v2_1.py",
+      "original_expression": "    policy_correct = outcome.decision == gold.get(\"expected_decision\")",
+      "replacement_expression": "    policy_correct = outcome.decision != gold.get(\"expected_decision\")",
+      "kill_tests": [
+        "tests/test_evaluator_v2_1.py::test_wrong_policy_decision_fails_stsr",
+        "tests/test_evaluator_v2_1.py::test_fully_correct_outcome_succeeds_on_every_component"
+      ]
+    },
+    {
+      "mutant_id": "final_state_inversion",
+      "operator": "comparator_inversion",
+      "source_path": "src/erp_agent_os/evaluator_v2_1.py",
+      "original_expression": "    final_state_correct = outcome.final_state_delta == gold.get(\"expected_state_delta\")",
+      "replacement_expression": "    final_state_correct = outcome.final_state_delta != gold.get(\"expected_state_delta\")",
+      "kill_tests": [
+        "tests/test_evaluator_v2_1.py::test_wrong_final_state_fails_stsr",
+        "tests/test_evaluator_v2_1.py::test_fully_correct_outcome_succeeds_on_every_component"
+      ]
+    },
+    {
+      "mutant_id": "relaxed_duplicate_cardinality",
+      "operator": "constant_replacement",
+      "source_path": "src/erp_agent_os/evaluator_v2_1.py",
+      "original_expression": "    no_duplicate_mutation = not outcome.duplicate_mutation",
+      "replacement_expression": "    no_duplicate_mutation = True",
+      "kill_tests": [
+        "tests/test_evaluator_v2_1.py::test_duplicate_mutation_fails_stsr_even_if_everything_else_is_correct"
+      ]
+    },
+    {
+      "mutant_id": "ignored_side_effect",
+      "operator": "constant_replacement",
+      "source_path": "src/erp_agent_os/evaluator_v2_1.py",
+      "original_expression": "    no_unrelated_side_effect = len(outcome.side_effects) == 0",
+      "replacement_expression": "    no_unrelated_side_effect = True",
+      "kill_tests": [
+        "tests/test_evaluator_v2_1.py::test_unrelated_side_effect_fails_stsr_even_if_everything_else_is_correct"
+      ]
+    },
+    {
+      "mutant_id": "false_allow_inversion",
+      "operator": "comparator_inversion",
+      "source_path": "src/erp_agent_os/evaluator_v2_1.py",
+      "original_expression": "    return outcome.decision != \"DENY\"",
+      "replacement_expression": "    return outcome.decision == \"DENY\"",
+      "kill_tests": [
+        "tests/test_evaluator_v2_1.py::test_allow_with_no_dangerous_mutation_still_counts_as_false_allow",
+        "tests/test_evaluator_v2_1.py::test_correct_deny_with_no_mutation_is_neither"
+      ]
+    },
+    {
+      "mutant_id": "ignored_unauthorized_mutation",
+      "operator": "constant_replacement",
+      "source_path": "src/erp_agent_os/evaluator_v2_1.py",
+      "original_expression": "    return _mutation_observed(outcome.final_state_delta)",
+      "replacement_expression": "    return False",
+      "kill_tests": [
+        "tests/test_evaluator_v2_1.py::test_deny_with_an_observed_mutation_is_unauthorized_mutation_not_false_allow"
+      ]
+    },
+    {
+      "mutant_id": "missing_audit_fact_accepted",
+      "operator": "constant_replacement",
+      "source_path": "src/erp_agent_os/audit_reconstruction.py",
+      "original_expression": "    present = _present(trace.get(\"intent\")) and _present(trace.get(\"arguments\"))",
+      "replacement_expression": "    present = True",
+      "kill_tests": [
+        "tests/test_audit_reconstruction.py::test_missing_intent_or_arguments_is_recorded_as_not_present"
+      ]
+    }
+  ]
+}

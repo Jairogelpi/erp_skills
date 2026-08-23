@@ -1,0 +1,1099 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ERP Agent OS — consola de gobernanza</title>
+<style>
+  @font-face {
+    font-family: "Spline Sans Mono";
+    src: local("Consolas"), local("SFMono-Regular"), local("Menlo");
+  }
+
+  :root {
+    --ink: #10141c;
+    --ink-2: #1c2230;
+    --paper: #f5f6f8;
+    --paper-2: #ffffff;
+    --line: #dde1e8;
+    --muted: #5c6577;
+    --accent: #1f6f6b;
+    --accent-ink: #0e3d3a;
+    --accent-soft: #e2f0ee;
+    --allow: #1c7a4d;
+    --allow-soft: #e2f5ea;
+    --deny: #b0342b;
+    --deny-soft: #fbe8e6;
+    --approval: #a5680e;
+    --approval-soft: #fbf0dc;
+    --neutral-state: #5c6577;
+    --neutral-soft: #eaecf1;
+    --radius: 10px;
+    --font-display: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --font-body: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "Spline Sans Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #eef0f4;
+      --ink-2: #c7ccd8;
+      --paper: #0d1016;
+      --paper-2: #151a23;
+      --line: #2a3140;
+      --muted: #8b93a5;
+      --accent: #4fb8b1;
+      --accent-ink: #bdece7;
+      --accent-soft: #16302e;
+      --allow: #52c98a;
+      --allow-soft: #113023;
+      --deny: #ef7a72;
+      --deny-soft: #351817;
+      --approval: #e3ab52;
+      --approval-soft: #372a10;
+      --neutral-state: #8b93a5;
+      --neutral-soft: #1c212b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #eef0f4; --ink-2: #c7ccd8; --paper: #0d1016; --paper-2: #151a23;
+    --line: #2a3140; --muted: #8b93a5; --accent: #4fb8b1; --accent-ink: #bdece7;
+    --accent-soft: #16302e; --allow: #52c98a; --allow-soft: #113023;
+    --deny: #ef7a72; --deny-soft: #351817; --approval: #e3ab52; --approval-soft: #372a10;
+    --neutral-state: #8b93a5; --neutral-soft: #1c212b;
+  }
+  :root[data-theme="light"] {
+    --ink: #10141c; --ink-2: #1c2230; --paper: #f5f6f8; --paper-2: #ffffff;
+    --line: #dde1e8; --muted: #5c6577; --accent: #1f6f6b; --accent-ink: #0e3d3a;
+    --accent-soft: #e2f0ee; --allow: #1c7a4d; --allow-soft: #e2f5ea;
+    --deny: #b0342b; --deny-soft: #fbe8e6; --approval: #a5680e; --approval-soft: #fbf0dc;
+    --neutral-state: #5c6577; --neutral-soft: #eaecf1;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent-soft); color: var(--accent-ink); }
+
+  a { color: var(--accent); }
+
+  .shell {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 28px 80px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  header.top .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  header.top h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0;
+    letter-spacing: 0.2px;
+    text-wrap: balance;
+  }
+  header.top .tag {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .target-pill {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 5px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .target-pill .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 920px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .panel + .panel { margin-top: 20px; }
+
+  .panel h2 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 14px;
+    font-weight: 600;
+  }
+
+  label {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--ink-2);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  textarea, select, input[type="text"] {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    resize: vertical;
+  }
+  textarea:focus, select:focus, input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+  textarea { min-height: 84px; }
+  .field { margin-bottom: 16px; }
+
+  button {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.92rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 10px 16px;
+    cursor: pointer;
+  }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--paper-2);
+    width: 100%;
+  }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-primary:disabled { opacity: 0.55; cursor: default; }
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--ink-2);
+  }
+  .btn-approve {
+    background: var(--approval);
+    color: #211505;
+  }
+
+  .catalog-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .catalog-item {
+    font-size: 0.8rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .catalog-item summary {
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .catalog-item summary::-webkit-details-marker { display: none; }
+  .catalog-item summary::after {
+    content: "ver parámetros";
+    font-size: 0.68rem;
+    color: var(--accent);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .catalog-item[open] summary::after { content: "ocultar parámetros"; }
+  .catalog-item .id { font-family: var(--font-mono); color: var(--ink-2); }
+  .catalog-item .summary-chips { display: flex; align-items: center; flex-shrink: 0; }
+  .catalog-item .param-list { border-top: 1px solid var(--line); padding: 10px 12px 12px; }
+  .wired-chip, .risk-chip {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    padding: 2px 7px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .wired-chip.yes { background: var(--allow-soft); color: var(--allow); }
+  .wired-chip.no { background: var(--neutral-soft); color: var(--neutral-state); }
+  .risk-chip { background: var(--neutral-soft); color: var(--muted); margin-left: 6px; }
+
+  /* Parameters rendered from a skill's input_schema, in plain language --
+     used in the catalog, on proposal cards, and (as an editable form) in
+     the CU-02 sandbox-test step. See humanizeField()/typeCaption() below. */
+  .param-list { display: flex; flex-direction: column; gap: 8px; }
+  .param-caption {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .param-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 0.83rem;
+    padding: 5px 0;
+    border-top: 1px solid var(--line);
+  }
+  .param-row:first-of-type { border-top: none; }
+  .param-label { color: var(--ink-2); font-weight: 500; }
+  .param-required {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 1px 6px;
+    margin-left: 6px;
+    vertical-align: 1px;
+  }
+  .param-hint { color: var(--muted); font-size: 0.78rem; text-align: right; flex-shrink: 0; }
+  .param-form .field { margin-bottom: 12px; }
+  .param-form .field label { display: flex; align-items: baseline; gap: 6px; }
+  .param-form .field .param-hint { text-align: left; font-size: 0.74rem; margin-top: 3px; }
+  .param-form input[type="checkbox"] { width: auto; }
+
+  .trace-empty {
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    padding: 8px 2px;
+  }
+
+  .event {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper-2);
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .event-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .event-head .query {
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    color: var(--ink);
+  }
+  .state {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .state.ALLOW { background: var(--allow-soft); color: var(--allow); }
+  .state.DENY { background: var(--deny-soft); color: var(--deny); }
+  .state.REQUIRE_APPROVAL { background: var(--approval-soft); color: var(--approval); }
+  .state.ABSTAIN, .state.CLARIFY, .state.NOT_WIRED, .state.ERROR { background: var(--neutral-soft); color: var(--neutral-state); }
+  .state.ACTIVE { background: var(--allow-soft); color: var(--allow); }
+  .state.QUARANTINED { background: var(--deny-soft); color: var(--deny); }
+  .state.DRAFT, .state.VALIDATED, .state.TESTED, .state.APPROVED { background: var(--approval-soft); color: var(--approval); }
+
+  .admin-section { margin-top: 28px; }
+  .admin-section > h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.15rem;
+    margin: 0 0 4px;
+  }
+  .admin-section > .sub {
+    color: var(--muted);
+    font-size: 0.84rem;
+    line-height: 1.55;
+    margin: 0 0 16px;
+    max-width: 74ch;
+  }
+  .admin-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 920px) {
+    .admin-layout { grid-template-columns: 1fr; }
+  }
+  textarea.code {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    min-height: 220px;
+    white-space: pre;
+  }
+  .lifecycle-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .lifecycle-steps span:not(:last-child)::after { content: " \2192 "; }
+  .proposal-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .proposal-card .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .proposal-card .id { font-family: var(--font-mono); font-size: 0.85rem; }
+  .proposal-card .desc { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+  .approver-row { display: flex; gap: 8px; margin-top: 10px; }
+  .approver-row input { flex: 1; }
+  .approver-row button { width: auto; white-space: nowrap; }
+
+  .stages { padding: 4px 16px 16px; }
+  .stage {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 14px;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+    font-size: 0.86rem;
+  }
+  .stage:first-child { border-top: none; }
+  .stage .label {
+    color: var(--muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding-top: 2px;
+  }
+  .stage .body { min-width: 0; }
+  .stage .body code, .kv code {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    background: var(--neutral-soft);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .candidates { display: flex; flex-wrap: wrap; gap: 6px; }
+  .candidate {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px 8px;
+    color: var(--ink-2);
+  }
+  .candidate.top { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
+
+  .kv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px 16px; }
+  .kv { font-size: 0.85rem; }
+  .kv .k { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .note-box {
+    font-size: 0.84rem;
+    background: var(--neutral-soft);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .reread-box {
+    font-size: 0.84rem;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    border-radius: 8px;
+    padding: 10px 12px;
+    line-height: 1.5;
+  }
+  .reread-box strong { display: block; margin-bottom: 4px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .approve-row { display: flex; gap: 10px; align-items: center; margin-top: 4px; flex-wrap: wrap; }
+  .approve-row button { width: auto; }
+
+  footer.legal {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .spinner {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    border: 2px solid var(--neutral-soft);
+    border-top-color: var(--accent);
+    display: inline-block;
+    animation: spin 0.7s linear infinite;
+    vertical-align: -2px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="top">
+    <div class="brand">
+      <h1>ERP Agent OS</h1>
+      <span class="tag">consola de gobernanza — pipeline real, Odoo real</span>
+    </div>
+    <span class="target-pill"><span class="dot"></span><span id="target-label">verificando instancia…</span></span>
+  </header>
+
+  <div class="layout">
+
+    <div>
+      <div class="panel">
+        <h2>Petición</h2>
+        <form id="request-form">
+          <div class="field">
+            <label for="text">Escribe la petición en lenguaje natural</label>
+            <textarea id="text" placeholder="Crea una oportunidad para Acme por 15000 euros." required></textarea>
+          </div>
+          <div class="field">
+            <label for="role">Rol</label>
+            <select id="role">
+              <option value="erp_user">erp_user (permitido)</option>
+              <option value="becario_sin_permisos">becario_sin_permisos (sin permiso)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary" id="send-btn">Enviar al pipeline gobernado</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>Catálogo — qué escribe en Odoo de verdad</h2>
+        <div class="catalog-list" id="catalog-list">
+          <div class="trace-empty">cargando catálogo…</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h2>Traza en vivo</h2>
+        <div id="trace-stream">
+          <div class="trace-empty">Todavía no se ha enviado ninguna petición. Cada envío pasa por recuperación → extracción de argumentos (LLM real) → política de riesgo → aprobación si hace falta → ejecución contra Odoo → relectura independiente.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="admin-section">
+    <h2>Administrar automatizaciones — crear una skill nueva (CU-02)</h2>
+    <p class="sub">
+      El modelo redacta un <strong>contrato</strong> de la automatización (esquema de entrada, riesgo,
+      roles, postcondiciones) a partir de una descripción — nunca código ejecutable. Puedes editar ese
+      contrato a mano antes de probarlo. La prueba corre en una caja de arena desechable, nunca contra
+      Odoo. Activar aquí no escribe en Odoo: dice "gobernada y lista para que un ingeniero le conecte un
+      handler real", igual que las otras 10 skills del catálogo que hoy solo tienen política, no ejecución.
+    </p>
+    <div class="lifecycle-steps">
+      <span>DRAFT</span><span>VALIDATED</span><span>TESTED</span><span>APPROVED</span><span>ACTIVE</span>
+    </div>
+
+    <div class="admin-layout" style="margin-top:18px;">
+      <div>
+        <div class="panel">
+          <h2>1 · Redactar</h2>
+          <div class="field">
+            <label for="propose-desc">Describe la automatización en lenguaje natural</label>
+            <textarea id="propose-desc" placeholder="Cuando un cliente pide una demo, crea una tarea interna con su nombre y la fecha límite."></textarea>
+          </div>
+          <button type="button" class="btn-primary" id="draft-btn">Redactar contrato con IA</button>
+        </div>
+
+        <div class="panel">
+          <h2>2 · Editar contrato (técnico, JSON)</h2>
+          <div class="field">
+            <label for="contract-json">Contrato — editable a mano antes de probar</label>
+            <textarea id="contract-json" class="code" placeholder="Redacta primero un borrador arriba."></textarea>
+          </div>
+          <button type="button" class="btn-ghost" id="resync-form-btn" style="width:100%;">
+            Actualizar el formulario de abajo con este contrato
+          </button>
+        </div>
+
+        <div class="panel">
+          <h2>3 · Rellenar parámetros para probar</h2>
+          <p style="font-size:0.82rem; color:var(--muted); margin:0 0 14px; line-height:1.5;">
+            Así es como cualquier persona del negocio usaría esta automatización: un campo por
+            parámetro, con su nombre en claro y lo que espera cada uno — no hace falta tocar JSON.
+          </p>
+          <div id="sample-form" class="param-form">
+            <div class="trace-empty">Redacta primero un borrador arriba.</div>
+          </div>
+          <button type="button" class="btn-primary" id="test-btn" disabled>Probar en sandbox y registrar</button>
+          <div id="test-result" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <h2>Automatizaciones propuestas</h2>
+          <div id="proposals-list">
+            <div class="trace-empty">Ninguna propuesta todavía en esta sesión.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="legal">
+    Cada petición corre contra la instancia de <strong>desarrollo</strong> de Odoo (nunca producción — bloqueado por <code>require_development_instance()</code> antes de que salga ninguna escritura de este proceso). Solo 2 de las 12 skills del catálogo tienen handler real de Odoo; el resto se resuelve por política pero no ejecuta. Servidor en <code>127.0.0.1</code> únicamente, no accesible desde red. Fuente: <code>scripts/product_demo_server.py</code>.
+  </footer>
+
+</div>
+
+<script>
+const API = "";
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+// --- Rendering a skill's input_schema in plain language --------------------
+// The point: any business user should be able to look at a skill and know
+// exactly what to fill in, without reading JSON or a field's raw key name
+// ("customer_name"). Used read-only in the catalog and on proposal cards,
+// and as a live editable form in the CU-02 sandbox-test step below.
+
+const FIELD_LABELS = {
+  customer_name: "Nombre del cliente",
+  expected_revenue: "Importe esperado (€)",
+  opportunity_id: "ID de la oportunidad",
+  query: "Búsqueda (nombre, email o teléfono)",
+  quote_id: "ID del presupuesto",
+  product_name: "Nombre del producto",
+  quantity: "Cantidad",
+  order_id: "ID del pedido",
+  supplier_name: "Nombre del proveedor",
+  field: "Campo a modificar",
+  value: "Nuevo valor",
+  title: "Título de la tarea",
+};
+
+// Field names outside the frozen catalog (a CU-02 draft) are invented by
+// the model and can't be dictionary-covered -- this fallback is what makes
+// an unknown name readable: "nombre_cliente" -> "Nombre cliente".
+function humanizeField(name) {
+  if (FIELD_LABELS[name]) return FIELD_LABELS[name];
+  const spaced = name.replace(/[_-]+/g, " ").trim();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+function typeCaption(prop) {
+  if (!prop || Object.keys(prop).length === 0) return "texto";
+  if (prop.enum && prop.enum.length) return "una de: " + prop.enum.join(", ");
+  const t = prop.type;
+  let base;
+  if (t === "number" || t === "integer") base = "número";
+  else if (t === "boolean") base = "sí / no";
+  else if (t === "string" && prop.format === "email") base = "email";
+  else base = "texto";
+  const bounds = [];
+  if (prop.minimum !== undefined) bounds.push("mín " + prop.minimum);
+  if (prop.maximum !== undefined) bounds.push("máx " + prop.maximum);
+  if (prop.minLength !== undefined) bounds.push("mín " + prop.minLength + " caracteres");
+  return bounds.length ? base + " (" + bounds.join(", ") + ")" : base;
+}
+
+function schemaFieldNames(schema) {
+  const required = new Set((schema && schema.required) || []);
+  const properties = (schema && schema.properties) || {};
+  return { required, names: Array.from(new Set([...required, ...Object.keys(properties)])), properties };
+}
+
+// Read-only rendering (catalog, proposal cards): a plain list of "this is
+// what you need to tell it, and what kind of value it expects".
+function paramListEl(schema, caption) {
+  const { required, names, properties } = schemaFieldNames(schema);
+  const wrap = el("div");
+  if (caption) wrap.appendChild(el("div", "param-caption", caption));
+  if (!names.length) {
+    wrap.appendChild(el("div", "trace-empty", "Esta automatización no necesita ningún parámetro."));
+    return wrap;
+  }
+  const list = el("div", "param-list");
+  for (const name of names) {
+    const row = el("div", "param-row");
+    const label = el("div", "param-label");
+    label.appendChild(document.createTextNode(humanizeField(name)));
+    if (required.has(name)) label.appendChild(el("span", "param-required", "obligatorio"));
+    row.appendChild(label);
+    row.appendChild(el("div", "param-hint", typeCaption(properties[name])));
+    list.appendChild(row);
+  }
+  wrap.appendChild(list);
+  return wrap;
+}
+
+// Editable rendering (CU-02 sandbox-test step): one real input control per
+// parameter, typed from the schema (number/checkbox/select/text), so
+// filling in test values means typing into labelled fields, never JSON.
+// Returns { collect() } to read the typed-back values.
+function buildParamForm(schema, containerEl, values) {
+  values = values || {};
+  containerEl.innerHTML = "";
+  const { required, names, properties } = schemaFieldNames(schema);
+  if (!names.length) {
+    containerEl.appendChild(el("div", "trace-empty", "Esta automatización no necesita ningún parámetro."));
+    return { collect: () => ({}) };
+  }
+  const controls = {};
+  for (const name of names) {
+    const prop = properties[name] || {};
+    const field = el("div", "field");
+    const label = el("label");
+    label.htmlFor = "param-" + name;
+    label.appendChild(document.createTextNode(humanizeField(name)));
+    if (required.has(name)) label.appendChild(el("span", "param-required", "obligatorio"));
+    field.appendChild(label);
+
+    let input;
+    if (prop.enum && prop.enum.length) {
+      input = document.createElement("select");
+      for (const opt of prop.enum) {
+        const o = document.createElement("option");
+        o.value = opt;
+        o.textContent = opt;
+        input.appendChild(o);
+      }
+    } else if (prop.type === "boolean") {
+      input = document.createElement("input");
+      input.type = "checkbox";
+    } else if (prop.type === "number" || prop.type === "integer") {
+      input = document.createElement("input");
+      input.type = "number";
+      if (prop.type === "integer") input.step = "1";
+      if (prop.minimum !== undefined) input.min = String(prop.minimum);
+      if (prop.maximum !== undefined) input.max = String(prop.maximum);
+    } else {
+      input = document.createElement("input");
+      input.type = "text";
+    }
+    input.id = "param-" + name;
+    if (values[name] !== undefined) {
+      if (input.type === "checkbox") input.checked = !!values[name];
+      else input.value = values[name];
+    }
+    field.appendChild(input);
+    field.appendChild(el("div", "param-hint", typeCaption(prop)));
+    containerEl.appendChild(field);
+    controls[name] = { input, type: prop.type };
+  }
+  return {
+    collect() {
+      const out = {};
+      for (const [name, { input, type }] of Object.entries(controls)) {
+        if (input.type === "checkbox") {
+          out[name] = input.checked;
+          continue;
+        }
+        const raw = input.value;
+        if (raw === "") continue; // an empty optional field is simply omitted
+        if (type === "number") out[name] = Number(raw);
+        else if (type === "integer") out[name] = parseInt(raw, 10);
+        else out[name] = raw;
+      }
+      return out;
+    },
+  };
+}
+
+async function loadCatalog() {
+  const list = document.getElementById("catalog-list");
+  try {
+    const res = await fetch(API + "/api/skills");
+    const skills = await res.json();
+    list.innerHTML = "";
+    for (const s of skills) {
+      const row = document.createElement("details");
+      row.className = "catalog-item";
+      const summary = document.createElement("summary");
+      const left = el("span", "id", s.skill_id);
+      const chips = el("span", "summary-chips");
+      const risk = el("span", "risk-chip", s.risk_class);
+      const wired = el("span", "wired-chip " + (s.odoo_wired ? "yes" : "no"),
+        s.odoo_wired ? "escribe en Odoo" : "solo política");
+      chips.appendChild(wired);
+      chips.appendChild(risk);
+      summary.appendChild(left);
+      summary.appendChild(chips);
+      row.appendChild(summary);
+      row.appendChild(paramListEl(s.input_schema, "Para usar esta automatización necesitas indicar:"));
+      list.appendChild(row);
+    }
+    document.getElementById("target-label").textContent = "instancia de desarrollo verificada";
+  } catch (err) {
+    list.innerHTML = "";
+    list.appendChild(el("div", "trace-empty", "No se pudo cargar el catálogo: " + err));
+    document.getElementById("target-label").textContent = "backend no disponible";
+  }
+}
+
+function stageRow(label, bodyEl) {
+  const row = el("div", "stage");
+  row.appendChild(el("div", "label", label));
+  const body = el("div", "body");
+  body.appendChild(bodyEl);
+  row.appendChild(body);
+  return row;
+}
+
+function candidatesEl(candidates) {
+  const wrap = el("div", "candidates");
+  candidates.forEach((c, i) => {
+    const chip = el("span", "candidate" + (i === 0 ? " top" : ""), c.skill_id + "  " + c.score.toFixed(3));
+    wrap.appendChild(chip);
+  });
+  return wrap;
+}
+
+function kvGrid(pairs) {
+  const grid = el("div", "kv-grid");
+  for (const [k, v] of pairs) {
+    const item = el("div", "kv");
+    item.appendChild(el("div", "k", k));
+    const val = el("div");
+    val.innerHTML = "<code>" + String(v) + "</code>";
+    item.appendChild(val);
+    grid.appendChild(item);
+  }
+  return grid;
+}
+
+async function grantApproval(scope, statusEl, retryFn) {
+  statusEl.textContent = "concediendo aprobación…";
+  try {
+    const res = await fetch(API + "/api/approvals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scope, ttl_seconds: 120 }),
+    });
+    const data = await res.json();
+    statusEl.textContent = "aprobado por " + data.actor + ", expira " + data.expires_at;
+    retryFn();
+  } catch (err) {
+    statusEl.textContent = "error concediendo aprobación: " + err;
+  }
+}
+
+function renderEvent(text, role, data) {
+  const stream = document.getElementById("trace-stream");
+  const first = stream.querySelector(".trace-empty");
+  if (first) first.remove();
+
+  const card = el("div", "event");
+  const head = el("div", "event-head");
+  head.appendChild(el("span", "query", "“" + text + "”  ·  " + role));
+  head.appendChild(el("span", "state " + data.decision, data.decision));
+  card.appendChild(head);
+
+  const stages = el("div", "stages");
+
+  if (data.candidates && data.candidates.length) {
+    stages.appendChild(stageRow("Recuperación", candidatesEl(data.candidates)));
+  }
+  if (data.extracted_arguments && Object.keys(data.extracted_arguments).length) {
+    const pairs = Object.entries(data.extracted_arguments);
+    const tokenNote = data.extraction_tokens
+      ? [`tokens LLM`, `${data.extraction_tokens.prompt} + ${data.extraction_tokens.completion}`]
+      : null;
+    if (tokenNote) pairs.push(tokenNote);
+    stages.appendChild(stageRow("Extracción (LLM real)", kvGrid(pairs)));
+  }
+  if (data.reasons && data.reasons.length) {
+    const box = el("div", "note-box", data.reasons.join(" · "));
+    stages.appendChild(stageRow("Política", box));
+  }
+  if (data.note) {
+    stages.appendChild(stageRow("Aviso", el("div", "note-box", data.note)));
+  }
+  if (data.decision === "REQUIRE_APPROVAL" && data.selected_skill_id) {
+    const wrap = el("div");
+    const status = el("div", "note-box", "pendiente de aprobación humana");
+    wrap.appendChild(status);
+    const row = el("div", "approve-row");
+    const btn = el("button", "btn-approve", "Conceder aprobación y reintentar");
+    btn.type = "button";
+    btn.addEventListener("click", () => {
+      grantApproval(data.selected_skill_id, status, () => submitRequest(text, role));
+    });
+    row.appendChild(btn);
+    wrap.appendChild(row);
+    stages.appendChild(stageRow("Aprobación", wrap));
+  }
+  if (data.execution) {
+    const pairs = [
+      ["salida", data.execution.output ?? "—"],
+      ["replay idempotente", data.execution.idempotent_replay],
+    ];
+    if (data.execution.handler_error) pairs.push(["error", data.execution.handler_error]);
+    stages.appendChild(stageRow("Ejecución", kvGrid(pairs)));
+  }
+  if (data.independent_reread) {
+    const box = el("div", "reread-box");
+    box.innerHTML = "<strong>Relectura independiente de Odoo (cliente nuevo)</strong>" +
+      Object.entries(data.independent_reread).map(([k, v]) => `${k}: <code>${v}</code>`).join(" · ");
+    stages.appendChild(stageRow("Verificación", box));
+  }
+
+  card.appendChild(stages);
+  stream.insertBefore(card, stream.firstChild);
+}
+
+async function submitRequest(text, role) {
+  const btn = document.getElementById("send-btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> enviando…';
+  try {
+    const res = await fetch(API + "/api/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, role }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      renderEvent(text, role, { decision: "ERROR", reasons: [data.detail || "error desconocido"] });
+    } else {
+      renderEvent(text, role, data);
+    }
+  } catch (err) {
+    renderEvent(text, role, { decision: "ERROR", reasons: [String(err)] });
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Enviar al pipeline gobernado";
+  }
+}
+
+document.getElementById("request-form").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const text = document.getElementById("text").value.trim();
+  const role = document.getElementById("role").value;
+  if (!text) return;
+  submitRequest(text, role);
+});
+
+// --- CU-02: propose / edit / test / approve a new skill -------------------
+// Separate lane from the request pipeline above: nothing here ever touches
+// CATALOG or Odoo. See scripts/skill_admin.py's module docstring.
+
+async function renderProposals() {
+  const list = document.getElementById("proposals-list");
+  let proposals;
+  try {
+    const res = await fetch(API + "/api/proposals");
+    proposals = await res.json();
+  } catch (err) {
+    list.innerHTML = "";
+    list.appendChild(el("div", "trace-empty", "No se pudo cargar la lista: " + err));
+    return;
+  }
+  list.innerHTML = "";
+  if (!proposals.length) {
+    list.appendChild(el("div", "trace-empty", "Ninguna propuesta todavía en esta sesión."));
+    return;
+  }
+  for (const p of proposals) {
+    const card = el("div", "proposal-card");
+    const head = el("div", "head");
+    head.appendChild(el("span", "id", p.skill_id + "@" + p.version));
+    head.appendChild(el("span", "state " + p.state, p.state));
+    card.appendChild(head);
+    card.appendChild(el("div", "desc", p.description));
+    card.appendChild(paramListEl(p.input_schema, "Para usar esta automatización hace falta indicar:"));
+
+    const steps = el("div", "lifecycle-steps");
+    for (const h of p.history) {
+      steps.appendChild(el("span", null, h.to));
+    }
+    card.appendChild(steps);
+
+    if (p.state === "TESTED") {
+      const row = el("div", "approver-row");
+      const input = el("input");
+      input.type = "text";
+      input.placeholder = "nombre de quien aprueba (persona real)";
+      const btn = el("button", "btn-approve", "Aprobar y activar");
+      btn.type = "button";
+      btn.addEventListener("click", async () => {
+        const approver = input.value.trim();
+        if (!approver) { input.focus(); return; }
+        btn.disabled = true;
+        try {
+          const res = await fetch(API + "/api/proposals/approve", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ skill_id: p.skill_id, version: p.version, approver }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "error desconocido");
+          renderProposals();
+        } catch (err) {
+          btn.disabled = false;
+          alert("No se pudo aprobar: " + err);
+        }
+      });
+      row.appendChild(input);
+      row.appendChild(btn);
+      card.appendChild(row);
+    } else if (p.state === "ACTIVE") {
+      card.appendChild(el("div", "note-box",
+        "Gobernada y activa en el registro de propuestas de esta demo. " +
+        "No escribe en Odoo hasta que un ingeniero le conecte un handler real, " +
+        "igual que 10 de las 12 skills del catálogo congelado."));
+    }
+
+    list.appendChild(card);
+  }
+}
+
+// Holds the { collect() } handle of the currently-rendered sample-args
+// form (step 3), rebuilt every time a contract is (re)drafted or the
+// "actualizar formulario" button resyncs it from a manually-edited
+// contract JSON.
+let sampleFormApi = null;
+
+function rebuildSampleForm(inputSchema, presetValues) {
+  const container = document.getElementById("sample-form");
+  sampleFormApi = buildParamForm(inputSchema, container, presetValues || {});
+  document.getElementById("test-btn").disabled = false;
+}
+
+document.getElementById("draft-btn").addEventListener("click", async () => {
+  const desc = document.getElementById("propose-desc").value.trim();
+  if (!desc) return;
+  const btn = document.getElementById("draft-btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> redactando…';
+  try {
+    const res = await fetch(API + "/api/proposals/draft", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ description: desc }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "error desconocido");
+    document.getElementById("contract-json").value = JSON.stringify(data.contract, null, 2);
+    rebuildSampleForm(data.contract.input_schema, data.sample_arguments);
+  } catch (err) {
+    alert("No se pudo redactar el contrato: " + err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Redactar contrato con IA";
+  }
+});
+
+document.getElementById("resync-form-btn").addEventListener("click", () => {
+  let contract;
+  try {
+    contract = JSON.parse(document.getElementById("contract-json").value);
+  } catch (err) {
+    alert("El contrato tiene un JSON inválido, no se puede regenerar el formulario: " + err);
+    return;
+  }
+  // Manual edits to the contract's own field names/types should be
+  // reflected in the form -- rebuilding from scratch (rather than
+  // patching) is what keeps the two from silently drifting apart.
+  rebuildSampleForm(contract.input_schema, {});
+});
+
+document.getElementById("test-btn").addEventListener("click", async () => {
+  const resultEl = document.getElementById("test-result");
+  let contract;
+  try {
+    contract = JSON.parse(document.getElementById("contract-json").value);
+  } catch (err) {
+    resultEl.innerHTML = "";
+    resultEl.appendChild(el("div", "note-box", "El contrato tiene un JSON inválido: " + err));
+    return;
+  }
+  const sample = sampleFormApi ? sampleFormApi.collect() : {};
+  const btn = document.getElementById("test-btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> probando en sandbox…';
+  try {
+    const res = await fetch(API + "/api/proposals/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contract, sample_arguments: sample }),
+    });
+    const data = await res.json();
+    resultEl.innerHTML = "";
+    if (!res.ok) {
+      resultEl.appendChild(el("div", "note-box", "Prueba rechazada: " + (data.detail || "error desconocido")));
+    } else {
+      resultEl.appendChild(el("div", "reread-box",
+        "Registrada y probada en sandbox: estado " + data.state + "."));
+      renderProposals();
+    }
+  } catch (err) {
+    resultEl.innerHTML = "";
+    resultEl.appendChild(el("div", "note-box", "Error: " + err));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Probar en sandbox y registrar";
+  }
+});
+
+loadCatalog();
+renderProposals();
+</script>
+</body>
+</html>

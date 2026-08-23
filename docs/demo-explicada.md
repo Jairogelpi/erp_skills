@@ -1,5 +1,16 @@
 # Las demos, explicadas: qué se construyó, qué se prueba y qué enseña cada paso
 
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion** (marcador exigido
+> por el contrato automático `src/erp_agent_os/claims.py` — ver la nota
+> siguiente antes de leerlo como el estado real)
+>
+> **Actualizado 2026-08-23.** Las demos prueban funcionamiento y
+> factibilidad, no cambian con la campaña confirmatoria. Pero las cifras
+> que este documento citaba como contexto sí — la campaña confirmatoria
+> v2.1 (`docs/results-v2.1.md`) muestra que la promesa de detección
+> activa de peligro **no se sostiene** (H4). Este documento se ha
+> revisado para citar las cifras vigentes en vez de las de v1.
+
 Documento de **comprensión y réplica**. Responde a tres preguntas que
 son distintas y conviene no mezclar:
 
@@ -35,8 +46,10 @@ argumentos**.
 | Alta gobernada de skills (CU-02) | Que el sistema despliegue capacidades nuevas por su cuenta | `skill_proposal.py`, `registry.py` |
 
 Y **un instrumento de medida**, que es la otra mitad del trabajo: un
-benchmark de 480 casos con test congelado por hash, y un arnés que
-compara tres sistemas en 1.080 ejecuciones emparejadas.
+piloto de 480 casos con test congelado por hash (1.080 ejecuciones
+emparejadas, exploratorio) y la campaña confirmatoria v2.1, con verdad
+de referencia por construcción y evaluación única (21.478
+observaciones).
 
 ## 2. Qué buscamos probar
 
@@ -45,17 +58,19 @@ La pregunta **declarada** en §5, congelada antes de medir:
 > ¿Separar la interpretación probabilística de la ejecución determinista
 > reduce errores, tokens y variabilidad, manteniendo el éxito?
 
-Respuesta medida:
+Respuesta medida, con la campaña confirmatoria v2.1 (`docs/results-v2.1.md`):
 
 | | Resultado |
 |---|---|
-| Errores de seguridad | **Sí, contundente.** *False allow* 0,889 → 0,111 |
-| Tokens | **Sí.** 3,9× menos, mecanismo verificado por aritmética |
-| Variabilidad | **No medible.** Temperatura 0 lo hace determinista por diseño |
-| Éxito de tarea | **Mejora poco** (+15 pp) y **no transfiere** a texto real |
+| Errores de seguridad | **No — al contrario.** Sobre 315 escenarios peligrosos reales, C deja pasar el 19,0 % de mutaciones no autorizadas, casi 4× el umbral prerregistrado |
+| Tokens | **Sí, confirmado.** Más barato que A y que B, IC95 completo por debajo de cero |
+| Estabilidad entre formulaciones | **Sí, confirmado** (H3a, *p*=2,2e-18). Entre repeticiones bajo temperatura baja, no discriminable, como se esperaba |
+| Éxito de tarea | **No mejora** sobre un baseline con herramientas tipadas (*p*=0,286) |
 
-**El resultado que acabó siendo el fuerte no estaba en esa pregunta.**
-Salió de auditar el trabajo:
+**El resultado que acabó siendo el fuerte no estaba en esa pregunta, y
+sigue sin estarlo.** Salió de auditar el trabajo, y es más estrecho de
+lo que la respuesta de "errores de seguridad" de la tabla de arriba
+podría sugerir:
 
 > Concedido que el ataque ha ganado —el modelo comprometido, el atacante
 > dictando los argumentos—, ¿ocurre el daño?
@@ -65,7 +80,10 @@ Salió de auditar el trabajo:
 
 Lo que de verdad se prueba es que **la gobernanza sobrevive al fallo
 total del modelo**. No que el sistema entienda mejor: que restringe
-mejor, y que restringe aunque todo lo demás falle.
+mejor, y que restringe aunque todo lo demás falle. Es una propiedad
+distinta de "detectar peligro" — y la tabla de arriba, con el 19 % de
+H4, es la prueba de que no son intercambiables: el sistema confina bien
+lo explícitamente adversarial y falla sobre lo simplemente ambiguo.
 
 ## 3. Qué enseñan las demos
 
@@ -98,7 +116,7 @@ Cada escena ejecuta **la misma petición** contra:
 
 - **Sistema A** — agente con herramientas ERP genéricas y sin
   gobernanza (§18). No es un hombre de paja: es el mismo código que
-  corre las 1.080 observaciones del experimento.
+  corre las 21.478 observaciones de la campaña confirmatoria v2.1.
 - **Sistema C** — el pipeline gobernado completo.
 
 Mismo estado inicial de `FakeERPAdapter`, mismos argumentos. Lo único
@@ -150,9 +168,12 @@ motivo reportado no es «rol no permitido» sino «sin candidato»**. Yo
 había escrito que saldría `DENY`; el sistema me desmintió, y la escena
 ahora enseña las dos capas por separado.
 
-Ese matiz de orden del pipeline **ya estaba medido**: el recall de
-detección de 0,889 se descompone en 0,778 de detección real y 0,111 de
-abstención (`docs/results.md`). La demo lo hace visible.
+Ese matiz de orden del pipeline **ya está medido, confirmatoriamente**:
+en la categoría de permisos insuficientes de H4 (45 casos reales), C
+nunca emite `DENY` — 84 % `ABSTAIN`, 16 % `CLARIFY`
+(`docs/results-v2.1.md` §4.2). El resultado de seguridad es correcto en
+esa categoría (0 % de mutación); el motivo reportado, no. La demo lo
+hace visible.
 
 ### Escena 7b — la debilidad que la demo enseña en vez de ocultar
 
@@ -345,10 +366,13 @@ no sabía hacerlo»*.
 
 ## Qué NO demuestran las demos
 
-- **No son el experimento.** Las conclusiones estadísticas salen de
-  1.080 observaciones sobre el test congelado.
-- **No miden *false allow*.** Esa métrica sale de 9 casos peligrosos,
-  con IC [0,020, 0,435].
+- **No son el experimento.** Las conclusiones estadísticas salen de la
+  campaña confirmatoria v2.1 (21.478 observaciones) y, como contexto
+  exploratorio, del piloto v1 (1.080 observaciones).
+- **No miden *false allow*.** Esa métrica sale de la campaña
+  confirmatoria: 315 escenarios peligrosos reales, 19,0 % de mutación no
+  autorizada [IC95 hasta 23,1 %] — el número real es **peor**, no mejor,
+  que lo que cualquier demo aislada podría sugerir.
 - **Solo 2 de las 12 skills** están mapeadas a modelos reales de Odoo.
 - **La demo completa usa un selector determinista**, no un LLM real. Lo
   que demuestra es qué ocurre **después** de elegir herramienta.
@@ -382,14 +406,14 @@ impecable «0 escrituras en casos bloqueados» que no significaría nada.
 
 | Control | Requisito / sección | Conclusión del TFM |
 |---|---|---|
-| Recuperación de skill | RF-04, §22 | Top-1 = 0,780 en test; **0,381 con texto real** |
+| Recuperación de skill | RF-04, §22 | Confirmatorio (H5): no adecuada — selective accuracy 0,589, false-reuse risk 0,411, ambos fuera de los umbrales prerregistrados |
 | Abstención / clarificación | RF-05, §17 | 9,3 % de abstención; H6 matizada |
 | Normalización + validación | RF-06, §20 | Defecto #13: sin ella, sesgo contra C |
-| Decisión de política | RF-09/10, §16, §24 | *False allow* 0,111 vs 0,889 |
+| Decisión de política | RF-09/10, §16, §24 | Confirmatorio (H4): 19,0 % de mutación no autorizada, casi 4× el umbral — la política no basta sobre lo ambiguo |
 | Solo handlers registrados | RF-12 | El LLM no ejecuta código arbitrario (§41.8) |
 | Idempotencia | RF-13, §25 | CU-04, probado con property tests |
 | Verificación por relectura | RF-14, §25 | Cuarto conjunto de STSR |
-| Auditoría | RF-15 | Trazabilidad 0,820 vs 0,356 / 0,374 |
+| Auditoría | RF-15 | Confirmatorio (H7): +42,7 pp de reconstrucción completa frente a A, *p*=2,85e-112 |
 | Alta gobernada de skills | CU-02, §15 | Fuera del experimento a propósito |
 
 ---

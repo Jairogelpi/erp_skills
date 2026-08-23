@@ -1,0 +1,350 @@
+{
+  "schema_version": "1.1",
+  "as_of": "2026-08-14",
+  "global_status": "no_valid_confirmatory_conclusion",
+  "summary": "ERP Agent OS has useful exploratory and feasibility evidence. The unused human-gated v2 holdout is being superseded by a specified but not yet implemented or executed no-human v2.1 protocol; none of H1-H8 is confirmatorily accepted yet.",
+  "blocking_reasons": [
+    "test_v1_was_inspected_before_the_latest_corrections",
+    "historic_experiment_files_preserve_only_aggregate_summaries_not_raw_observations",
+    "historic_H2_population_included_sin_skill_cases",
+    "historic_H7_lacks_paired_inference_and_component_rows",
+    "human_gated_v2_is_retired_and_has_not_been_system_evaluated",
+    "v2_1_no_human_protocol_is_implemented_and_unit_tested_but_not_yet_code_frozen_or_executed"
+  ],
+  "hypotheses": {
+    "H1": {
+      "status": "not_confirmed_exploratory_signal",
+      "question": "C is non-inferior to A in Strict Task Success Rate with a -5 percentage-point margin.",
+      "observed_signal": "Latest real-parser aggregate: A=0.000, B=0.483, C=0.633; C-A=+0.633, CI95 [0.550, 0.717]; C-B=+0.150, CI95 [0.042, 0.258].",
+      "why_not_confirmed": "The result was corrected after inspecting test v1, raw paired rows were not retained, and expected final states are not independently adjudicated.",
+      "primary_artifacts": [
+        "data/experiment_results_real_parser.json"
+      ]
+    },
+    "H2": {
+      "status": "not_confirmed_exploratory_signal",
+      "question": "C uses fewer total tokens than A and B on test requests with an expected skill.",
+      "observed_signal": "Legacy aggregate means per execution: A=185.1, B=265.269, C=67.622 tokens.",
+      "why_not_confirmed": "The legacy computation included all 120 cases rather than excluding two sin_skill cases and retained no raw rows. The future runner now applies the declared population and paired Friedman/Wilcoxon analysis.",
+      "primary_artifacts": [
+        "data/experiment_results_real_parser.json"
+      ]
+    },
+    "H3": {
+      "status": "not_testable_current_design",
+      "question": "C has greater final-state agreement across three repetitions than A and B.",
+      "observed_signal": "A=B=C=1.000 at temperature 0.",
+      "why_not_confirmed": "All systems are deterministic under the current temperature and cache design, so the endpoint has no variance and cannot discriminate the architectures.",
+      "primary_artifacts": [
+        "data/experiment_results_real_parser.json"
+      ]
+    },
+    "H4": {
+      "status": "not_confirmed_exploratory_signal",
+      "question": "C detects more dangerous cases before execution and has a lower false-allow rate.",
+      "observed_signal": "Legacy aggregate false-allow rates: A=0.889, B=0.889, C=0.111; C detection recall=0.889 and precision=0.500.",
+      "why_not_confirmed": "Only nine unique dangerous test cases underlie 27 repeated observations, v1 was inspected, raw rows are absent, and the lexical detector transfers poorly out of distribution.",
+      "primary_artifacts": [
+        "data/experiment_results_real_parser.json",
+        "data/injecagent_stress_test_results.json",
+        "data/injection_resistance_results.json"
+      ]
+    },
+    "H5": {
+      "status": "partially_supported_descriptive",
+      "question": "Retrieval has useful coverage and selective accuracy on cases with an expected skill.",
+      "observed_signal": "On the legacy v1 aggregate for C: Top-1=0.780, Top-3=0.941, coverage=0.907, selective accuracy=0.785, false-reuse risk=0.215.",
+      "why_not_confirmed": "These are descriptive post-inspection results and the TF-IDF router drops to Top-1=0.381 on the separate real-request set whose source CSV is not versioned.",
+      "primary_artifacts": [
+        "data/experiment_results_real_parser.json",
+        "data/real_requests_eval.json",
+        "data/real_requests_llm_eval.json"
+      ]
+    },
+    "H6": {
+      "status": "partially_supported_descriptive",
+      "question": "Abstention reduces incorrect reuse on no-skill, ambiguous, or insufficient-margin cases.",
+      "observed_signal": "At threshold 0.15 and margin 0.05 on inspected test v1: coverage=0.833, selective accuracy=0.770, false-reuse risk=0.230, correct-abstention rate=0.923.",
+      "why_not_confirmed": "The complete fixed-grid curve is now exported, but it was implemented after test v1 was inspected and is therefore descriptive only.",
+      "primary_artifacts": [
+        "data/retrieval_precision_coverage_v1.json"
+      ]
+    },
+    "H7": {
+      "status": "not_confirmed_exploratory_signal",
+      "question": "C has a higher weighted audit-trace score than A and B.",
+      "observed_signal": "Legacy aggregate mean scores: A=0.356, B=0.374, C=0.820.",
+      "why_not_confirmed": "Historic raw component rows were not retained, no paired inference was published, and the rubric structurally awards components that A and B do not implement. Future runs now preserve all seven components and paired tests.",
+      "primary_artifacts": [
+        "data/experiment_results_real_parser.json"
+      ]
+    },
+    "H8": {
+      "status": "scenario_only_not_empirical",
+      "question": "What total modeled cost follows under declared inference, review, retry, and error-cost scenarios?",
+      "observed_signal": "Only a token-price sensitivity calculation exists; no observed monetary saving is measured.",
+      "why_not_confirmed": "H8 is explicitly non-directional and scenario-based; review time and error-cost inputs still need declared scenario tables.",
+      "primary_artifacts": [
+        "data/experiment_results_real_parser.json"
+      ]
+    }
+  },
+  "theses": {
+    "T1": {
+      "status": "provisional",
+      "claim": "Separating probabilistic interpretation from deterministic authorization and execution is the central safety mechanism."
+    },
+    "T2": {
+      "status": "provisional",
+      "claim": "Reusable skills can reduce repeated model work, but the saving must include the same parsing cost and the declared H2 population."
+    },
+    "T3": {
+      "status": "unresolved",
+      "claim": "Greater run-to-run stability has not been demonstrated because temperature-zero repetitions are identical for all systems."
+    },
+    "T4": {
+      "status": "descriptive",
+      "claim": "Abstention exposes an explicit coverage-versus-false-reuse trade-off instead of forcing an unsafe choice."
+    },
+    "T5": {
+      "status": "provisional",
+      "claim": "Versioned skills, policies, approvals, postconditions, and audit evidence make decisions more reconstructible, subject to rubric-bias analysis."
+    },
+    "T6": {
+      "status": "feasibility_only",
+      "claim": "The governed pipeline can operate against Odoo staging, but the Odoo demos do not establish comparative superiority."
+    },
+    "T7": {
+      "status": "demo_only",
+      "claim": "A missing skill can be proposed, sandbox-tested, human-approved, versioned, and activated; generated skills remain outside A/B/C inference."
+    },
+    "T8": {
+      "status": "exploratory",
+      "claim": "The current TF-IDF retriever generalizes poorly to less templated language, so retrieval quality is a limiting subsystem rather than a solved problem."
+    },
+    "T9": {
+      "status": "exploratory",
+      "claim": "Contract confinement may prevent unauthorized mutations even when lexical injection detection fails, but the existing stress result is aggregate and not confirmatory."
+    },
+    "T10": {
+      "status": "scenario_only",
+      "claim": "No claim of observed monetary savings is currently justified."
+    }
+  },
+  "artifacts": {
+    "docs/tfm-closure-no-human-v2.1.md": {
+      "kind": "normative_protocol_amendment",
+      "status": "specified_pending_implementation_freeze_and_execution",
+      "enables_confirmatory_claims": false
+    },
+    "docs/superpowers/plans/2026-08-14-tfm-closure-no-human-v2-1.md": {
+      "kind": "implementation_plan",
+      "status": "agent_review_approved_pending_implementation",
+      "review_kind": "independent_agent_review_not_human_validation",
+      "enables_confirmatory_claims": false
+    },
+    "data/prospective_v2/bench_v2_candidate_seal_386fdf8b16f8283280d4f7127b1613fff5e0917e37a8bb11132896a06c63f037.json": {
+      "kind": "prospective_candidate_manifest",
+      "status": "superseded_before_system_evaluation",
+      "system_evaluation_allowed": false,
+      "superseded_by": "data/protocol_v2_1/v2_supersession_de52502c346f8c566e9f486c66d92e53c08f23a9bbfbe582f28cbcc6a507b462.json"
+    },
+    "data/protocol_v2_1/v2_supersession_de52502c346f8c566e9f486c66d92e53c08f23a9bbfbe582f28cbcc6a507b462.json": {
+      "kind": "v2_supersession_receipt",
+      "status": "superseded_before_system_evaluation_zero_evaluations_zero_completed_packets",
+      "enables_confirmatory_claims": false
+    },
+    "data/prospective_v2/bench_v2_candidates_0f738bf7feaa9f31f67e2dc908d1efe16112cf20a50f6efe1baabb381493e799.jsonl": {
+      "kind": "blinded_prospective_candidates",
+      "status": "sealed_unevaluated"
+    },
+    "data/prospective_v2/bench_v2_annotation_annotator_1.csv": {
+      "kind": "human_annotation_packet",
+      "status": "retired_blank_unused"
+    },
+    "data/prospective_v2/bench_v2_annotation_annotator_2.csv": {
+      "kind": "human_annotation_packet",
+      "status": "retired_blank_unused"
+    },
+    "data/prospective_v2/bench_v2_author_proposals_5ac0e8db5f3d86e3b42e76df9cf63d482e9a9d12ab01e0eedeaeb9627f1c3e2a.jsonl": {
+      "kind": "author_proposals",
+      "status": "not_oracle_restricted_from_annotators"
+    },
+    "data/bench_v1.jsonl": {
+      "kind": "frozen_benchmark",
+      "status": "inspected_v1_not_future_confirmatory"
+    },
+    "data/bench_v1_observed_states_17edf3d59f72e6c134016620a6270b51b11d9c71198a17f3825565e3a04e2966.jsonl": {
+      "kind": "system_observations",
+      "status": "not_oracle_pending_independent_review"
+    },
+    "data/bench_v1_wiring_report.json": {
+      "kind": "development_diagnostic",
+      "status": "post_inspection_exploratory"
+    },
+    "data/enrichment_across_authors.json": {
+      "kind": "router_analysis",
+      "status": "exploratory"
+    },
+    "data/experiment_results.json": {
+      "kind": "legacy_aggregate_summary",
+      "status": "legacy_aggregate_post_freeze_exploratory",
+      "raw_observations_available": false,
+      "legacy_confirmatory_label_invalidated": true
+    },
+    "data/experiment_results_groq_given_args.json": {
+      "kind": "legacy_aggregate_summary",
+      "status": "legacy_aggregate_post_freeze_exploratory",
+      "raw_observations_available": false,
+      "legacy_confirmatory_label_invalidated": true
+    },
+    "data/experiment_results_real_parser.json": {
+      "kind": "legacy_aggregate_summary",
+      "status": "legacy_aggregate_post_freeze_exploratory",
+      "raw_observations_available": false,
+      "legacy_confirmatory_label_invalidated": true
+    },
+    "data/freeze_manifest.json": {
+      "kind": "protocol_manifest",
+      "status": "valid_hash_manifest_but_test_already_inspected"
+    },
+    "data/injecagent_stress_test_results.json": {
+      "kind": "external_stress_summary",
+      "status": "exploratory_aggregate"
+    },
+    "data/injecagent_test_cases_dh_base.json": {
+      "kind": "external_test_cases",
+      "status": "source_data"
+    },
+    "data/injection_resistance_results.json": {
+      "kind": "external_stress_summary",
+      "status": "exploratory_aggregate"
+    },
+    "data/odoo_adversarial_results.json": {
+      "kind": "odoo_staging_demo",
+      "status": "feasibility_only"
+    },
+    "data/odoo_demo_results.json": {
+      "kind": "odoo_staging_demo",
+      "status": "feasibility_only"
+    },
+    "data/odoo_governed_demo_results.json": {
+      "kind": "odoo_staging_demo",
+      "status": "feasibility_only"
+    },
+    "data/real_requests_eval.json": {
+      "kind": "generalization_evaluation",
+      "status": "exploratory_source_csv_not_versioned"
+    },
+    "data/real_requests_llm_eval.json": {
+      "kind": "generalization_evaluation",
+      "status": "exploratory_source_csv_not_versioned"
+    },
+    "data/retrieval_precision_coverage_v1.json": {
+      "kind": "h6_curve",
+      "status": "post_freeze_exploratory_derived"
+    },
+    "data/retriever_comparison.json": {
+      "kind": "development_validation_analysis",
+      "status": "exploratory"
+    },
+    "data/router_designs_eval.json": {
+      "kind": "held_out_router_analysis",
+      "status": "exploratory"
+    },
+    "data/skill_profiles.json": {
+      "kind": "router_configuration",
+      "status": "development_derived"
+    },
+    "src/erp_agent_os/scenarios_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/surfaces_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/security_scenarios_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/reference_policy_oracle.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/reference_state_oracle.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/oracle_concordance_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/protocol_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/power_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/evaluator_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/evidence_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/experiment_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/statistics_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/cost_scenarios_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/freeze_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    },
+    "src/erp_agent_os/claims_v2_1.py": {
+      "kind": "v2_1_protocol_implementation",
+      "status": "implemented_and_unit_tested_no_code_freeze_tag_cut_no_campaign_run",
+      "enables_confirmatory_claims": false,
+      "notes": "Tasks 1-11 of the plan are implemented with passing unit tests (759 tests as of this entry) and were never executed against a real holdout or a real LLM provider. CODE_FROZEN requires an annotated git tag that does not exist yet (Task 10's create_code_freeze refuses without one). No H1-H8 verdict exists from this code."
+    }
+  }
+}

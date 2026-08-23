@@ -69,6 +69,23 @@ def test_a_blocked_denied_execution_with_no_evidence_scores_zero_for_that_case()
     assert score.total == 0.0
 
 
+def test_audited_deny_earns_block_evidence_component():
+    score = score_governed_execution(
+        correlation_id="r0001",
+        has_interpretation=True,
+        ranked_skill_ids=("crm.create_opportunity",),
+        abstention_reasons=(),
+        audit_event=_event(
+            decision="DENY",
+            postconditions_met=None,
+            output=None,
+            reasons=("forbidden",),
+        ),
+    )
+
+    assert score.components["postcondition_or_block_evidence"] is True
+
+
 def test_ungoverned_system_never_earns_policy_or_postcondition_credit():
     score = score_ungoverned_execution(
         correlation_id="r0001", tool_or_skill_id="create_record", output_present=True

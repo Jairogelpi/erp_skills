@@ -68,7 +68,11 @@ def score_governed_execution(
         ),
         "result_and_effects": audit_event is not None,
         "postcondition_or_block_evidence": (
-            audit_event is not None and audit_event.postconditions_met is not None
+            audit_event is not None
+            and (
+                audit_event.postconditions_met is not None
+                or audit_event.decision != "ALLOW"
+            )
         )
         or (audit_event is None and bool(abstention_reasons)),
     }

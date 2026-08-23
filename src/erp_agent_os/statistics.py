@@ -35,6 +35,20 @@ class Interval:
     high: float
 
 
+@dataclass(frozen=True)
+class FriedmanResult:
+    statistic: float
+    df: int
+    p_value: float
+
+
+@dataclass(frozen=True)
+class WilcoxonResult:
+    statistic: float
+    p_value: float
+    rank_biserial: float
+
+
 def _chi2_sf_1df(x: float) -> float:
     """Survival function of chi-square with 1 df = erfc(sqrt(x/2))."""
     if x <= 0:
@@ -126,6 +140,109 @@ def paired_mean_difference(
     paired continuous measurement (CLAUDE.md H2/H8: tokens per case).
     """
     return _bootstrap_paired_mean_diff(first, second, confidence, seed)
+
+
+def cohens_dz(first: Sequence[float], second: Sequence[float]) -> float:
+    """Standardised mean of paired differences."""
+    if len(first) != len(second):
+        raise ValueError("paired sequences must have equal length")
+    if len(first) < 2:
+        raise ValueError("Cohen's dz needs at least two pairs")
+    differences = [x - y for x, y in zip(first, second, strict=True)]
+    mean = sum(differences) / len(differences)
+    variance = sum((value - mean) ** 2 for value in differences) / (
+        len(differences) - 1
+    )
+    standard_deviation = math.sqrt(variance)
+    if standard_deviation == 0:
+        if mean == 0:
+            return 0.0
+        return math.copysign(math.inf, mean)
+    return mean / standard_deviation
+
+
+def _average_ranks(values: Sequence[float]) -> tuple[list[float], list[int]]:
+    ordered = sorted(enumerate(values), key=lambda item: item[1])
+    ranks = [0.0] * len(values)
+    tie_sizes: list[int] = []
+    cursor = 0
+    while cursor < len(ordered):
+        end = cursor + 1
+        while end < len(ordered) and ordered[end][1] == ordered[cursor][1]:
+            end += 1
+        average = ((cursor + 1) + end) / 2
+        for position in range(cursor, end):
+            ranks[ordered[position][0]] = average
+        if end - cursor > 1:
+            tie_sizes.append(end - cursor)
+        cursor = end
+    return ranks, tie_sizes
+
+
+def _chi2_survival(value: float, df: int) -> float:
+    if value <= 0:
+        return 1.0
+    if df == 1:
+        return _chi2_sf_1df(value)
+    if df % 2 == 0:
+        half = value / 2
+        return math.exp(-half) * sum(
+            half**term / math.factorial(term) for term in range(df // 2)
+        )
+    # Wilson-Hilferty normal approximation; experiment use is df=2 (k=3).
+    z = ((value / df) ** (1 / 3) - (1 - 2 / (9 * df))) / math.sqrt(2 / (9 * df))
+    return 0.5 * math.erfc(z / math.sqrt(2))
+
+
+def friedman_test(*systems: Sequence[float]) -> FriedmanResult:
+    """Friedman omnibus test for three or more paired systems."""
+    if len(systems) < 3:
+        raise ValueError("Friedman needs at least three systems")
+    lengths = {len(system) for system in systems}
+    if len(lengths) != 1 or not systems[0]:
+        raise ValueError("paired sequences must be equally sized and non-empty")
+    n = len(systems[0])
+    k = len(systems)
+    rank_sums = [0.0] * k
+    tie_term = 0
+    for row in zip(*systems, strict=True):
+        ranks, ties = _average_ranks(row)
+        for index, rank in enumerate(ranks):
+            rank_sums[index] += rank
+        tie_term += sum(size**3 - size for size in ties)
+    statistic = 12 * sum(total**2 for total in rank_sums) / (n * k * (k + 1))
+    statistic -= 3 * n * (k + 1)
+    correction = 1 - tie_term / (n * k * (k**2 - 1))
+    statistic = statistic / correction if correction else 0.0
+    return FriedmanResult(statistic, k - 1, _chi2_survival(statistic, k - 1))
+
+
+def wilcoxon_signed_rank(
+    first: Sequence[float], second: Sequence[float]
+) -> WilcoxonResult:
+    """Two-sided paired Wilcoxon test with tie correction and rank effect."""
+    if len(first) != len(second):
+        raise ValueError("paired sequences must have equal length")
+    differences = [x - y for x, y in zip(first, second, strict=True) if x - y != 0]
+    if not differences:
+        return WilcoxonResult(0.0, 1.0, 0.0)
+    ranks, ties = _average_ranks([abs(value) for value in differences])
+    positive = sum(
+        rank for rank, value in zip(ranks, differences, strict=True) if value > 0
+    )
+    negative = sum(
+        rank for rank, value in zip(ranks, differences, strict=True) if value < 0
+    )
+    n = len(differences)
+    expected = n * (n + 1) / 4
+    variance = n * (n + 1) * (2 * n + 1) / 24
+    variance -= sum(size**3 - size for size in ties) / 48
+    z = max(0.0, abs(positive - expected) - 0.5) / math.sqrt(variance)
+    p_value = math.erfc(z / math.sqrt(2))
+    total_rank = n * (n + 1) / 2
+    return WilcoxonResult(
+        min(positive, negative), p_value, (positive - negative) / total_rank
+    )
 
 
 def odds_ratio(first: Sequence[bool], second: Sequence[bool]) -> float:

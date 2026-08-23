@@ -1,5 +1,30 @@
 # ERP Agent OS
 
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion** (marcador exigido
+> por el contrato automático `src/erp_agent_os/claims.py` — ver la nota
+> siguiente antes de leerlo como el estado real)
+>
+> **Actualizado 2026-08-23.** El protocolo v2.1 sin anotadores humanos
+> (`docs/tfm-closure-no-human-v2.1.md`) ya está implementado, congelado
+> (`tfm-protocol-v2.1.2`) y ejecutado: campaña real de 21.478
+> observaciones, `RUN_COMPLETED`/`CLOSURE_VALID`. **La fuente de verdad
+> confirmatoria es `docs/results-v2.1.md`** — H1a, H2, H3a, H6 y H7
+> salen soportadas; H1b, H4 (los cuatro componentes) y H5 salen
+> explícitamente no soportadas. La frase de abajo, de la auditoría del
+> 14-08-2026, describe el estado de esa fecha y se conserva sin editar
+> por ser append-only.
+>
+> Auditoría actualizada el 14-08-2026: los resultados actuales son
+> exploratorios o de
+> factibilidad. Test v1 fue inspeccionado antes de las últimas correcciones y
+> las ejecuciones históricas solo conservan agregados. Véase
+> `docs/hypotheses-and-theses.md` y `data/evidence_registry.json`.
+> El holdout humano v2 de 120 casos permanece sin ejecutar y se retirará mediante
+> supersesión append-only antes de cualquier evaluación. El protocolo normativo
+> de reemplazo, v2.1 sin anotadores humanos, está definido en
+> `docs/tfm-closure-no-human-v2.1.md`; todavía no está implementado, congelado ni
+> ejecutado, por lo que no habilita ninguna conclusión confirmatoria.
+
 **Diseño y evaluación experimental de un sistema para recuperar, verificar y ejecutar skills reutilizables en procesos ERP mediante agentes de inteligencia artificial.**
 
 Trabajo Fin de Máster — Jairo Gelpi Moreno · Máster en Data Science, IA y Big Data · Curso 2025–2026.
@@ -35,6 +60,17 @@ The paired A/B/C experiment (below) is the thesis' primary endpoint and
 is reported in full — but a system built to block blocking things is a
 weaker claim than this one, and its task-success edge does not transfer
 to real user text. Both facts are stated wherever the numbers appear.
+
+**Updated 2026-08-23 — the confirmatory v2.1 campaign found the harder
+version of this same question, and the answer is worse.** Over 315 real
+dangerous scenarios (not the 9-case exploratory sample below), the
+governed system lets through **19.0% unauthorized mutations** — nearly
+4× the preregistered 5% threshold. It is a different attack surface
+(plausible, ambiguous requests with no lexical attack marker, vs. this
+section's explicit compromised-model scenario) and the finding above
+still holds for what it measures — but "the defence is architectural"
+does not extend to active danger detection. Full breakdown in
+[`docs/results-v2.1.md`](docs/results-v2.1.md) §4.
 
 ## What this is
 
@@ -80,11 +116,11 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Executable postconditions (verification engine) | `postconditions.py` | ✅ |
 | Paired A/B/C experiment runner (1.080 observations) | `experiment.py` | ✅ |
 | Freeze manifest + drift detection (CI-enforced) | `freeze.py` | ✅ |
-| Inter-annotator agreement instrument (Cohen's kappa) | `agreement.py` | ⚠️ human annotation pending |
+| Legacy inter-annotator instrument (not used by v2.1) | `agreement.py` | ⛔ retired protocol only |
 | Real LLM clients for A/B/C (Groq, Gemini, OpenRouter — all free tier) | `groq_client.py`, `gemini_client.py`, `openrouter_client.py` | ✅ |
 | Checkpoint/resume + call caching for real-LLM runs | `experiment.py`, `llm_client.CachingLLMClient` | ✅ |
 | Token instrumentation (H2) and traceability rubric (H7) | `metrics.py`, `traceability.py` | ✅ |
-| Confirmatory run with a real LLM (CLAUDE.md §19) | `scripts/run_experiment.py --real-llm --provider {groq,gemini,openrouter}` | ✅ executed, 1.080 observations |
+| Legacy real-LLM A/B/C run (exploratory; aggregates only) | `scripts/run_experiment.py --real-llm --provider {groq,gemini,openrouter}` | ⚠️ executed, not confirmatory |
 | External adversarial stress test (InjecAgent, out-of-distribution) | `scripts/injecagent_stress_test.py` | ✅ measured, 0%→3.3% (see below) |
 | Injection **resistance** sweep: 510 payloads × 3 attack channels | `scripts/injection_resistance_test.py` | ✅ 0/1530 unauthorized mutations |
 | **Odoo 19 adapter** (post-core, JSON-2 API, allowlisted, no delete) | `odoo_client.py` | ✅ live-verified |
@@ -98,7 +134,7 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Six-scenario deterministic demo (§38) | `scripts/demo.py` | ✅ self-verifying |
 | Results export (CSV) and reproducible figures (§31) | `scripts/export_results.py`, `scripts/make_figures.py` | ✅ Tableau workbook itself is manual |
 
-393 tests, `ruff`/`mypy` clean, CI green.
+822 tests, `ruff`/`mypy` clean, CI green.
 
 Every software requirement CLAUDE.md specifies is implemented; the
 section-by-section audit lives in
@@ -132,7 +168,16 @@ and reuses one real call across a case's 3 repetitions
 `temperature=0.0` was empirically confirmed reproducible across three
 independent real runs (H3 = 1.0 every time).
 
-### Measured result: the confirmatory A/B/C experiment (real LLM)
+### Measured result: the v1 pilot A/B/C experiment (real LLM, exploratory)
+
+**This section's title said "confirmatory" until 2026-08-23 — it
+described the v1 pilot, and by this project's own later audit, a piloto
+whose analysis code was corrected after inspecting its own results
+cannot honestly claim that word. The real confirmatory campaign is v2.1,
+reported in [`docs/results-v2.1.md`](docs/results-v2.1.md) (21,478
+observations, `RUN_COMPLETED`/`CLOSURE_VALID`).** This section is kept
+as exploratory context: it is where several of the project's documented
+defects were found and fixed.
 
 **1.080 executions** (120 frozen-test cases × 3 systems × 3 repetitions),
 randomized order, `FakeERPAdapter` rebuilt per observation, A/B/C sharing
@@ -214,16 +259,28 @@ OpenRouter, 0.889 on both Groq runs) while C's is 0.111 everywhere — an
 ungoverned agent's safety depends on which model it draws; the governed
 one's depends on none.
 
-**The defensible claim:**
+**The defensible claim (v1 pilot, exploratory — superseded, kept as context):**
 
 > Over a typed-tools baseline running the same LLM, governance buys
 > **8× fewer unsafe executions, 2.2× better traceability and 3.9× fewer
 > tokens**, plus a **small but significant** gain in task success
 > (+15.0 pp).
 
-That is narrower than the perfect-parse runs suggested (+18.3 pp) and
-stronger than the un-normalised run (not significant). It is what the
-evidence supports today.
+That was narrower than the perfect-parse runs suggested (+18.3 pp) and
+stronger than the un-normalised run (not significant). It was what the
+pilot's evidence supported at the time.
+
+**Updated 2026-08-23 — this is no longer the current claim.** The v2.1
+confirmatory campaign (21,478 real observations, `RUN_COMPLETED`/
+`CLOSURE_VALID`, see [`docs/results-v2.1.md`](docs/results-v2.1.md))
+confirms cheaper tokens and better traceability, but **reverses the
+security claim**: over 315 real dangerous scenarios, C lets through
+19.0% unauthorized mutations — nearly 4× the preregistered 5% threshold
+— and does not beat the typed-tools baseline on task success either
+(*p* = 0.286). The defensible claim today is narrower: confinement holds
+under a fully compromised model (0/1,530, still true), efficiency and
+traceability hold; active danger detection on ambiguous requests does
+not.
 
 > **⚠️ Scope.** Free-tier model (`openai/gpt-oss-20b:free`), not a
 > frontier/production model — disclosed, not hidden. The freeze manifest
@@ -327,8 +384,9 @@ uv run python scripts/demo_completa.py --pausa   # step through it
 ```
 
 Eleven scenes. Each runs the **same request** against System A (generic
-tools, no governance — the same code the 1,080-observation experiment
-uses) and System C, from the same initial state with the same arguments.
+tools, no governance — the same code the 21,478-observation v2.1
+confirmatory campaign uses) and System C, from the same initial state
+with the same arguments.
 Covers: R1 happy path with postconditions · R2 approval with actor,
 scope and expiry · **mandatory R3 simulation** with mutation preview ·
 prompt injection · type validation · role denial · CLARIFY vs ABSTAIN ·
@@ -358,17 +416,27 @@ evidence that would survive a customer conversation from the evidence
 that would not — because they are not the same set, and conflating them
 would produce false commercial claims.
 
-**Survives:** no unauthorized mutation through any attack channel
-(0/1530, including the arm that hands the attacker the whole LLM); one
-fewer LLM call per request, shown by arithmetic; a decision that is
-invariant to the provider while an ungoverned agent's is not; a real
-Odoo block verified by independent re-read; traceability 0.820.
+**Survives (v1 pilot framing, exploratory):** no unauthorized mutation
+through any attack channel (0/1530, including the arm that hands the
+attacker the whole LLM — this one is confirmed independently, see
+below); one fewer LLM call per request, shown by arithmetic; a real Odoo
+block verified by independent re-read.
 
 **Does not survive:** lexical attack detection (3.3% out of distribution,
 and 8 of the 9 dangerous test cases are caught by patterns written
 against that same corpus); "8× safer" without its interval (n = 9, CI
-[0.020, 0.435]); the task-success edge (+15 pp, modest); any savings
-figure (H8 is a declared-rate sensitivity analysis, not measured spend).
+[0.020, 0.435]) — **and per the v2.1 confirmatory campaign below, not
+just "without its interval": the opposite, 19.0% unauthorized mutation
+on n = 315**; "invariant to the provider" (never tested in the v2.1
+confirmatory campaign, single provider); the task-success edge (+15 pp,
+modest — v2.1 confirms C does *not* beat B on task success, *p* = 0.286);
+any savings figure (H8 is a declared-rate sensitivity analysis, not
+measured spend).
+
+**Confirmed independently (v2.1, `docs/results-v2.1.md`):** cheaper
+tokens (vs. both A and B), more stable across paraphrases, more complete
+audit reconstruction (with the caveat that A/B lack that capability by
+design), and the compromised-model confinement result above.
 
 The design consequence: a product built on this cannot lean on the
 system *understanding* better, only on it *constraining* better — which
@@ -467,7 +535,11 @@ cost per environment.
 **Cold-start verification (acceptance criterion 12).** Done from a fresh clone,
 not asserted: `git clone` → `uv sync` → **393 tests pass** → `freeze_protocol.py
 --verify` intact → `run_experiment.py` reproduces the published architecture-only
-numbers exactly (A 0.000 / B 0.333 / C 0.700).
+numbers exactly (A 0.000 / B 0.333 / C 0.700). That specific fresh-clone run was
+last performed at 393 tests; the suite has since grown to **822** (v2.1 protocol),
+each component (`pytest`, both freeze verifiers, `verify_tfm_closure_v2_1.py
+--final`) individually reverified in-place this session — not yet repeated as one
+combined fresh-clone pass at the current count.
 
 > **Windows: clone into a short path.** The deepest tracked path is 119
 > characters (`openspec/changes/…/project-local-ponytail-codebase-memory-mcp/spec.md`).
@@ -510,18 +582,18 @@ make figures              # reproducible PNG+SVG figures (needs the figures grou
 make build                # builds sdist + wheel
 ```
 
-## Second-annotator review (pending human step)
+## Retired second-annotator workflow (do not execute)
 
 ```sh
-uv run python scripts/build_annotation_sample.py   # blank review sheet, 96 cases
-# a second annotator fills the `annotator2_decision` column, then:
-uv run python scripts/compute_agreement.py         # Cohen's kappa
+uv run python scripts/build_annotation_sample.py   # legacy artifact only
+uv run python scripts/compute_agreement.py         # legacy artifact only
 ```
 
-The sample is deterministic and stratified so adversarial/high-risk cases are
-over-represented. `compute_agreement.py` **refuses to print a number** while the
-second-annotator column is empty — this step is honestly pending (CLAUDE.md
-§17/§21, roadmap P3.4), not silently skipped.
+These commands remain reproducible history, but the v2.1 protocol does not use
+human annotators or Cohen's kappa. The blank sheets must remain blank. Gold is
+instead generated from latent scenarios and checked through independent-by-
+dependency reference oracles, as specified in
+`docs/tfm-closure-no-human-v2.1.md`.
 
 Ruff is the formatter and linter; mypy is static type checking only (not a
 formatter). mypy is configured to skip re-checking `torch`/`transformers`/

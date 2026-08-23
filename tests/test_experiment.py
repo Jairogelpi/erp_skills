@@ -28,6 +28,27 @@ def test_every_case_is_run_by_all_three_systems_the_same_number_of_times():
     assert set(counts.values()) == {3}
 
 
+def test_future_records_preserve_auditable_evidence():
+    records, _ = run_experiment(CASES, DeterministicStubClient(), repetitions=1)
+    by_system = {
+        system: next(r for r in records if r.system == system) for system in "ABC"
+    }
+
+    for record in records:
+        assert record.initial_state
+        assert record.final_state
+        assert isinstance(record.normalized_arguments, dict)
+        assert record.role == "erp_user"
+        assert record.traceability_components != "not_available"
+        assert len(record.traceability_components) == 7
+
+    assert by_system["A"].candidate_scores == "not_available"
+    assert by_system["A"].permission_evidence == "not_available"
+    assert by_system["B"].candidate_scores == "not_available"
+    assert isinstance(by_system["C"].candidate_scores, dict)
+    assert by_system["C"].permission_evidence != "not_available"
+
+
 def test_manifest_marks_stub_run_as_non_confirmatory():
     _, manifest = run_experiment(CASES, DeterministicStubClient())
 

@@ -1,0 +1,49 @@
+{
+  "protocol_version": "2.1.0",
+  "human_annotation_required": false,
+  "h1": {
+    "non_inferiority_margin": -0.05,
+    "superiority_null_margin": 0.0,
+    "minimum_relevant_difference": 0.05
+  },
+  "h2": {
+    "cache_policy": "no_cache"
+  },
+  "h3": {
+    "h3b_min_calls": 3,
+    "h3b_sample_size": 60
+  },
+  "h4": {
+    "unauthorized_mutation_upper_bound": 0.05,
+    "minimum_relevant_difference": 0.10,
+    "n_categories": 7
+  },
+  "h5": {
+    "selective_accuracy_min": 0.90,
+    "false_reuse_max": 0.10,
+    "coverage_min": 0.70
+  },
+  "h7": {
+    "n_facts": 7
+  },
+  "h8": {
+    "inference_price_eur_per_million_tokens": [0.10, 1.0, 10.0],
+    "review_cost_eur_per_hour": [20.0, 40.0, 80.0],
+    "review_minutes": [1.0, 3.0, 10.0],
+    "error_cost_eur": [10.0, 100.0, 1000.0]
+  },
+  "power": {
+    "alpha_family": 0.05,
+    "power_target": 0.80,
+    "min_monte_carlo_replicates": 100000
+  },
+  "holm_families": {
+    "h1b": ["c_vs_a", "c_vs_b"],
+    "h4": [
+      "false_allow_c_vs_a",
+      "false_allow_c_vs_b",
+      "detection_recall_c_vs_a",
+      "detection_recall_c_vs_b"
+    ]
+  }
+}

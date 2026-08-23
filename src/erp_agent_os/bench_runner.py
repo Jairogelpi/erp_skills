@@ -25,23 +25,13 @@ from erp_agent_os.bench_generator import generate_cases
 from erp_agent_os.bench_intents import INTENTS_BY_ID
 from erp_agent_os.catalog import CATALOG, CATALOG_BY_ID
 from erp_agent_os.dataset import BenchmarkCase, CaseLabel
-from erp_agent_os.handlers import HANDLERS, SKILL_MODELS
+from erp_agent_os.handlers import HANDLERS, REFERENCE_FIELDS, SKILL_MODELS
 from erp_agent_os.parser import structure_proposal
 from erp_agent_os.retrieval import TfidfRetriever
 from erp_agent_os.runtime import Runtime
 from erp_agent_os.system_c import SystemC
 
 ROLE = "erp_user"
-
-# skill_id -> required fields that must reference a pre-existing record
-# for the skill's operation to succeed (update/read skills only).
-REFERENCE_FIELDS: dict[str, list[str]] = {
-    "crm.update_expected_revenue": ["opportunity_id"],
-    "sales.add_quote_line": ["quote_id"],
-    "sales.confirm_order": ["order_id"],
-    "product.update_field": ["product_name"],
-    "inventory.check_availability": ["product_name"],
-}
 
 
 def _seed_references(erp: FakeERPAdapter, skill_id: str, args: dict[str, Any]) -> None:

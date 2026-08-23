@@ -1,9 +1,37 @@
 # Resultados experimentales
 
-> ## ⚠️ Lee esto primero: cuál es el resultado vigente
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion** (marcador exigido
+> por el contrato automático `src/erp_agent_os/claims.py` — ver la nota
+> siguiente antes de leerlo como el estado real)
 >
-> Hay **cinco ejecuciones** documentadas aquí. La vigente es la
-> **ejecución 4**; las demás se conservan porque el motivo por el que
+> **Actualizado 2026-08-23: el protocolo v2.1 ya se implementó, se
+> congeló y se ejecutó** (campaña real de 21.478 observaciones,
+> `RUN_COMPLETED`/`CLOSURE_VALID`). La frase de la auditoría del
+> 14-08-2026 de abajo, que decía que v2.1 "todavía no se ha
+> implementado, congelado ni ejecutado", describe el estado de esa
+> fecha, no el actual — se conserva sin editar por ser append-only, con
+> esta corrección delante. **La fuente de verdad confirmatoria es ahora
+> `docs/results-v2.1.md`.** Todo lo que sigue en este documento —las
+> cinco ejecuciones, sus cifras y su cronología— es evidencia
+> exploratoria del piloto v1, válida como contexto y como origen de
+> varios de los defectos que v2.1 corrigió, pero no el resultado
+> vigente.
+>
+> Auditoría del 14-08-2026: todas las ejecuciones históricas de este documento
+> son agregados exploratorios. Test v1 se inspeccionó antes de las últimas
+> correcciones y no se conservaron las filas crudas. Cualquier etiqueta antigua
+> de «confirmatorio», «confirmada» o «resultado vigente» que aparezca en la
+> cronología inferior describe el nombre histórico de la corrida, no una
+> conclusión válida. El veredicto actual está en
+> `docs/hypotheses-and-theses.md` y `data/evidence_registry.json`. El protocolo
+> v2.1 sin anotadores humanos está definido, pero todavía no se ha implementado,
+> congelado ni ejecutado; por ello este documento aún no contiene resultados
+> confirmatorios v2.1.
+
+> ## ⚠️ Lee esto primero: cuál es la referencia exploratoria más reciente
+>
+> Hay **cinco ejecuciones** documentadas aquí. La referencia exploratoria
+> más reciente es la **ejecución 4**; las demás se conservan porque el motivo por el que
 > quedaron superadas —o lo que aíslan— es material metodológico, no
 > ruido.
 >
@@ -20,7 +48,7 @@
 > extraía `'27600 euros'` para un campo numérico y el validador lo
 > rechazaba por tipo — un fallo que solo penaliza al sistema que valida
 > antes de ejecutar. Con normalización de unidad monetaria (deliberadamente
-> estrecha) el resultado vigente es:
+> estrecha) el agregado exploratorio más reciente es:
 >
 > | | A | B | **C** |
 > |---|---|---|---|
@@ -31,10 +59,9 @@
 >
 > **C − B = +0,150, IC95 [+0,042, +0,258], Holm *p* = 0,016.**
 >
-> Tesis defendible: la gobernanza compra **8× menos ejecuciones
-> inseguras, 2,2× más trazabilidad y 3,9× menos tokens**, con una
-> ventaja **pequeña pero significativa** en éxito de tarea — más
-> estrecha que la que sostenía el parseo regalado (+0,183).
+> Señal exploratoria: C obtiene menores tasas agregadas de ejecución insegura,
+> mayor puntuación de trazabilidad y menos tokens. Estas razones no deben
+> presentarse como efectos confirmados ni como multiplicadores generalizables.
 >
 > Detalle en [§ Ejecución 4](#ejecución-4-normalización-de-argumentos-el-resultado-vigente).
 
@@ -46,13 +73,13 @@ reconstruido por observación.
 
 | # | Selector | Argumentos | Fichero | Papel |
 |---|---|---|---|---|
-| 1 | OpenRouter | dados | `experiment_results.json` | Confirmatoria con LLM real |
+| 1 | OpenRouter | dados | `experiment_results.json` | Histórica; etiqueta confirmatoria invalidada |
 | 2 | stub | dados | (histórica) | Aísla gobernanza de calidad del modelo |
 | 3 | Groq | parseados | (superada por la 4) | Elimina el sesgo del parseo regalado |
-| 4 | Groq | parseados + normalizados | `experiment_results_real_parser.json` | **VIGENTE** |
+| 4 | Groq | parseados + normalizados | `experiment_results_real_parser.json` | Referencia exploratoria más reciente |
 | 5 | Groq | dados | `experiment_results_groq_given_args.json` | Resuelve el confundido proveedor↔régimen |
 
-1. **Ejecución confirmatoria real** (`data/experiment_results.json`,
+1. **Ejecución histórica con LLM real** (`data/experiment_results.json`,
    `manifest.selector: "OpenRouterClient"`, `is_confirmatory_run: true`)
    — A y B llaman a OpenRouter (`openai/gpt-oss-20b:free`, temperatura 0)
    igual que exige D-03; C no llama al LLM (su recuperación es TF-IDF),
@@ -73,11 +100,11 @@ reconstruido por observación.
    introduce un confundido proveedor↔régimen frente a la ejecución 1,
    que se acota en las amenazas a la validez.
 
-> ## Estado del protocolo confirmatorio de §19
+> ## Estado del protocolo confirmatorio de §19 tras la auditoría
 >
-> **Esto SÍ es el protocolo confirmatorio.** Limitación declarada: modelo
-> gratuito (`openai/gpt-oss-20b:free` vía OpenRouter), no un modelo
-> frontera/de producción — se declara en la memoria, no se oculta.
+> **Esto NO constituye ya evidencia confirmatoria válida.** Aunque la corrida
+> usó un LLM real, test v1 había sido inspeccionado antes de correcciones
+> posteriores y no se conservaron las observaciones crudas.
 >
 > **Historial de proveedor, por transparencia.** El primer intento
 > confirmatorio usó Groq (`llama-3.1-8b-instant`) y **completó** una
@@ -140,7 +167,7 @@ LLM.
 ## H1 — Strict Task Success Rate
 
 > **Esta sección reporta la ejecución 1 (OpenRouter, argumentos dados).**
-> Se conserva porque es la primera corrida confirmatoria con LLM real y
+> Se conserva como la primera corrida histórica con LLM real y
 > porque su comparación con la ejecución 5 es lo que resuelve el
 > confundido proveedor↔régimen. **Las cifras vigentes están en
 > [§ Ejecución 4](#ejecución-4-normalización-de-argumentos-el-resultado-vigente)**:
@@ -538,7 +565,7 @@ del almacén de auditoría, no de la calidad de los argumentos.
 
 ---
 
-## Ejecución 4: normalización de argumentos, el resultado vigente
+## Ejecución 4: normalización de argumentos, referencia exploratoria más reciente
 
 `data/experiment_results_real_parser.json` · `manifest.selector:
 "GroqClient"` · `real_parser: true` · `is_confirmatory_run: true`
@@ -696,25 +723,25 @@ al LLM), B se mueve 2,5 puntos, y el *false allow* de A oscila mucho
 (0,333 vs 0,889). Ese último dato importa y se reporta sin suavizar: la
 seguridad de un agente **sin gobernanza** depende fuertemente de qué
 modelo le toque, mientras que la de C no depende de ninguno. Las dos
-corridas Groq coinciden en 0,889 para A, lo que confirma que la
+corridas Groq coinciden en 0,889 para A, lo que sugiere que la
 oscilación es del proveedor y no ruido de una corrida.
 
 ---
 
-## Hipótesis, estado final
+## Hipótesis, estado auditado
 
-*(Estado tras la ejecución 4, la vigente.)*
+*(Estado tras la auditoría del 13-08-2026; ninguna hipótesis confirmada.)*
 
 | H | Estado |
 |---|---|
-| H1 | **Aceptada.** C−A significativo en las cuatro ejecuciones. C−B = +0,150, IC95 [+0,042, +0,258], *p* = 0,016: significativo, con un efecto **menor** que el que sostenía el parseo regalado (+0,183) y sin el sesgo que hundía a C en la ejecución 3 (+0,075, no significativo). Se cumple además el margen de no inferioridad (−5 pp). |
-| H2 | **Confirmada con parseo honesto**: C 67,6 tok/ejec frente a B 265,2 (−197,6, IC95 [−198,3, −196,9]), 3,9× más barato |
-| H3 | **Nula por diseño**: temperatura=0 exigida por §23 impide discriminar |
-| H4 | **Confirmada y robusta**: C recall 0,889 / false allow 0,111 estable entre proveedores y entre regímenes de parseo; A/B en 0,889 de false allow |
-| H5 | **Parcial**: C gana en Top-3/abstención; Top-1/exactitud selectiva dependen del LLM de A/B |
-| H6 | **Matizada**: el valor de abstenerse depende de qué tan bueno sea el selector alternativo |
-| H7 | **Confirmada**: C=0,82 frente a A=0,36/B=0,37, invariante al régimen de parseo |
-| H8 | **Análisis de sensibilidad**, no ahorro medido, tal como exige §20 |
+| H1 | **No confirmada; señal exploratoria favorable.** C−B = +0,150, IC95 [+0,042, +0,258], pero test v1 fue inspeccionado y faltan filas crudas/oráculo independiente. |
+| H2 | **No confirmada; señal exploratoria favorable.** El histórico no excluyó los dos casos `sin_skill`; el runner futuro ya corrige la población. |
+| H3 | **No evaluable con el diseño actual.** A=B=C=1,000 por temperatura 0 y caché. |
+| H4 | **No confirmada; señal exploratoria favorable.** Solo nueve casos peligrosos únicos y mala transferencia del detector léxico. |
+| H5 | **Parcial y descriptiva.** Buen Top-3 en v1, pero fuerte caída de TF-IDF en texto menos templado. |
+| H6 | **Parcial y descriptiva.** Existe curva completa, implementada después de inspeccionar v1. |
+| H7 | **No confirmada; señal exploratoria favorable.** Faltan filas históricas por componente e inferencia emparejada. |
+| H8 | **Solo análisis de sensibilidad.** No existe ahorro monetario observado. |
 
 ---
 
@@ -840,14 +867,14 @@ incorrectos** y se rehízo la ejecución completa.
 # arquitectura-solo (stub, rápido, sin red)
 uv run python scripts/run_experiment.py
 
-# confirmatorio (real, requiere una API key, red)
+# exploratorio con LLM real sobre el ya inspeccionado test v1
 uv run python scripts/run_experiment.py --real-llm --provider groq
 uv run python scripts/run_experiment.py --real-llm --provider gemini
 uv run python scripts/run_experiment.py --real-llm --provider openrouter
 
 # parseo real: los tres sistemas extraen argumentos con el LLM.
 # Escribe en data/experiment_results_real_parser.json, no pisa el
-# resultado confirmatorio.
+# resultado histórico.
 uv run python scripts/run_experiment.py --real-llm --real-parser --provider groq
 ```
 

@@ -1,0 +1,21 @@
+{
+  "component_hashes": {
+    "analysis": "7845e7c7c12425302fc599011278a3de9f89fd53097f4c58508933c4ed576def",
+    "catalog": "c1e04e5f85e8e1743739054b7c4d82d2fe9038fb5b9b770af004a79a88058351",
+    "evaluator": "2aa8c22d3a699a0f8759b37d2c3179107a1e5261e0dbed1f70dd57d5b6ecbe20",
+    "generator": "e78f4aec39b07068eea2af388d29dea1e8e94810438a19c5529a9b79316861e7",
+    "harness": "79808ee6c4c28ab43ee054643c0eb8c82b26c05ff875107ee0f7cc0b53a3c10a",
+    "lockfile": "3c2bcb95eec45d790ceba41465b2d66d69e6a53b287efcc086080f23ceee7e3a",
+    "oracle": "2c6b878ffda0e7414abc23862caff02b9e372a1bb7102af91d9d5786eb16ee5b",
+    "power": "485a2ffc80585e8070fdfa0efa5df6137d024ccccc758b2bba104d3b371de958",
+    "prompt": "b6e9156c97425fab0dff6158ada514108dfa15326255c6e6e7351072d0e750cc",
+    "protocol": "f9ef9afa6a63b47ee8db8648ed5eb1a55e1317706cfe19aaa429a37543e09274",
+    "provider": "8b2a57c797ec21dc9b7e7b24fd5c3728523b0b6598d9ddf8ef4148c93833fa4f",
+    "runner": "36816c7f25647d72da737146ee40ac685b346cbe05f5a2f529841518ad97160e",
+    "spec": "c112e0c4eea26e3c34188b312896add79461e40ddd7cb9bad61abefd4691f7f2"
+  },
+  "frozen_at": "2026-08-20T16:23:06.361503+00:00",
+  "git_commit": "ef40b9e93c222c9b6e9975be71b608da6e95f19b",
+  "git_tag": "tfm-protocol-v2.1.1",
+  "schema_version": "2.1"
+}

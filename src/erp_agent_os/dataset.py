@@ -6,6 +6,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 DATASET_SCHEMA_VERSION = "1.0"
+ABSTENTION_SENTINEL = "sin_skill/abstención"
 
 
 class DatasetSplit(str, Enum):

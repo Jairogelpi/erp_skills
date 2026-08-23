@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from erp_agent_os.bench_intents import INTENTS, IntentSpec
 from erp_agent_os.catalog import CATALOG_BY_ID
 from erp_agent_os.dataset import (
+    ABSTENTION_SENTINEL,
     BenchmarkCase,
     CaseLabel,
     DatasetSplit,
@@ -25,7 +26,6 @@ from erp_agent_os.dataset import (
 )
 
 SEED = 20260805
-ABSTENTION_SENTINEL = "sin_skill/abstención"
 
 _ADV_CATEGORIES = [
     "permisos_insuficientes",

@@ -1,5 +1,17 @@
 # Hoja de ruta operativa — ERP Agent OS
 
+> **ESTADO 14-08-2026 — HOJA HISTÓRICA:** la anotación humana y el kappa ya no
+> forman parte del cierre. Las tareas incompatibles de esta hoja están
+> sustituidas por `tfm-closure-no-human-v2.1.md`.
+>
+> **Actualizado 2026-08-23:** el plan ya se implementó, se congeló
+> (`tfm-protocol-v2.1.2`) y se ejecutó — campaña real de 21.478
+> observaciones, `RUN_COMPLETED`/`CLOSURE_VALID`. H1-H8 tienen veredicto
+> confirmatorio explícito en `docs/results-v2.1.md` (H1a, H2, H3a, H6,
+> H7 soportadas; H1b, H4, H5 no soportadas). La "tesis defendible" citada
+> más abajo en este documento es del piloto v1 y está superada — ver
+> `docs/results-v2.1.md` §9 de `docs/memoria.md`.
+
 Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLAUDE.md) **y las prioridades/riesgos de evaluación de [`../evaluacion_tfm.md`](../evaluacion_tfm.md)** en trabajo trazable y gobernado. Sirve para planificar, ejecutar y aceptar unidades de trabajo; no modifica el alcance, las hipótesis ni el protocolo normativo. La bitácora canónica, append-only, está en [`../CLAUDE.md#bitácora-operativa`](../CLAUDE.md#bitácora-operativa).
 
 ## Ruta rápida
@@ -31,7 +43,7 @@ Este documento convierte la especificación normativa de [`../CLAUDE.md`](../CLA
 | `EXT` | extensión post-core | no puede bloquear CONF |
 | `CONF` | requisito confirmatorio | debe cerrarse antes del experimento final |
 
-**Estado al 2026-08-07.** Unidades 1–30 (incluye tokens/H2, rúbrica de trazabilidad/H7, tres clientes LLM reales, checkpoint/resume y caché de llamadas). **El experimento confirmatorio de §19 está ejecutado con LLM real y con H2/H7 medidos por primera vez**: 1.080 observaciones (120 casos de test × 3 sistemas × 3 repeticiones), `manifest.selector: "OpenRouterClient"` (`openai/gpt-oss-20b:free`), `is_confirmatory_run: true`, `data/experiment_results.json`, análisis completo en [`results.md`](results.md), que conserva también la línea base con selector stub para aislar la contribución arquitectónica.
+**Estado histórico al 2026-08-07.** Unidades 1–30 (incluye tokens/H2, rúbrica de trazabilidad/H7, tres clientes LLM reales, checkpoint/resume y caché de llamadas). La corrida entonces etiquetada como “confirmatoria” se conserva como exploratoria: no contiene las filas crudas necesarias y el test fue inspeccionado. La campaña confirmatoria vigente será v2.1 y aún no se ha ejecutado.
 
 **Historial de proveedor:** Groq completó una corrida entera antes de que existieran H2/H7; al relanzar con la instrumentación nueva, la cuota diaria de Groq (agotada por intentos previos sin checkpoint) y luego la de Gemini (20 peticiones/día por modelo en todos los modelos probados) bloquearon el reintento. OpenRouter (`openai/gpt-oss-20b:free`) es el que completó la corrida que se reporta. Los tres clientes quedan en el repo, probados y seleccionables vía `--provider {groq,gemini,openrouter}`.
 
@@ -62,7 +74,7 @@ C−A = +0,700 IC95 [+0,617, +0,783], Holm *p* = 2,71×10⁻¹⁹, OR 169. C−B
 
 **Historia de esta cifra, porque importa más que la cifra:** al quitar el parseo regalado, C−B cayó a +0,075 (*p* = 0,212) y **se publicó así, como no significativo**. Una pregunta escéptica posterior reveló que ese resultado arrastraba un sesgo **contra** C —una unidad monetaria sin normalizar que solo penalizaba al sistema que valida tipos, defecto #13—. Corregido, la ventaja volvió, pero menor que la original. Detalle en `docs/results.md` § Ejecución 4.
 
-**Tesis defendible:** frente a un baseline de herramientas tipadas con el mismo LLM, la gobernanza compra **8× menos ejecuciones inseguras, 2,2× más trazabilidad y 3,9× menos tokens**, con una ventaja **pequeña pero significativa** en éxito de tarea que **no transfiere a texto real** (`docs/results.md`, amenaza 3c).
+**Tesis defendible (piloto v1, superada — ver el aviso al principio de este documento):** frente a un baseline de herramientas tipadas con el mismo LLM, la gobernanza compra **8× menos ejecuciones inseguras, 2,2× más trazabilidad y 3,9× menos tokens**, con una ventaja **pequeña pero significativa** en éxito de tarea que **no transfiere a texto real** (`docs/results.md`, amenaza 3c). **Vigente, confirmatorio (v2.1):** tokens y trazabilidad se confirman; la seguridad se invierte — 19,0 % de mutación no autorizada sobre 315 escenarios reales, ver `docs/results-v2.1.md`.
 
 **Doce defectos encontrados y corregidos por auditoría propia** (unidades 21–31, detalle completo en [`docs/audit.md`](audit.md)): fuga del test congelado; validador de fuga tautológico; dos conjuntos vacíos de STSR; pseudo-replicación; dos huecos en la suite estadística (mutation testing); caveat del manifiesto inconsistente con `is_confirmatory_run`; caveat con el nombre del proveedor hardcodeado; error de varianza de `Callable` al retipar contra `ErpAdapter`; dos clases de error homónimas entre `odoo_client` y `adapters`; y **el #12, caché de extracción compartido entre A/B/C**, que hacía que los tokens por sistema midieran orden de ejecución. Once correcciones **no cambiaron el signo de ninguna conclusión**; la doceava **sí** — es la que reformuló la tesis. Mutation testing acumulado: 40 mutantes, 40 muertos, cobertura de los 23 módulos con lógica de antes de esta sesión.
 
@@ -315,7 +327,7 @@ Cierre científico → Dataset congelable → FakeERP → Contrato de skill
 
 ### 11. Entregables, memoria y defensa `CONF`
 
-- [-] **P11.1** Redactar memoria con método, arquitectura, dataset, resultados, discusión, validez, seguridad y límites (D-09). Evidencia: `docs/memoria.md`, **borrador completo de los 13 capítulos del índice de §33**, construido desde los artefactos reales — cada cifra procede de un `data/*.json` versionado y es reproducible con los comandos del anexo A. Incluye resultados negativos sin suavizar, las tres tensiones no resueltas a favor del número bonito (R3 vs STSR, abstención vs Top-1, temperatura vs H3) y el capítulo metodológico sobre los quince defectos del instrumento de medida. **Pendiente:** revisión del tutor, kappa de anotación para cerrar §6.3, y el formato final de entrega (el borrador es Markdown, no el documento maquetado).
+- [-] **P11.1** Redactar memoria con método, arquitectura, dataset, resultados, discusión, validez, seguridad y límites (D-09). Evidencia: `docs/memoria.md`, **borrador completo de los 13 capítulos del índice de §33**, construido desde los artefactos reales — cada cifra procede de un `data/*.json` versionado y es reproducible con los comandos del anexo A. Incluye resultados negativos sin suavizar, las tres tensiones no resueltas a favor del número bonito (R3 vs STSR, abstención vs Top-1, temperatura vs H3) y el capítulo metodológico sobre los dieciocho defectos del instrumento de medida. **Pendiente:** revisión del tutor, kappa de anotación para cerrar §6.3, y el formato final de entrega (el borrador es Markdown, no el documento maquetado).
 - [ ] **P11.2** Entregar repositorio público, CITATION, dataset card, threat model, catálogo, experimentos, notebook, figuras y resultados negativos (§32, §35).
 - [-] **P11.3** Preparar vídeo 3–5 min y presentación/ensayo: resultados observados, no promesas (§32, §39). Evidencia: `docs/video-guion.md` (guion literal por tramos de §39, con notas de producción que prohíben recrear capturas y exigen grabar la demo de Odoo en una sola toma) y `docs/presentacion.md` (15 diapositivas con lo que se ve y lo que se dice, más 8 de reserva para preguntas). Estrategia y las siete preguntas difíciles en `docs/defensa.md`. **Pendiente:** grabar y maquetar.
 - [ ] **P11.4** Verificar los 20 criterios de aceptación del §35 uno a uno antes de cerrar.

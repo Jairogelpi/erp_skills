@@ -1,4 +1,4 @@
-.PHONY: format format-check lint typecheck test coverage build up down logs compose-config bootstrap-codebase-memory remove-codebase-memory validate-dataset benchmark-smoke experiment verify-freeze demo export-results figures compare-retrievers
+.PHONY: format format-check lint typecheck test coverage build up down logs compose-config bootstrap-codebase-memory remove-codebase-memory validate-dataset benchmark-smoke experiment verify-freeze validate-claims prepare-v2 advance-v2 demo export-results figures compare-retrievers power-v2-1 freeze-v2-1 verify-tfm-closure verify-tfm-failed-external mutation-v2-1
 
 up:
 	docker compose --env-file config/development.defaults up --build
@@ -43,6 +43,15 @@ benchmark-smoke:
 verify-freeze:
 	uv run python scripts/freeze_protocol.py --verify
 
+validate-claims:
+	uv run python scripts/validate_claims.py
+
+prepare-v2:
+	uv run python scripts/prepare_v2_holdout.py
+
+advance-v2:
+	uv run python scripts/advance_v2_holdout.py
+
 experiment:
 	uv run python scripts/run_experiment.py
 
@@ -57,6 +66,39 @@ figures:
 
 compare-retrievers:
 	uv run python scripts/compare_retrievers.py
+
+# --- v2.1 (docs/tfm-closure-no-human-v2.1.md, Task 12) ---
+# None of these targets calls a real provider or consumes the holdout;
+# see scripts/verify_tfm_closure_v2_1.py's own docstring for the exact
+# guarantee each mode makes.
+
+mutation-v2-1:
+	uv run python scripts/run_targeted_mutations_v2_1.py --verify
+
+power-v2-1:
+	uv run python scripts/run_power_v2_1.py
+
+freeze-v2-1:
+	uv run python scripts/freeze_protocol_v2_1.py --verify
+
+# --pre-run only ever succeeds before any v2.1 receipts exist
+# (DRAFT_PROTOCOL, per verify_tfm_closure_v2_1.py's own docstring) --
+# it was the correct CI check while Task 12 was being built, but the
+# real campaign has since run to completion (RUN_COMPLETED, receipts
+# committed under data/protocol_v2_1/runs_v2/), so --pre-run can never
+# pass again in this repo's history. Found live (docs/audit.md #17):
+# this CI target had never actually run end-to-end until PR #3 first
+# exercised it, well after the campaign completed. --final is the mode
+# that verifies the campaign that actually happened, matching exactly
+# the reproduction command documented in docs/memoria.md's Anexo A.
+verify-tfm-closure:
+	uv run python scripts/verify_tfm_closure_v2_1.py --final \
+		--receipt-log data/protocol_v2_1/runs_v2/receipts_2.jsonl \
+		--code-manifest-path data/protocol_v2_1/code_freeze_manifest.json \
+		--report-path data/protocol_v2_1/confirmatory_report_v2_1_2.json
+
+verify-tfm-failed-external:
+	uv run python scripts/verify_tfm_closure_v2_1.py --failed-external
 
 bootstrap-codebase-memory:
 	python scripts/bootstrap-codebase-memory.py
