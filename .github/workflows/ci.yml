@@ -34,26 +34,16 @@ jobs:
       - run: make validate-claims
       # v2.1 (docs/tfm-closure-no-human-v2.1.md, Task 12 step 3): both
       # non-consuming -- mutation-v2-1 re-proves the evaluator's own
-      # targeted-mutation report against the committed source, and
-      # verify-tfm-closure (--pre-run) validates protocol/generator/
-      # oracle/evaluator/catalog/prompt/provider/analysis component
-      # hashes plus the committed power artifact, all read-only. Neither
-      # calls a real LLM provider or generates/consumes a holdout.
+      # targeted-mutation report against the committed source (its
+      # failing_tests capture is node-ID-only now, not the platform-
+      # dependent truncated pytest summary line -- docs/audit.md #16),
+      # and verify-tfm-closure (--final, docs/audit.md #17) verifies the
+      # real completed campaign's closure -- protocol/generator/oracle/
+      # evaluator/catalog/prompt/provider/analysis component hashes, the
+      # committed power artifact, and the RUN_COMPLETED report's claim
+      # language, all read-only. Neither calls a real LLM provider or
+      # generates/consumes a holdout.
       - run: make mutation-v2-1
-      # Temporary capture, not part of the permanent artifact set below:
-      # this run discovered that the committed targeted_mutation_report
-      # (generated on Windows) does not byte-reproduce on this Linux
-      # runner -- source files and config are confirmed identical
-      # (checked locally), so the divergence is in pytest's live output
-      # during mutation testing, not stale source. Uploading here (before
-      # verify-tfm-closure, which fails on the resulting "found 2") lets
-      # the CI-canonical report be downloaded and committed to replace
-      # the stale one. Remove once that replacement lands.
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: targeted-mutation-report-linux
-          path: data/protocol_v2_1/targeted_mutation_report_*.json
-          retention-days: 3
       - run: make verify-tfm-closure
       - run: make build
       # actions/upload-artifact v4.6.2

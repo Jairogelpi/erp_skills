@@ -4,7 +4,7 @@
   "mutants": [
     {
       "failing_tests": [
-        "tests/test_evaluator_v2_1.py::test_wrong_policy_decision_fails_stsr - ...",
+        "tests/test_evaluator_v2_1.py::test_wrong_policy_decision_fails_stsr",
         "tests/test_evaluator_v2_1.py::test_fully_correct_outcome_succeeds_on_every_component"
       ],
       "harness_error": null,
@@ -23,7 +23,7 @@
     },
     {
       "failing_tests": [
-        "tests/test_evaluator_v2_1.py::test_wrong_final_state_fails_stsr - asse...",
+        "tests/test_evaluator_v2_1.py::test_wrong_final_state_fails_stsr",
         "tests/test_evaluator_v2_1.py::test_fully_correct_outcome_succeeds_on_every_component"
       ],
       "harness_error": null,

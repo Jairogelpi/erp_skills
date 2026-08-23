@@ -155,11 +155,30 @@ def _run_focused_tests(
 
 
 def _failing_test_names(stdout: str) -> list[str]:
-    return [
-        line[len("FAILED ") :].strip()
-        for line in stdout.splitlines()
-        if line.startswith("FAILED ")
-    ]
+    """Extract only the test node ID from each pytest "FAILED" summary
+    line, discarding everything from " - " onward.
+
+    Found live, not assumed: pytest's short summary appends the
+    assertion's own message after " - ", and truncates that message to
+    fit the detected terminal width -- which differs between a local
+    Windows shell and GitHub Actions' runner, so the SAME test failure
+    was captured as two different strings ("...assert True is False" on
+    one platform, "..." mid-word on the other, or the suffix missing
+    entirely). That made the content-addressed mutation report
+    (_write_report) hash differently per platform even though every
+    mutant's kill/survive outcome was identical -- see
+    docs/audit.md for the write-up. The node ID before " - " is stable;
+    the free-text reason after it is not, and nothing in this repo reads
+    it (grep confirmed), so it is not worth keeping at the cost of
+    reproducibility.
+    """
+    names = []
+    for line in stdout.splitlines():
+        if not line.startswith("FAILED "):
+            continue
+        node_id = line[len("FAILED ") :].split(" - ", 1)[0]
+        names.append(node_id.strip())
+    return names
 
 
 def _run_baseline(

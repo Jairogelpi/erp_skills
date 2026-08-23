@@ -81,8 +81,21 @@ power-v2-1:
 freeze-v2-1:
 	uv run python scripts/freeze_protocol_v2_1.py --verify
 
+# --pre-run only ever succeeds before any v2.1 receipts exist
+# (DRAFT_PROTOCOL, per verify_tfm_closure_v2_1.py's own docstring) --
+# it was the correct CI check while Task 12 was being built, but the
+# real campaign has since run to completion (RUN_COMPLETED, receipts
+# committed under data/protocol_v2_1/runs_v2/), so --pre-run can never
+# pass again in this repo's history. Found live (docs/audit.md #17):
+# this CI target had never actually run end-to-end until PR #3 first
+# exercised it, well after the campaign completed. --final is the mode
+# that verifies the campaign that actually happened, matching exactly
+# the reproduction command documented in docs/memoria.md's Anexo A.
 verify-tfm-closure:
-	uv run python scripts/verify_tfm_closure_v2_1.py --pre-run
+	uv run python scripts/verify_tfm_closure_v2_1.py --final \
+		--receipt-log data/protocol_v2_1/runs_v2/receipts_2.jsonl \
+		--code-manifest-path data/protocol_v2_1/code_freeze_manifest.json \
+		--report-path data/protocol_v2_1/confirmatory_report_v2_1_2.json
 
 verify-tfm-failed-external:
 	uv run python scripts/verify_tfm_closure_v2_1.py --failed-external

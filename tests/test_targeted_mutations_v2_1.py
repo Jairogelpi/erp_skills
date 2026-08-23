@@ -121,6 +121,31 @@ def test_apply_mutation_replaces_the_single_occurrence():
     assert result == "a\nB\nc\n"
 
 
+def test_failing_test_names_strips_the_platform_dependent_reason():
+    """Regression for docs/audit.md defect #16: pytest's "FAILED ..."
+    summary line appends the assertion's own message after " - ", and
+    truncates it to the detected terminal width -- width that differs
+    between a local shell and CI's runner, so the SAME failure produced
+    two different strings on Windows and on Linux, changing the content-
+    addressed report's hash per platform even though every mutant's
+    kill/survive outcome was identical. Only the node ID before " - " is
+    platform-stable; this plants both real shapes observed live (a
+    truncated reason ending in "...", and the suffix missing entirely)."""
+    stdout = "\n".join(
+        [
+            "FAILED tests/test_evaluator_v2_1.py::test_a - assert True is False",
+            "FAILED tests/test_evaluator_v2_1.py::test_b - assert False i...",
+            "FAILED tests/test_evaluator_v2_1.py::test_c",
+            "not a failure line",
+        ]
+    )
+    assert mutations._failing_test_names(stdout) == [
+        "tests/test_evaluator_v2_1.py::test_a",
+        "tests/test_evaluator_v2_1.py::test_b",
+        "tests/test_evaluator_v2_1.py::test_c",
+    ]
+
+
 def test_running_one_real_mutant_end_to_end_is_killed():
     """A genuine, slow-ish integration check that the isolated tempdir
     mechanism actually works, restricted to the cheapest registered

@@ -192,7 +192,7 @@ un asistente de IA. Dos motivos, y el segundo es el que importa:
    programación dirigidas a un asistente técnico, no peticiones ERP
    escritas por personal de operaciones. Medir sobre esa muestra daría
    un número real, reproducible y **sin ningún significado** — la misma
-   familia de error que este proyecto lleva quince defectos corrigiendo:
+   familia de error que este proyecto lleva diecisiete defectos corrigiendo:
    una medición que no puede fallar porque no mide lo que dice medir.
 
 La fuente válida es la aburrida: pedir a 5–10 personas que escriban cómo

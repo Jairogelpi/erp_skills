@@ -170,7 +170,7 @@ cálculo (¿es significativo?, ¿está en rango?) y no el *mecanismo*.
 
 **Una regla operativa:** *una comprobación que no puede fallar es peor
 que no tener comprobación*, porque fabrica confianza. Cinco de los
-quince defectos tienen esa forma exacta.
+diecisiete defectos tienen esa forma exacta.
 
 **Un hallazgo aplicable a quien monte algo parecido:** la descripción de
 una línea por skill es el cuello de botella del enrutado, no el

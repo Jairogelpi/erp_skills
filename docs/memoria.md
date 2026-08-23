@@ -193,7 +193,7 @@ las políticas del runtime.
    errores prevenidos, necesidad de revisión, capacidad de auditoría y
    coste modelado, con supuestos declarados.
 6. **Metodológica sobre el propio proceso.** Un registro auditado de
-   quince defectos hallados en el instrumento de medida y el patrón que
+   diecisiete defectos hallados en el instrumento de medida y el patrón que
    los explica (§9.5), utilizable como material sobre validez de
    constructo.
 
@@ -1561,7 +1561,7 @@ uv run python scripts/make_figures_v2_1.py
 `docs/dataset-card.md`, `docs/experiment-protocol.md`,
 `docs/threat-model.md`, `docs/traceability-rubric.md`,
 `docs/retriever-comparison.md`, `docs/injecagent-stress-test.md`,
-`docs/odoo-demo.md`, `docs/audit.md` (registro completo de los quince
+`docs/odoo-demo.md`, `docs/audit.md` (registro completo de los diecisiete
 defectos), `docs/spec-coverage.md` (cobertura §-por-§ de la
 especificación normativa), `docs/product-viability.md` (transferencia a
 producto: qué afirmación comercial sostiene cada número y cuál no),
