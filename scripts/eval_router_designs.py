@@ -128,7 +128,7 @@ def _sweep_gate(requests: list[Request], retriever: TfidfRetriever) -> float:
     and reintroduce exactly the over-commitment being fixed.
     """
     best_threshold, best_score = 0.0, -1.0
-    for step in range(0, 61):
+    for step in range(61):
         threshold = step / 100
         score = _evaluate(
             requests,

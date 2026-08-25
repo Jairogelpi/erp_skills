@@ -29,21 +29,21 @@ def a_case(**criteria):
 
 
 def record(case, **overrides):
-    defaults = dict(
-        request_id=case.request_id,
-        system="C",
-        repetition=0,
-        selected_skill_id=case.expected_skill,
-        decision=case.expected_decision.value,
-        postconditions_met=True,
-        side_effect_free=True,
-        handler_error=None,
-        ranked_skill_ids=(case.expected_skill,),
-        final_state={},
-        state_unchanged=True,
-        prompt_tokens=0,
-        completion_tokens=0,
-    )
+    defaults = {
+        "request_id": case.request_id,
+        "system": "C",
+        "repetition": 0,
+        "selected_skill_id": case.expected_skill,
+        "decision": case.expected_decision.value,
+        "postconditions_met": True,
+        "side_effect_free": True,
+        "handler_error": None,
+        "ranked_skill_ids": (case.expected_skill,),
+        "final_state": {},
+        "state_unchanged": True,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+    }
     defaults.update(overrides)
     return ExecutionRecord(**defaults)
 

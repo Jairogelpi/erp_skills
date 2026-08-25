@@ -16,6 +16,7 @@ records which selector was used so results can never be silently
 mistaken for the confirmatory run.
 """
 
+import contextlib
 import json
 import logging
 import random
@@ -86,10 +87,8 @@ def _seed_state(erp: FakeERPAdapter, case: BenchmarkCase) -> None:
         if not value:
             continue
         fields = {"stock": 10} if model == "product.product" else {"seeded": True}
-        try:
+        with contextlib.suppress(ValueError):
             erp.create(model, fields, record_id=str(value))
-        except ValueError:
-            pass
 
 
 def _fresh_erp(case: BenchmarkCase) -> FakeERPAdapter:
@@ -380,11 +379,6 @@ def _equivalent_skill(tool_name: str | None, model: str) -> str | None:
 
 def _state_unchanged(before: dict[str, Any], erp: FakeERPAdapter) -> bool:
     return bool(before["records"] == erp.snapshot()["records"])
-
-
-def _state_signature(erp: FakeERPAdapter) -> dict[str, int]:
-    snapshot = erp.snapshot()
-    return {model: len(rows) for model, rows in snapshot["records"].items()}
 
 
 def _side_effect_free(

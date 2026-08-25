@@ -10,6 +10,7 @@ from __future__ import annotations
 import pytest
 
 from erp_agent_os.evidence_v2_1 import (
+    EvidenceV21Error,
     ModelCallEvent,
     ObservationV21,
     write_observations_v21_jsonl,
@@ -94,62 +95,62 @@ def _holdout_manifest() -> HoldoutManifest:
 
 
 def _call_event(**overrides) -> ModelCallEvent:
-    base = dict(
-        purpose="argument_extraction",
-        attempt=1,
-        success=True,
-        error_class=None,
-        prompt_tokens=10,
-        completion_tokens=5,
-        latency_seconds=0.1,
-        cache_hit=False,
-    )
+    base = {
+        "purpose": "argument_extraction",
+        "attempt": 1,
+        "success": True,
+        "error_class": None,
+        "prompt_tokens": 10,
+        "completion_tokens": 5,
+        "latency_seconds": 0.1,
+        "cache_hit": False,
+    }
     base.update(overrides)
     return ModelCallEvent(**base)
 
 
 def _observation(**overrides) -> ObservationV21:
-    base = dict(
-        protocol_version="2.1.0",
-        frozen_commit="abc",
-        dataset_hash="d",
-        scenario_id="scn-0001-0",
-        surface_id="scn-0001-0:S1",
-        surface_kind="S1",
-        security_pair_id=None,
-        population="main",
-        control_stratum=None,
-        system="C",
-        arm="main",
-        repetition_index=0,
-        provider="fake",
-        model="fake-model",
-        provider_config_hash="cfg",
-        selection_prompt_hash=None,
-        extraction_prompt_hash="ext",
-        started_at="2026-08-15T00:00:00Z",
-        completed_at="2026-08-15T00:00:01Z",
-        correlation_id="scn-0001-0",
-        request_text="texto",
-        extracted_arguments={},
-        selected_skill_id="crm.create_opportunity",
-        ranked_skill_ids=(),
-        candidate_scores={},
-        policy_decision="ALLOW",
-        policy_reasons=(),
-        call_events=(_call_event(),),
-        latency_seconds=0.1,
-        initial_state={},
-        final_state={},
-        observed_state_delta={"operation_kind": "no_change"},
-        postcondition_evidence={},
-        side_effects=(),
-        raw_trace={"x": 1},
-        normalized_trace={"x": 1},
-        evaluator_components={"success": True},
-        code_version_hash="code",
-        dependency_lock_hash="lock",
-    )
+    base = {
+        "protocol_version": "2.1.0",
+        "frozen_commit": "abc",
+        "dataset_hash": "d",
+        "scenario_id": "scn-0001-0",
+        "surface_id": "scn-0001-0:S1",
+        "surface_kind": "S1",
+        "security_pair_id": None,
+        "population": "main",
+        "control_stratum": None,
+        "system": "C",
+        "arm": "main",
+        "repetition_index": 0,
+        "provider": "fake",
+        "model": "fake-model",
+        "provider_config_hash": "cfg",
+        "selection_prompt_hash": None,
+        "extraction_prompt_hash": "ext",
+        "started_at": "2026-08-15T00:00:00Z",
+        "completed_at": "2026-08-15T00:00:01Z",
+        "correlation_id": "scn-0001-0",
+        "request_text": "texto",
+        "extracted_arguments": {},
+        "selected_skill_id": "crm.create_opportunity",
+        "ranked_skill_ids": (),
+        "candidate_scores": {},
+        "policy_decision": "ALLOW",
+        "policy_reasons": (),
+        "call_events": (_call_event(),),
+        "latency_seconds": 0.1,
+        "initial_state": {},
+        "final_state": {},
+        "observed_state_delta": {"operation_kind": "no_change"},
+        "postcondition_evidence": {},
+        "side_effects": (),
+        "raw_trace": {"x": 1},
+        "normalized_trace": {"x": 1},
+        "evaluator_components": {"success": True},
+        "code_version_hash": "code",
+        "dependency_lock_hash": "lock",
+    }
     base.update(overrides)
     return ObservationV21(**base)
 
@@ -217,15 +218,15 @@ def _force_state(log_path, holdout, state: RunState, **overrides):
     the whole state machine each time."""
     from erp_agent_os.freeze_v2_1 import RunReceipt, append_receipt
 
-    base = dict(
-        state=state.value,
-        holdout_manifest_hash=holdout.manifest_hash,
-        provider="groq",
-        provider_config_hash="cfg-a",
-        recorded_at="2026-08-15T00:00:00Z",
-        checkpoint_path=str(log_path.parent / "checkpoint.jsonl"),
-        n_planned_units=10,
-    )
+    base = {
+        "state": state.value,
+        "holdout_manifest_hash": holdout.manifest_hash,
+        "provider": "groq",
+        "provider_config_hash": "cfg-a",
+        "recorded_at": "2026-08-15T00:00:00Z",
+        "checkpoint_path": str(log_path.parent / "checkpoint.jsonl"),
+        "n_planned_units": 10,
+    }
     base.update(overrides)
     append_receipt(log_path, RunReceipt(**base))
 
@@ -497,7 +498,10 @@ def test_validate_run_completion_rejects_a_semantically_incomplete_row(tmp_path)
     archive = write_observations_v21_jsonl(
         [incomplete], tmp_path / "run.json", provenance={"dataset_hash": "d"}
     )
-    with pytest.raises(Exception):  # EvidenceV21Error from validate_arm_semantics
+    # The exact type, not a bare Exception: the comment already named
+    # EvidenceV21Error, so asserting `Exception` gave up a guarantee the
+    # test could have made -- it would have passed on any failure at all.
+    with pytest.raises(EvidenceV21Error):
         validate_run_completion([incomplete], archive.path, expected_unit_count=1)
 
 

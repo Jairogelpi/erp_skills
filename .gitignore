@@ -82,8 +82,7 @@ data/protocol_v2_1/runs*/**
 .atl/
 .pi/
 .pi-subagents/
-.mcp/local/
-.mcp/tool-venv/
+.mcp/
 .codebase-memory/
 .worktrees/
 
@@ -97,10 +96,7 @@ data/protocol_v2_1/runs*/**
 Thumbs.db
 Desktop.ini
 
-# Retained reviewable templates, provenance, and documentation
-!.mcp/codebase-memory.template.json
-!.ponytail/UPSTREAM.md
-!.ponytail/LICENSE
+# Retained reviewable documentation
 !README.md
 !docs/
 

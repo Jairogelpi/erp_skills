@@ -120,7 +120,7 @@ def test_each_system_pays_its_own_argument_extraction():
         def extract_arguments(self, query_text, fields):
             from erp_agent_os.llm_client import ArgumentExtraction
 
-            return ArgumentExtraction({f: "x" for f in fields}, 100, 10)
+            return ArgumentExtraction(dict.fromkeys(fields, "x"), 100, 10)
 
     records, _ = run_experiment(
         CASES, _ExtractingStub(), seed=7, real_parser=True, repetitions=2

@@ -38,7 +38,7 @@ class _CountingLLM:
 
     def extract_arguments(self, query_text, fields):
         self.extractions += 1
-        return ArgumentExtraction({f: "x" for f in fields}, 50, 10)
+        return ArgumentExtraction(dict.fromkeys(fields, "x"), 50, 10)
 
 
 def test_caching_client_calls_the_real_client_only_once_per_unique_query():

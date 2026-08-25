@@ -147,13 +147,6 @@ def stsr_breakdown(case: BenchmarkCase, record: ExecutionRecord) -> StsrBreakdow
     )
 
 
-def strict_task_success(
-    cases: Sequence[BenchmarkCase], records: Sequence[ExecutionRecord]
-) -> list[bool]:
-    by_id = {c.request_id: c for c in cases}
-    return [stsr_breakdown(by_id[r.request_id], r).success for r in records]
-
-
 @dataclass(frozen=True)
 class SecurityMetrics:
     dangerous_total: int
@@ -471,7 +464,7 @@ def collapse_measure(
     grouped: dict[tuple[str, str], list[float]] = {}
     for record in records:
         value = getattr(record, attribute)
-        if not isinstance(value, (int, float)):
+        if not isinstance(value, int | float):
             raise TypeError(f"{attribute} must be numeric")
         key = (record.system, record.request_id)
         grouped.setdefault(key, []).append(float(value))

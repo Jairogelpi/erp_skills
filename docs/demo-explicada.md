@@ -254,7 +254,7 @@ este proyecto lleva quince correcciones cazando.
 ```sh
 export ODOO_URL="https://<rama>.dev.odoo.com"
 export ODOO_DB="<rama>"
-export ODOO_USERNAME="claude@esenssi.com"
+export ODOO_USERNAME="<usuario-api>"
 export ODOO_API_KEY="<la de .env>"
 ```
 

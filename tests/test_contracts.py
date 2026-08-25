@@ -15,6 +15,7 @@ than to a hand-written parallel test.
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from erp_agent_os.adapters import (
     ErpAdapter,
@@ -128,7 +129,10 @@ def test_skill_schema_every_catalog_skill_round_trips_through_json():
 def test_skill_schema_rejects_unknown_fields():
     payload = CATALOG[0].model_dump()
     payload["undeclared_field"] = "x"
-    with pytest.raises(Exception):
+    # ValidationError, not a bare Exception: `pytest.raises(Exception)`
+    # would also pass if this test itself blew up (a typo'd name, an
+    # import error), i.e. it could not fail for the right reason.
+    with pytest.raises(ValidationError, match="extra_forbidden"):
         SkillDefinition.model_validate(payload)
 
 

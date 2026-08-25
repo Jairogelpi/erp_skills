@@ -68,7 +68,7 @@ def validate_proposal(payload: dict[str, Any]) -> SkillDefinition:
     """
     try:
         skill = SkillDefinition.model_validate_json(json.dumps(payload))
-    except Exception as exc:  # noqa: BLE001 - surfaced as a rejection
+    except Exception as exc:  # any schema failure is surfaced as a rejection
         raise ProposalRejected(f"schema validation failed: {exc}") from exc
     if skill.state is not SkillState.DRAFT:
         raise ProposalRejected(

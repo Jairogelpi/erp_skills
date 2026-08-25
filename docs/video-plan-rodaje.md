@@ -36,9 +36,9 @@ guardián del código lo rechaza (correctamente). Antes de grabar, en la
 misma terminal:
 
 ```sh
-export ODOO_URL="https://esenssi-aromas-dev-pruebas-limpio-36295186.dev.odoo.com"
-export ODOO_DB="esenssi-aromas-dev-pruebas-limpio-36295186"
-export ODOO_USERNAME="claude@esenssi.com"
+export ODOO_URL="https://acme-erp-dev-pruebas-36295186.dev.odoo.com"
+export ODOO_DB="acme-erp-dev-pruebas-36295186"
+export ODOO_USERNAME="<usuario-api>"
 export ODOO_API_KEY="<la de .env>"
 ```
 

@@ -1,4 +1,4 @@
-.PHONY: format format-check lint typecheck test coverage build up down logs compose-config bootstrap-codebase-memory remove-codebase-memory validate-dataset benchmark-smoke experiment verify-freeze validate-claims prepare-v2 advance-v2 demo export-results figures compare-retrievers power-v2-1 freeze-v2-1 verify-tfm-closure verify-tfm-failed-external mutation-v2-1
+.PHONY: format format-check lint typecheck test coverage build up down logs compose-config validate-dataset benchmark-smoke experiment verify-freeze validate-claims prepare-v2 advance-v2 demo export-results figures compare-retrievers power-v2-1 freeze-v2-1 verify-tfm-closure verify-tfm-failed-external mutation-v2-1
 
 up:
 	docker compose --env-file config/development.defaults up --build
@@ -21,8 +21,12 @@ format-check:
 lint:
 	uv run ruff check .
 
+# No path argument: pyproject's `files` setting is the single source of
+# truth for what gets type-checked (src + scripts). Passing `src` here
+# would silently un-check the scripts that produce the published
+# artifacts.
 typecheck:
-	uv run mypy src
+	uv run mypy
 
 test:
 	uv run pytest
@@ -99,9 +103,3 @@ verify-tfm-closure:
 
 verify-tfm-failed-external:
 	uv run python scripts/verify_tfm_closure_v2_1.py --failed-external
-
-bootstrap-codebase-memory:
-	python scripts/bootstrap-codebase-memory.py
-
-remove-codebase-memory:
-	python scripts/bootstrap-codebase-memory.py --remove

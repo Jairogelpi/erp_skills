@@ -43,11 +43,15 @@ import argparse
 import json
 import os
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Literal
 
-from erp_agent_os.evidence_v2_1 import ObservationV21, write_observations_v21_jsonl
+from erp_agent_os.evidence_v2_1 import (
+    ObservationV21,
+    System,
+    write_observations_v21_jsonl,
+)
 from erp_agent_os.experiment_v2_1 import (
     ArmRunContext,
     build_h2_arm_plan,
@@ -129,31 +133,35 @@ def _build_client(provider: Provider) -> tuple[LLMClient, str, dict[str, object]
     if provider == "groq":
         from erp_agent_os.groq_client import GroqClient, GroqConfig
 
-        config = GroqConfig(
+        groq_config = GroqConfig(
             min_interval_seconds=_min_interval_override(
                 "GROQ_MIN_INTERVAL_SECONDS", GroqConfig().min_interval_seconds
             )
         )
-        return GroqClient(config), config.model, config.__dict__
+        return GroqClient(groq_config), groq_config.model, groq_config.__dict__
     if provider == "gemini":
         from erp_agent_os.gemini_client import GeminiClient, GeminiConfig
 
-        config = GeminiConfig(
+        gemini_config = GeminiConfig(
             min_interval_seconds=_min_interval_override(
                 "GEMINI_MIN_INTERVAL_SECONDS", GeminiConfig().min_interval_seconds
             )
         )
-        return GeminiClient(config), config.model, config.__dict__
+        return GeminiClient(gemini_config), gemini_config.model, gemini_config.__dict__
     if provider == "openrouter":
         from erp_agent_os.openrouter_client import OpenRouterClient, OpenRouterConfig
 
-        config = OpenRouterConfig(
+        router_config = OpenRouterConfig(
             min_interval_seconds=_min_interval_override(
                 "OPENROUTER_MIN_INTERVAL_SECONDS",
                 OpenRouterConfig().min_interval_seconds,
             )
         )
-        return OpenRouterClient(config), config.model, config.__dict__
+        return (
+            OpenRouterClient(router_config),
+            router_config.model,
+            router_config.__dict__,
+        )
     raise FreezeV21Error(f"unknown provider: {provider!r}")
 
 
@@ -369,7 +377,7 @@ def _run_real(args: argparse.Namespace) -> int:
         n_planned_units=n_planned,
     )
 
-    llm_by_system = {"A": client, "B": client, "C": client}
+    llm_by_system: Mapping[System, LLMClient] = {"A": client, "B": client, "C": client}
     h3b_sample = _h3b_sample(main, protocol)
     all_observations: list[ObservationV21] = []
     try:

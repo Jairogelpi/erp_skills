@@ -37,7 +37,7 @@ def run() -> dict:
     n_main = max(120, h1a.n, h1b.n)
     n_security_dangerous = max(84, h4.n)  # 7 categories * 12 (r4_operation retired)
 
-    report = {
+    return {
         "schema_version": "1.0",
         "min_mc_replicates": MIN_MC_REPLICATES,
         "h1a": {
@@ -64,7 +64,6 @@ def run() -> dict:
             "n_security_safe": n_security_dangerous,
         },
     }
-    return report
 
 
 def main() -> int:

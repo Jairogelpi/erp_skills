@@ -89,47 +89,47 @@ def protocol():
 
 
 def _row(**overrides) -> ObservationV21:
-    defaults: dict[str, object] = dict(
-        protocol_version="2.1.0",
-        frozen_commit="abc",
-        dataset_hash="d",
-        scenario_id="scn",
-        surface_id="scn:S1",
-        surface_kind="S1",
-        security_pair_id=None,
-        population="main",
-        control_stratum=None,
-        system="C",
-        arm="main",
-        repetition_index=0,
-        provider="fake",
-        model="fake-model",
-        provider_config_hash="cfg",
-        selection_prompt_hash=None,
-        extraction_prompt_hash="ext",
-        started_at="2026-08-15T00:00:00Z",
-        completed_at="2026-08-15T00:00:01Z",
-        correlation_id="scn",
-        request_text="texto",
-        extracted_arguments={},
-        selected_skill_id=None,
-        ranked_skill_ids=(),
-        candidate_scores={},
-        policy_decision="ALLOW",
-        policy_reasons=(),
-        call_events=(),
-        latency_seconds=0.1,
-        initial_state={},
-        final_state={},
-        observed_state_delta={"operation_kind": "no_change"},
-        postcondition_evidence={},
-        side_effects=(),
-        raw_trace={"x": 1},
-        normalized_trace={"x": 1},
-        evaluator_components={},
-        code_version_hash="code",
-        dependency_lock_hash="lock",
-    )
+    defaults: dict[str, object] = {
+        "protocol_version": "2.1.0",
+        "frozen_commit": "abc",
+        "dataset_hash": "d",
+        "scenario_id": "scn",
+        "surface_id": "scn:S1",
+        "surface_kind": "S1",
+        "security_pair_id": None,
+        "population": "main",
+        "control_stratum": None,
+        "system": "C",
+        "arm": "main",
+        "repetition_index": 0,
+        "provider": "fake",
+        "model": "fake-model",
+        "provider_config_hash": "cfg",
+        "selection_prompt_hash": None,
+        "extraction_prompt_hash": "ext",
+        "started_at": "2026-08-15T00:00:00Z",
+        "completed_at": "2026-08-15T00:00:01Z",
+        "correlation_id": "scn",
+        "request_text": "texto",
+        "extracted_arguments": {},
+        "selected_skill_id": None,
+        "ranked_skill_ids": (),
+        "candidate_scores": {},
+        "policy_decision": "ALLOW",
+        "policy_reasons": (),
+        "call_events": (),
+        "latency_seconds": 0.1,
+        "initial_state": {},
+        "final_state": {},
+        "observed_state_delta": {"operation_kind": "no_change"},
+        "postcondition_evidence": {},
+        "side_effects": (),
+        "raw_trace": {"x": 1},
+        "normalized_trace": {"x": 1},
+        "evaluator_components": {},
+        "code_version_hash": "code",
+        "dependency_lock_hash": "lock",
+    }
     defaults.update(overrides)
     return ObservationV21(**defaults)
 
@@ -346,7 +346,7 @@ def test_generate_report_produces_every_registered_hypothesis(
     )
 
     hypotheses = report["hypotheses"]
-    assert EXPECTED_HYPOTHESIS_KEYS <= set(hypotheses)
+    assert set(hypotheses) >= EXPECTED_HYPOTHESIS_KEYS
     for name in EXPECTED_HYPOTHESIS_KEYS:
         assert hypotheses[name]["result"] is not None, f"{name} has no result"
 

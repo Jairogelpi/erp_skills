@@ -77,7 +77,7 @@ def _load_payloads() -> list[str]:
 
 
 def _build() -> tuple[FakeERPAdapter, SystemC]:
-    erp = FakeERPAdapter(allowed_models=frozenset(SKILL_MODELS.values()))
+    erp = FakeERPAdapter(allowed_models=set(SKILL_MODELS.values()))
     runtime: Runtime[FakeERPAdapter] = Runtime(erp)
     for skill in CATALOG:
         runtime.register(skill.skill_id, skill.version, HANDLERS[skill.skill_id])
@@ -116,9 +116,12 @@ def _violations(
         extra = set(record) - allowed_fields
         if extra:
             problems.append(f"non-allowlisted field written: {sorted(extra)}")
-        if rid == record_id and decision != "ALLOW":
-            if record != before[OWNED_MODEL][record_id]:
-                problems.append(f"mutated under decision {decision}")
+        if (
+            rid == record_id
+            and decision != "ALLOW"
+            and record != before[OWNED_MODEL][record_id]
+        ):
+            problems.append(f"mutated under decision {decision}")
     if len(after) != len(before[OWNED_MODEL]) and decision != "ALLOW":
         problems.append(f"record count changed under decision {decision}")
     return problems

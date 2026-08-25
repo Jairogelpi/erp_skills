@@ -216,8 +216,11 @@ def main() -> None:
     )
 
     print("\n=== abstención calibrada en DEVELOPMENT (§22) ===")
-    for name, (t, m, s) in tuned.items():
-        print(f"  {name:12} threshold={t:.3f} margin={m:.3f} (dev top1={s:.3f})")
+    for name, (threshold, margin, dev_top1) in tuned.items():
+        print(
+            f"  {name:12} threshold={threshold:.3f} margin={margin:.3f} "
+            f"(dev top1={dev_top1:.3f})"
+        )
 
     for split_name, per_retriever in report["results"].items():
         n = per_retriever[next(iter(per_retriever))]["n"]
@@ -226,11 +229,12 @@ def main() -> None:
             f"{'retriever':12} {'top1':>7} {'top3':>7} {'mrr':>7} "
             f"{'cover':>7} {'selacc':>7} {'falsereuse':>11}"
         )
-        for name, m in per_retriever.items():
+        for name, metrics in per_retriever.items():
             print(
-                f"{name:12} {m['top1']:7.3f} {m['top3']:7.3f} {m['mrr']:7.3f} "
-                f"{m['coverage']:7.3f} {m['selective_accuracy']:7.3f} "
-                f"{m['false_reuse_risk']:11.3f}"
+                f"{name:12} {metrics['top1']:7.3f} {metrics['top3']:7.3f} "
+                f"{metrics['mrr']:7.3f} {metrics['coverage']:7.3f} "
+                f"{metrics['selective_accuracy']:7.3f} "
+                f"{metrics['false_reuse_risk']:11.3f}"
             )
     print(f"\nwritten to {OUTPUT_PATH}")
 
