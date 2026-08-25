@@ -130,9 +130,15 @@ files = ["src", "scripts"]
 follow_imports = "silent"
 
 [[tool.mypy.overrides]]
-# Optional Parquet export path only; the CSV is the RF-18 deliverable
-# and pandas is deliberately not a declared dependency.
-module = ["pandas.*"]
+# Both are deliberately absent from the type-checked environment, so
+# mypy must treat them as untyped rather than as missing:
+#   pandas     -- optional Parquet export path only; the CSV is the
+#                 RF-18 deliverable and pandas is not a dependency.
+#   matplotlib -- lives in the `figures` group, not `dev`, for the
+#                 reason documented above that group. CI syncs `dev`
+#                 only, so scripts/make_figures*.py import a module
+#                 that is genuinely not installed there.
+module = ["pandas.*", "matplotlib.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
