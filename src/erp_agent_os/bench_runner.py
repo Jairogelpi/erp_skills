@@ -16,6 +16,7 @@ match the dataset's ideally-correct `expected_decision`. That gap is
 reported, not hidden or silently "fixed" by relaxing the comparison.
 """
 
+import contextlib
 from dataclasses import dataclass
 from typing import Any
 
@@ -41,10 +42,8 @@ def _seed_references(erp: FakeERPAdapter, skill_id: str, args: dict[str, Any]) -
         if not ref_id:
             continue
         fields = {"stock": 10} if model == "product.product" else {"seeded": True}
-        try:
+        with contextlib.suppress(DuplicateRecordError):
             erp.create(model, fields, record_id=ref_id)
-        except DuplicateRecordError:
-            pass
 
 
 @dataclass(frozen=True)

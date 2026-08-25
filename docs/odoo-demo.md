@@ -31,10 +31,10 @@ producto real y su utilidad sobre Odoo?".
 
 ## Dónde se ejecutó
 
-Rama **Development** de Odoo.sh (`esenssi-aromas-dev-pruebas-limpio-...`),
+Rama **Development** de Odoo.sh (`acme-erp-dev-pruebas-...`),
 con datos demo estándar de Odoo confirmados antes de escribir nada
 ("Acme Corporation", "@example.com", "Azure Interior" — no producción
-clonada). La instancia de staging original (`esenssi-aromas-staging-...`)
+clonada). La instancia de staging original (`acme-erp-staging-...`)
 tenía datos con apariencia real y **nunca se usó para escritura**, solo
 para una lectura de prueba de conectividad — decisión tomada
 explícitamente antes de continuar, no una omisión.

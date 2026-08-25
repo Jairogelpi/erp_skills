@@ -37,7 +37,7 @@ class Finding:
     detail: str
 
 
-# ponytail: lexical patterns, Spanish corpus of the frozen benchmark plus
+# Lexical patterns, Spanish corpus of the frozen benchmark plus
 # English equivalents added after the InjecAgent stress test
 # (docs/injecagent-stress-test.md) showed the Spanish-only version
 # scored 0% on an English out-of-domain adversarial set. A
@@ -123,7 +123,7 @@ def normalize_arguments(
     normalized = dict(arguments)
     for field in _NUMERIC_LIMITS:
         raw = normalized.get(field)
-        if raw is None or isinstance(raw, (int, float)):
+        if raw is None or isinstance(raw, int | float):
             continue
         match = _NUMERIC_WITH_UNIT.match(str(raw))
         if match is None:

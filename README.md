@@ -134,7 +134,7 @@ request → Intent Parser → Skill Retriever → Policy Engine → Runtime → 
 | Six-scenario deterministic demo (§38) | `scripts/demo.py` | ✅ self-verifying |
 | Results export (CSV) and reproducible figures (§31) | `scripts/export_results.py`, `scripts/make_figures.py` | ✅ Tableau workbook itself is manual |
 
-822 tests, `ruff`/`mypy` clean, CI green.
+849 tests, `ruff`/`mypy` clean, CI green.
 
 Every software requirement CLAUDE.md specifies is implemented; the
 section-by-section audit lives in
@@ -536,7 +536,7 @@ cost per environment.
 not asserted: `git clone` → `uv sync` → **393 tests pass** → `freeze_protocol.py
 --verify` intact → `run_experiment.py` reproduces the published architecture-only
 numbers exactly (A 0.000 / B 0.333 / C 0.700). That specific fresh-clone run was
-last performed at 393 tests; the suite has since grown to **822** (v2.1 protocol),
+last performed at 393 tests; the suite has since grown to **849** (v2.1 protocol),
 each component (`pytest`, both freeze verifiers, `verify_tfm_closure_v2_1.py
 --final`) individually reverified in-place this session — not yet repeated as one
 combined fresh-clone pass at the current count.
@@ -699,12 +699,36 @@ CLAUDE.md               the normative specification and the append-only
                         bitácora operativa (build log)
 ```
 
-## Optional developer assistance
+## Comparative product demo
 
-[Ponytail](.ponytail/UPSTREAM.md) is vendored with immutable provenance and a
-SHA-256 manifest. Codebase Memory MCP setup and the always-index convention are
-documented in [`docs/development-assistance.md`](docs/development-assistance.md).
-Both are local, read-mostly assistance — not application runtime dependencies.
+A web app that runs one ERP request through all three architectures at
+once, shows what each did to the actual ERP state, and puts the frozen
+confirmatory evidence next to it.
+
+```sh
+make demo-preflight   # verifies artifacts, boots A/B/C, positive control
+make demo-product     # API on :8000, UI on :5173
+```
+
+The headline scene: the same "change this amount to 49,500 €" request
+makes A and B write immediately, while C classifies it **R2**, returns
+`REQUIRE_APPROVAL`, and an independent ERP re-read proves nothing moved.
+Approve, re-run, and the same request executes with its postcondition
+verified.
+
+Two rules the demo is built around:
+
+- **No statistic is computed by the demo.** Every figure comes from
+  `confirmatory_report_v2_1_2.json`; there is no number literal in the
+  React code, and `tests/test_demo_results.py` asserts each displayed
+  estimate equals the report's.
+- **Negative results stay negative.** H1b, H4 and H5 render in red as
+  NOT SUPPORTED. The security scene is followed immediately by H4's
+  19.0 % unauthorized-mutation rate against a preregistered target below
+  5 %, alongside the 0/1,530 confinement result — two different
+  properties, kept apart.
+
+Full description in [`docs/product-demo.md`](docs/product-demo.md).
 
 ## Scope and non-negotiables
 

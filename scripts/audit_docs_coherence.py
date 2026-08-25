@@ -68,7 +68,7 @@ print("=" * 70)
 print("CIFRAS SOSPECHOSAS EN LA DOCUMENTACION")
 print("=" * 70)
 
-docs = sorted((ROOT / "docs").glob("*.md")) + [ROOT / "README.md", ROOT / "CLAUDE.md"]
+docs = [*sorted((ROOT / "docs").glob("*.md")), ROOT / "README.md", ROOT / "CLAUDE.md"]
 
 # cifras que ya no son vigentes y no deberian aparecer sin contexto de "superado"
 OBSOLETAS = {

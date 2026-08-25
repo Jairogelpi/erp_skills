@@ -25,6 +25,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import NoReturn
 
 from erp_agent_os import odoo_handlers
 from erp_agent_os.approval import ApprovalService
@@ -126,7 +127,11 @@ def main() -> None:
     create_result = system.handle(
         "demo-r1", create_text, create_proposal, ROLE, "demo-r1-key"
     )
-    opportunity_id = create_result.selected_skill_id and create_result.execution.output
+    # Guard on `execution`, not on `selected_skill_id`: a REQUIRE_APPROVAL
+    # or SIMULATE decision selects a skill but never executes it, so the
+    # old guard would have dereferenced None the moment this step stopped
+    # being an auto-executing R1.
+    opportunity_id = create_result.execution.output if create_result.execution else None
     steps.append(
         {
             "step": "1_create_opportunity_R1",
@@ -259,7 +264,7 @@ def main() -> None:
         sys.exit(1)
 
 
-def _fail(steps: list, message: str) -> None:
+def _fail(steps: list, message: str) -> NoReturn:
     print(json.dumps({"FAILED": message, "steps": steps}, indent=2, default=str))
     sys.exit(1)
 

@@ -101,6 +101,27 @@ def _build_retriever(intents: list[str], examples: dict[str, list[str]], k: int)
     return TfidfRetriever(skills)
 
 
+def _score_rows(
+    rows: list[dict[str, Any]], retriever: Any
+) -> list[tuple[str | None, float]]:
+    """Top-1 (skill_id, score) per row, or (None, 0.0) when the retriever
+    returns no candidate at all.
+
+    Takes the retriever explicitly rather than closing over the one built
+    in `main`'s per-k loop: the closure was called inside the same
+    iteration, so it never actually mis-bound, but an explicit parameter
+    removes the possibility instead of relying on call ordering.
+    """
+    out: list[tuple[str | None, float]] = []
+    for row in rows:
+        ranked = retriever.rank(row["utt"], role=ROLE)
+        if ranked:
+            out.append((str(ranked[0].skill.skill_id), float(ranked[0].score)))
+        else:
+            out.append((None, 0.0))
+    return out
+
+
 def main() -> None:
     rows = _load()
     workers = sorted({row["worker_id"] for row in rows})
@@ -170,19 +191,10 @@ def main() -> None:
     for k in K_VALUES:
         retriever = _build_retriever(catalog_intents, examples, k)
 
-        def scored(rows_: list[dict[str, Any]]) -> list[tuple[str | None, float]]:
-            out = []
-            for row in rows_:
-                ranked = retriever.rank(row["utt"], role=ROLE)
-                if ranked:
-                    out.append((str(ranked[0].skill.skill_id), float(ranked[0].score)))
-                else:
-                    out.append((None, 0.0))
-            return out
-
-        dev_in_scored, dev_out_scored = scored(dev_in), scored(dev_out)
+        dev_in_scored = _score_rows(dev_in, retriever)
+        dev_out_scored = _score_rows(dev_out, retriever)
         best_threshold, best_overall = 0.0, -1.0
-        for step in range(0, 61):
+        for step in range(61):
             threshold = step / 100
             ok = sum(
                 1
@@ -193,7 +205,8 @@ def main() -> None:
             if overall_dev > best_overall:
                 best_threshold, best_overall = threshold, overall_dev
 
-        held_in_scored, held_out_scored = scored(held_in), scored(held_out)
+        held_in_scored = _score_rows(held_in, retriever)
+        held_out_scored = _score_rows(held_out, retriever)
         # Routing accuracy with the gate removed: isolates "does enriched
         # text route better" from "where is the gate set", which the
         # calibrated threshold otherwise mixes together.

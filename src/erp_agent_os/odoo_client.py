@@ -48,8 +48,8 @@ DEFAULT_TIMEOUT_SECONDS = 20
 # to break error handling.
 __all__ = [
     "MissingCredentialsError",
-    "OdooApiError",
     "Odoo19Adapter",
+    "OdooApiError",
     "UnknownFieldError",
     "UnknownModelError",
     "UnknownRecordError",

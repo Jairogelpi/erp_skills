@@ -19,13 +19,13 @@ from erp_agent_os.statistics_v2_1 import AnalysisResult
 
 
 def _gate(**overrides) -> ConfirmatoryGateInputs:
-    base = dict(
-        run_completed=True,
-        hashes_valid=True,
-        observations_complete=True,
-        registered_analysis_ran=True,
-        no_open_protocol_violation=True,
-    )
+    base = {
+        "run_completed": True,
+        "hashes_valid": True,
+        "observations_complete": True,
+        "registered_analysis_ran": True,
+        "no_open_protocol_violation": True,
+    }
     base.update(overrides)
     return ConfirmatoryGateInputs(**base)
 

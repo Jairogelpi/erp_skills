@@ -554,7 +554,7 @@ def escena_10_alta_de_skill(pausa: bool) -> None:
         "CU-02: el sistema propone, pero no puede auto-desplegar",
     )
 
-    from erp_agent_os.skill_proposal import validate_proposal
+    from erp_agent_os.skill_proposal import ProposalRejected, validate_proposal
 
     propuesta = {
         "skill_id": "crm.archive_opportunity",
@@ -580,7 +580,11 @@ def escena_10_alta_de_skill(pausa: bool) -> None:
     try:
         validate_proposal(prohibida)
         r4_rechazada = False
-    except Exception:
+    except ProposalRejected:
+        # ProposalRejected, not Exception: catching everything would let
+        # this demo claim "R4 rechazada" even if validate_proposal had
+        # failed for an unrelated reason, which is the exact class of
+        # claim-that-cannot-fail this project keeps auditing out.
         r4_rechazada = True
 
     print("  A (sin gobierno) : no hay catálogo. Cualquier operación que el")

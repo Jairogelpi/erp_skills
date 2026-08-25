@@ -1972,7 +1972,7 @@ Cada entrada debe estar fechada y consignar: **qué** cambió, **por qué**, **o
 
 ### 2026-08-07 UTC — unidad 32: Odoo19Adapter real, demo end-to-end contra Odoo 19 (post-core, P10.1)
 
-* **Qué:** el usuario preguntó si se podía probar el producto real contra Odoo. Tenía una instancia Odoo.sh staging (`esenssi-aromas-staging-...`); una lectura de prueba mostró un nombre de empresa (`100FRANQUICIAS S.L.`) que no parecía sintético — se paró de inmediato, sin escribir nada, y se preguntó al usuario. Confirmó que no había un entorno demo separado; se le explicó cómo crear una rama **Development** en Odoo.sh (genera datos demo frescos, no un clon de producción) frente a Staging (sí clona producción). El usuario aprovisionó `esenssi-aromas-dev-pruebas-limpio-...` y pasó credenciales nuevas. Se verificó por lectura que los datos eran demo estándar de Odoo ("Acme Corporation", "@example.com") antes de escribir nada. (1) `Odoo19Adapter` (`src/erp_agent_os/odoo_client.py`): mismo contrato público que `FakeERPAdapter` (`create`/`get`/`update`/`list`), sin `delete` (estructural, no convención — R4), allowlist de modelos y campos aplicado antes de cualquier HTTP, timeout, logs redactados, credenciales solo por entorno. Formato de la API JSON-2 verificado contra la documentación oficial de Odoo 19 antes de escribir código, no adivinado. (2) `odoo_handlers.py`: dos skills del catálogo (`crm.create_opportunity`, `crm.update_expected_revenue`) reimplementadas con nombres de modelo/campo **reales** de Odoo (`crm.lead`, no la fantasía `crm.opportunity` de FakeERP), verificados leyendo registros demo reales antes de codificar. (3) `scripts/odoo_demo.py`: ejecuta crear→verificar postcondición→actualizar→relectura independiente contra la instancia real — no confía en el 200 OK de la escritura, vuelve a leer por separado.
+* **Qué:** el usuario preguntó si se podía probar el producto real contra Odoo. Tenía una instancia Odoo.sh staging (`acme-erp-staging-...`); una lectura de prueba mostró un nombre de empresa (`una empresa real del negocio`) que no parecía sintético — se paró de inmediato, sin escribir nada, y se preguntó al usuario. Confirmó que no había un entorno demo separado; se le explicó cómo crear una rama **Development** en Odoo.sh (genera datos demo frescos, no un clon de producción) frente a Staging (sí clona producción). El usuario aprovisionó `acme-erp-dev-pruebas-...` y pasó credenciales nuevas. Se verificó por lectura que los datos eran demo estándar de Odoo ("Acme Corporation", "@example.com") antes de escribir nada. (1) `Odoo19Adapter` (`src/erp_agent_os/odoo_client.py`): mismo contrato público que `FakeERPAdapter` (`create`/`get`/`update`/`list`), sin `delete` (estructural, no convención — R4), allowlist de modelos y campos aplicado antes de cualquier HTTP, timeout, logs redactados, credenciales solo por entorno. Formato de la API JSON-2 verificado contra la documentación oficial de Odoo 19 antes de escribir código, no adivinado. (2) `odoo_handlers.py`: dos skills del catálogo (`crm.create_opportunity`, `crm.update_expected_revenue`) reimplementadas con nombres de modelo/campo **reales** de Odoo (`crm.lead`, no la fantasía `crm.opportunity` de FakeERP), verificados leyendo registros demo reales antes de codificar. (3) `scripts/odoo_demo.py`: ejecuta crear→verificar postcondición→actualizar→relectura independiente contra la instancia real — no confía en el 200 OK de la escritura, vuelve a leer por separado.
 * **Resultado real, ejecutado contra Odoo de verdad, no simulado:** `all_postconditions_met: true` — se creó una oportunidad (`crm.lead`, `type=opportunity`) con el importe pedido, se actualizó, y una relectura independiente confirmó el nuevo valor exacto. `data/odoo_demo_results.json` guarda la salida real de esta ejecución.
 * **Honestidad sobre el alcance, documentada en `docs/odoo-demo.md`:** esto NO sustituye ni compite con el experimento confirmatorio (1.080 observaciones, `FakeERPAdapter` obligatorio, §26/D-07 lo dejan explícito) — es una demo cualitativa de 2 skills, no un experimento estadístico. Solo 2 de 12 skills del catálogo están mapeadas a modelos reales de Odoo; las otras 10 seguirían necesitando su propio mapeo, no hecho aquí por presupuesto de tiempo. El script llama a los handlers directamente, sin pasar por Policy Engine ni System C — no hay gobernanza real ejercida en esta demo, solo el adaptador. El registro de prueba queda en la base demo (`id=45`, sin `delete` disponible por diseño R4) — se puede borrar manualmente desde la UI si se desea.
 * **Orden/dependencias:** depende de `FakeERPAdapter` (unidad 2, como referencia de contrato) y del catálogo de 12 skills (unidad 11). Cierra P10.1 del roadmap (Odoo19Adapter), previamente sin empezar. No depende de ni bloquea el núcleo confirmatorio.
@@ -2052,16 +2052,16 @@ Cada entrada debe estar fechada y consignar: **qué** cambió, **por qué**, **o
 * **(1) Congelación extendida (§19, cierra el pendiente de P9.1).** `freeze.py` schema 1.1 añade `prompt_hash` (prompt de selección, prompt de extracción y plantilla de usuario **renderizada**, no su código fuente: una edición que cambia lo que el modelo recibe mueve el hash; un comentario, no) y `provider_config_hash` (modelo, temperatura, reintentos, timeout, tope de tokens de los tres clientes reales). **Puramente aditivo:** los hashes de split, dataset y catálogo son byte-idénticos a los de schema 1.0 — fijado por test con los valores literales — así que los resultados ya publicados siguen siendo comparables. Un manifiesto 1.0 no pasa en silencio: `verify_freeze` lo reporta como componente no congelado en vez de crashear o ignorarlo. Deriva **verificada cambiando de verdad** el modelo, la temperatura y un prompt, no solo declarada; el test del proveedor descubrió por el camino que parchear `GroqConfig.model` como atributo de clase **no** cambia `GroqConfig()` (un dataclass fija sus defaults en `__init__` al crear la clase), así que se parchea la factoría — sin eso el test habría pasado sin probar nada.
 * **(2) Prompt de selección deduplicado.** Vivía copiado literal en `groq_client`, `gemini_client` y `openrouter_client`, con D-03 ("mismo prompt para A/B/C") sostenido por convención entre tres ficheros. Ahora es `llm_client.SELECTION_SYSTEM_PROMPT`, una sola constante: el requisito pasa a ser estructural y el freeze hashea un artefacto en vez de tres que podían divergir. Test que fija la identidad de objeto en los tres clientes.
 * **(3) Defecto de documentación grave, encontrado al preparar la memoria:** `docs/results.md` y `README.md` publicaban los números de la **ejecución 3** (C = 0,558, C−B = +0,075, *p* = 0,212, no significativo) como resultado vigente, mientras `data/experiment_results_real_parser.json` contenía ya los de la **ejecución 4**, posterior a la corrección del defecto #13 (C = 0,633, C−B = +0,150, IC95 [+0,042, +0,258], *p* = 0,0162, **significativo**). La bitácora de la unidad 36 daba por documentada una sección "§ Ejecución 4" que **no existía en el fichero**. Corregido: sección nueva con las cifras vigentes, cabecera de `results.md` reescrita, tabla de hipótesis actualizada, ejecución 3 **conservada** con aviso de superada (se publicó y se defendió mientras se creía correcta; el motivo por el que dejó de serlo es material metodológico), y README alineado. **Es la segunda vez en el proyecto que un artefacto de reporte, no de medición, contiene el defecto** — ya pasó con `manifest.caveat` en las unidades 29 y 30.
-* **(4) Demo adversarial de Odoo: parada, no ejecutada.** Se le añadió primero el **control positivo** que le faltaba (una petición limpia debe llegar al handler y crear un registro real, o el "0 escrituras bloqueadas" sería vacuo — exactamente el modo de fallo recurrente del proyecto). Al ejecutar, `.env` apuntaba a `esenssi-aromas.odoo.com`: la instancia de **producción** del negocio, no la rama de desarrollo con datos demo usada el 10-ago, que ya no está en `.env`. **No se ejecutó**; escribir oportunidades de prueba en el ERP real de un negocio es exactamente lo que este proyecto se negó a hacer la primera vez. El usuario aprovisionará una rama Development.
+* **(4) Demo adversarial de Odoo: parada, no ejecutada.** Se le añadió primero el **control positivo** que le faltaba (una petición limpia debe llegar al handler y crear un registro real, o el "0 escrituras bloqueadas" sería vacuo — exactamente el modo de fallo recurrente del proyecto). Al ejecutar, `.env` apuntaba a `acme-erp.odoo.com`: la instancia de **producción** del negocio, no la rama de desarrollo con datos demo usada el 10-ago, que ya no está en `.env`. **No se ejecutó**; escribir oportunidades de prueba en el ERP real de un negocio es exactamente lo que este proyecto se negó a hacer la primera vez. El usuario aprovisionará una rama Development.
 * **(5) Borrador de memoria (`docs/memoria.md`).** Los 13 capítulos del índice de §33, construidos **desde los artefactos reales**: cada cifra procede de un `data/*.json` versionado y es reproducible con los comandos del anexo A. Incluye los resultados negativos sin suavizar (embeddings pierden contra TF-IDF; H3 no discriminable por diseño; detección léxica al 3,3 % fuera de distribución; C con peor false-reuse risk que B), las tres tensiones que no se resuelven a favor del número bonito (R3 vs STSR, abstención vs Top-1, temperatura vs H3) y el capítulo metodológico sobre dónde se concentran los defectos. Los apartados que dependen de trabajo humano (kappa, Tableau, defensa) están marcados como pendientes, no dados por hechos. Cifras de segmentación recalculadas contra la corrida vigente al detectar que las de `results.md` venían de la ejecución 1 (R3 = 0,400 y `tasks` = 0,400 son los peores hoy, no R3 = 0,500 y `contacts`).
 * **Evidencia:** `python -m pytest` → **391 passed**, cobertura **96 %** (2.456 sentencias, 90 sin cubrir — el 97 % citado en documentos previos quedó desactualizado al crecer la suite; corregido en la memoria); `ruff check`/`ruff format --check` limpios; `mypy src` sin hallazgos en 38 archivos; `scripts/freeze_protocol.py --verify` intacto con el manifiesto 1.1.
 * **Siguiente paso:** demo adversarial de Odoo cuando exista rama Development (el script ya tiene control positivo); kappa de anotación (paso humano); réplica de ambos regímenes de parseo en un mismo proveedor; medición de H3b con LLM real; workbook de Tableau, vídeo y presentación.
 
 ### 2026-08-11 UTC — unidad 40: demo adversarial de Odoo desbloqueada, guardián de instancia (casi accidente real)
 
-* **Qué:** el usuario aprovisionó la rama Development (`esenssi-aromas-dev-pruebas-limpio-36154343`) y pasó sus credenciales. Antes de ejecutar se verificó por **lectura** que los datos eran demo estándar de Odoo (`Acme Corporation`, `Ready Mat`, `Epic Technologies`) y que CRM estaba instalado. La demo adversarial corrió con éxito: **3/3 bloqueados, 0 escrituras**, decisión coincidente con la esperada en los tres, evento de auditoría en los tres.
+* **Qué:** el usuario aprovisionó la rama Development (`acme-erp-dev-pruebas-36154343`) y pasó sus credenciales. Antes de ejecutar se verificó por **lectura** que los datos eran demo estándar de Odoo (`Acme Corporation`, `Ready Mat`, `Epic Technologies`) y que CRM estaba instalado. La demo adversarial corrió con éxito: **3/3 bloqueados, 0 escrituras**, decisión coincidente con la esperada en los tres, evento de auditoría en los tres.
 * **Control positivo, añadido antes de ejecutar:** la versión anterior del script no comprobaba que escribir fuera posible. Con una credencial incapaz de escribir en `crm.lead` —el estado exacto en el que estuvo esta integración durante días— el resultado habría sido un impecable "0 escrituras en casos bloqueados" que **no podía fallar**. Ahora una petición limpia debe llegar al handler y crear un registro real (`created ['45']` en esta corrida) o el script aborta con `SystemExit` sin publicar cifras.
-* **Casi accidente real, y el control que lo cierra:** al ejecutar por primera vez, el script apuntó a `esenssi-aromas.odoo.com` — la instancia de **producción** del negocio. Causa: la máquina tiene `ODOO_URL`/`ODOO_DB` de producción como **variables de entorno persistentes de usuario** (`[Environment]::GetEnvironmentVariable(...,'User')`), y `odoo_client.py` lee `os.environ` directamente; el `.env` local con la rama de desarrollo **no las pisa**, porque el código nunca carga `.env`. Falló por casualidad con "No database is selected" antes de escribir nada — no por ningún control. Se paró, se diagnosticó y se añadió `require_development_instance()`, invocado al principio de las **tres** demos: rechaza cualquier host que no sea `*.dev.odoo.com` (producción), cualquier host con `staging` (que en Odoo.sh vive bajo `.dev.odoo.com` pero es **clon de datos de producción**) y `ODOO_URL` sin definir. **Probado en ambos sentidos**, no solo declarado: rechaza los tres casos peligrosos y acepta la rama de desarrollo.
+* **Casi accidente real, y el control que lo cierra:** al ejecutar por primera vez, el script apuntó a `acme-erp.odoo.com` — la instancia de **producción** del negocio. Causa: la máquina tiene `ODOO_URL`/`ODOO_DB` de producción como **variables de entorno persistentes de usuario** (`[Environment]::GetEnvironmentVariable(...,'User')`), y `odoo_client.py` lee `os.environ` directamente; el `.env` local con la rama de desarrollo **no las pisa**, porque el código nunca carga `.env`. Falló por casualidad con "No database is selected" antes de escribir nada — no por ningún control. Se paró, se diagnosticó y se añadió `require_development_instance()`, invocado al principio de las **tres** demos: rechaza cualquier host que no sea `*.dev.odoo.com` (producción), cualquier host con `staging` (que en Odoo.sh vive bajo `.dev.odoo.com` pero es **clon de datos de producción**) y `ODOO_URL` sin definir. **Probado en ambos sentidos**, no solo declarado: rechaza los tres casos peligrosos y acepta la rama de desarrollo.
 * **Método:** es la misma familia que los trece defectos anteriores, con una diferencia importante — este no estaba en el instrumento de medida sino en el **entorno de ejecución**, y no lo detectó ningún test, sino leer con desconfianza a qué host se estaba conectando el proceso. Un `.env` correcto no protege de nada si el código lee el entorno del sistema y el sistema tiene producción configurada.
 * **Evidencia:** `python -m pytest` → **393 passed** (2 tests nuevos del guardián en `tests/test_odoo_client.py`); `ruff`/`mypy` limpios (38 archivos). `data/odoo_adversarial_results.json` regenerado con el campo `positive_control`. `docs/odoo-demo.md` ampliado con la reejecución, el control positivo y el guardián; `docs/spec-coverage.md` corregido (la fila que declaraba la demo bloqueada por permisos ya no aplica).
 * **Siguiente paso:** kappa de anotación (paso humano); réplica de ambos regímenes de parseo en un mismo proveedor; medición de H3b con LLM real; mapear más skills a modelos reales de Odoo; Tableau, vídeo y defensa.
@@ -2299,3 +2299,223 @@ Cada entrada debe estar fechada y consignar: **qué** cambió, **por qué**, **o
   `postcondition_checks` en `experiment_v2_1.py` y se relanza la campaña
   (coste real de API) para poder medir H7 de verdad. Nada de esto se ha
   escrito todavía en `docs/memoria.md`.
+
+### 2026-08-25 UTC — unidad 56: limpieza de código a fondo, con la congelación como límite duro
+
+* **Qué:** limpieza transversal del repositorio a petición del usuario ("analiza
+  todo el código y límpialo al máximo"). (1) **Ruleset de lint ampliado y
+  permanente**: `pyproject.toml` pasa de `E,F,I` a `E,F,I,UP,B,SIM,C4,BLE,PIE,
+  RET,PTH,TID,RUF`. (2) **mypy extendido de `src` a `src`+`scripts`** (100
+  ficheros), porque los scripts son los que producen los artefactos publicados.
+  (3) **Código muerto eliminado**: `strict_task_success` (`metrics.py`),
+  `_state_signature` (`experiment.py`), `_style_accion_pendiente`
+  (`bench_generator.py`) y `V2_SEED` (`prospective_v2.py`) — los cuatro con
+  cero referencias en `src`/`scripts`/`tests`, verificado con un detector AST
+  propio que cuenta también rutas punteadas en strings (los handlers del
+  catálogo se referencian así, nunca por nombre desnudo).
+* **El límite que gobernó toda la unidad, y que no se cruzó:** 25 ficheros están
+  hasheados byte a byte por `freeze_v2_1.COMPONENT_FILES` y
+  `analyze_confirmatory_v2_1.ANALYSIS_CODE_FILES` — unas 6.150 líneas, en torno
+  al 40 % de `src`. Editar uno solo, aunque fuera un comentario o un arreglo de
+  linter, rompe `verify_code_freeze` e invalida la campaña de 21.460
+  observaciones reales. La lista se generó **mecánicamente desde el propio
+  código**, no de memoria, y se comprobó al final con `git diff` fichero a
+  fichero: ninguno fue tocado. Las 6 infracciones de lint que caen dentro de
+  esa frontera están suprimidas en `[tool.ruff.lint.per-file-ignores]` con el
+  motivo escrito, no "arregladas"; la de mypy, en un override de módulo.
+* **`BLE` estaba asumido pero nunca activado:** había una docena de
+  `# noqa: BLE001` inertes por los clientes LLM y los scripts porque la regla
+  jamás se seleccionó. Activarla los vuelve significativos y destapó dos
+  blind-except reales sin suprimir.
+* **Cuatro defectos encontrados, todos de la misma familia que este proyecto
+  lleva quince correcciones persiguiendo — comprobaciones que no pueden
+  fallar:** (a) `scripts/demo_completa.py` afirmaba "R4 rechazada" desde un
+  `except Exception`, de modo que **cualquier** fallo de `validate_proposal`
+  —un import roto, un typo— habría producido la misma afirmación tranquilizadora;
+  ahora captura `ProposalRejected`. (b) `tests/test_contracts.py` usaba
+  `pytest.raises(Exception)` para el rechazo de campos desconocidos; ahora
+  `ValidationError` con `match="extra_forbidden"`. (c)
+  `tests/test_freeze_v2_1.py` hacía lo mismo **con el tipo correcto escrito en
+  un comentario al lado** (`EvidenceV21Error`); ahora lo asevera. (d)
+  `scripts/audit_docs_claims.py` llevaba imprimiendo `skills en catalog.py: 1`
+  para un catálogo de 12: contaba el literal `SkillDefinition(` en el fuente, y
+  ese literal aparece **una** vez porque todas las entradas pasan por la
+  factoría `_skill(...)`. Nunca podría haber detectado un cambio de tamaño del
+  catálogo, que era lo único que ese chequeo existía para vigilar; ahora cuenta
+  `len(CATALOG)`.
+* **Un bug latente de verdad, hallado al extender mypy a `scripts`:**
+  `scripts/odoo_governed_demo.py` desreferenciaba
+  `SystemCResult.execution.output` protegido por `selected_skill_id`, que es
+  el campo equivocado — `REQUIRE_APPROVAL` y `SIMULATE` seleccionan skill y
+  **no** ejecutan, así que `execution` es `None`. Funcionaba solo porque ese
+  paso concreto es R1 y autoejecuta. Corregido guardando por `execution`.
+* **Dos avisos investigados y descartados como bug, no silenciados:** el `B023`
+  de `eval_enrichment_across_authors.py` (cierre sobre variable de bucle) no
+  llegaba a mal-vincular, porque la función se consumía dentro de la misma
+  iteración — los números publicados no están afectados; aun así se izó a
+  `_score_rows(rows, retriever)` para que la garantía no dependa del orden de
+  llamada. El `B007` de `make_figures_v2_1.py` no ocultaba un eje sin
+  etiquetas: se dibujan fuera del bucle vía `set_yticklabels`.
+* **Un chequeo nuevo retirado por ruidoso, deliberadamente:** al corregir el
+  conteo de skills añadí un escaneo de "N skills" contra los documentos. Daba
+  falsos positivos legítimos ("2 de las 12 skills mapeadas a Odoo", "las 10
+  skills sin handler"), así que se quitó dejando el motivo escrito. Un chequeo
+  que da falsas alarmas es peor que no tenerlo, por la misma razón por la que
+  uno que no puede fallar lo es.
+* **Documentación:** corregidas cuatro afirmaciones de **estado actual** que
+  decían 822 tests (son 823) en `docs/memoria.md` y `README.md`. **No** se
+  tocaron las de `docs/results-v2.1.md` ("820 tests") ni `README.md`
+  ("393 tests"): son registros de lo que era cierto en ese momento, y
+  reescribirlos sería corromper un histórico, no actualizarlo.
+* **Evidencia:** `uv run ruff check .` y `ruff format --check` limpios sobre 169
+  ficheros; `uv run mypy` sin hallazgos en 100 ficheros; `python -m pytest` →
+  **823 passed**, cobertura **95 %**; `scripts/freeze_protocol.py --verify` →
+  intacto; `verify_tfm_closure_v2_1.py --final` → `CLOSURE_VALID` en las dos
+  campañas; `demo.py` y `demo_completa.py` pasan sus autocomprobaciones;
+  `injection_resistance_test.py` e `injecagent_stress_test.py` reproducen sus
+  artefactos **byte a byte** (`git diff` vacío), que es la prueba de que los
+  refactores preservaron el comportamiento y no solo de que compilan.
+* **No hecho, y por qué:** mypy **no** se extendió a `tests/` — 90 errores, 83
+  de ellos concentrados en los builders `**overrides` de los tests v2.1, que
+  exigirían TypedDicts espejo de dataclasses congeladas. Mucho ruido, poco
+  valor, y justo en los tests que guardan la campaña. `PERF` y `ARG` quedaron
+  fuera del ruleset por motivos escritos en `pyproject.toml`: el primero
+  degrada bucles de validación legibles a comprensiones `list.extend` en código
+  que corre una vez; el segundo marca argumentos que son conformidad de
+  contrato (las postcondiciones comparten la firma `(erp, output)`).
+* **Siguiente paso:** sin cambios respecto a la unidad anterior — decidir cómo
+  se integra el resultado de v2.1 con el relato de v1; desglosar H4 por las
+  ocho categorías de seguridad; decidir si se cablea `postcondition_checks` en
+  `experiment_v2_1.py` (que sigue siendo la causa de que H7 no sea medible) y
+  se relanza la campaña.
+
+### 2026-08-25 UTC — unidad 57: poda del repositorio y redacción de datos de terceros
+
+* **Qué:** el usuario pidió dejar "lo justo y necesario" y preguntó si había
+  algo que no debiera ver un tutor. Se inventarió el repositorio entero y se
+  eliminaron 15 ficheros en tres capas. (1) **Scratch de una sesión de
+  brainstorming**: `.superpowers/brainstorm/video-competition-20260812/` — un
+  `.server-stopped` de 53 bytes (`{"reason":"idle timeout"}`), un
+  `waiting.html` que solo dice "Opción A seleccionada" y un storyboard
+  interactivo ya superado por `docs/video-guion.md` y `docs/presentacion.md`.
+  (2) **`AGENTS.md`**, copia de `CLAUDE.md` que iba una entrada de bitácora por
+  detrás (2.285 frente a 2.390 líneas): dos "especificaciones maestras" en el
+  mismo repo, una desactualizada, y nada la referenciaba — el riesgo real era
+  que un lector se llevara la versión vieja. (3) **Planes de trabajo
+  superados**: los cuatro ficheros de `docs/superpowers/`, con cero
+  referencias; el de v2.1 está sustituido por `docs/tfm-closure-no-human-v2.1.md`,
+  que es la spec congelada de verdad. (4) **Tooling de desarrollo ajeno al
+  TFM**: `.ponytail/`, `.mcp/`, `docs/development-assistance.md`,
+  `scripts/bootstrap-codebase-memory.py` y su test, más los dos targets del
+  Makefile y las negaciones de `.gitignore` que quedaban sin objeto.
+* **Datos de terceros redactados, que es el hallazgo que de verdad importaba:**
+  la entrada de la unidad 32 nombraba a **`100FRANQUICIAS S.L.`**, una empresa
+  real que apareció al leer el Odoo de producción. El relato no pierde nada
+  —lo relevante es que se vio "un nombre que no parecía sintético" y se paró
+  antes de escribir, no cuál era—, así que se sustituyó por una descripción
+  genérica. En la misma pasada se genericizaron el subdominio real de la
+  instancia Odoo del negocio (presente en 4 documentos **y hardcodeado en
+  `tests/test_odoo_client.py`**, que publicaba la URL de producción) y el
+  usuario de API `claude@esenssi.com`, que en un bloque donde todo lo demás ya
+  era un marcador (`<rama>`, `<la de .env>`) era el único valor real.
+* **El test no se debilitó al genericizarlo:** `require_development_instance`
+  discrimina por la **forma** de la URL de Odoo.sh — `<tenant>.odoo.com` para
+  producción frente a `<tenant>-<env>-<dígitos>.dev.odoo.com` para ramas — no
+  por el tenant, así que los nombres de ejemplo ejercitan exactamente lo mismo.
+* **Lo que NO se tocó, y por qué:** `openspec/` (104 ficheros) parece ruido pero
+  la bitácora lo cita como evidencia unidad por unidad — es la trazabilidad del
+  método. Los cuatro informes confirmatorios, incluido
+  `confirmatory_report_v2_1_1_PRE_H2_FIX.json`, están documentados en
+  `docs/memoria.md` como conservados a propósito. El JSONL de 81 MB es la
+  evidencia cruda primaria y comprime bien (`.git` pesa 15 MB). Y
+  `evaluacion_tfm.md` es la autoevaluación académica que la bitácora contrasta.
+* **Higiene local:** eliminado el worktree obsoleto
+  `.worktrees/competition-readiness` (**1 GB** en disco, rama
+  `codex/competition-readiness` conservada intacta).
+* **Comprobado, no supuesto:** no hay ningún secreto versionado — se buscaron
+  patrones `api_key=`/`secret=`/`token=` y claves con forma real (`gsk_`,
+  `sk-`, `AIza`) sobre todos los ficheros que git rastrea, y `.env` está
+  correctamente ignorado. Los correos que aparecen en
+  `data/injecagent_test_cases_dh_base.json` son del dataset público InjecAgent
+  (MIT, sintéticos), no PII.
+* **Evidencia:** `python -m pytest` → **821 passed** (823 menos los 2 tests del
+  script de bootstrap eliminado; conteos actualizados en `docs/memoria.md` y
+  `README.md`, dejando intactos los históricos de `docs/results-v2.1.md` y los
+  "393 tests" del arranque en frío, que eran ciertos cuando se escribieron);
+  `ruff check`/`ruff format --check` limpios sobre 167 ficheros; `mypy` sin
+  hallazgos en 99; `freeze_protocol.py --verify` intacto;
+  `verify_tfm_closure_v2_1.py --final` → `CLOSURE_VALID`; `demo.py` y
+  `demo_completa.py` pasan sus autocomprobaciones; el auditor de enlaces no
+  reporta ninguno roto tras los borrados.
+* **Siguiente paso:** sin cambios respecto a la unidad 56.
+
+### 2026-08-25 UTC — unidad 58: demo comparativa de producto (A/B/C en vivo + evidencia congelada)
+
+* **Qué:** aplicación web que ejecuta **una misma petición ERP por las tres
+  arquitecturas a la vez** y muestra, lado a lado, qué hizo cada una al estado
+  real del ERP, junto a la evidencia confirmatoria congelada. Backend:
+  `demo_results.py` (lector de artefactos), `demo_service.py` (orquestador),
+  `demo_models.py` (modelos de transporte), `demo_api.py` (FastAPI).
+  Frontend: `demo-ui/` (React + TypeScript + Vite). Más
+  `scripts/demo_preflight.py` y los targets `demo-preflight`/`demo-api`/
+  `demo-product`.
+* **La regla que gobierna todo el diseño:** los ejemplos **enseñan** el
+  comportamiento, la campaña de 21.478 observaciones es la que **valida**. La
+  UI mantiene las dos cosas visiblemente separadas — el panel de paráfrasis
+  dice "tres formulaciones en esta corrida" al lado del "n = 1.192 escenarios"
+  de H3a, y el pie es permanente, nunca condicional.
+* **Ninguna cifra estadística vive en el código.** Todas se leen de
+  `confirmatory_report_v2_1_2.json` y del manifiesto de cabecera del archivo de
+  observaciones (`row_count`, no un `wc -l`: la primera línea *es* el
+  manifiesto, así que contar líneas daría 21.479). `supported` sale del
+  `evidence_state` del propio informe, **no** de re-aplicar un umbral en la
+  capa de presentación — una segunda regla de decisión podría discrepar de la
+  publicada sin que nadie lo notara. Fijado por `tests/test_demo_results.py`.
+* **Dos problemas reales encontrados al construirlo:** (1) el informe contiene
+  `NaN` y `-Infinity` legítimos (p-valores de tests unilaterales, extremo
+  abierto de un IC): son Python válido y **JSON inválido**, así que `JSON.parse`
+  habría rechazado la respuesta entera y dejado el panel en blanco; se sanean a
+  `null` en la frontera, conservando la clave para poder mostrar "no aplica" en
+  vez de omitir el campo. (2) `vite preview` **no hereda** el proxy del
+  servidor de desarrollo: la build servida devolvía el HTML del SPA con
+  `200 OK` para `/demo/evidence` — un fallo silencioso que se veía como
+  "evidencia no disponible". Declarado también en `preview`.
+* **Equidad de la comparación, copiada de `experiment.py` en vez de
+  reinventada:** mismo selector determinista para los tres (sin proveedor: una
+  demo que depende de una cuota gratuita es una demo que falla en el escenario,
+  y C nunca llama al LLM de todos modos), mismos argumentos, mismo estado
+  sembrado en tres adaptadores separados, y los argumentos de A reformateados a
+  su firma genérica `model`/`record_id`/`fields` — darle argumentos con forma
+  de skill lo haría fallar por el motivo equivocado.
+* **Lo que la UI NO hace, por decisión explícita:** no puntúa a los sistemas
+  (matriz de capacidades citando la hipótesis de origen, no un "A=42/C=91" que
+  inventaría una magnitud que nadie midió, §36); no rellena los campos que A y
+  B no producen (se pintan "—", porque **esas filas vacías son la
+  comparación**); no acepta `backend: "odoo"` (una segunda vía de conexión a un
+  ERP real es como ocurre una escritura en producción por accidente — la
+  guardada sigue siendo `scripts/odoo_governed_demo.py`); y no suaviza los
+  resultados negativos: H1b, H4 y H5 salen en rojo, y la escena de seguridad va
+  seguida **inmediatamente** del 19,0 % de mutación no autorizada de H4 contra
+  su umbral prerregistrado del 5 %, junto al 0/1.530 de confinamiento, con la
+  distinción entre ambas propiedades escrita al lado.
+* **El preflight lleva control positivo:** tras comprobar que la puerta R2
+  retiene, **aprueba y reejecuta** para verificar que la petición aprobada sí
+  escribe. Sin eso, "no se mutó nada" sería vacuo — es el mismo modo de fallo
+  que este proyecto lleva quince correcciones cazando, aplicado a una demo.
+* **Verificado en navegador real, no solo por curl:** las cuatro escenas
+  ejecutadas con Playwright sobre la build de producción. La escena estrella se
+  comporta como se afirma (A y B escriben 27000→49500; C queda en
+  `REQUIRE_APPROVAL` con `NO CHANGE`; tras aprobar, `ALLOW` + postcondición
+  verificada), la de seguridad dispara los tres detectores y deniega sin mutar
+  mientras B ejecuta igualmente, y el drill-down de H2 muestra población,
+  método, criterio, IC unilateral `[−∞, −456,87]` y "not applicable for this
+  test" donde el informe no tiene p-valor.
+* **Evidencia:** `python -m pytest` → **849 passed** (28 nuevos:
+  `test_demo_results.py` 8, `test_demo_service.py` 10, `test_demo_api.py` 10);
+  `ruff check`/`format` limpios sobre 175 ficheros; `mypy` sin hallazgos en
+  104; `tsc --noEmit` y `vite build` limpios; `freeze_protocol.py --verify`
+  intacto; `verify_tfm_closure_v2_1.py --final` → `CLOSURE_VALID`; los 25
+  ficheros congelados sin tocar. Documentación: `docs/product-demo.md` (nuevo),
+  `README.md`.
+* **Siguiente paso:** sin cambios respecto a la unidad 57. Para la demo, si se
+  quiere: grabarla a 1920×1080 siguiendo `docs/video-guion.md`.

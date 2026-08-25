@@ -75,18 +75,18 @@ class _CountingFakeLLM:
 
 
 def _context(**overrides) -> ArmRunContext:
-    base = dict(
-        protocol_version="2.1.0",
-        frozen_commit="abc123",
-        dataset_hash="ds-hash",
-        provider="fake",
-        model="fake-model",
-        provider_config={"temperature": 0.0},
-        code_version_hash="code-hash",
-        dependency_lock_hash="lock-hash",
-        timeout_seconds=30.0,
-        max_call_attempts=3,
-    )
+    base = {
+        "protocol_version": "2.1.0",
+        "frozen_commit": "abc123",
+        "dataset_hash": "ds-hash",
+        "provider": "fake",
+        "model": "fake-model",
+        "provider_config": {"temperature": 0.0},
+        "code_version_hash": "code-hash",
+        "dependency_lock_hash": "lock-hash",
+        "timeout_seconds": 30.0,
+        "max_call_attempts": 3,
+    }
     base.update(overrides)
     return ArmRunContext(**base)
 

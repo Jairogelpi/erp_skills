@@ -4,8 +4,10 @@ import pathlib
 import re
 import subprocess
 
+from erp_agent_os.catalog import CATALOG
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-DOCS = sorted((ROOT / "docs").glob("*.md")) + [ROOT / "README.md"]
+DOCS = [*sorted((ROOT / "docs").glob("*.md")), ROOT / "README.md"]
 
 print("=" * 70)
 print("1. AFIRMACIONES QUE DEBEN APARECER CON SU MATIZ")
@@ -58,9 +60,21 @@ for doc in DOCS:
             print(f"    !! {doc.relative_to(ROOT)}:{linea} dice {m.group(0)}")
 
 # numero de skills
-catalogo = (ROOT / "src" / "erp_agent_os" / "catalog.py").read_text(encoding="utf-8")
-n_skills = catalogo.count("SkillDefinition(")
+#
+# Counted from the imported catalog, not by grepping the source for
+# "SkillDefinition(". That literal appears exactly ONCE -- inside the
+# private `_skill(...)` factory every entry goes through -- so the old
+# heuristic printed "1" for a 12-skill catalog and could never have
+# detected the catalog changing size, which is the only thing it was
+# there to check. CLAUDE.md section 11 fixes the count at 12.
+n_skills = len(CATALOG)
 print(f"  skills en catalog.py: {n_skills}")
+# Deliberately NOT scanned against the docs the way the scene and test
+# counts are. "N skills" appears in Spanish prose that is not a claim
+# about catalog size at all -- "2 de las 12 skills mapeadas a Odoo",
+# "las 10 skills sin handler registrado" -- so a regex over it reports
+# drift that does not exist. A check that cries wolf is worse than no
+# check; the authoritative count above is what this section owes.
 
 # tests
 res = subprocess.run(
@@ -69,15 +83,15 @@ res = subprocess.run(
     capture_output=True,
     text=True,
 )
-m = re.search(r"(\d+) tests? collected", res.stdout)
-n_tests = int(m.group(1)) if m else None
+collected = re.search(r"(\d+) tests? collected", res.stdout)
+n_tests = int(collected.group(1)) if collected else None
 print(f"  tests recolectados: {n_tests}")
 for doc in DOCS:
     texto = doc.read_text(encoding="utf-8")
-    for m in re.finditer(r"(\d{3})\s+(?:tests|passed)", texto):
-        if n_tests and int(m.group(1)) != n_tests:
-            linea = texto[: m.start()].count("\n") + 1
-            print(f"    !! {doc.relative_to(ROOT)}:{linea} dice {m.group(0)}")
+    for claim in re.finditer(r"(\d{3})\s+(?:tests|passed)", texto):
+        if n_tests and int(claim.group(1)) != n_tests:
+            linea = texto[: claim.start()].count("\n") + 1
+            print(f"    !! {doc.relative_to(ROOT)}:{linea} dice {claim.group(0)}")
 
 print()
 print("=" * 70)

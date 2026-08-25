@@ -31,62 +31,62 @@ _CONFIG = H8CostGrid(
 
 
 def _call_event(**overrides) -> ModelCallEvent:
-    base = dict(
-        purpose="argument_extraction",
-        attempt=1,
-        success=True,
-        error_class=None,
-        prompt_tokens=50,
-        completion_tokens=20,
-        latency_seconds=0.1,
-        cache_hit=False,
-    )
+    base = {
+        "purpose": "argument_extraction",
+        "attempt": 1,
+        "success": True,
+        "error_class": None,
+        "prompt_tokens": 50,
+        "completion_tokens": 20,
+        "latency_seconds": 0.1,
+        "cache_hit": False,
+    }
     base.update(overrides)
     return ModelCallEvent(**base)
 
 
 def _observation(**overrides) -> ObservationV21:
-    base = dict(
-        protocol_version="2.1.0",
-        frozen_commit="abc",
-        dataset_hash="d",
-        scenario_id="scn-0001-0",
-        surface_id="scn-0001-0:S1",
-        surface_kind="S1",
-        security_pair_id=None,
-        population="main",
-        control_stratum=None,
-        system="C",
-        arm="main",
-        repetition_index=0,
-        provider="fake",
-        model="fake-model",
-        provider_config_hash="cfg",
-        selection_prompt_hash=None,
-        extraction_prompt_hash="ext",
-        started_at="2026-08-15T00:00:00Z",
-        completed_at="2026-08-15T00:00:01Z",
-        correlation_id="scn-0001-0",
-        request_text="texto",
-        extracted_arguments={},
-        selected_skill_id="crm.create_opportunity",
-        ranked_skill_ids=(),
-        candidate_scores={},
-        policy_decision="ALLOW",
-        policy_reasons=(),
-        call_events=(_call_event(),),
-        latency_seconds=0.1,
-        initial_state={},
-        final_state={},
-        observed_state_delta={"operation_kind": "no_change"},
-        postcondition_evidence={},
-        side_effects=(),
-        raw_trace={"x": 1},
-        normalized_trace={"x": 1},
-        evaluator_components={"success": True},
-        code_version_hash="code",
-        dependency_lock_hash="lock",
-    )
+    base = {
+        "protocol_version": "2.1.0",
+        "frozen_commit": "abc",
+        "dataset_hash": "d",
+        "scenario_id": "scn-0001-0",
+        "surface_id": "scn-0001-0:S1",
+        "surface_kind": "S1",
+        "security_pair_id": None,
+        "population": "main",
+        "control_stratum": None,
+        "system": "C",
+        "arm": "main",
+        "repetition_index": 0,
+        "provider": "fake",
+        "model": "fake-model",
+        "provider_config_hash": "cfg",
+        "selection_prompt_hash": None,
+        "extraction_prompt_hash": "ext",
+        "started_at": "2026-08-15T00:00:00Z",
+        "completed_at": "2026-08-15T00:00:01Z",
+        "correlation_id": "scn-0001-0",
+        "request_text": "texto",
+        "extracted_arguments": {},
+        "selected_skill_id": "crm.create_opportunity",
+        "ranked_skill_ids": (),
+        "candidate_scores": {},
+        "policy_decision": "ALLOW",
+        "policy_reasons": (),
+        "call_events": (_call_event(),),
+        "latency_seconds": 0.1,
+        "initial_state": {},
+        "final_state": {},
+        "observed_state_delta": {"operation_kind": "no_change"},
+        "postcondition_evidence": {},
+        "side_effects": (),
+        "raw_trace": {"x": 1},
+        "normalized_trace": {"x": 1},
+        "evaluator_components": {"success": True},
+        "code_version_hash": "code",
+        "dependency_lock_hash": "lock",
+    }
     base.update(overrides)
     return ObservationV21(**base)
 
@@ -156,7 +156,7 @@ def test_validate_cost_grid_coverage_rejects_a_selectively_filtered_report():
 def test_validate_cost_grid_coverage_rejects_duplicate_grid_points():
     observations = [_observation(system="C")]
     results = list(compute_cost_sensitivity(observations, _CONFIG, systems=("C",)))
-    duplicated = results + [results[0]]
+    duplicated = [*results, results[0]]
     with pytest.raises(CostScenarioError):
         validate_cost_grid_coverage(duplicated, _CONFIG, systems=("C",))
 

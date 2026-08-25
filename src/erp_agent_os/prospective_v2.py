@@ -13,8 +13,6 @@ from erp_agent_os.dataset import (
     RiskClass,
 )
 
-V2_SEED = 20260813
-
 _TEMPLATES = {
     "crm.create_opportunity.new": (
         "Abre en CRM una oportunidad de {customer_name} con previsión de "

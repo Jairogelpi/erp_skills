@@ -15,12 +15,12 @@ ALLOWED = {"res.partner": frozenset({"name", "email"})}
 
 
 def _adapter(**overrides) -> Odoo19Adapter:
-    kwargs = dict(
-        allowed_fields=ALLOWED,
-        url="https://example.odoo.com",
-        database="mydb",
-        api_key="test-key",
-    )
+    kwargs = {
+        "allowed_fields": ALLOWED,
+        "url": "https://example.odoo.com",
+        "database": "mydb",
+        "api_key": "test-key",
+    }
     kwargs.update(overrides)
     return Odoo19Adapter(**kwargs)
 
@@ -180,14 +180,18 @@ def test_write_demos_refuse_production_and_staging(monkeypatch):
         require_development_instance,
     )
 
-    dev = "https://esenssi-aromas-dev-pruebas-limpio-36154343.dev.odoo.com"
+    # Placeholder tenant name. What this test actually exercises is the
+    # Odoo.sh URL *shape* -- `<tenant>.odoo.com` for production versus
+    # `<tenant>-<env>-<digits>.dev.odoo.com` for branches -- so the real
+    # tenant adds nothing here and is not published.
+    dev = "https://acme-erp-dev-pruebas-36154343.dev.odoo.com"
     assert require_development_instance(dev) == dev
 
     for refused in (
-        "https://esenssi-aromas.odoo.com",  # production
+        "https://acme-erp.odoo.com",  # production
         # Odoo.sh staging lives under .dev.odoo.com but is a clone of
         # production data, so it must be refused too.
-        "https://esenssi-aromas-staging-35351235.dev.odoo.com",
+        "https://acme-erp-staging-35351235.dev.odoo.com",
         "",
     ):
         with pytest.raises(NotADevelopmentInstanceError):
@@ -200,7 +204,7 @@ def test_guard_falls_back_to_the_environment_when_no_url_is_passed(monkeypatch):
         require_development_instance,
     )
 
-    monkeypatch.setenv("ODOO_URL", "https://esenssi-aromas.odoo.com")
+    monkeypatch.setenv("ODOO_URL", "https://acme-erp.odoo.com")
     with pytest.raises(NotADevelopmentInstanceError):
         require_development_instance()
 

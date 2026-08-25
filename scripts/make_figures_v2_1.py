@@ -87,7 +87,9 @@ def figure_hypotheses_forest(report: dict) -> None:
     own figures below rather than being squeezed onto an incompatible
     axis."""
     fig, ax = plt.subplots(figsize=(8, 6))
-    for row_index, (key, label, supported) in enumerate(_FOREST_ROWS):
+    # `_label` is unpacked but unused here on purpose: the y-axis labels
+    # are set once, from the same tuple, in `set_yticklabels` below.
+    for row_index, (key, _label, supported) in enumerate(_FOREST_ROWS):
         result = report["hypotheses"][key]["result"]
         estimate = result["estimate"]
         ci_low = result["ci_low"]

@@ -109,10 +109,6 @@ def _style_necesito(t: str) -> str:
     return f"Necesito que {t[0].lower()}{t[1:]}"
 
 
-def _style_accion_pendiente(t: str) -> str:
-    return t.rstrip(".") + " y me confirmes cuando este hecho."
-
-
 def _style_tipografico(t: str) -> str:
     if len(t) < 4:
         return t

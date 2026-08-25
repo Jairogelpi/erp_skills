@@ -9,20 +9,20 @@ from erp_agent_os.traceability import (
 
 
 def _event(**overrides):
-    defaults = dict(
-        correlation_id="r0001",
-        skill_id="crm.create_opportunity",
-        skill_version="1.0.0",
-        role="erp_user",
-        decision="ALLOW",
-        risk_score=0.1,
-        reasons=(),
-        idempotency_key="key-1",
-        idempotent_replay=False,
-        postconditions_met=True,
-        output={"id": "OPP-1"},
-        recorded_at=datetime.now(UTC),
-    )
+    defaults = {
+        "correlation_id": "r0001",
+        "skill_id": "crm.create_opportunity",
+        "skill_version": "1.0.0",
+        "role": "erp_user",
+        "decision": "ALLOW",
+        "risk_score": 0.1,
+        "reasons": (),
+        "idempotency_key": "key-1",
+        "idempotent_replay": False,
+        "postconditions_met": True,
+        "output": {"id": "OPP-1"},
+        "recorded_at": datetime.now(UTC),
+    }
     defaults.update(overrides)
     return AuditEvent(**defaults)
 

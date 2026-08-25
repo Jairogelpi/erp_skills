@@ -1,3 +1,5 @@
+from itertools import pairwise
+
 import pytest
 from pydantic import ValidationError
 
@@ -60,7 +62,7 @@ def test_full_lifecycle_path_accepted():
         SkillState.ACTIVE,
         SkillState.DEPRECATED,
     ]
-    for current, target in zip(path, path[1:]):
+    for current, target in pairwise(path):
         assert transition(current, target) == target
 
 

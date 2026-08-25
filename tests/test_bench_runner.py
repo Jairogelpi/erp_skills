@@ -78,12 +78,12 @@ def test_unreferenced_record_surfaces_handler_error_on_r0_skill():
     # must fail visibly (Runtime catches it), not silently succeed.
     from erp_agent_os.dataset import CaseLabel, ExpectedDecision
 
-    case = [
+    case = next(
         c
         for c in _CASES
         if c.canonical_intent.startswith("inventory.check_availability")
         and c.labels == {CaseLabel.NORMAL}
-    ][0].model_copy(
+    ).model_copy(
         update={
             "expected_arguments": {"product_name": "Producto-Nunca-Sembrado"},
             "expected_decision": ExpectedDecision.DENY,

@@ -95,6 +95,12 @@ class HybridWeights:
     operation_match: float = 0.15
 
 
+# Evaluated once, shared by every HybridRetriever built without explicit
+# weights. Safe precisely because HybridWeights is frozen -- a mutable
+# default would be shared state across retrievers.
+DEFAULT_HYBRID_WEIGHTS = HybridWeights()
+
+
 class HybridRetriever:
     """Combines a vector retriever with module/operation-match boosts.
 
@@ -106,7 +112,7 @@ class HybridRetriever:
         self,
         skills: list[SkillDefinition],
         vector_retriever: VectorRetriever,
-        weights: HybridWeights = HybridWeights(),
+        weights: HybridWeights = DEFAULT_HYBRID_WEIGHTS,
     ) -> None:
         self._skills = skills
         self._vector_retriever = vector_retriever
@@ -154,6 +160,4 @@ def should_abstain(
         return True
     if ranked[0].score < threshold:
         return True
-    if len(ranked) > 1 and (ranked[0].score - ranked[1].score) < margin:
-        return True
-    return False
+    return bool(len(ranked) > 1 and ranked[0].score - ranked[1].score < margin)

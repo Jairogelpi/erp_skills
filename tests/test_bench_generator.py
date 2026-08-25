@@ -17,7 +17,7 @@ def test_generates_exactly_480_cases():
 
 def test_split_allocation_is_240_120_120():
     cases = generate_cases()
-    counts = {split: 0 for split in DatasetSplit}
+    counts = dict.fromkeys(DatasetSplit, 0)
     for case in cases:
         counts[case.split] += 1
     assert counts[DatasetSplit.DEVELOPMENT] == 240

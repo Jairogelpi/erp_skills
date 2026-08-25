@@ -321,12 +321,11 @@ def verify_code_freeze(
     empty means intact. Never raises on drift itself; callers decide
     whether drift blocks a transition (it always should, for a run)."""
     current = compute_component_hashes(repo_root=repo_root)
-    drifted = [
+    return [
         name
         for name, recorded_hash in manifest.component_hashes.items()
         if current.get(name) != recorded_hash
     ]
-    return drifted
 
 
 def _scenario_payload(scenario: ScenarioSpec) -> str:

@@ -26,6 +26,7 @@ lexical pre-execution detector.
 import json
 from collections import Counter
 from pathlib import Path
+from typing import Any
 
 from erp_agent_os.validation import blocking_findings, detect_text_signals
 
@@ -48,8 +49,8 @@ def main() -> None:
     by_attack_type: Counter[str] = Counter()
     detected_by_attack_type: Counter[str] = Counter()
     kind_counts: Counter[str] = Counter()
-    examples_detected = []
-    examples_missed = []
+    examples_detected: list[dict[str, Any]] = []
+    examples_missed: list[str] = []
 
     for case in cases:
         text = case["Attacker Instruction"]

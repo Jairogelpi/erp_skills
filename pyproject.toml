@@ -73,12 +73,82 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+# Beyond the pycodestyle/pyflakes/isort core: pyupgrade (UP), bugbear
+# (B), simplify (SIM), comprehensions (C4), blind-except (BLE), flake8
+# -pie (PIE), return (RET), pathlib (PTH), tidy-imports (TID) and ruff's
+# own checks (RUF).
+#
+# BLE in particular was already *assumed* enabled by the codebase: a
+# dozen `# noqa: BLE001` directives sat inert across the LLM clients and
+# scripts because the rule had never been selected. Turning it on makes
+# those suppressions mean what they say and catches the blind excepts
+# that were not suppressed -- one of which let scripts/demo_completa.py
+# report "R4 rechazada" for any failure whatsoever.
+#
+# Deliberately NOT selected:
+#   PERF -- PERF401 pushes readable `if ...: errors.append(...)`
+#           validation loops into `list.extend` comprehensions. It is a
+#           micro-optimisation in code that runs once, paid for in
+#           clarity.
+#   ARG  -- unused arguments are load-bearing here: postcondition and
+#           precondition checks share one `(erp, output)` signature, so
+#           an implementation that ignores one of them is conforming to
+#           the contract, not carrying dead weight.
+select = [
+  "E", "F", "I", "UP", "B", "SIM", "C4", "BLE", "PIE", "RET", "PTH", "TID", "RUF",
+]
+# RUF001/002/003 flag "ambiguous" Unicode: en dashes, minus signs and
+# multiplication signs. This project's prose, docstrings and figure
+# labels are Spanish and use them correctly -- the fix would be to
+# degrade the typography.
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+# The 25 files listed in erp_agent_os.freeze_v2_1.COMPONENT_FILES and
+# analyze_confirmatory_v2_1.ANALYSIS_CODE_FILES are hashed byte-for-byte
+# into the frozen v2.1 manifest and into every table of the published
+# confirmatory report. Editing one -- even to satisfy a linter, even to
+# change a comment -- breaks `verify_code_freeze` and invalidates the
+# 21.460-observation campaign. These are the rules the frozen files
+# happen to trip; they are suppressed here rather than "fixed", and the
+# suppressions must not be extended to any unfrozen file.
+[tool.ruff.lint.per-file-ignores]
+"scripts/run_targeted_mutations_v2_1.py" = ["RET504"]
+"src/erp_agent_os/audit_reconstruction.py" = ["UP038"]
+"src/erp_agent_os/experiment_v2_1.py" = ["BLE001", "RUF100", "SIM105"]
+"src/erp_agent_os/scenarios_v2_1.py" = ["SIM201"]
 
 [tool.mypy]
 python_version = "3.12"
-files = ["src"]
+# `scripts` is checked alongside `src`: the scripts are what actually
+# produce the published artifacts (the confirmatory report, the figures,
+# the evaluation JSONs), so a type error there corrupts a number rather
+# than merely a helper. Extending coverage to them caught a real latent
+# bug -- odoo_governed_demo dereferenced `SystemCResult.execution`
+# guarded by `selected_skill_id`, which is None on every non-executing
+# decision.
+files = ["src", "scripts"]
 follow_imports = "silent"
+
+[[tool.mypy.overrides]]
+# Both are deliberately absent from the type-checked environment, so
+# mypy must treat them as untyped rather than as missing:
+#   pandas     -- optional Parquet export path only; the CSV is the
+#                 RF-18 deliverable and pandas is not a dependency.
+#   matplotlib -- lives in the `figures` group, not `dev`, for the
+#                 reason documented above that group. CI syncs `dev`
+#                 only, so scripts/make_figures*.py import a module
+#                 that is genuinely not installed there.
+module = ["pandas.*", "matplotlib.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Byte-frozen (ANALYSIS_CODE_FILES): its hash is embedded in every table
+# of the published confirmatory report, so the one `object` -> `str |
+# None` narrowing it needs cannot be annotated away without invalidating
+# the campaign. Suppressed at the config level, leaving the file itself
+# untouched.
+module = ["analyze_confirmatory_v2_1"]
+disable_error_code = ["arg-type"]
 
 [[tool.mypy.overrides]]
 module = ["sentence_transformers.*", "torch.*", "transformers.*"]
