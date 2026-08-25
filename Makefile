@@ -1,4 +1,4 @@
-.PHONY: format format-check lint typecheck test coverage build up down logs compose-config validate-dataset benchmark-smoke experiment verify-freeze validate-claims prepare-v2 advance-v2 demo export-results figures compare-retrievers power-v2-1 freeze-v2-1 verify-tfm-closure verify-tfm-failed-external mutation-v2-1
+.PHONY: demo-product demo-api demo-preflight format format-check lint typecheck test coverage build up down logs compose-config validate-dataset benchmark-smoke experiment verify-freeze validate-claims prepare-v2 advance-v2 demo export-results figures compare-retrievers power-v2-1 freeze-v2-1 verify-tfm-closure verify-tfm-failed-external mutation-v2-1
 
 up:
 	docker compose --env-file config/development.defaults up --build
@@ -61,6 +61,21 @@ experiment:
 
 demo:
 	uv run python scripts/demo.py
+
+# --- comparative product demo (docs/product-demo.md) ---
+# Reads the frozen v2.1.2 confirmatory report; recomputes nothing.
+
+demo-preflight:
+	uv run python scripts/demo_preflight.py
+
+demo-api:
+	uv run uvicorn erp_agent_os.demo_api:app --reload --port 8000
+
+# Runs preflight first, on purpose: presenting a screen whose evidence
+# artifacts are unreadable is the one failure mode worth blocking on.
+demo-product: demo-preflight
+	cd demo-ui && npm install --silent
+	uv run uvicorn erp_agent_os.demo_api:app --port 8000 & 		cd demo-ui && npm run dev
 
 export-results:
 	uv run python scripts/export_results.py

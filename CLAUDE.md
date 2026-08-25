@@ -2448,3 +2448,74 @@ Cada entrada debe estar fechada y consignar: **qué** cambió, **por qué**, **o
   `demo_completa.py` pasan sus autocomprobaciones; el auditor de enlaces no
   reporta ninguno roto tras los borrados.
 * **Siguiente paso:** sin cambios respecto a la unidad 56.
+
+### 2026-08-25 UTC — unidad 58: demo comparativa de producto (A/B/C en vivo + evidencia congelada)
+
+* **Qué:** aplicación web que ejecuta **una misma petición ERP por las tres
+  arquitecturas a la vez** y muestra, lado a lado, qué hizo cada una al estado
+  real del ERP, junto a la evidencia confirmatoria congelada. Backend:
+  `demo_results.py` (lector de artefactos), `demo_service.py` (orquestador),
+  `demo_models.py` (modelos de transporte), `demo_api.py` (FastAPI).
+  Frontend: `demo-ui/` (React + TypeScript + Vite). Más
+  `scripts/demo_preflight.py` y los targets `demo-preflight`/`demo-api`/
+  `demo-product`.
+* **La regla que gobierna todo el diseño:** los ejemplos **enseñan** el
+  comportamiento, la campaña de 21.478 observaciones es la que **valida**. La
+  UI mantiene las dos cosas visiblemente separadas — el panel de paráfrasis
+  dice "tres formulaciones en esta corrida" al lado del "n = 1.192 escenarios"
+  de H3a, y el pie es permanente, nunca condicional.
+* **Ninguna cifra estadística vive en el código.** Todas se leen de
+  `confirmatory_report_v2_1_2.json` y del manifiesto de cabecera del archivo de
+  observaciones (`row_count`, no un `wc -l`: la primera línea *es* el
+  manifiesto, así que contar líneas daría 21.479). `supported` sale del
+  `evidence_state` del propio informe, **no** de re-aplicar un umbral en la
+  capa de presentación — una segunda regla de decisión podría discrepar de la
+  publicada sin que nadie lo notara. Fijado por `tests/test_demo_results.py`.
+* **Dos problemas reales encontrados al construirlo:** (1) el informe contiene
+  `NaN` y `-Infinity` legítimos (p-valores de tests unilaterales, extremo
+  abierto de un IC): son Python válido y **JSON inválido**, así que `JSON.parse`
+  habría rechazado la respuesta entera y dejado el panel en blanco; se sanean a
+  `null` en la frontera, conservando la clave para poder mostrar "no aplica" en
+  vez de omitir el campo. (2) `vite preview` **no hereda** el proxy del
+  servidor de desarrollo: la build servida devolvía el HTML del SPA con
+  `200 OK` para `/demo/evidence` — un fallo silencioso que se veía como
+  "evidencia no disponible". Declarado también en `preview`.
+* **Equidad de la comparación, copiada de `experiment.py` en vez de
+  reinventada:** mismo selector determinista para los tres (sin proveedor: una
+  demo que depende de una cuota gratuita es una demo que falla en el escenario,
+  y C nunca llama al LLM de todos modos), mismos argumentos, mismo estado
+  sembrado en tres adaptadores separados, y los argumentos de A reformateados a
+  su firma genérica `model`/`record_id`/`fields` — darle argumentos con forma
+  de skill lo haría fallar por el motivo equivocado.
+* **Lo que la UI NO hace, por decisión explícita:** no puntúa a los sistemas
+  (matriz de capacidades citando la hipótesis de origen, no un "A=42/C=91" que
+  inventaría una magnitud que nadie midió, §36); no rellena los campos que A y
+  B no producen (se pintan "—", porque **esas filas vacías son la
+  comparación**); no acepta `backend: "odoo"` (una segunda vía de conexión a un
+  ERP real es como ocurre una escritura en producción por accidente — la
+  guardada sigue siendo `scripts/odoo_governed_demo.py`); y no suaviza los
+  resultados negativos: H1b, H4 y H5 salen en rojo, y la escena de seguridad va
+  seguida **inmediatamente** del 19,0 % de mutación no autorizada de H4 contra
+  su umbral prerregistrado del 5 %, junto al 0/1.530 de confinamiento, con la
+  distinción entre ambas propiedades escrita al lado.
+* **El preflight lleva control positivo:** tras comprobar que la puerta R2
+  retiene, **aprueba y reejecuta** para verificar que la petición aprobada sí
+  escribe. Sin eso, "no se mutó nada" sería vacuo — es el mismo modo de fallo
+  que este proyecto lleva quince correcciones cazando, aplicado a una demo.
+* **Verificado en navegador real, no solo por curl:** las cuatro escenas
+  ejecutadas con Playwright sobre la build de producción. La escena estrella se
+  comporta como se afirma (A y B escriben 27000→49500; C queda en
+  `REQUIRE_APPROVAL` con `NO CHANGE`; tras aprobar, `ALLOW` + postcondición
+  verificada), la de seguridad dispara los tres detectores y deniega sin mutar
+  mientras B ejecuta igualmente, y el drill-down de H2 muestra población,
+  método, criterio, IC unilateral `[−∞, −456,87]` y "not applicable for this
+  test" donde el informe no tiene p-valor.
+* **Evidencia:** `python -m pytest` → **849 passed** (28 nuevos:
+  `test_demo_results.py` 8, `test_demo_service.py` 10, `test_demo_api.py` 10);
+  `ruff check`/`format` limpios sobre 175 ficheros; `mypy` sin hallazgos en
+  104; `tsc --noEmit` y `vite build` limpios; `freeze_protocol.py --verify`
+  intacto; `verify_tfm_closure_v2_1.py --final` → `CLOSURE_VALID`; los 25
+  ficheros congelados sin tocar. Documentación: `docs/product-demo.md` (nuevo),
+  `README.md`.
+* **Siguiente paso:** sin cambios respecto a la unidad 57. Para la demo, si se
+  quiere: grabarla a 1920×1080 siguiendo `docs/video-guion.md`.

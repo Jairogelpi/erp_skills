@@ -1,0 +1,173 @@
+/* Semantic colour is load-bearing here, not decoration (spec §22):
+   green = allowed/verified/supported, amber = held for a human,
+   red = denied or hypothesis not supported. Red on H4 means "a
+   preregistered hypothesis was not supported", never "broken product",
+   and the copy next to it has to say so. */
+:root {
+  --bg: #0b1020;
+  --panel: #141b2e;
+  --panel-2: #1a2338;
+  --line: #26314d;
+  --text: #e8ecf6;
+  --muted: #94a1bd;
+  --dim: #5f6d8c;
+
+  --allow: #34d399;
+  --hold: #fbbf24;
+  --deny: #f87171;
+  --accent: #7dd3fc;
+
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ---------------------------------------------------------- header */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #121a2c, #0d1322);
+}
+.brand h1 { margin: 0; font-size: 19px; letter-spacing: 0.16em; font-weight: 600; }
+.brand p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+.header-right { text-align: right; font-family: var(--mono); font-size: 12px; }
+.header-right .count { font-size: 17px; color: var(--accent); font-weight: 600; }
+.header-right .tag { color: var(--muted); }
+
+.tabs { display: flex; gap: 6px; padding: 0 28px; border-bottom: 1px solid var(--line); }
+.tab {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  padding: 11px 16px; font-size: 13px; font-family: var(--sans);
+  border-bottom: 2px solid transparent;
+}
+.tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+/* --------------------------------------------------------- layout */
+
+.main { flex: 1; padding: 20px 28px 8px; display: flex; flex-direction: column; gap: 16px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.panel-title {
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--dim); padding: 12px 16px 0;
+}
+
+/* ------------------------------------------------------- composer */
+
+.composer { padding: 16px; }
+.composer label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.composer textarea {
+  width: 100%; min-height: 58px; resize: vertical; padding: 11px 13px;
+  background: var(--bg); color: var(--text); font-family: var(--mono);
+  font-size: 13.5px; border: 1px solid var(--line); border-radius: 7px;
+}
+.composer-row { display: flex; gap: 10px; align-items: center; margin-top: 11px; flex-wrap: wrap; }
+.presets { display: flex; gap: 7px; }
+
+button {
+  font-family: var(--sans); font-size: 12.5px; cursor: pointer;
+  border-radius: 6px; padding: 8px 14px; border: 1px solid var(--line);
+  background: var(--panel-2); color: var(--text); transition: border-color 0.15s;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button.preset.active { border-color: var(--accent); color: var(--accent); }
+button.primary { background: var(--accent); color: #07121f; border-color: var(--accent); font-weight: 600; }
+button.approve { background: var(--hold); color: #221701; border-color: var(--hold); font-weight: 600; }
+
+/* --------------------------------------------------- system cards */
+
+.systems { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.syscard { display: flex; flex-direction: column; }
+.syscard.governed { border-color: #2f4468; box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.14); }
+.syscard header { padding: 13px 16px 10px; border-bottom: 1px solid var(--line); }
+.syscard h3 { margin: 0; font-size: 14px; letter-spacing: 0.04em; }
+.syscard .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.syscard .rows { padding: 6px 16px 14px; }
+
+.row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; font-size: 12.5px; border-bottom: 1px dashed rgba(38, 49, 77, 0.55); }
+.row:last-child { border-bottom: none; }
+.row .k { color: var(--muted); white-space: nowrap; }
+.row .v { font-family: var(--mono); text-align: right; word-break: break-word; }
+/* An architecture that cannot produce a field shows a dash. Hiding the
+   row instead would erase the comparison the screen exists to make. */
+.row.absent .v { color: var(--dim); }
+
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; font-family: var(--mono); }
+.pill.allow { background: rgba(52, 211, 153, 0.15); color: var(--allow); }
+.pill.hold  { background: rgba(251, 191, 36, 0.15); color: var(--hold); }
+.pill.deny  { background: rgba(248, 113, 113, 0.15); color: var(--deny); }
+.pill.none  { background: rgba(95, 109, 140, 0.15); color: var(--dim); }
+
+.findings { margin: 8px 16px 0; padding: 8px 10px; border-radius: 6px; background: rgba(248, 113, 113, 0.09); border: 1px solid rgba(248, 113, 113, 0.28); }
+.findings .f { font-family: var(--mono); font-size: 11.5px; color: var(--deny); }
+
+/* ------------------------------------------------------ erp state */
+
+.erp { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; padding: 14px 16px 16px; }
+.erp-col h4 { margin: 0 0 7px; font-size: 12px; color: var(--muted); font-weight: 500; }
+.erp-box { background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; font-family: var(--mono); font-size: 12px; min-height: 74px; }
+.erp-delta { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+.erp-delta.changed { color: var(--hold); }
+.erp-delta.same { color: var(--allow); }
+.verified { font-size: 11px; color: var(--dim); margin-top: 8px; font-style: italic; }
+
+/* --------------------------------------------------------- tables */
+
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); }
+th { color: var(--dim); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+td.mono, th.mono { font-family: var(--mono); }
+.ok { color: var(--allow); font-weight: 700; }
+.no { color: var(--deny); font-weight: 700; }
+
+/* ------------------------------------------------------- evidence */
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 12px; padding: 14px 16px 16px; }
+.evcard { background: var(--panel-2); border: 1px solid var(--line); border-left-width: 3px; border-radius: 8px; padding: 12px 13px; cursor: pointer; }
+.evcard.supported { border-left-color: var(--allow); }
+.evcard.not-supported { border-left-color: var(--deny); }
+.evcard .t { font-size: 12px; color: var(--muted); }
+.evcard .figure { font-family: var(--mono); font-size: 21px; margin: 6px 0 3px; }
+.evcard .state { font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em; }
+.evcard.supported .state { color: var(--allow); }
+.evcard.not-supported .state { color: var(--deny); }
+
+.drill { padding: 12px 16px 16px; border-top: 1px solid var(--line); }
+.drill dl { display: grid; grid-template-columns: 190px 1fr; gap: 5px 14px; margin: 0; font-size: 12.5px; }
+.drill dt { color: var(--muted); }
+.drill dd { margin: 0; font-family: var(--mono); }
+
+.timeline { padding: 8px 16px 16px; }
+.tl-row { display: grid; grid-template-columns: 78px 190px 1fr; gap: 12px; padding: 4px 0; font-size: 12.5px; }
+.tl-row .at { font-family: var(--mono); color: var(--dim); }
+.tl-row .detail { font-family: var(--mono); color: var(--muted); }
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.note { padding: 10px 16px 14px; color: var(--muted); font-size: 12.5px; }
+.warn-banner {
+  margin: 0 16px 14px; padding: 10px 13px; border-radius: 7px; font-size: 12.5px;
+  background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3);
+}
+.error { color: var(--deny); padding: 14px 16px; font-family: var(--mono); font-size: 12.5px; }
+
+/* Permanent, never conditional (spec §23). */
+.footer {
+  border-top: 1px solid var(--line); padding: 9px 28px;
+  color: var(--dim); font-size: 11.5px; display: flex; justify-content: space-between;
+}
