@@ -108,7 +108,7 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 # into the frozen v2.1 manifest and into every table of the published
 # confirmatory report. Editing one -- even to satisfy a linter, even to
 # change a comment -- breaks `verify_code_freeze` and invalidates the
-# 21.460-observation campaign. These are the rules the frozen files
+# 21,478-observation campaign. These are the rules the frozen files
 # happen to trip; they are suppressed here rather than "fixed", and the
 # suppressions must not be extended to any unfrozen file.
 [tool.ruff.lint.per-file-ignores]
