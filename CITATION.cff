@@ -1,35 +1,39 @@
 cff-version: 1.2.0
 title: >-
-  ERP Agent OS: diseño y evaluación experimental de un sistema de
-  recuperación y ejecución segura de skills reutilizables para la
-  automatización de procesos ERP mediante agentes de inteligencia
-  artificial
+  ERP Agent OS: diseño y evaluación experimental de una arquitectura para la
+  recuperación, ejecución y evolución gobernada de skills en sistemas ERP
+  mediante agentes de inteligencia artificial
 message: >-
-  Si utilizas este software, el dataset ERP-Skills-Bench o sus
-  resultados experimentales, cítalo mediante estos metadatos.
+  Si utilizas el software, ERP-Skills-Bench, la campaña confirmatoria o sus
+  resultados experimentales, cita este repositorio mediante estos metadatos.
 type: software
 authors:
   - family-names: Gelpi Moreno
     given-names: Jairo
 repository-code: https://github.com/Jairogelpi/erp_skills
 abstract: >-
-  Arquitectura que separa la interpretación probabilística de un modelo
-  de lenguaje de la ejecución determinista de operaciones ERP: registro
-  de skills versionadas, recuperación semántica, validación de esquema
-  y precondiciones, motor de políticas con taxonomía de riesgo R0-R4,
-  aprobación humana, idempotencia, verificación de postcondiciones y
-  auditoría append-only. Incluye ERP-Skills-Bench (480 peticiones
-  sintéticas anotadas, split de test congelado por hash) y un protocolo
-  emparejado de 1.080 ejecuciones que compara un agente directo, un
-  agente con herramientas tipadas y el sistema gobernado.
+  ERP Agent OS estudia dónde situar la frontera de autoridad entre un modelo de
+  lenguaje probabilístico y un sistema ERP determinista. La arquitectura usa
+  skills versionadas, validación estructural, clasificación de riesgo, políticas,
+  aprobación humana, ejecución idempotente, verificación de postcondiciones y
+  auditoría append-only. La campaña confirmatoria vigente, congelada como
+  tfm-protocol-v2.1.2, contiene 21.478 observaciones reales y compara tres
+  arquitecturas: agente directo (A), herramientas tipadas (B) y ERP Agent OS
+  gobernado (C). H1a, H2, H3a, H6 y H7 resultaron soportadas; H1b, H4 y H5 no
+  resultaron soportadas. La integración con Odoo 19 se valida aparte como
+  demostración de factibilidad sobre una rama Development con datos demo y no
+  constituye una réplica confirmatoria del benchmark.
 keywords:
   - LLM agents
   - ERP automation
+  - AI governance
   - agent governance
+  - Odoo
   - prompt injection
   - semantic retrieval
   - selective prediction
+  - reproducible research
   - paired experimental design
 license: MIT
-version: 1.0.0
-date-released: '2026-08-11'
+version: 0.1.0
+date-released: '2026-08-23'
