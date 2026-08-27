@@ -8,7 +8,7 @@ Leyenda: ✅ grabado · ⏳ pendiente · 🔜 siguiente
 
 ---
 
-## 0. Intro — de dónde viene esto *(0:00–0:35)* — ✅ GRABADO
+## 0. Intro — de dónde viene esto *(0:00–0:35)* — ⏳ REGRABAR (frase final)
 
 **Pantalla:** a cámara, o diapositiva con el título del proyecto. No se
 ejecuta ningún comando.
@@ -24,29 +24,48 @@ ejecuta ningún comando.
 > Cada vez más empresas conectan agentes de IA directamente a su ERP —
 > SAP, Salesforce, Odoo. Para este TFM elegí Odoo: es de código
 > abierto, tiene una API real y documentada, y permite comprobar
-> exactamente qué pasa dentro cuando algo se ejecuta. Nada de lo que van
-> a ver es una simulación.
+> exactamente qué pasa dentro cuando algo se ejecuta.
+
+**Por qué se cambió (2026-08-27):** la frase grabada terminaba con
+"Nada de lo que van a ver es una simulación" — falso, la escena 2
+contrasta A y C con `FakeERP` (en memoria, sin red, sin Odoo) a
+propósito, precisamente para aislar la comparación de ruido de red.
+Se corta sin más: la frase anterior ya cierra el párrafo sola y de
+paso acorta el intro, que es uno de los candidatos de recorte de más
+abajo. **Solo hay que regrabar el final de esta toma** (la última
+frase, no la toma entera) para que el audio deje de decir esa línea.
 
 ---
 
-## 1. El problema *(0:35–0:55)* — ✅ GRABADO
+## 1. El problema *(0:35–0:55)* — ⏳ REGRABAR (una frase)
 
 **Qué se hizo:** `scripts/stage_video_shot1.py --before` creó en Odoo
 (id=2, "Hoteles Camino (DEMO)") una oportunidad a 15.000 €; se grabó el
 plano. Luego `--after` la cambió a 27.600 €; se grabó el segundo plano
-tras refrescar.
+tras refrescar. **Es un cambio hecho a mano por el script de staging,
+no por un agente** — la prueba real de que un agente sin control lo
+haría es la escena 2, no esta.
 
 **Narración:**
 
-> Esta es una oportunidad real en Odoo: quince mil euros. Y esta es la
-> misma, después de que un agente sin control la tocara: veintisiete mil
+> Esta es una oportunidad real en Odoo: quince mil euros. Y esto es lo
+> que puede pasar si un agente sin control la toca: veintisiete mil
 > seiscientos.
 >
 > No es una respuesta incorrecta de un chat. Es un asiento contable. Y
 > alguien tiene que responder por él.
 
-**Nota:** no afirma que un agente lo cambió — eso lo prueba la escena 2.
-Es solo el planteamiento del riesgo.
+**Por qué se cambió (2026-08-27):** la frase grabada decía "esta es la
+misma, **después de que** un agente sin control la tocara" — afirma
+como hecho algo que en esta toma es staging manual (`stage_video_shot1.py`),
+no la acción de un agente. La propia nota de este documento ya lo
+reconocía ("no afirma que un agente lo cambió") pero la narración
+grabada sí lo afirmaba — contradicción entre lo que se dice y lo que
+se hace. "Lo que **puede pasar si**..." plantea el riesgo sin mentir
+sobre el origen del cambio; la escena 2, inmediatamente después, es la
+que de verdad lo demuestra con los dos sistemas en paralelo. **Solo
+hay que regrabar esa frase**, el resto de la toma (el plano de Odoo)
+no cambia.
 
 ---
 
@@ -424,8 +443,8 @@ en la defensa porque no promete detección, solo reparto de autoridad.
 
 | # | Toma | Estado |
 |---|---|---|
-| 0 | Intro | ✅ grabado |
-| 1 | El problema | ✅ grabado |
+| 0 | Intro | ⏳ regrabar frase final |
+| 1 | El problema | ⏳ regrabar 1 frase |
 | 2 | Agente sin gobierno | ✅ grabado |
 | 3 | Arquitectura | ✅ imagen generada |
 | 4 | Skill Studio | ✅ grabado |
