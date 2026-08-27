@@ -107,6 +107,10 @@ pasa a `ACTIVE`.
 > forma parte de las ocho hipótesis que mido con datos — es una
 > demostración de producto. Pero el principio es el mismo de todo el
 > proyecto: el modelo propone, un humano con nombre decide.
+>
+> Esto que van a ver ahora en Odoo real — cambiar el importe de una
+> oportunidad — es exactamente el destino final de una skill nacida
+> así en Skill Studio, una vez un ingeniero le conecta el handler.
 
 ---
 
