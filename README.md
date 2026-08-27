@@ -306,7 +306,7 @@ These limitations are part of the result, not backlog items hidden from the eval
 The version submitted as the Trabajo Fin de Máster corresponds to commit:
 
 ```text
-e930c7d2ca07bcde7d02c580bd8ee458b3e65eec
+32e675bfd7ca1f7d7dfff8fb8bc6684093125ab7
 ```
 
 Verified from a clean clone of that commit: `ruff check .`, `mypy src` and
@@ -314,6 +314,10 @@ Verified from a clean clone of that commit: `ruff check .`, `mypy src` and
 `CLOSURE_VALID` against the frozen `tfm-protocol-v2.1.2` artifacts. Any
 commit after this one is post-delivery work and is not covered by the
 submitted memoria.
+
+*(Superseded `e930c7d2ca07bcde7d02c580bd8ee458b3e65eec` — same closure
+result, this one additionally fixes two overclaiming lines in the video
+script's narration; see `docs/GUION-DEFINITIVO.md`.)*
 
 ---
 
