@@ -201,8 +201,18 @@ confirmadas en azul, no confirmadas en rojo.
 > nuevas sin escribir código, y se aprovecha de todo lo que acabo de
 > enseñar: control, verificación y auditoría reales.
 >
-> El modelo propone. El contrato decide. Y cuando el modelo falla del
-> todo, el contrato sigue decidiendo.
+> ERP Agent OS no intenta hacer infalible al modelo. Intenta que una
+> operación empresarial no dependa únicamente de que el modelo acierte.
+> El modelo propone; la organización conserva la autoridad.
+
+---
+
+> **Este documento quedó SUPERSEDIDO por `docs/GUION-DEFINITIVO.md`**,
+> que fusiona narración + comando + plan de rodaje en un único fichero
+> de rodaje (evita que guion, plan y grabación diverjan, que es
+> precisamente lo que pasaba antes de fusionarlos). Se conserva aquí
+> como referencia histórica de la narración palabra por palabra; para
+> grabar, usar solo `GUION-DEFINITIVO.md`.
 
 ---
 

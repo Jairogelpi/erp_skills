@@ -1,5 +1,11 @@
 # Plan de rodaje: qué grabar exactamente
 
+> **SUPERSEDIDO por `docs/GUION-DEFINITIVO.md`** — fusiona este plan y
+> `video-guion.md` en un único documento de rodaje, para que no puedan
+> volver a divergir guion/plan/grabación entre sí. Se conserva aquí
+> como referencia de preparación de entorno y tiempos medidos; para
+> rodar, seguir `GUION-DEFINITIVO.md`.
+
 Complementa `docs/video-guion.md` (la narración). Esto es la lista de
 tomas: **qué comando, cuánto tarda de verdad, qué se ve en pantalla**.
 Los tiempos están medidos en esta máquina, no estimados.

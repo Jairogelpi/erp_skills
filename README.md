@@ -301,6 +301,22 @@ These limitations are part of the result, not backlog items hidden from the eval
 
 ---
 
+## TFM delivery freeze
+
+The version submitted as the Trabajo Fin de Máster corresponds to commit:
+
+```text
+e930c7d2ca07bcde7d02c580bd8ee458b3e65eec
+```
+
+Verified from a clean clone of that commit: `ruff check .`, `mypy src` and
+`pytest` (895/895) pass, and `make verify-tfm-closure` reports
+`CLOSURE_VALID` against the frozen `tfm-protocol-v2.1.2` artifacts. Any
+commit after this one is post-delivery work and is not covered by the
+submitted memoria.
+
+---
+
 ## Citation
 
 Citation metadata is provided in [`CITATION.cff`](CITATION.cff). GitHub can generate a formatted citation directly from that file.

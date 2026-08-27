@@ -105,6 +105,18 @@ No. Puede proponer una definición, pero `DRAFT -> ACTIVE` está prohibido. La p
 
 Prioridad 1: cerrar H4 y volver a medir. Después: mejorar retrieval con descripciones/ejemplos reales, ampliar handlers de Odoo (actualmente 2/12), cablear persistencia a la API, autenticación/multi-tenant, UX de aprobación y auditoría resistente a manipulación.
 
+### «¿Cuál es exactamente tu aportación original?»
+
+No introducir individualmente tool calling, contratos, aprobación humana, control de acceso o auditoría — eso ya existe en distintos sistemas y líneas de investigación (MCP, Agent Skills, marcos de riesgo). La aportación es integrarlos como una única frontera de autoridad sobre operaciones ERP, y sobre todo la evaluación experimental de qué propiedades aporta esa frontera frente a un agente directo (A) y frente a herramientas tipadas (B), con protocolo confirmatorio prerregistrado.
+
+### «¿Por qué debería existir C si B tiene casi la misma tasa de éxito?»
+
+Porque el éxito de tarea (STSR) no es la única propiedad que importa en un ERP. H2 y H3a muestran que C es más barato en tokens y más estable ante paráfrasis que B; H7 muestra que su auditoría se reconstruye con mayor completitud. B no tiene catálogo versionado, política de riesgo explícita, aprobación humana con actor ni ciclo de evolución gobernada — son propiedades de ingeniería y gobierno, no solo de acierto puntual. C no gana en éxito; gana en lo que pasa alrededor de cada decisión.
+
+### «Si H4 falla, ¿por qué una empresa debería usar esto?»
+
+Porque la evidencia no justifica desplegar C tal cual como solución de seguridad. Sí justifica varias propiedades de ingeniería —coste, estabilidad, abstención, auditabilidad y confinamiento acotado— e identifica H4/H5 como requisitos que deben cerrarse antes de una productivización de alto riesgo.
+
 ## Regla final
 
 Si una pregunta del tribunal intenta llevar la respuesta más lejos que la evidencia, volver a la formulación exacta: **“en ERP-Skills-Bench-Proc v2.1, bajo el modelo, catálogo, políticas y condiciones registradas...”**. Esa precisión fortalece la defensa; no la debilita.

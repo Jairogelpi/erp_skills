@@ -395,8 +395,28 @@ benchmark):**
 
 **Pantalla:** frase única sobre fondo limpio.
 
-> El modelo propone. El contrato decide. Y cuando el modelo falla del
-> todo, el contrato sigue decidiendo.
+**Narración:**
+
+> Y esto no se queda en un experimento. El producto real es un sitio
+> donde cualquier empresario, en lenguaje natural, trabaja con un
+> agente de inteligencia artificial sobre su ERP, crea automatizaciones
+> nuevas sin escribir código, y se aprovecha de todo lo que acabo de
+> enseñar: control, verificación y auditoría reales.
+>
+> ERP Agent OS no intenta hacer infalible al modelo. Intenta que una
+> operación empresarial no dependa únicamente de que el modelo acierte.
+> El modelo propone; la organización conserva la autoridad.
+
+Sin comando que ejecutar — es el plano más simple de todo el vídeo.
+
+**Por qué se cambió el cierre (2026-08-27):** la frase anterior — "y
+cuando el modelo falla del todo, el contrato sigue decidiendo" — es
+memorable pero suena a garantía general de seguridad. H4 (19,0% de
+mutación no autorizada sobre 315 escenarios peligrosos) demuestra que
+NO es así en el caso ambiguo; solo el stress test de confinamiento
+(0/1.530) sostiene esa frase, y ahí el modelo está comprometido del
+todo, no "fallando un poco". La nueva frase es más difícil de atacar
+en la defensa porque no promete detección, solo reparto de autoridad.
 
 ---
 
@@ -414,29 +434,39 @@ benchmark):**
 | 7 | Valor y límite | ✅ grabado |
 | 8 | Cierre | ⏳ pendiente |
 
----
+**Timing:** ≈**6:12** a ritmo normal contando las dos secciones "8.
+Cierre" que había duplicadas (bug de este documento, corregido en esta
+misma revisión: quedaba un cierre corto sin el párrafo de producto y
+otro con él — ahora hay uno solo, el largo, con la frase de cierre
+nueva). Sigue por encima del límite duro de 5:00 — hace falta recortar
+un tramo entero en montaje, no solo palabras sueltas (ver candidatos de
+recorte más abajo).
 
-## 8. Cierre *(4:45–5:05)* — ⏳ pendiente
+**Candidatos de recorte, en este orden** (no tocar la sección 6, "Los
+números" — es la que decide el vídeo):
 
-**Pantalla:** frase única sobre fondo limpio.
+1. **Escena 0 (Intro, 0:00–0:35)** — recortar a ~15s: quitar la frase
+   "un importe que cambia solo, un pedido confirmado que no debía
+   confirmarse, un registro duplicado que nadie detecta..." (tres
+   ejemplos, uno basta) y abrir directamente sobre Odoo/producto en
+   pantalla en vez de cámara/diapositiva de título — así se cumple de
+   paso el punto de la spec de producto de mostrar algo del producto en
+   los primeros ~10-15s, que ahora mismo no se cumple (la intro es solo
+   título, el producto no aparece hasta la escena 1 a los 0:35).
+2. **Escena 7 (Valor y límite, 4:10–4:45)** — quitar la repetición de
+   cifras del benchmark ("cuatrocientas ochenta peticiones... doce
+   capacidades... ocho áreas...") que ya se dieron o se infieren de la
+   escena 6; dejar solo tokens/estabilidad/auditoría + el límite frente
+   a B. Esto también resuelve el punto MEDIA "reducir estadística
+   hablada, no recitar las hipótesis una a una".
+3. Si con 1+2 no basta, recortar la escena 0 más aún (a una sola frase)
+   antes de tocar cualquier otra escena.
 
-**Narración:**
-
-> Y esto no se queda en un experimento. El producto real es un sitio
-> donde cualquier empresario, en lenguaje natural, trabaja con un
-> agente de inteligencia artificial sobre su ERP, crea automatizaciones
-> nuevas sin escribir código, y se aprovecha de todo lo que acabo de
-> enseñar: control, verificación y auditoría reales.
->
-> El modelo propone. El contrato decide. Y cuando el modelo falla del
-> todo, el contrato sigue decidiendo.
-
-Sin comando que ejecutar — es el plano más simple de todo el vídeo.
-
-**Timing:** 931 palabras de narración ≈ **6:12 a ritmo normal**. Muy
-por encima del límite duro de 5:00 — hace falta recortar un tramo
-entero en montaje, no solo palabras sueltas (ver candidatos de recorte
-más abajo).
+Con los recortes 1+2 el guion baja de 931 a ~820 palabras (~5:28) —
+sigue sin llegar a 5:00 exactos con voz normal; el margen final se
+gana en el montaje (ritmo de habla, cortes secos entre tomas) más que
+recortando más texto, porque cualquier tramo restante ya es evidencia
+que el propio documento marca como "no recortar".
 
 **Notas de producción completas** (encoding, riesgos, qué no decir):
 ver `docs/video-plan-rodaje.md` y la sección final de
