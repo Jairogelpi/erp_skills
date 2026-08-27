@@ -31,6 +31,7 @@ from erp_agent_os.demo_models import (
     TimelineResponse,
 )
 from erp_agent_os.demo_service import DemoRun, DemoService, presets
+from erp_agent_os.product_demo_api import register_product_routes
 
 DEMO_DISCLAIMER = (
     "Demo behavior is illustrative. Statistical claims come from the "
@@ -72,6 +73,12 @@ def create_demo_app() -> FastAPI:
         allow_headers=["*"],
     )
     service = DemoService()
+    # Skills Catalog, Skill Studio, live Odoo Operations, unified
+    # Approvals/Audit -- same app, same port, so there is exactly one
+    # server to reason about (SPEC v2 §14: no second Odoo connection
+    # path). Everything Odoo/LLM-dependent in there builds lazily and
+    # answers 503 rather than crashing this app's own boot.
+    register_product_routes(app)
 
     def _get(request_id: str) -> DemoRun:
         try:

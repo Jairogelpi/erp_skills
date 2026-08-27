@@ -40,11 +40,16 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 
 from erp_agent_os.adapters import FakeERPAdapter
-from erp_agent_os.registry import SqlSkillRegistry, create_registry_schema
+from erp_agent_os.registry import (
+    DuplicateSkillError,
+    SqlSkillRegistry,
+    create_registry_schema,
+)
 from erp_agent_os.skill_proposal import (
     ProposalRejected,
     approve_and_activate,
     propose_skill,
+    validate_proposal,
 )
 from erp_agent_os.skills import SkillDefinition
 
@@ -181,15 +186,106 @@ def draft_skill_contract(description: str, *, api_key: str) -> dict[str, Any]:
     return payload
 
 
+_VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
+
+
+def bump_minor_version(version: str) -> str:
+    """`1.0.0` -> `1.1.0`. A malformed version (the model drifted from the
+    schema) falls back to `1.1.0` rather than raising here -- the contract
+    still goes through `SkillDefinition`'s own strict validator downstream,
+    which is the one place a bad version is actually a rejection."""
+    match = _VERSION_RE.match(version)
+    if not match:
+        return "1.1.0"
+    major, minor, _patch = match.groups()
+    return f"{major}.{int(minor) + 1}.0"
+
+
+_MODIFY_SYSTEM_PROMPT = """\
+Eres un asistente que edita contratos de "skill" para un sistema ERP
+gobernado. Recibes el contrato JSON ACTUAL de una skill y una instruccion
+en lenguaje natural que describe UN cambio. Devuelves EXCLUSIVAMENTE el
+JSON COMPLETO del contrato modificado, con la misma forma exacta que el
+contrato de entrada, sin texto adicional, sin markdown.
+
+Reglas estrictas:
+- Aplica SOLO el cambio pedido en la instruccion. Todo lo demas del
+  contrato debe quedar exactamente igual que el original.
+- "skill_id" nunca cambia -- copialo tal cual del contrato original.
+- No cambies "version" -- el sistema la actualiza por su cuenta.
+- "risk_class" nunca puede ser "R4".
+- "execution.handler" es siempre literalmente "demo_proposals.generic_create".
+- No inventes campos fuera de los que el contrato original o la
+  instruccion describen.
+- Escribe TODOS los valores de texto SIN tildes ni enes con virgulilla,
+  por la misma limitacion conocida del modelo a traves de este proveedor
+  descrita para el prompt de creacion.
+"""
+
+
+def draft_skill_modification(
+    current_contract: dict[str, Any], instruction: str, *, api_key: str
+) -> dict[str, Any]:
+    """LLM edits an existing contract from one natural-language instruction.
+
+    `skill_id` and `version` are enforced here, not merely requested of the
+    model: an LLM that drifted the identity of the skill it is editing, or
+    picked its own version number, would silently break the "this is a new
+    version of the SAME skill" invariant the rest of the pipeline (and the
+    diff shown to the human) depends on.
+    """
+    user_prompt = (
+        "Contrato actual (JSON):\n"
+        + json.dumps(current_contract, ensure_ascii=False)
+        + "\n\nInstruccion de modificacion:\n"
+        + instruction
+    )
+    content = _llm_complete(_MODIFY_SYSTEM_PROMPT, user_prompt, api_key=api_key)
+    payload = _extract_json(content)
+    payload["skill_id"] = current_contract["skill_id"]
+    payload["version"] = bump_minor_version(str(current_contract.get("version", "")))
+    payload.setdefault("execution", {})
+    payload["execution"]["handler"] = "demo_proposals.generic_create"
+    payload["state"] = "DRAFT"
+    return payload
+
+
+def diff_contract(old: dict[str, Any], new: dict[str, Any]) -> list[dict[str, Any]]:
+    """Field-level diff between two skill contracts, computed once here so
+    the same diff is what gets shown and what gets applied -- the frontend
+    never re-derives it from two JSON blobs of its own.
+
+    Deliberately flat: it compares top-level keys by equality rather than
+    walking into nested dicts/lists field by field. A skill contract is not
+    deep enough that a coarser diff loses something a human reviewing "what
+    changed" would need -- and a nested diff invites exactly the kind of
+    speculative generality this demo does not need.
+    """
+    entries: list[dict[str, Any]] = []
+    for key in sorted(set(old) | set(new)):
+        if key in ("skill_id", "state"):
+            continue  # identity/lifecycle, not a content change to show
+        before, after = old.get(key), new.get(key)
+        if before != after:
+            entries.append({"field": key, "before": before, "after": after})
+    return entries
+
+
+_NAME_LIKE_FIELD = re.compile(r"(client|cliente|customer|name|nombre)", re.IGNORECASE)
+_ID_LIKE_FIELD = re.compile(r"id$", re.IGNORECASE)
+
+
 def synthesize_sample_arguments(input_schema: dict[str, Any]) -> dict[str, Any]:
     """Fabricate one plausible value per required field, so the sandbox
     test (CU-02 step 4, "se ejecutan sus tests") has something to run
     against without asking a human to type throwaway test data by hand.
 
-    Deliberately dumb and type-driven (never touches the LLM): a
-    fabricated value only has to satisfy the schema's own type, because
-    what the sandbox test is actually checking is "does the handler
-    honor its declared postconditions", not "is this realistic data".
+    Type-driven, never touches the LLM: what the sandbox test actually
+    checks is "does the handler honor its declared postconditions", not
+    "is this realistic data" -- correctness never depended on the exact
+    string chosen. The field-name heuristic below exists only so the
+    sandbox result reads as a real business record on camera instead of
+    the literal words "valor de prueba"; it is cosmetic, not semantic.
     """
     properties = input_schema.get("properties", {})
     sample: dict[str, Any] = {}
@@ -199,6 +295,10 @@ def synthesize_sample_arguments(input_schema: dict[str, Any]) -> dict[str, Any]:
             sample[field] = 1
         elif field_type == "boolean":
             sample[field] = True
+        elif _NAME_LIKE_FIELD.search(field):
+            sample[field] = "Hotel Miramar"
+        elif _ID_LIKE_FIELD.search(field):
+            sample[field] = "1042"
         else:
             sample[field] = "valor de prueba"
     return sample
@@ -236,6 +336,50 @@ class SkillAdmin:
         self._registry = SqlSkillRegistry(engine)
         self._proposals: list[tuple[str, str]] = []  # (skill_id, version)
 
+    @property
+    def registry(self) -> SqlSkillRegistry:
+        """Read-only access to the proposals-only registry, for a caller
+        (the unified Approvals/Audit views) that needs a proposal's
+        transition history, not just its current description."""
+        return self._registry
+
+    @property
+    def proposal_ids(self) -> list[tuple[str, str]]:
+        """Every (skill_id, version) proposed this process, oldest first."""
+        return list(self._proposals)
+
+    def _sandbox_preview(
+        self, skill: SkillDefinition, sample_arguments: dict[str, Any]
+    ) -> dict[str, Any]:
+        """What this specific skill really did, per its own handler --
+        not a simulation and not an LLM guess. Creates a record in a
+        throwaway sandbox and **reads it back independently**, the same
+        discipline `odoo_governed_demo.py` and `stage_video_shot1.py`
+        use against real Odoo: a write's own return value is never
+        trusted on its own.
+
+        Separate from `propose_skill`'s own sandbox pass (which only
+        needs pass/fail, via `run_in_sandbox`) -- this one exists purely
+        to have a record to show, and skill_id/version are already
+        registered by the time this runs, so a second throwaway create
+        here changes nothing about the skill's lifecycle.
+        """
+        erp = FakeERPAdapter(allowed_models={"demo_proposals"})
+        try:
+            record_id = generic_create_handler(erp, sample_arguments)
+            record = erp.get("demo_proposals", record_id)
+        except Exception as exc:  # noqa: BLE001 - a crash is a real result to show
+            return {
+                "passed": False,
+                "detail": f"{type(exc).__name__}: {exc}",
+                "created_record": None,
+            }
+        return {
+            "passed": True,
+            "detail": "created and read back independently",
+            "created_record": record,
+        }
+
     def propose(
         self, payload: dict[str, Any], sample_arguments: dict[str, Any]
     ) -> dict[str, Any]:
@@ -255,9 +399,32 @@ class SkillAdmin:
             )
         except ProposalRejected as exc:
             raise SkillAdminError(str(exc)) from exc
+        except DuplicateSkillError:
+            # Testing the same (skill_id, version) twice -- clicking
+            # "Validate + sandbox test" again without having changed
+            # anything -- is a harmless retry, not a real error: it is
+            # the same "same key, same result" idempotency this project
+            # already applies to skill execution (Runtime's own replay),
+            # here applied to the demo's own click-twice case. Only a
+            # genuinely different contract under the same version stays
+            # a real error, surfaced below.
+            existing = self._describe(payload["skill_id"], payload["version"])
+            if existing["description"] != payload.get("description"):
+                raise SkillAdminError(
+                    f"{payload['skill_id']}@{payload['version']} was already "
+                    "tested this session with a different contract -- bump "
+                    "the version to test this edit."
+                ) from None
+            skill = validate_proposal(payload)
+            existing["sandbox_preview"] = self._sandbox_preview(
+                skill, sample_arguments
+            )
+            return existing
 
         self._proposals.append((skill.skill_id, skill.version))
-        return self._describe(skill.skill_id, skill.version)
+        described = self._describe(skill.skill_id, skill.version)
+        described["sandbox_preview"] = self._sandbox_preview(skill, sample_arguments)
+        return described
 
     def approve(self, skill_id: str, version: str, *, approver: str) -> dict[str, Any]:
         # skill_proposal.approve_and_activate does APPROVED -> ACTIVE in
@@ -297,3 +464,61 @@ class SkillAdmin:
                 for h in history
             ],
         }
+
+
+# --- approval-condition evaluator: Skill Studio product demo only ---------
+#
+# `approval_required_when` (skills.py) is free text nobody in the real
+# system reads -- neither the frozen 12-skill catalog nor `policy.py`
+# (the engine System C actually uses, measured by the confirmatory
+# campaign) evaluates it; it decides purely by `risk_class`. That gap is
+# real, by design, and this evaluator does not close it: it is a small,
+# self-contained feature that lets Skill Studio show what evaluating a
+# condition *could* look like, entirely inside the proposals-only lane
+# (never wired into `policy.py`, `system_c.py`, `Runtime`, or the frozen
+# `CATALOG`). Deliberately toy-simple: it recognises one shape of
+# condition -- "más de/mayor a/supera N <algo>" -- and nothing else.
+#
+# ponytail: regex threshold parsing, no real NLU. Upgrade path if this
+# ever needs to be honest about more than a demo: a proper condition
+# grammar (comparison operators, field references) evaluated against
+# real ERP state before execution -- exactly the "needs a new component"
+# scope this module's docstring already declines to build.
+
+_THRESHOLD_RE = re.compile(
+    r"(?:m[aá]s de|mayor(?:es)? (?:a|que)|supera(?:n)?|excede(?:n)?|>\s*)\s*(\d+)",
+    re.IGNORECASE,
+)
+
+
+def parse_threshold(condition: str) -> int | None:
+    """Extract "N" from a condition like "más de 10 oportunidades", or
+    `None` if the text doesn't match this one recognised shape."""
+    match = _THRESHOLD_RE.search(condition)
+    return int(match.group(1)) if match else None
+
+
+def evaluate_approval_conditions(
+    conditions: list[str], affected_count: int
+) -> dict[str, Any]:
+    """Would any of these free-text conditions require approval for an
+    action affecting `affected_count` records?
+
+    Returns which conditions matched (a parsed threshold exceeded by
+    `affected_count`) and which the parser could not understand at all --
+    the latter is shown to the user honestly rather than silently
+    treated as "no approval needed".
+    """
+    matched: list[str] = []
+    unparsed: list[str] = []
+    for condition in conditions:
+        threshold = parse_threshold(condition)
+        if threshold is None:
+            unparsed.append(condition)
+        elif affected_count > threshold:
+            matched.append(condition)
+    return {
+        "requires_approval": bool(matched),
+        "matched_conditions": matched,
+        "unparsed_conditions": unparsed,
+    }

@@ -41,12 +41,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from skill_admin import (
-    SkillAdmin,
-    SkillAdminError,
-    draft_skill_contract,
-    synthesize_sample_arguments,
-)
 
 from erp_agent_os import odoo_handlers
 from erp_agent_os.approval import ApprovalService
@@ -58,6 +52,12 @@ from erp_agent_os.openrouter_client import MissingApiKeyError, OpenRouterClient
 from erp_agent_os.parser import structure_proposal
 from erp_agent_os.retrieval import TfidfRetriever
 from erp_agent_os.runtime import Runtime
+from erp_agent_os.skill_admin import (
+    SkillAdmin,
+    SkillAdminError,
+    draft_skill_contract,
+    synthesize_sample_arguments,
+)
 from erp_agent_os.system_c import SystemC
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")

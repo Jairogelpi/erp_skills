@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "./api/client";
 import { ApprovalPanel } from "./components/ApprovalPanel";
+import { ApprovalsCenter, AuditCenter } from "./components/ApprovalsAndAudit";
 import { AuditComparisonTable, AuditTimeline } from "./components/AuditTimeline";
 import { ErpStatePanel } from "./components/ErpStatePanel";
 import { EvidencePanel } from "./components/EvidencePanel";
@@ -9,7 +10,10 @@ import {
   ParaphrasePanel,
 } from "./components/ExperimentScorecard";
 import { Header, RequestComposer } from "./components/Header";
+import { Operations } from "./components/Operations";
 import { SafetyPanel } from "./components/SafetyPanel";
+import { SkillsCatalog } from "./components/SkillsCatalog";
+import { SkillStudio } from "./components/SkillStudio";
 import { SystemCard } from "./components/SystemCard";
 import type {
   ApprovalGrant,
@@ -22,10 +26,17 @@ import type {
   TimelineEvent,
 } from "./types/demo";
 
-type Tab = "live" | "evidence";
+type Tab =
+  | "operations"
+  | "skills"
+  | "studio"
+  | "approvals"
+  | "audit"
+  | "evidence"
+  | "compare";
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("live");
+  const [tab, setTab] = useState<Tab>("operations");
   const [presets, setPresets] = useState<Preset[]>([]);
   const [evidence, setEvidence] = useState<Evidence | null>(null);
   const [evidenceError, setEvidenceError] = useState<string | null>(null);
@@ -131,16 +142,46 @@ export default function App() {
 
       <nav className="tabs">
         <button
-          className={`tab ${tab === "live" ? "active" : ""}`}
-          onClick={() => setTab("live")}
+          className={`tab ${tab === "operations" ? "active" : ""}`}
+          onClick={() => setTab("operations")}
         >
-          Live comparison
+          Operations
+        </button>
+        <button
+          className={`tab ${tab === "skills" ? "active" : ""}`}
+          onClick={() => setTab("skills")}
+        >
+          Skills
+        </button>
+        <button
+          className={`tab ${tab === "studio" ? "active" : ""}`}
+          onClick={() => setTab("studio")}
+        >
+          Skill Studio
+        </button>
+        <button
+          className={`tab ${tab === "approvals" ? "active" : ""}`}
+          onClick={() => setTab("approvals")}
+        >
+          Approvals
+        </button>
+        <button
+          className={`tab ${tab === "audit" ? "active" : ""}`}
+          onClick={() => setTab("audit")}
+        >
+          Audit
         </button>
         <button
           className={`tab ${tab === "evidence" ? "active" : ""}`}
           onClick={() => setTab("evidence")}
         >
-          Experimental evidence
+          Evidence
+        </button>
+        <button
+          className={`tab ${tab === "compare" ? "active" : ""}`}
+          onClick={() => setTab("compare")}
+        >
+          A/B/C Comparison
         </button>
       </nav>
 
@@ -154,7 +195,13 @@ export default function App() {
           </section>
         )}
 
-        {tab === "live" && (
+        {tab === "operations" && <Operations />}
+        {tab === "skills" && <SkillsCatalog />}
+        {tab === "studio" && <SkillStudio />}
+        {tab === "approvals" && <ApprovalsCenter />}
+        {tab === "audit" && <AuditCenter />}
+
+        {tab === "compare" && (
           <>
             <RequestComposer
               presets={presets}
@@ -228,7 +275,8 @@ export default function App() {
       <footer className="footer">
         <span>
           Demo behavior is illustrative. Statistical claims come from the frozen
-          v2.1.2 confirmatory campaign.
+          v2.1.2 confirmatory campaign. Skill generation/evolution is a
+          functional post-core demonstration.
         </span>
         <span>
           {evidence

@@ -198,6 +198,35 @@ def test_write_demos_refuse_production_and_staging(monkeypatch):
             require_development_instance(refused)
 
 
+def test_guard_accepts_local_and_tailscale_hosts(monkeypatch):
+    # A self-hosted Odoo used to record the TFM demo: localhost, a
+    # loopback literal, and a Tailscale CGNAT address (100.64.0.0/10) --
+    # none of these can be the business's real Odoo.sh instance.
+    from erp_agent_os.odoo_client import require_development_instance
+
+    for accepted in (
+        "http://localhost:8069",
+        "http://127.0.0.1:8069",
+        "http://100.94.61.89:8069",
+        "http://192.168.1.5:8069",
+    ):
+        assert require_development_instance(accepted) == accepted
+
+
+def test_guard_still_refuses_a_public_ip_or_domain(monkeypatch):
+    # Accepting local/private hosts must not accidentally accept every
+    # IP literal -- a publicly routable address is refused exactly like
+    # a production domain name.
+    from erp_agent_os.odoo_client import (
+        NotADevelopmentInstanceError,
+        require_development_instance,
+    )
+
+    for refused in ("http://8.8.8.8:8069", "https://some-other-erp.example.com"):
+        with pytest.raises(NotADevelopmentInstanceError):
+            require_development_instance(refused)
+
+
 def test_guard_falls_back_to_the_environment_when_no_url_is_passed(monkeypatch):
     from erp_agent_os.odoo_client import (
         NotADevelopmentInstanceError,

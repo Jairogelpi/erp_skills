@@ -10,10 +10,16 @@ export default defineConfig({
   // this would 404 every /demo call and show "evidence unavailable".
   server: {
     port: 5173,
-    proxy: { "/demo": "http://127.0.0.1:8000" },
+    proxy: {
+      "/demo": "http://127.0.0.1:8000",
+      "/product": "http://127.0.0.1:8000",
+    },
   },
   preview: {
     port: 4173,
-    proxy: { "/demo": "http://127.0.0.1:8000" },
+    proxy: {
+      "/demo": "http://127.0.0.1:8000",
+      "/product": "http://127.0.0.1:8000",
+    },
   },
 });

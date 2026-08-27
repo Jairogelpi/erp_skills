@@ -30,7 +30,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 Con eso puesto, la salida de `demo_completa.py` y `odoo_governed_demo.py`
 sale exactamente como en el guion, sin mojibake.
 
-**Odoo: obligatorio antes de la toma 4.** Este equipo tiene `ODOO_URL`
+**Odoo: obligatorio antes de la toma 5.** Este equipo tiene `ODOO_URL`
 apuntando a **producción** como variable de usuario persistente, y el
 guardián del código lo rechaza (correctamente). Antes de grabar, en la
 misma terminal:
@@ -47,11 +47,24 @@ Verificar que responde antes de rodar, o la toma se cae en directo.
 **Navegador.** Pestaña abierta en la vista de oportunidades (`crm.lead`)
 de la rama de desarrollo, lista para refrescar en cámara.
 
+**App unificada, para la toma de Skill Studio.** Antes de grabar:
+
+```sh
+export OPENROUTER_API_KEY="<la de .env>"
+make demo-product
+```
+
+Esto corre `demo-preflight` primero (si falla, no se graba nada hasta
+arreglarlo) y levanta backend (puerto 8000) + frontend (puerto 5173).
+Abrir `http://localhost:5173`, pestaña **Skill Studio**, y **probar una
+vez** "Generate skill proposal" antes de grabar — si la llamada al LLM
+falla en directo, es mejor descubrirlo ahora que en la toma.
+
 ---
 
-## Las seis tomas
+## Las siete tomas
 
-### Toma 1 — El problema *(0:00–0:30)*
+### Toma 1 — El problema *(0:00–0:25)*
 
 **Pantalla:** navegador, Odoo real. Oportunidad "Renovacion contrato
 anual" de **Hoteles Camino (DEMO)** con 15.000 €. Corte seco. La misma
@@ -86,7 +99,7 @@ número tiene que leerse sin esfuerzo.
 
 ---
 
-### Toma 2 — El agente sin gobierno ejecuta *(0:30–1:00)*
+### Toma 2 — El agente sin gobierno ejecuta *(0:25–0:50)*
 
 **Pantalla:** terminal.
 
@@ -114,7 +127,7 @@ cortes.
 
 ---
 
-### Toma 3 — La arquitectura *(1:00–1:45)*
+### Toma 3 — La arquitectura *(0:50–1:15)*
 
 **Pantalla:** diagrama de las dos zonas. **No es una toma de pantalla**,
 es una diapositiva.
@@ -123,50 +136,148 @@ es una diapositiva.
 redibujado limpio, o el de `docs/architecture.md`. Animación mínima: que
 aparezca primero la zona izquierda, luego la línea, luego la derecha.
 
+**Prompt para generarlo con una IA de imagen/diagrama**, exacto,
+completo, sin de más — solo lo que la narración de esta toma nombra:
+
+```
+Diagrama técnico limpio, estilo diapositiva profesional, fondo blanco,
+horizontal, sin decoración ni iconos genéricos de robots/IA.
+
+Dos zonas rectangulares del mismo tamaño, lado a lado, separadas por
+una línea vertical gruesa en el centro.
+
+ZONA IZQUIERDA, título "MODELO DE LENGUAJE — PROPONE" en la parte
+superior. Dentro, tres cajas apiladas verticalmente conectadas por
+flechas hacia abajo, con estos textos exactos:
+1. "Interpretar la petición"
+2. "Recuperar capacidades conocidas"
+3. "Proponer una acción"
+
+ZONA DERECHA, título "CÓDIGO DETERMINISTA — DECIDE" en la parte
+superior. Dentro, cinco cajas apiladas verticalmente conectadas por
+flechas hacia abajo, con estos textos exactos:
+1. "Validar esquema"
+2. "Comprobar rol"
+3. "Clasificar riesgo"
+4. "Ejecutar (solo handlers registrados)"
+5. "Verificar estado final"
+
+Una única flecha horizontal cruza la línea central desde la caja
+"Proponer una acción" (zona izquierda) hasta la caja "Validar esquema"
+(zona derecha), etiquetada "identificador de skill + argumentos".
+Ninguna otra flecha cruza la línea central.
+
+Arriba de todo, una caja de entrada pequeña con el texto "Petición del
+usuario" con una flecha hacia la caja "Interpretar la petición".
+
+Abajo de todo, a la derecha, una caja de salida pequeña con el texto
+"ERP" con una flecha desde "Verificar estado final".
+
+No añadir ningún otro elemento, icono, color decorativo, logotipo ni
+texto que no esté listado arriba. Paleta: gris oscuro para el texto,
+azul para la zona izquierda, verde para la zona derecha, ambos en tono
+pastel/sobrio, apto para 1920x1080.
+```
+
+Si la IA de imagen no respeta texto exacto (es un problema conocido de
+los generadores de imagen con texto largo), la alternativa fiable es
+pedir el mismo contenido como diagrama Mermaid (`graph TB`) y
+renderizarlo, o dibujarlo a mano en Keynote/Figma con esas mismas cajas
+y textos literales.
+
 **Duración de rodaje:** es montaje, no rodaje.
 
 ---
 
-### Toma 4 — Odoo real *(1:45–2:45)* · **LA TOMA IMPORTANTE**
+### Toma 4 — Skill Studio *(1:15–1:50)*
 
-**Pantalla:** terminal a pantalla partida con el navegador de Odoo.
+**Pantalla:** navegador, `http://localhost:5173`, pestaña **Skill
+Studio** de la app unificada (`make demo-product`, ver preparación
+arriba).
 
-```sh
-uv run python scripts/odoo_governed_demo.py --rodaje
-```
+**Qué grabar, en una sola toma continua:**
 
-**`--rodaje` es obligatorio aquí.** Sin ese flag el demo termina en
-**3,6 segundos** y escupe JSON crudo: no da tiempo material a refrescar
-el navegador entre pasos, que es justo lo que la toma tiene que
-enseñar. Con el flag, la salida es legible a 1080p y **se detiene tras
-cada paso** esperando un Enter — el operador refresca Odoo en cámara y
-continúa. El modo por defecto no cambia: sigue produciendo
-`data/odoo_governed_demo_results.json` idéntico, que es el artefacto de
-evidencia.
+1. Petición no cubierta: ya está precargada como texto por defecto de
+   la pestaña ("marcar prioridad alta a las oportunidades abiertas de
+   un cliente..."), no hace falta escribirla en cámara — solo pulsar el
+   botón.
+2. Pulsar **Generate skill proposal**. Esperar la respuesta real del
+   LLM — el contrato aparece con riesgo, roles y regla de aprobación.
+   El callout `AI MAY PROPOSE · AI MAY NOT ACTIVATE` está siempre visible
+   en esta pestaña, no hace falta encuadrarlo aparte.
+3. Pulsar **Validate + sandbox test**: el panel de la derecha muestra
+   `✓ schema valid` / `✓ sandbox tests passed`.
+4. Escribir un nombre en el campo de aprobador y pulsar **Approve
+   skill**: el estado pasa a `ACTIVE`.
+
+**Qué no grabar aquí:** la modificación por lenguaje natural (segundo
+modo de la pestaña, con el diff CURRENT → PROPOSED) es real y
+reproducible en directo, pero no cabe en el presupuesto de 35 segundos
+de esta toma — se menciona solo en la locución. Si el vídeo final tiene
+margen, es la primera candidata a añadir, no a recortar de otro sitio.
+
+**Riesgo de rodaje:** depende de una llamada real a OpenRouter (paso 2).
+Por eso la preparación exige probarla una vez antes de grabar. Si falla
+en directo, cortar a `data/` no es una opción limpia aquí (no hay un
+JSON de esta escena pensado para pantalla) — mejor repetir la toma.
+
+**Duración real medida (2026-08-26, contra el Odoo local/Tailscale y
+`deepseek/deepseek-v4-flash` vía OpenRouter):** la llamada de draft tarda
+**~15-20 segundos**, no 2-4 — verificado en directo, no estimado. Deja
+hueco en el corte de vídeo para esa espera (o corta a la locución
+mientras carga) en vez de cronometrar la toma a 35 segundos secos.
+
+---
+
+### Toma 5 — Odoo real *(1:50–2:40)* · **LA TOMA IMPORTANTE**
+
+**Cambio de plan (verificado en vivo el 27-08):** no se usa el script
+CLI. Se hace en el navegador, pestaña **Operations** de la app
+unificada — misma pantalla que las tomas anteriores, sin cortar a
+terminal. Los tres pasos se probaron por API contra el Odoo real antes
+de grabar y funcionaron exactamente así.
+
+**Pantalla:** navegador a pantalla partida — pestaña Operations a un
+lado, Odoo al otro (o dos ventanas).
 
 **Qué se ve, en orden:**
 
-1. Crear oportunidad (R1) → `ALLOW`. **Refrescar Odoo en el navegador**:
-   el registro está ahí.
-2. Cambiar importe (R2) sin aprobación → `REQUIRE_APPROVAL`. **Refrescar
-   Odoo**: el importe **no ha cambiado**.
-3. Conceder aprobación, repetir → `ALLOW`. **Refrescar Odoo**: ahora sí.
+1. Escribir `Crea una oportunidad para Distribuciones Norte por 12000
+   euros.` → **Run** → `ALLOW`. **Refrescar Odoo**: el registro está
+   ahí, 12.000€.
+2. Escribir `Actualiza el importe esperado de la oportunidad <id> a
+   20000 euros.` (el id sale en el resultado del paso 1) → **Run** →
+   `REQUIRE_APPROVAL`, no ejecuta. **Refrescar Odoo**: sigue en
+   12.000€.
+3. Pulsar **Approve & execute** → concede aprobación y repite sola →
+   `ALLOW`. **Refrescar Odoo**: ahora 20.000€.
 
-Cada paso imprime la relectura independiente en pantalla, así que el
-espectador ve **el número que el sistema leyó de Odoo**, no solo la
-decisión que el sistema dice haber tomado.
+Cada paso muestra la relectura independiente en el propio panel
+("independent_reread"), así que el espectador ve **el número que el
+sistema leyó de Odoo**, no solo la decisión que dice haber tomado.
+
+**Riesgo nuevo frente al script:** el paso 2 depende de una llamada
+real al LLM para extraer el id de la oportunidad del texto — en la
+prueba funcionó a la primera, pero no es determinista al 100% como sí
+lo era el script. Probar el texto exacto una vez antes de grabar, igual
+que con Skill Studio.
 
 **Regla de rodaje, no negociable: una sola toma continua.** Un corte
 entre el bloqueo y el refresco del navegador destruye todo el valor
 probatorio — el espectador ya no sabe si entre plano y plano pasó algo.
 Si sale mal, se repite entera.
 
+**Alternativa de respaldo si falla en directo:** `scripts/
+odoo_governed_demo.py --rodaje` sigue funcionando exactamente igual
+(verificado, más determinista) — cambiar a terminal solo si Operations
+falla dos veces seguidas en el mismo día de rodaje.
+
 **Duración de rodaje:** 10–15 minutos con repeticiones. Es la toma que
 más cuesta y la que más vale.
 
 ---
 
-### Toma 5 — Los números *(2:45–3:40)*
+### Toma 6 — Los números *(2:40–3:35)*
 
 **Pantalla:** dos figuras seguidas.
 
@@ -197,7 +308,7 @@ la ejecución completa y se corta.
 
 ---
 
-### Toma 6 — Valor y límite *(3:40–4:20)*
+### Toma 7 — Valor y límite *(3:35–4:10)*
 
 **Pantalla:** `reports/figures/v21_hypotheses_forest.png` — las nueve
 pruebas de la campaña confirmatoria, confirmada/no confirmada.
@@ -222,13 +333,14 @@ tramo principal.
 
 | Bloque | Tiempo |
 |---|---|
-| Preparación de entorno y navegador | 20 min |
-| Tomas 2 y 5 (terminal) | 30 min |
-| **Toma 4 (Odoo, una sola toma)** | **45 min** con repeticiones |
-| Diapositivas 1, 3, 6 | 60 min |
+| Preparación de entorno, navegador y `make demo-product` | 25 min |
+| Tomas 2 y 6 (terminal) | 30 min |
+| Toma 4 (Skill Studio, una sola toma) | 20 min con repeticiones |
+| **Toma 5 (Odoo, una sola toma)** | **45 min** con repeticiones |
+| Diapositivas 1, 3, 7 | 60 min |
 | Locución sobre `docs/video-guion.md` | 45 min |
 | Montaje | 90 min |
-| **Total** | **~5 horas** |
+| **Total** | **~5,5 horas** |
 
 ---
 
@@ -244,3 +356,6 @@ tramo principal.
 5. **Decir «seguro» o «inmune».** La afirmación es acotada: 510
    payloads, tres canales, cero mutaciones no autorizadas, sin
    adversario adaptativo.
+6. **No probar Skill Studio antes de grabar.** Depende de una llamada
+   real al LLM (paso 2 de la toma 4); sin verificarla antes, la toma se
+   puede caer en directo por una razón ajena al producto.

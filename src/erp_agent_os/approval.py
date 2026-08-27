@@ -34,6 +34,13 @@ class ApprovalService:
         self._approvals.append(approval)
         return approval
 
+    @property
+    def grants(self) -> list[Approval]:
+        """Read-only view of every grant issued, oldest first -- so a
+        UI (Approval Center) can list "ERP execution approvals granted"
+        without this service growing a second, parallel storage concept."""
+        return list(self._approvals)
+
     def is_valid(self, scope: str) -> bool:
         now = self._clock()
         return any(

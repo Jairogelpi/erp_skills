@@ -29,6 +29,7 @@ Controls per §26:
 
 import logging
 import os
+from ipaddress import ip_address
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -72,8 +73,32 @@ class NotADevelopmentInstanceError(RuntimeError):
     """Raised when a write demo is aimed at anything but a dev branch."""
 
 
+def _is_local_instance(host: str) -> bool:
+    """True for a host that is structurally incapable of being the
+    business's real Odoo.sh instance: localhost, or an address from a
+    private/CGNAT range (RFC 1918, or Tailscale's 100.64.0.0/10) --
+    never publicly routable, never reachable from odoo.com's own
+    infrastructure. Added for a self-hosted local/Tailscale Odoo used
+    to record the TFM demo, alongside the original *.dev.odoo.com
+    check, not instead of it -- a hostname that fails both is still
+    refused.
+    """
+    if host in ("localhost", "127.0.0.1", "::1"):
+        return True
+    try:
+        # not is_global, not is_private: RFC 1918 (192.168/172.16/10.x)
+        # sets both is_private=True/is_global=False, but Tailscale's
+        # 100.64.0.0/10 CGNAT range is_private=False in this stdlib --
+        # is_global is the one flag both agree on for "not publicly
+        # routable, cannot be the business's real Odoo.sh instance".
+        return not ip_address(host).is_global
+    except ValueError:
+        return False  # not an IP literal (e.g. a real domain name)
+
+
 def require_development_instance(url: str | None = None) -> str:
-    """Fail unless `url` is an Odoo.sh **development** branch.
+    """Fail unless `url` is an Odoo.sh **development** branch or a local
+    instance (see `_is_local_instance`).
 
     Exists because of a near miss, not a hypothetical: this machine has
     `ODOO_URL` set to the business's *production* instance as a
@@ -81,8 +106,9 @@ def require_development_instance(url: str | None = None) -> str:
     `os.environ` directly -- so a script run with no arguments silently
     aims at production, whatever a local `.env` says.
 
-    Two hosts are refused:
-      - anything that is not `*.dev.odoo.com` (production);
+    Refused:
+      - anything that is not `*.dev.odoo.com` and not a local/private
+        host (production, or any other public domain);
       - any `*staging*` branch, which on Odoo.sh is a **clone of
         production data** even though it lives under `.dev.odoo.com`.
 
@@ -90,13 +116,15 @@ def require_development_instance(url: str | None = None) -> str:
     """
     url = url or os.environ.get("ODOO_URL") or ""
     host = urlsplit(url).hostname or ""
-    if not host.endswith(".dev.odoo.com") or "staging" in host:
+    is_dev_branch = host.endswith(".dev.odoo.com") and "staging" not in host
+    if not is_dev_branch and not _is_local_instance(host):
         raise NotADevelopmentInstanceError(
             f"refusing to run a write demo against {host or '<unset>'}: "
             "only an Odoo.sh development branch (*.dev.odoo.com, not "
-            "staging) holds demo data safe to write to. Production and "
-            "staging both contain real business records. Set ODOO_URL, "
-            "ODOO_DB and ODOO_API_KEY for a development branch."
+            "staging) or a local/private-network instance holds demo "
+            "data safe to write to. Production and staging both contain "
+            "real business records. Set ODOO_URL, ODOO_DB and "
+            "ODOO_API_KEY for a development or local instance."
         )
     return url
 

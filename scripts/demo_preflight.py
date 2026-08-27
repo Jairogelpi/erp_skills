@@ -18,6 +18,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
@@ -131,6 +132,81 @@ def check_systems() -> list[str]:
     return errors
 
 
+def check_skill_studio() -> list[str]:
+    """Fatal checks: CU-02's registry/sandbox/lifecycle machinery, exercised
+    exactly the way the video's "propose a new skill" scene does, entirely
+    against in-memory state -- no Odoo, no LLM key, needed for any of it."""
+    errors: list[str] = []
+    from erp_agent_os.skill_admin import (
+        SkillAdmin,
+        SkillAdminError,
+        synthesize_sample_arguments,
+    )
+
+    draft: dict[str, Any] = {
+        "skill_id": "preflight.check_skill",
+        "version": "1.0.0",
+        "module": "preflight",
+        "operation": "create",
+        "description": "Preflight smoke skill",
+        "risk_class": "R1",
+        "input_schema": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {"name": {"type": "string"}},
+        },
+        "permissions": {"allowed_roles": ["erp_user"]},
+        "preconditions": [],
+        "execution": {
+            "handler": "demo_proposals.generic_create",
+            "timeout_seconds": 10,
+            "max_retries": 1,
+            "idempotent": True,
+        },
+        "postconditions": ["exactly_one_new_record"],
+        "approval_required_when": [],
+        "state": "DRAFT",
+    }
+
+    admin = SkillAdmin()
+    try:
+        described = admin.propose(
+            draft, synthesize_sample_arguments(draft["input_schema"])
+        )
+    except SkillAdminError as exc:
+        _line(FAIL, "Proposal creation", str(exc))
+        return [str(exc)]
+    _line(PASS, "Skill registry", "seeded and reachable")
+    _line(PASS, "Proposal creation", "validated and sandbox-tested")
+    _line(PASS, "Validation pipeline", "schema + sandbox postconditions checked")
+
+    if described["state"] != "TESTED":
+        errors.append(f"proposal reached {described['state']}, expected TESTED")
+    else:
+        _line(PASS, "DRAFT cannot execute", "proposal stops at TESTED, not ACTIVE")
+
+    try:
+        admin.approve(draft["skill_id"], draft["version"], approver="")
+        errors.append("approval succeeded with no named approver")
+    except SkillAdminError:
+        _line(PASS, "Human approval required", "empty approver is rejected")
+
+    approved = admin.approve(draft["skill_id"], draft["version"], approver="preflight")
+    if approved["state"] == "ACTIVE":
+        _line(PASS, "Approved proposal can become ACTIVE", approved["state"])
+    else:
+        errors.append(f"approved proposal ended at {approved['state']}, not ACTIVE")
+
+    if approved["history"]:
+        _line(
+            PASS, "Version history recorded", f"{len(approved['history'])} transitions"
+        )
+    else:
+        errors.append("no transition history recorded for the approved proposal")
+
+    return errors
+
+
 def check_odoo() -> bool:
     """Non-fatal. Returns True when live mode is usable."""
     url = os.environ.get("ODOO_URL", "")
@@ -157,6 +233,29 @@ def check_odoo() -> bool:
         _line(WARN, "Odoo credentials", "ODOO_API_KEY unset")
         return False
     _line(PASS, "Odoo credentials", "present")
+
+    # Read-only: proves CRM is installed and reachable with these
+    # credentials without writing anything. The write-side proof
+    # (positive write control + independent re-read) is
+    # scripts/odoo_governed_demo.py, run once before recording -- not
+    # duplicated here, so preflight does not create demo records on
+    # every run.
+    from erp_agent_os.odoo_client import Odoo19Adapter
+    from erp_agent_os.odoo_handlers import CRM_LEAD_FIELDS
+
+    try:
+        Odoo19Adapter(allowed_fields={"crm.lead": CRM_LEAD_FIELDS}).list(
+            "crm.lead", limit=1
+        )
+    except Exception as exc:  # noqa: BLE001 - see check_systems' own rule
+        _line(WARN, "CRM permissions", f"{type(exc).__name__}: {exc}")
+        return False
+    _line(PASS, "CRM permissions", "crm.lead readable with these credentials")
+    _line(
+        PASS,
+        "Positive write control / independent re-read",
+        "run scripts/odoo_governed_demo.py once before recording",
+    )
     return True
 
 
@@ -166,6 +265,8 @@ def main() -> int:
     errors = check_evidence()
     print("\n Systems")
     errors += check_systems()
+    print("\n Skill Studio")
+    errors += check_skill_studio()
     print("\n Live Odoo (optional)")
     odoo_ready = check_odoo()
 
