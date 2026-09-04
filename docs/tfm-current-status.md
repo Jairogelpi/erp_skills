@@ -7,6 +7,12 @@
 
 Este documento existe para ofrecer una entrada inequívoca al repositorio de cara a la evaluación del TFM. Algunos documentos históricos conservan, por compatibilidad con `src/erp_agent_os/claims.py`, el marcador legacy `EVIDENCE-STATUS: no-valid-confirmatory-conclusion`. Ese marcador pertenece al contrato de claims de la era v1 y **no describe el estado científico vigente de v2.1**.
 
+## Encuadre metodológico
+
+ERP Agent OS es un **proyecto técnico aplicado con desarrollo de una solución software y evaluación experimental**. ERP-Skills-Bench-Proc v2.1 es el instrumento experimental utilizado para comparar A, B y C; no es el objeto del TFM como ejercicio de análisis de dataset.
+
+La campaña confirmatoria contiene **21.478 observaciones experimentales procedentes de ejecuciones observadas sobre escenarios sintéticos/procedurales**. Este diseño favorece validez interna, igualdad de estado inicial y reproducibilidad, pero limita validez externa. No se interpreta como una muestra representativa de usuarios, empresas ni prevalencias del mundo real.
+
 ## Veredictos confirmatorios
 
 | Hipótesis | Estado | Lectura defendible |
@@ -16,7 +22,7 @@ Este documento existe para ofrecer una entrada inequívoca al repositorio de car
 | H2 | Soportada | C consume menos tokens que A y B. |
 | H3a | Soportada | C es más estable entre formulaciones lingüísticas del mismo escenario. |
 | H3b | Descriptiva | Variabilidad estocástica reportada sin criterio confirmatorio. |
-| H4 | No soportada | C no alcanza los criterios prerregistrados de seguridad; mutación no autorizada observada: 19,0 % sobre 315 escenarios peligrosos. |
+| H4 | No soportada | C no alcanza el criterio prerregistrado de seguridad activa; mutación no autorizada observada: 19,0 % sobre 315 escenarios peligrosos del benchmark confirmatorio. |
 | H5 | No soportada | El punto operativo de retrieval no alcanza los tres umbrales registrados. |
 | H6 | Soportada | La abstención reduce el riesgo de reutilización incorrecta. |
 | H7 | Soportada | C mejora la reconstrucción objetiva de auditoría. |
@@ -24,7 +30,8 @@ Este documento existe para ofrecer una entrada inequívoca al repositorio de car
 
 ## Evidencia principal
 
-- Campaña confirmatoria: **21.478 observaciones fila a fila**.
+- Campaña confirmatoria: **21.478 observaciones experimentales fila a fila**.
+- Población H4: **315 escenarios peligrosos del benchmark confirmatorio**.
 - Datos crudos: `data/protocol_v2_1/runs_v2/confirmatory_observations_v21_2d36433e861121928cceac5899ff1cf4ed346fe63250ff87956f8aba4f082c5c.jsonl`.
 - Informe: `data/protocol_v2_1/confirmatory_report_v2_1_2.json`.
 - Manifiesto vigente: `data/protocol_v2_1/code_freeze_manifest.json`.
@@ -36,8 +43,8 @@ Este documento existe para ofrecer una entrada inequívoca al repositorio de car
 2. Reduce consumo de tokens frente a A y B en el brazo específico de H2.
 3. Mejora estabilidad entre paráfrasis y reconstrucción de auditoría.
 4. La abstención aporta valor medible reduciendo reutilización errónea.
-5. La integración gobernada con Odoo 19 es técnicamente factible y se verificó mediante relecturas independientes en Development.
-6. El confinamiento estructural frente a inyección explícita se sostiene en el stress test específico que reporta 0/1.530 mutaciones no autorizadas.
+5. La integración gobernada con Odoo 19 es técnicamente factible y se verificó mediante relecturas independientes en **Development con datos demo**.
+6. El confinamiento estructural frente a inyección explícita se sostiene en el stress test específico que reporta **0/1.530 mutaciones no autorizadas fuera de contrato**.
 
 ## Qué NO se puede afirmar
 
@@ -47,11 +54,16 @@ Este documento existe para ofrecer una entrada inequívoca al repositorio de car
 - Que el retrieval actual sea adecuado para producción.
 - Que exista ROI o ahorro monetario observado.
 - Que el benchmark sintético equivalga a comportamiento de usuarios reales.
+- Que las frecuencias observadas en el benchmark sean prevalencias de una organización real.
 - Que la generación gobernada de nuevas skills cause mejoras en H1-H8; es una demostración funcional fuera del protocolo confirmatorio.
 
 ## Integración con Odoo
 
-`docs/odoo-demo.md` documenta tres niveles de evidencia: adaptador real, flujo completo de System C con aprobación y una demo adversarial cualitativa. Las escrituras se realizaron únicamente sobre una rama **Development** con datos demo. Producción y staging se rechazan programáticamente antes de cualquier escritura.
+`docs/odoo-demo.md` documenta tres niveles de evidencia: adaptador, flujo completo de System C con aprobación y una demo adversarial cualitativa. Las escrituras se realizaron únicamente sobre una rama **Development** con datos demo. Producción y staging se rechazan programáticamente antes de cualquier escritura. Solo **2 de las 12 skills** del catálogo están mapeadas en esta demostración; se presenta como factibilidad, no como cobertura de producto ni réplica confirmatoria.
+
+## Interpretabilidad
+
+La interpretabilidad relevante en este TFM es **operacional**: reconstruir petición, skill/versión, argumentos, decisión de política, aprobación, handler, postcondición y evidencia final. H7 evalúa esa reconstrucción. No se afirma interpretabilidad interna de los pesos del LLM.
 
 ## Regla de lectura del repositorio
 
@@ -60,5 +72,6 @@ Para conclusiones del TFM, el orden de precedencia es:
 1. `docs/results-v2.1.md` — resultados confirmatorios vigentes.
 2. `docs/tfm-closure-no-human-v2.1.md` — protocolo normativo.
 3. `docs/tfm-current-status.md` — resumen ejecutivo de claims.
-4. `docs/audit.md` — procedencia y defectos del instrumento.
-5. Evidencia v1 — histórica/exploratoria, nunca sustituto de v2.1.
+4. `docs/tfm-benchmark-positioning.md` — encuadre y terminología de los datos.
+5. `docs/audit.md` — procedencia y defectos del instrumento.
+6. Evidencia v1 — histórica/exploratoria, nunca sustituto de v2.1.
