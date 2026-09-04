@@ -1,12 +1,10 @@
 # Guion de defensa — documento retirado
 
-Este fichero se conserva únicamente para no romper enlaces históricos.
-Su contenido anterior mezclaba cifras exploratorias de v1 con resultados
-confirmatorios de v2.1 y utilizaba terminología ambigua sobre la naturaleza
-del benchmark.
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion** — marcador legacy exigido por `src/erp_agent_os/claims.py`; no describe el estado científico vigente de `tfm-protocol-v2.1.2`.
 
-**No utilizar este documento para el vídeo, la memoria ni una eventual
-defensa.**
+Este fichero se conserva únicamente para no romper enlaces históricos. Su contenido anterior mezclaba cifras exploratorias de v1 con resultados confirmatorios de v2.1 y utilizaba terminología ambigua sobre la naturaleza del benchmark.
+
+**No utilizar este documento para el vídeo, la memoria ni una eventual defensa.**
 
 Fuentes vigentes:
 
