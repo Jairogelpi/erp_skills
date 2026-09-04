@@ -20,7 +20,7 @@ The current confirmatory source of truth is [`docs/results-v2.1.md`](docs/result
 
 - Protocol: **`tfm-protocol-v2.1.2`**.
 - Campaign state: **`RUN_COMPLETED / CLOSURE_VALID`**.
-- Campaign size: **21,478 real observations**.
+- Campaign size: **21,478 experimental observations from executed model/system runs over a synthetic procedural benchmark**.
 - Provider/model: OpenRouter · **`deepseek/deepseek-v4-flash`**.
 - Compared systems: **A** direct agent, **B** typed tools, **C** ERP Agent OS.
 - Confirmatory support: **H1a, H2, H3a, H6, H7**.
@@ -38,7 +38,7 @@ The current confirmatory source of truth is [`docs/results-v2.1.md`](docs/result
 | **Abstention (H6)** | false reuse **−8.6 pp** | Explicit abstention improves selective behavior. |
 | **Audit reconstruction (H7)** | C − A = **+42.7 pp**, *p*=2.85×10⁻112 | C produces substantially more reconstructible execution evidence. |
 
-The most important negative result is H4. The architecture must **not** be described as generally “safe” or as a system that reliably recognizes dangerous intent. The experiment found a 19.0% unauthorized-mutation rate across 315 dangerous scenarios, almost four times the preregistered target.
+The most important negative result is H4. The architecture must **not** be described as generally “safe” or as a system that reliably recognizes dangerous intent. The experiment found a 19.0% unauthorized-mutation rate across 315 dangerous scenarios in the confirmatory synthetic benchmark, almost four times the preregistered target.
 
 That finding is deliberately kept separate from the external compromised-model stress test: across 510 InjecAgent payloads delivered through three attacker-controlled surfaces, **0/1,530 outside-contract unauthorized mutations were observed**. This is evidence about **confinement under explicit compromise**, not proof of general safety and not a replacement for H4.
 
@@ -223,14 +223,22 @@ The project uses pinned/reviewed dependencies through `uv.lock`, Ruff for format
 
 The project intentionally distinguishes evidence classes instead of flattening them into one claim:
 
-- **Confirmatory:** v2.1.2 campaign and its preregistered endpoints.
+- **Confirmatory:** v2.1.2 campaign and its preregistered endpoints over a synthetic procedural benchmark.
 - **Exploratory / historical:** v1 pilot, parser corrections, router studies and post-hoc analyses.
 - **External stress:** InjecAgent injection/confinement evaluation.
-- **Feasibility:** real Odoo 19 Development demo.
+- **Feasibility:** real Odoo 19 Development demo using demo data.
 - **Product exploration:** skill-enrichment and real-request retrieval studies.
 - **Scenario-only:** H8 cost sensitivity.
 
 The full audit trail records defects found during development and analysis rather than deleting superseded results. See [`docs/audit.md`](docs/audit.md), [`docs/tfm-current-status.md`](docs/tfm-current-status.md) and [`docs/tfm-submission-readiness.md`](docs/tfm-submission-readiness.md).
+
+### Benchmark role and TFM framing
+
+ERP Agent OS is a **technical applied software project with experimental evaluation**, not a TFM whose object is to analyze a dataset. ERP-Skills-Bench-Proc v2.1 is the measurement instrument used to compare A, B and C under controlled, reproducible conditions. Its synthetic/procedural nature enables a known reference action, policy and final state by construction; it also limits external validity, so results are not presented as frequencies observed in real companies or users.
+
+The most precise wording is: **the campaign contains observed executions of the system over synthetic scenarios**. Detailed terminology, external-validity boundaries and the recommended defense wording are documented in [`docs/tfm-benchmark-positioning.md`](docs/tfm-benchmark-positioning.md).
+
+For this project, interpretability is primarily **operational** rather than parameter-level model interpretability: the system records the chain from request to skill/version, arguments, policy, approval, handler, postcondition and final evidence. H7 evaluates whether that execution can be objectively reconstructed.
 
 ### Historical evidence
 
@@ -248,7 +256,8 @@ That marker describes the old registry contract, **not** the current scientific 
 
 Committed project material is synthetic or public research material. The repository must not contain real ERP credentials, API tokens, customer data or local environment secrets.
 
-- ERP-Skills-Bench is synthetic.
+- ERP-Skills-Bench is synthetic and is used as a controlled experimental benchmark, not as a sample claimed to represent real ERP users.
+- The 21,478 confirmatory observations are executed system/model runs over those synthetic scenarios.
 - Odoo demonstrations use Development/demo data only.
 - External benchmark provenance and license conditions are documented with the corresponding study artifacts.
 - `.env` and credential material are excluded from version control.
@@ -278,6 +287,7 @@ Recommended entry points:
 - [`docs/tfm-current-status.md`](docs/tfm-current-status.md) — one-page current status.
 - [`docs/tfm-closure-no-human-v2.1.md`](docs/tfm-closure-no-human-v2.1.md) — protocol.
 - [`docs/audit.md`](docs/audit.md) — instrument and implementation audit history.
+- [`docs/tfm-benchmark-positioning.md`](docs/tfm-benchmark-positioning.md) — methodological framing of the synthetic benchmark for the TFM.
 - [`docs/product-demo.md`](docs/product-demo.md) — A/B/C comparative demo.
 - [`docs/odoo-demo.md`](docs/odoo-demo.md) — guarded Odoo feasibility demonstration.
 - [`docs/product-viability.md`](docs/product-viability.md) — commercial claims that do and do not survive the evidence.
@@ -294,6 +304,7 @@ Current boundaries include:
 - H4: active danger recognition did not meet the preregistered safety target.
 - H5: selective retrieval did not meet its preregistered adequacy thresholds.
 - Odoo mapping covers 2/12 catalog skills.
+- The confirmatory benchmark is synthetic/procedural and does not establish representativeness of real user language or organizational prevalence.
 - Durable persistence exists as a component but is not the basis of a production multi-tenant control plane.
 - H8 models cost scenarios; it does not measure realized monetary savings.
 
