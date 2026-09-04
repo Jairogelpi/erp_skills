@@ -17,10 +17,11 @@ abstract: >-
   skills versionadas, validación estructural, clasificación de riesgo, políticas,
   aprobación humana, ejecución idempotente, verificación de postcondiciones y
   auditoría append-only. La campaña confirmatoria vigente, congelada como
-  tfm-protocol-v2.1.2, contiene 21.478 observaciones reales y compara tres
-  arquitecturas: agente directo (A), herramientas tipadas (B) y ERP Agent OS
-  gobernado (C). H1a, H2, H3a, H6 y H7 resultaron soportadas; H1b, H4 y H5 no
-  resultaron soportadas. La integración con Odoo 19 se valida aparte como
+  tfm-protocol-v2.1.2, contiene 21.478 observaciones experimentales procedentes
+  de ejecuciones observadas sobre un benchmark sintético/procedural y compara
+  tres arquitecturas: agente directo (A), herramientas tipadas (B) y ERP Agent
+  OS gobernado (C). H1a, H2, H3a, H6 y H7 resultaron soportadas; H1b, H4 y H5
+  no resultaron soportadas. La integración con Odoo 19 se evalúa aparte como
   demostración de factibilidad sobre una rama Development con datos demo y no
   constituye una réplica confirmatoria del benchmark.
 keywords:
