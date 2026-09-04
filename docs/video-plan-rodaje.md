@@ -1,11 +1,13 @@
 # Plan de rodaje: qué grabar exactamente
 
-Complementa `docs/video-guion.md` (la narración). Esto es la lista de
-tomas: **qué comando, cuánto tarda de verdad, qué se ve en pantalla**.
-Los tiempos están medidos en esta máquina, no estimados.
+Complementa `docs/video-guion.md` (la narración). Este documento fija
+qué comando usar, qué se ve en pantalla y qué evidencia sostiene cada
+toma. El vídeo final del TFM debe durar **como máximo 5:00**.
 
-Regla: **todo lo que aparezca en pantalla es salida real**. Nada
-recreado, nada maquetado para parecer una ejecución.
+Regla: **no presentar una recreación como evidencia experimental**. Si
+una escena está preparada para ilustrar un riesgo, debe quedar descrita
+como tal; si se muestra un resultado, debe proceder del comando o del
+artefacto versionado correspondiente.
 
 > Para entender **qué hace y qué prueba cada paso** de la demo —traza
 > del código, mapa contra la especificación y guía de réplica— ver
@@ -18,34 +20,29 @@ recreado, nada maquetado para parecer una ejecución.
 **Terminal.** Fuente grande (18–20 pt), fondo oscuro, ventana ~100
 columnas. En un vídeo a 1080p, una terminal a tamaño normal no se lee.
 
-**Codificación, antes de tocar nada más.** En PowerShell sin fijarla,
-los acentos y `§`/`—` salen como `�` — verificado el 23-08 grabando
-`demo_completa.py`. Al principio de la sesión de grabación:
+**Codificación.** Antes de grabar en PowerShell:
 
 ```powershell
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 ```
 
-Con eso puesto, la salida de `demo_completa.py` y `odoo_governed_demo.py`
-sale exactamente como en el guion, sin mojibake.
+**Odoo: obligatorio antes de la toma 4.** La demo solo debe apuntar a
+una **rama Development con datos demo**. El guardián del código debe
+rechazar producción, staging y destinos no declarados. No mostrar en el
+vídeo valores reales de API keys, usuarios o secretos.
 
-**Odoo: obligatorio antes de la toma 4.** Este equipo tiene `ODOO_URL`
-apuntando a **producción** como variable de usuario persistente, y el
-guardián del código lo rechaza (correctamente). Antes de grabar, en la
-misma terminal:
+Ejemplo conceptual de preparación:
 
 ```sh
-export ODOO_URL="https://acme-erp-dev-pruebas-36295186.dev.odoo.com"
-export ODOO_DB="acme-erp-dev-pruebas-36295186"
-export ODOO_USERNAME="<usuario-api>"
-export ODOO_API_KEY="<la de .env>"
+export ODOO_URL="<url-development>"
+export ODOO_DB="<db-development>"
+export ODOO_USERNAME="<usuario-api-demo>"
+export ODOO_API_KEY="<secreto-no-visible-en-video>"
 ```
 
-Verificar que responde antes de rodar, o la toma se cae en directo.
-
 **Navegador.** Pestaña abierta en la vista de oportunidades (`crm.lead`)
-de la rama de desarrollo, lista para refrescar en cámara.
+de la rama Development, con datos demo y lista para refrescar en cámara.
 
 ---
 
@@ -53,36 +50,27 @@ de la rama de desarrollo, lista para refrescar en cámara.
 
 ### Toma 1 — El problema *(0:00–0:30)*
 
-**Pantalla:** navegador, Odoo real. Oportunidad "Renovacion contrato
-anual" de **Hoteles Camino (DEMO)** con 15.000 €. Corte seco. La misma
-con 27.600 €.
+**Pantalla:** navegador, Odoo 19 Development. Oportunidad
+"Renovacion contrato anual" de **Hoteles Camino (DEMO)** con 15.000 €.
+Corte seco. La misma con 27.600 €.
 
-**Qué afirma esta toma, y qué no.** Muestra **lo que está en juego**: un
-registro de negocio real con un importe que puede cambiar. **No afirma
-que un agente lo cambiara mal** — esa afirmación se hace en la toma 2,
-donde el agente sin gobierno ejecuta de verdad y se ve la ejecución.
-Presentar la toma 1 como «mira lo que hizo la IA» sería una recreación
-disfrazada de prueba, exactamente lo que las notas de producción
-prohíben. La locución del guion está escrita en términos de riesgo
-(«sale esto: un importe cambiado»), no de incidente.
+**Qué afirma esta toma, y qué no.** Muestra **lo que está en juego**
+mediante un registro demo persistente. **No afirma que un agente haya
+producido ese cambio concreto**. El estado se prepara deliberadamente
+con `scripts/stage_video_shot1.py`; presentarlo como «mira lo que hizo
+la IA» sería atribuir causalidad que la toma no demuestra.
 
-**Preparación del estado, en dos comandos:**
+**Preparación del estado:**
 
 ```sh
-uv run python scripts/stage_video_shot1.py --before   # crea el registro a 15.000
-#   ... grabar el plano del importe inicial ...
-uv run python scripts/stage_video_shot1.py --after    # lo cambia a 27.600
-#   ... refrescar y grabar el plano del importe cambiado ...
+uv run python scripts/stage_video_shot1.py --before
+# grabar el estado inicial
+uv run python scripts/stage_video_shot1.py --after
+# refrescar y grabar el estado cambiado
 ```
 
 El cliente se llama **"Hoteles Camino (DEMO)"** a propósito: si el vídeo
-se publica, nadie puede confundirlo con un cliente real de la empresa.
-
-**Encuadre:** la ficha de la oportunidad con el campo de ingreso
-esperado visible y grande. No grabar la lista, grabar la ficha — el
-número tiene que leerse sin esfuerzo.
-
-**Duración de rodaje:** 5 minutos (2 planos + los dos comandos).
+se comparte, nadie debe confundirlo con un cliente real.
 
 ---
 
@@ -91,43 +79,41 @@ número tiene que leerse sin esfuerzo.
 **Pantalla:** terminal.
 
 ```sh
-uv run python scripts/demo.py
-```
-
-**Qué mostrar:** mejor aún, usar la **demo completa**, que ya trae el
-contraste construido:
-
-```sh
 uv run python scripts/demo_completa.py --pausa
 ```
 
-Para este tramo bastan las **escenas 2 y 8**: A escribe sin permiso y A
-duplica al repetir la petición, mientras C para y C reconoce la clave.
-El contraste está en pantalla, sin montaje.
-
-Alternativa más corta: `scripts/demo.py`, escenario 4 — petición con
-"aplícalo también a todos los clientes similares" → `DENY`, motivo
-`BULK_SCOPE`.
-
-**Duración real del comando: 14 segundos.** Cabe entero en cámara, sin
-cortes.
+Para este tramo bastan las escenas que muestran el contraste A/C. La
+evidencia de esta toma pertenece al entorno experimental controlado;
+no presentarla como una escritura sobre producción ni como una
+frecuencia observada en una empresa real.
 
 ---
 
 ### Toma 3 — La arquitectura *(1:00–1:45)*
 
-**Pantalla:** diagrama de las dos zonas. **No es una toma de pantalla**,
-es una diapositiva.
+**Pantalla:** diagrama de las dos zonas. Es una diapositiva explicativa,
+no evidencia experimental.
 
-**Cómo:** el diagrama del README (`request → Intent Parser → …`)
-redibujado limpio, o el de `docs/architecture.md`. Animación mínima: que
-aparezca primero la zona izquierda, luego la línea, luego la derecha.
+Mostrar:
 
-**Duración de rodaje:** es montaje, no rodaje.
+```text
+petición
+  -> interpretación probabilística
+  -> retrieval / abstención
+  -> contrato de skill
+  -> policy + riesgo + aprobación
+  -> runtime determinista
+  -> adaptador ERP
+  -> postcondiciones
+  -> auditoría
+```
+
+Frase central: **«el LLM propone; la arquitectura autoriza; el runtime
+ejecuta»**.
 
 ---
 
-### Toma 4 — Odoo real *(1:45–2:45)* · **LA TOMA IMPORTANTE**
+### Toma 4 — Odoo 19 Development *(1:45–2:45)* · TOMA PRINCIPAL
 
 **Pantalla:** terminal a pantalla partida con el navegador de Odoo.
 
@@ -135,112 +121,96 @@ aparezca primero la zona izquierda, luego la línea, luego la derecha.
 uv run python scripts/odoo_governed_demo.py --rodaje
 ```
 
-**`--rodaje` es obligatorio aquí.** Sin ese flag el demo termina en
-**3,6 segundos** y escupe JSON crudo: no da tiempo material a refrescar
-el navegador entre pasos, que es justo lo que la toma tiene que
-enseñar. Con el flag, la salida es legible a 1080p y **se detiene tras
-cada paso** esperando un Enter — el operador refresca Odoo en cámara y
-continúa. El modo por defecto no cambia: sigue produciendo
-`data/odoo_governed_demo_results.json` idéntico, que es el artefacto de
-evidencia.
-
 **Qué se ve, en orden:**
 
-1. Crear oportunidad (R1) → `ALLOW`. **Refrescar Odoo en el navegador**:
-   el registro está ahí.
-2. Cambiar importe (R2) sin aprobación → `REQUIRE_APPROVAL`. **Refrescar
-   Odoo**: el importe **no ha cambiado**.
-3. Conceder aprobación, repetir → `ALLOW`. **Refrescar Odoo**: ahora sí.
+1. Crear oportunidad (R1) → `ALLOW`. Refrescar Odoo: el registro demo
+   está persistido.
+2. Cambiar importe (R2) sin aprobación → `REQUIRE_APPROVAL`. Refrescar
+   Odoo: el importe no ha cambiado.
+3. Conceder aprobación, repetir → `ALLOW`. Refrescar Odoo: ahora sí.
 
-Cada paso imprime la relectura independiente en pantalla, así que el
-espectador ve **el número que el sistema leyó de Odoo**, no solo la
-decisión que el sistema dice haber tomado.
+Cada paso debe acompañarse de la relectura independiente. Esta toma
+prueba **factibilidad end-to-end en una instancia Odoo 19 Development
+con datos demo**; no forma parte del contraste confirmatorio A/B/C y no
+es validación en producción.
 
-**Regla de rodaje, no negociable: una sola toma continua.** Un corte
-entre el bloqueo y el refresco del navegador destruye todo el valor
-probatorio — el espectador ya no sabe si entre plano y plano pasó algo.
-Si sale mal, se repite entera.
-
-**Duración de rodaje:** 10–15 minutos con repeticiones. Es la toma que
-más cuesta y la que más vale.
+**Regla de rodaje:** mantener continua la secuencia bloqueo → refresco →
+aprobación → nueva escritura siempre que sea posible, para que la
+relectura sea comprensible y no dependa de una afirmación verbal.
 
 ---
 
 ### Toma 5 — Los números *(2:45–3:40)*
 
-**Pantalla:** dos figuras seguidas.
+**Pantalla:** dos fuentes de evidencia diferenciadas.
 
-Primero **el dato flojo, y es confirmatorio**: `reports/figures/v21_h4_categories.png`
-(o regenerarla en vivo con `uv run python scripts/make_figures_v2_1.py`)
-— 19,0 % de mutación no autorizada sobre 315 escenarios peligrosos
-reales, casi 4× el umbral del 5 %. El dato antiguo de InjecAgent
-(0 % → 3,3 %) mide otra cosa (detección léxica fuera de distribución) y
-puede citarse de pasada, no como titular.
+Primero, resultado confirmatorio:
+`reports/figures/v21_h4_categories.png` — **19,0 % de mutación no
+autorizada sobre 315 escenarios peligrosos del benchmark confirmatorio
+sintético**, frente al objetivo prerregistrado <5 %. H4 queda **no
+soportada**.
 
-Después **el fuerte**, que sigue de pie:
+Después, stress test externo:
 
 ```sh
 uv run python scripts/injection_resistance_test.py
 ```
 
-**Aviso práctico:** son 1.530 casos y **no cabe en el tramo de vídeo**.
-Dos opciones honestas:
-- grabar el arranque (el control positivo: `clean request -> ALLOW,
-  created ['45']`) y cortar al resumen final de la misma ejecución;
-- o mostrar `data/injection_resistance_results.json` en pantalla.
+Resultado acotado: **0/1.530 mutaciones no autorizadas fuera de contrato**
+sobre 510 payloads de InjecAgent entregados por tres superficies. No
+presentarlo como prueba de seguridad general ni como sustituto de H4.
 
-Lo que **no** se puede hacer es maquetar una tabla bonita y presentarla
-como si fuera la salida.
-
-**Duración de rodaje:** 5 minutos si se muestra el JSON; ~20 si se graba
-la ejecución completa y se corta.
+Si la ejecución completa no cabe en el vídeo, mostrar el artefacto
+versionado `data/injection_resistance_results.json` y decir que se trata
+del resultado almacenado, no de una salida recreada.
 
 ---
 
 ### Toma 6 — Valor y límite *(3:40–4:20)*
 
-**Pantalla:** `reports/figures/v21_hypotheses_forest.png` — las nueve
-pruebas de la campaña confirmatoria, confirmada/no confirmada.
+**Pantalla:** `reports/figures/v21_hypotheses_forest.png`.
 
-- Valor confirmado: tokens más baratos (H2, vs A y vs B), más estable
-  entre formulaciones (H3a), auditoría más completa (H7).
-- Límite confirmado: no supera en éxito de tarea a un baseline con
-  herramientas tipadas (H1b) ni reduce el riesgo de seguridad frente a
-  ninguno de los dos comparadores (H4).
+Claims permitidos y alineados con la memoria:
 
-**Nota:** la cifra antigua de sensibilidad al proveedor (false allow
-0,333 ↔ 0,889) es del piloto v1 con selector LLM real y **no** se probó
-en la campaña confirmatoria v2.1 (un solo proveedor). No usarla aquí sin
-esa salvedad — puede citarse como diapositiva de reserva (R8), no en el
-tramo principal.
+- **H1a soportada:** C no es inferior a A en STSR (+25,3 pp; margen -5 pp).
+- **H1b no soportada:** no se demuestra superioridad de C sobre B
+  (C−B = -1,5 pp; p=0,286).
+- **H2 soportada:** C consume ~468 tokens menos que A y ~648 menos que B
+  por ejecución en el brazo H2.
+- **H3a soportada:** mayor estabilidad entre formulaciones (OR 9,35;
+  p=2,2×10^-18).
+- **H4 no soportada:** 19,0 % de mutación no autorizada sobre 315
+  escenarios peligrosos del benchmark; objetivo <5 %.
+- **H5 no soportada:** selective accuracy 0,589; false-reuse 0,411.
+- **H6 soportada:** la abstención reduce false-reuse en 8,6 pp.
+- **H7 soportada:** reconstrucción completa de auditoría +42,7 pp frente
+  a A (p=2,85×10^-112), con la salvedad estructural descrita en memoria.
+- **H8 descriptiva:** sensibilidad económica modelada; **no** ahorro
+  monetario observado.
 
-**Duración de rodaje:** montaje.
-
----
-
-## Presupuesto realista
-
-| Bloque | Tiempo |
-|---|---|
-| Preparación de entorno y navegador | 20 min |
-| Tomas 2 y 5 (terminal) | 30 min |
-| **Toma 4 (Odoo, una sola toma)** | **45 min** con repeticiones |
-| Diapositivas 1, 3, 6 | 60 min |
-| Locución sobre `docs/video-guion.md` | 45 min |
-| Montaje | 90 min |
-| **Total** | **~5 horas** |
+No resumir H4 como «más/menos seguro que A o B» sin la salvedad de que
+parte de las denegaciones de los comparadores son errores de ejecución y
+no detección de seguridad homologable. La formulación final debe ser:
+**«H4 no alcanza el criterio prerregistrado de seguridad activa»**.
 
 ---
 
-## Errores que arruinan el vídeo
+## Control final antes de exportar el vídeo
 
-1. **Cortar la toma de Odoo.** Convierte la prueba en una afirmación.
-2. **Terminal ilegible.** Si no se lee el `REQUIRE_APPROVAL`, la toma no
-   existe.
-3. **Empezar por los resultados A/B/C.** El guion abre por el problema y
-   por el peor número propio, a propósito.
-4. **Recrear una salida.** Si un comando no se puede grabar en vivo, se
-   muestra el JSON versionado — no se dibuja una tabla que finja serlo.
-5. **Decir «seguro» o «inmune».** La afirmación es acotada: 510
-   payloads, tres canales, cero mutaciones no autorizadas, sin
-   adversario adaptativo.
+1. Duración final **≤5:00**.
+2. Formato **MP4**.
+3. Objetivo de tamaño recomendado por la guía: **≤50 MB cuando sea
+   razonablemente posible**.
+4. Voz del autor incluida; no es necesario aparecer en cámara.
+5. No aparecen credenciales, tokens, correos, teléfonos ni datos
+   identificables.
+6. No se dice «observaciones reales», «escenarios reales», «peticiones
+   peligrosas reales», «seguro», «inmune», «validado en producción» ni
+   «ahorra X euros».
+7. Para el benchmark: «observaciones experimentales / ejecuciones
+   observadas sobre escenarios sintéticos».
+8. Para H4: «315 escenarios peligrosos del benchmark confirmatorio».
+9. Para Odoo: «Odoo 19 Development con datos demo; demostración de
+   factibilidad».
+10. El cierre coincide con la tesis de la memoria: **el LLM propone; la
+    arquitectura autoriza; el runtime ejecuta**.
