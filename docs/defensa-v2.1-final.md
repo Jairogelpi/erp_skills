@@ -8,7 +8,7 @@ Guion alineado exclusivamente con la evidencia confirmatoria vigente (`tfm-proto
 
 La conclusión no es «el sistema es seguro». La conclusión es más precisa: aporta eficiencia, estabilidad, abstención y trazabilidad medibles, pero la detección activa de peligro y el retrieval siguen siendo límites abiertos.
 
-## Estructura recomendada del vídeo (4:30–5:00)
+## Estructura recomendada del vídeo (4:20–5:00)
 
 ### 0:00–0:35 — Problema
 
@@ -30,52 +30,55 @@ Tres sistemas comparables:
 - B: herramientas tipadas.
 - C: ERP Agent OS completo.
 
-Benchmark procedural con verdad de referencia definida antes del texto, oráculos independientes y campaña única tras freeze. Resultado: 21.478 observaciones, `RUN_COMPLETED / CLOSURE_VALID`.
+ERP-Skills-Bench-Proc v2.1 es un benchmark **sintético/procedural** con verdad de referencia definida antes del texto, oráculos independientes y campaña única tras freeze. La campaña contiene **21.478 observaciones experimentales procedentes de ejecuciones observadas sobre escenarios sintéticos**, con estado `RUN_COMPLETED / CLOSURE_VALID`.
+
+El benchmark es el instrumento experimental del proyecto software; no se presenta como muestra representativa de usuarios o empresas reales.
 
 ### 1:55–3:10 — Resultados
 
 Empezar por los resultados que limitan la tesis:
 
 - H1b no soportada: C no supera a B en éxito de tarea (`p=0,286`).
-- H4 no soportada: 19,0 % de mutación no autorizada sobre 315 escenarios peligrosos; el límite prerregistrado era 5 %.
+- H4 no soportada: 19,0 % de mutación no autorizada sobre **315 escenarios peligrosos del benchmark confirmatorio**; el límite prerregistrado era <5 %.
 - H5 no soportada: selective accuracy 0,589 y false-reuse risk 0,411.
 
 Después, qué sí se sostiene:
 
-- H1a: C no es inferior a A.
+- H1a: C no es inferior a A (+25,3 pp, con margen de no inferioridad -5 pp).
 - H2: aproximadamente 468 tokens menos que A y 648 menos que B.
-- H3a: mayor estabilidad entre formulaciones, OR 9,35.
-- H6: la abstención reduce false-reuse risk.
-- H7: +42,7 puntos porcentuales de reconstrucción completa de auditoría frente a A.
+- H3a: mayor estabilidad entre formulaciones, OR 9,35 (`p=2,2×10^-18`).
+- H6: la abstención reduce false-reuse risk en 8,6 pp.
+- H7: +42,7 puntos porcentuales de reconstrucción completa de auditoría frente a A (`p=2,85×10^-112`), con la salvedad estructural declarada en la memoria.
+- H8: análisis descriptivo de sensibilidad; no demuestra ahorro monetario observado.
 
 ### 3:10–3:50 — Seguridad: la distinción importante
 
 No confundir dos preguntas:
 
-1. ¿Detecta bien una petición ambigua y peligrosa? **No suficientemente: H4 falla.**
-2. Si el modelo está explícitamente comprometido y trata de escribir fuera del contrato, ¿el confinamiento estructural aguanta? En el stress test específico: **0/1.530 mutaciones no autorizadas**.
+1. ¿Detecta suficientemente bien una petición ambigua y peligrosa? **No: H4 falla el criterio prerregistrado.**
+2. Si el modelo está explícitamente comprometido y trata de escribir fuera del contrato, ¿el confinamiento estructural aguanta? En el stress test específico: **0/1.530 mutaciones no autorizadas fuera de contrato**.
 
-Ese contraste es una aportación del trabajo: **confinamiento no equivale a detección**.
+Ese contraste es una aportación del trabajo: **confinamiento no equivale a detección**. El 0/1.530 no prueba seguridad general ni sustituye H4.
 
-### 3:50–4:25 — Odoo real
+### 3:50–4:25 — Odoo 19 Development
 
-Demo gobernada sobre Odoo 19 Development:
+Demo gobernada sobre una instancia **Odoo 19 Development con datos demo**:
 
 1. R1 -> ALLOW -> crea oportunidad.
 2. R2 sin aprobación -> REQUIRE_APPROVAL -> relectura independiente confirma que Odoo no cambió.
 3. Se concede aprobación -> ALLOW -> escritura -> relectura confirma el nuevo estado.
 
-No presentarlo como réplica estadística: es evidencia de factibilidad de integración.
+No presentarlo como réplica estadística ni como validación en producción: es evidencia de **factibilidad de integración end-to-end**. Solo 2/12 skills están mapeadas a Odoo en la demostración actual.
 
 ### 4:25–5:00 — Cierre
 
-> El resultado más útil no es que la arquitectura gane en todo; es saber exactamente dónde ayuda y dónde deja de ayudar. La gobernanza reduce trabajo repetido y hace las acciones más estables y auditables, pero no sustituye a un retrieval fiable ni a políticas capaces de reconocer peligro ambiguo. Ese es el siguiente paso para convertir el prototipo en un producto operativo.
+> El resultado más útil no es que la arquitectura gane en todo; es saber exactamente dónde ayuda y dónde deja de ayudar. La gobernanza aporta propiedades medibles de eficiencia, estabilidad, abstención y trazabilidad, pero no sustituye a un retrieval fiable ni a políticas capaces de reconocer peligro ambiguo. Ese es el siguiente paso para convertir el prototipo en un producto operativo.
 
 ## Preguntas difíciles
 
 ### «¿Por qué usa datos sintéticos?»
 
-Porque permiten definir intención, decisión esperada y estado final antes de generar el lenguaje, evitando depender de anotación humana inexistente. Esto aumenta validez interna y reproducibilidad, a cambio de limitar validez externa. El TFM no afirma equivalencia con usuarios reales.
+Porque permiten definir intención, decisión esperada y estado final antes de generar el lenguaje y comparar A, B y C bajo el mismo estado inicial. Esto aumenta validez interna y reproducibilidad a cambio de limitar validez externa. El TFM no afirma equivalencia con usuarios reales. Además, el benchmark no es el objeto de un TFM de análisis de dataset: es el instrumento de evaluación de una solución software.
 
 ### «¿No está favorecido C porque A no tiene postcondiciones?»
 
@@ -83,11 +86,11 @@ Parte de H7 es estructural y se declara como tal. Por eso el contraste más info
 
 ### «¿Por qué H4 sale peor que A/B en algunos endpoints?»
 
-Porque el `DENY` de A/B puede ser simplemente un error de ejecución, no una decisión de seguridad homologable. La cifra que no depende de esa etiqueta es la mutación real no autorizada de C: 19,0 %, y esa cifra por sí sola hace que H4 no se soporte.
+Porque el `DENY` de A/B puede proceder de un error de ejecución, no de una decisión de seguridad homologable. Por eso la lectura principal no es «A/B son más seguros», sino que **C observa un 19,0 % de mutaciones no autorizadas dentro de la población peligrosa del benchmark**, suficiente para que H4 no alcance el objetivo <5 %.
 
 ### «¿0/1.530 significa que es seguro?»
 
-No. Significa que en ese stress test explícito no hubo mutaciones fuera de contrato. No establece tasa cero en producción ni sustituye H4, que evalúa otra superficie y falla.
+No. Significa que en ese stress test explícito no se observaron mutaciones fuera de contrato. No establece tasa cero en producción ni sustituye H4, que evalúa otra superficie y falla.
 
 ### «¿Qué pasó con v2.1.1 y v2.1.2?»
 
@@ -103,8 +106,8 @@ No. Puede proponer una definición, pero `DRAFT -> ACTIVE` está prohibido. La p
 
 ### «¿Qué falta para producción?»
 
-Prioridad 1: cerrar H4 y volver a medir. Después: mejorar retrieval con descripciones/ejemplos reales, ampliar handlers de Odoo (actualmente 2/12), cablear persistencia a la API, autenticación/multi-tenant, UX de aprobación y auditoría resistente a manipulación.
+Prioridad 1: cerrar las categorías que fallan en H4 y volver a medir sobre evidencia prospectiva. Después: mejorar retrieval con descripciones y ejemplos representativos, ampliar handlers de Odoo (actualmente 2/12), autenticación/multi-tenant y secretos, persistencia e integridad de auditoría, observabilidad/SLO y UX de aprobación/aclaración.
 
 ## Regla final
 
-Si una pregunta del tribunal intenta llevar la respuesta más lejos que la evidencia, volver a la formulación exacta: **“en ERP-Skills-Bench-Proc v2.1, bajo el modelo, catálogo, políticas y condiciones registradas...”**. Esa precisión fortalece la defensa; no la debilita.
+Si una pregunta intenta llevar la respuesta más lejos que la evidencia, volver a la formulación exacta: **«en ERP-Skills-Bench-Proc v2.1, bajo el modelo, catálogo, políticas y condiciones registradas...»**. Esa precisión fortalece la defensa.
