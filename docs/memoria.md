@@ -1,5 +1,7 @@
 # Memoria del TFM — nota de versión final
 
+> **EVIDENCE-STATUS: no-valid-confirmatory-conclusion** — marcador legacy exigido por `src/erp_agent_os/claims.py`; no describe el estado científico vigente de `tfm-protocol-v2.1.2`.
+
 La memoria oficial de entrega se genera y entrega como PDF independiente
 con el nombre:
 
@@ -16,24 +18,15 @@ tutor.
 1. `docs/results-v2.1.md` — resultados confirmatorios completos.
 2. `docs/tfm-closure-no-human-v2.1.md` — protocolo normativo.
 3. `docs/tfm-current-status.md` — matriz vigente de claims.
-4. `docs/tfm-benchmark-positioning.md` — encuadre metodológico del
-   benchmark sintético/procedural.
-5. `docs/defensa-v2.1-final.md` — explicación final de resultados y
-   límites.
+4. `docs/tfm-benchmark-positioning.md` — encuadre metodológico del benchmark sintético/procedural.
+5. `docs/defensa-v2.1-final.md` — explicación final de resultados y límites.
 6. `docs/video-guion.md` — guion final del vídeo de máximo 5 minutos.
 
 ## Encuadre del TFM
 
-ERP Agent OS es un **proyecto técnico aplicado con desarrollo de una
-solución software y evaluación experimental**. ERP-Skills-Bench-Proc v2.1
-es un instrumento de medida sintético/procedural; no es el objeto del TFM
-como ejercicio de análisis de dataset.
+ERP Agent OS es un **proyecto técnico aplicado con desarrollo de una solución software y evaluación experimental**. ERP-Skills-Bench-Proc v2.1 es un instrumento de medida sintético/procedural; no es el objeto del TFM como ejercicio de análisis de dataset.
 
-La campaña confirmatoria contiene **21.478 observaciones experimentales
-procedentes de ejecuciones observadas sobre escenarios sintéticos**. Su
-diseño maximiza control experimental, igualdad de estado inicial y
-reproducibilidad, a cambio de limitar validez externa. No se presentan
-estas frecuencias como prevalencias de usuarios o empresas.
+La campaña confirmatoria contiene **21.478 observaciones experimentales procedentes de ejecuciones observadas sobre escenarios sintéticos**. Su diseño maximiza control experimental, igualdad de estado inicial y reproducibilidad, a cambio de limitar validez externa. No se presentan estas frecuencias como prevalencias de usuarios o empresas.
 
 ## Claims vigentes
 
@@ -52,21 +45,11 @@ estas frecuencias como prevalencias de usuarios o empresas.
 
 ## Evidencia externa y operacional
 
-- **InjecAgent:** 0/1.530 mutaciones no autorizadas fuera de contrato en
-  el stress test específico. Es evidencia de confinamiento en ese diseño
-  de ataque, no prueba de seguridad general y no sustituye H4.
-- **Odoo 19:** demostración de factibilidad end-to-end exclusivamente en
-  **Development con datos demo**. La ruta gobernada muestra escritura R1,
-  bloqueo R2 sin aprobación, relectura independiente, aprobación y nueva
-  escritura. Cobertura actual: 2/12 skills.
+- **InjecAgent:** 0/1.530 mutaciones no autorizadas fuera de contrato en el stress test específico. Es evidencia de confinamiento en ese diseño de ataque, no prueba de seguridad general y no sustituye H4.
+- **Odoo 19:** demostración de factibilidad end-to-end exclusivamente en **Development con datos demo**. La ruta gobernada muestra escritura R1, bloqueo R2 sin aprobación, relectura independiente, aprobación y nueva escritura. Cobertura actual: 2/12 skills.
 
 ## Regla de interpretación
 
-La conclusión final no es que la arquitectura sea universalmente superior
-o segura. Bajo las condiciones registradas, la gobernanza aporta
-propiedades medibles de eficiencia, estabilidad, abstención y
-trazabilidad, mientras que la detección activa de peligro y el retrieval
-siguen siendo límites abiertos.
+La conclusión final no es que la arquitectura sea universalmente superior o segura. Bajo las condiciones registradas, la gobernanza aporta propiedades medibles de eficiencia, estabilidad, abstención y trazabilidad, mientras que la detección activa de peligro y el retrieval siguen siendo límites abiertos.
 
-La memoria PDF de entrega incorpora esta formulación y constituye el
-documento que debe evaluarse junto con el repositorio y el vídeo.
+La memoria PDF de entrega incorpora esta formulación y constituye el documento que debe evaluarse junto con el repositorio y el vídeo.
