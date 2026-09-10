@@ -253,9 +253,10 @@ def main() -> int:
         npm = _check_prerequisites()
         _run_demo_preflight()
         _install_and_build_frontend(npm)
-        if args.check or args.full_check:
-            if _launch(npm, open_browser=False, smoke_only=True) != 0:
-                return 1
+        if (args.check or args.full_check) and _launch(
+            npm, open_browser=False, smoke_only=True
+        ) != 0:
+            return 1
         if args.full_check:
             _run_full_scientific_check()
     except (PrerequisiteError, subprocess.CalledProcessError) as exc:
