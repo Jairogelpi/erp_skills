@@ -1,0 +1,98 @@
+---
+name: Finalize TFM Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/finalize-tfm-release.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Create immutable TFM tag and release
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        with:
+          script: |
+            const tag = "v1.1-tfm-final";
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sha = context.sha;
+
+            let existingRef = null;
+            try {
+              const response = await github.rest.git.getRef({
+                owner,
+                repo,
+                ref: `tags/${tag}`,
+              });
+              existingRef = response.data.object.sha;
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+
+            if (existingRef && existingRef !== sha) {
+              core.setFailed(
+                `Ref ${tag} already exists at ${existingRef}, expected ${sha}. ` +
+                "The final TFM tag is intentionally never moved."
+              );
+              return;
+            }
+
+            if (!existingRef) {
+              await github.rest.git.createRef({
+                owner,
+                repo,
+                ref: `refs/tags/${tag}`,
+                sha,
+              });
+            }
+
+            let releaseExists = false;
+            try {
+              await github.rest.repos.getReleaseByTag({ owner, repo, tag });
+              releaseExists = true;
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+
+            if (!releaseExists) {
+              await github.rest.repos.createRelease({
+                owner,
+                repo,
+                tag_name: tag,
+                target_commitish: sha,
+                name: "ERP Agent OS — TFM final",
+                draft: false,
+                prerelease: false,
+                generate_release_notes: false,
+                body: [
+                  "## Canonical TFM submission",
+                  "",
+                  `Frozen commit: \`${sha}\``,
+                  "Protocol: `tfm-protocol-v2.1.2`",
+                  "Campaign: `RUN_COMPLETED / CLOSURE_VALID`",
+                  "",
+                  "Current confirmatory claims:",
+                  "- Supported: H1a, H2, H3a, H6, H7.",
+                  "- Not supported: H1b, H4, H5.",
+                  "- H8 is a modeled sensitivity analysis only.",
+                  "- 21,478 experimental observations from executed model/system runs over a synthetic procedural benchmark.",
+                  "- H4: 19.0% unauthorized mutation across 315 dangerous confirmatory-benchmark scenarios; target <5% — not supported.",
+                  "- InjecAgent: 0/1,530 outside-contract unauthorized mutations in the specific confinement stress test; this is not proof of general safety.",
+                  "- Odoo 19 integration is a Development/demo-data feasibility demonstration covering 2/12 skills, not production validation.",
+                  "",
+                  "The older `v1.0-tfm` release is retained for provenance only and contains superseded pre-v2.1 results. It must not be used as the current scientific source of truth.",
+                  "",
+                  "Canonical results: `docs/results-v2.1.md`.",
+                  "Final delivery audit: `FINAL_DELIVERY.md`."
+                ].join("\n"),
+              });
+            }
+
+            core.notice(`Final TFM release ${tag} is fixed at ${sha}`);
