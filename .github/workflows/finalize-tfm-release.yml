@@ -19,7 +19,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
           script: |
-            const tag = "v1.1-tfm-final";
+            const tag = "v1.2-tfm-final";
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const sha = context.sha;
@@ -67,7 +67,7 @@ jobs:
                 repo,
                 tag_name: tag,
                 target_commitish: sha,
-                name: "ERP Agent OS — TFM final",
+                name: "ERP Agent OS — TFM final evaluator-ready",
                 draft: false,
                 prerelease: false,
                 generate_release_notes: false,
@@ -78,6 +78,11 @@ jobs:
                   "Protocol: `tfm-protocol-v2.1.2`",
                   "Campaign: `RUN_COMPLETED / CLOSURE_VALID`",
                   "",
+                  "Evaluator path:",
+                  "- Read `PROFESSOR_QUICKSTART.md`.",
+                  "- `uv run python scripts/professor_demo.py --check` verifies the frozen evidence, A/B/C behavior, approval positive control, npm lockfile install, TypeScript and Vite production build.",
+                  "- `uv run python scripts/professor_demo.py` opens the comparative demo locally without an LLM API key or Odoo credentials.",
+                  "",
                   "Current confirmatory claims:",
                   "- Supported: H1a, H2, H3a, H6, H7.",
                   "- Not supported: H1b, H4, H5.",
@@ -87,7 +92,7 @@ jobs:
                   "- InjecAgent: 0/1,530 outside-contract unauthorized mutations in the specific confinement stress test; this is not proof of general safety.",
                   "- Odoo 19 integration is a Development/demo-data feasibility demonstration covering 2/12 skills, not production validation.",
                   "",
-                  "The older `v1.0-tfm` release is retained for provenance only and contains superseded pre-v2.1 results. It must not be used as the current scientific source of truth.",
+                  "Older releases are retained for provenance only and may contain superseded pre-v2.1 material. They are not the current scientific source of truth.",
                   "",
                   "Canonical results: `docs/results-v2.1.md`.",
                   "Final delivery audit: `FINAL_DELIVERY.md`."
