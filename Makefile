@@ -1,4 +1,4 @@
-.PHONY: demo-product demo-api demo-preflight format format-check lint typecheck test coverage build up down logs compose-config validate-dataset benchmark-smoke experiment verify-freeze validate-claims prepare-v2 advance-v2 demo export-results figures compare-retrievers power-v2-1 freeze-v2-1 verify-tfm-closure verify-tfm-failed-external mutation-v2-1
+.PHONY: demo-product demo-api demo-preflight professor-demo professor-check professor-full-check format format-check lint typecheck test coverage build up down logs compose-config validate-dataset benchmark-smoke experiment verify-freeze validate-claims prepare-v2 advance-v2 demo export-results figures compare-retrievers power-v2-1 freeze-v2-1 verify-tfm-closure verify-tfm-failed-external mutation-v2-1
 
 up:
 	docker compose --env-file config/development.defaults up --build
@@ -71,11 +71,21 @@ demo-preflight:
 demo-api:
 	uv run uvicorn erp_agent_os.demo_api:app --reload --port 8000
 
-# Runs preflight first, on purpose: presenting a screen whose evidence
-# artifacts are unreadable is the one failure mode worth blocking on.
+# POSIX convenience target. The evaluator-facing path is professor-demo,
+# which is cross-platform and performs the same preflight first.
 demo-product: demo-preflight
-	cd demo-ui && npm install --silent
-	uv run uvicorn erp_agent_os.demo_api:app --port 8000 & 		cd demo-ui && npm run dev
+	cd demo-ui && npm ci --silent
+	uv run uvicorn erp_agent_os.demo_api:app --port 8000 & \
+		cd demo-ui && npm run dev
+
+professor-check:
+	uv run python scripts/professor_demo.py --check
+
+professor-full-check:
+	uv run python scripts/professor_demo.py --full-check
+
+professor-demo:
+	uv run python scripts/professor_demo.py
 
 export-results:
 	uv run python scripts/export_results.py
