@@ -1,9 +1,6 @@
 # ERP Agent OS — auditoría final de entrega TFM
 
-Este fichero marca el **freeze documental de entrega**. La referencia
-estable de entrega es la rama `tfm-final-2026`, creada sobre el commit que
-incorpora este documento. El PDF entregado debe registrar el SHA exacto de
-esa referencia.
+Este fichero marca el **freeze documental de entrega**. La referencia canónica de entrega es el tag/release **`v1.1-tfm-final`**, que debe apuntar al mismo commit que la rama estable `tfm-final-2026`. El PDF entregado debe registrar el SHA exacto de ese estado congelado.
 
 ## 1. Fuente científica canónica
 
@@ -108,7 +105,7 @@ experimento.
 
 El repositorio está configurado con **visibilidad pública** en GitHub.
 Los destinos relativos utilizados por el README y por los documentos
-canónicos se han resuelto contra el árbol de `main`, incluidos:
+canónicos se han resuelto, incluidos:
 
 - `docs/results-v2.1.md`
 - `docs/tfm-current-status.md`
@@ -123,8 +120,7 @@ canónicos se han resuelto contra el árbol de `main`, incluidos:
 - `CITATION.cff`
 
 La documentación externa principal de `uv` también resuelve públicamente.
-La visibilidad pública del repositorio evita que Carlos Ortega o Santiago
-Mota necesiten permisos adicionales para leerlo.
+La visibilidad pública del repositorio evita que los tutores necesiten permisos adicionales para leerlo.
 
 ## 8. Vídeo del TFM
 
@@ -147,7 +143,7 @@ Antes de subir el MP4 final deben comprobarse sobre el fichero multimedia:
 
 **El MP4 no está versionado en este repositorio**, por lo que esta auditoría
 certifica el guion y los claims, no las propiedades técnicas de un fichero
-de vídeo que no forme parte del árbol Git.
+de vídeo que no forma parte del árbol Git.
 
 ## 9. Entregables y fecha
 
@@ -169,9 +165,12 @@ Nombre de vídeo recomendado:
 
 `Jairo_Gelpi_Moreno_TFM_ERP_Agent_OS_VIDEO.mp4`
 
-## 10. Regla de freeze
+## 10. Freeze final
 
-Tras crear `tfm-final-2026` no realizar cambios en código, protocolo,
-resultados o documentación de entrega sin repetir esta auditoría y volver a
-actualizar la referencia del PDF. La finalidad es que PDF, vídeo y
-repositorio correspondan a una única versión identificable.
+- **Tag/release canónico:** `v1.1-tfm-final`.
+- **Rama estable de espejo:** `tfm-final-2026`.
+- `main` puede continuar evolucionando después de la entrega; la referencia académica permanente es el tag.
+- La release `v1.0-tfm` se conserva únicamente como artefacto histórico y contiene resultados superseded de una fase anterior. No debe utilizarse como fuente vigente.
+- La fuente de claims sigue siendo `docs/results-v2.1.md` bajo `tfm-protocol-v2.1.2`.
+
+A partir del tag final, cualquier cambio de código, protocolo, resultados o documentación científica pertenece a una versión posterior y no modifica el artefacto académico entregado.
