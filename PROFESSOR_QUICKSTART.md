@@ -21,10 +21,10 @@ No es necesario instalar Python manualmente: `uv` puede instalar la versión
 
 ## 2. Clonar la versión académica
 
-La referencia final de entrega es `v1.2-tfm-final`.
+La referencia final de entrega es `v1.3-tfm-final`.
 
 ```bash
-git clone --branch v1.2-tfm-final --depth 1 https://github.com/Jairogelpi/erp_skills.git
+git clone --branch v1.3-tfm-final --depth 1 https://github.com/Jairogelpi/erp_skills.git
 cd erp_skills
 ```
 
@@ -65,7 +65,9 @@ Antes de mostrar ese resultado, el script verifica:
 - auditoría disponible;
 - instalación reproducible del frontend con `npm ci`;
 - typecheck de TypeScript;
-- build de producción de Vite.
+- build de producción de Vite;
+- arranque real de la API y de la UI por HTTP;
+- funcionamiento del proxy UI → API.
 
 ## 5. Abrir la demo
 
@@ -83,12 +85,13 @@ http://127.0.0.1:5173
 La API se sirve únicamente en `127.0.0.1:8000`. Para detener ambos procesos,
 pulsar `Ctrl+C` en la terminal.
 
-La pantalla permite recorrer los cuatro presets principales:
+La pantalla dispone de **tres presets de escenario** y una prueba adicional de
+paráfrasis asociada al escenario de aprobación:
 
 - `01 NORMAL`: operación permitida y postcondición verificada.
 - `02 APPROVAL`: A/B escriben; C mantiene el ERP sin cambios hasta recibir una
-  aprobación explícita.
-- `03 PARAPHRASES`: comparación de estabilidad ante distintas formulaciones.
+  aprobación explícita. Desde este caso se puede ejecutar `PARAPHRASES` para
+  comparar distintas formulaciones del mismo intent.
 - `04 SECURITY`: ejemplo bloqueado acompañado del resultado confirmatorio H4,
   que permanece explícitamente **no soportado**.
 
