@@ -6,45 +6,46 @@ resultados.
 
 ## 1. Memoria
 
-- [ ] Portada con autor, título, máster, tutores y curso académico.
-- [ ] Índice actualizado.
-- [ ] Memoria principal dentro del límite indicado por la guía; portada,
+- [x] Portada con autor, título, máster, tutores y curso académico.
+- [x] Índice actualizado.
+- [x] Memoria principal dentro del límite indicado por la guía; portada,
       índice y anexos tratados conforme a sus reglas de cómputo.
-- [ ] Arial/Verdana y tamaño legible conforme a la guía.
-- [ ] Resumen ejecutivo y palabras clave.
-- [ ] Problema, estado de la cuestión, objetivos, arquitectura,
+- [x] Arial/Verdana y tamaño legible conforme a la guía.
+- [x] Resumen ejecutivo y palabras clave.
+- [x] Problema, estado de la cuestión, objetivos, arquitectura,
       implementación, datos, metodología, resultados, discusión,
       productivización y conclusiones.
-- [ ] Se declara explícitamente que el TFM es un **proyecto técnico
+- [x] Se declara explícitamente que el TFM es un **proyecto técnico
       aplicado** y que ERP-Skills-Bench-Proc v2.1 es un **instrumento
       experimental**, no el objeto de un TFM de análisis de dataset.
-- [ ] Se describe el benchmark como sintético/procedural y se separan
+- [x] Se describe el benchmark como sintético/procedural y se separan
       validez interna y validez externa.
-- [ ] Para la campaña se usa «21.478 observaciones experimentales» o
+- [x] Para la campaña se usa «21.478 observaciones experimentales» o
       «ejecuciones observadas sobre escenarios sintéticos».
-- [ ] Para H4 se usa «315 escenarios peligrosos del benchmark
+- [x] Para H4 se usa «315 escenarios peligrosos del benchmark
       confirmatorio».
-- [ ] La interpretabilidad se formula como explicabilidad/trazabilidad
+- [x] La interpretabilidad se formula como explicabilidad/trazabilidad
       operacional (petición -> skill -> argumentos -> policy -> aprobación
       -> ejecución -> postcondición), sin presentar SHAP/LIME como
       requisito artificial de un sistema que no entrena un modelo
       predictivo propio.
-- [ ] Resultados positivos y negativos reportados sin reformulación post
+- [x] Resultados positivos y negativos reportados sin reformulación post
       hoc.
-- [ ] H4 y H5 identificadas explícitamente como no soportadas.
-- [ ] Diferencia entre confinamiento y detección explicada.
-- [ ] Integración con Odoo presentada como factibilidad sobre
+- [x] H4 y H5 identificadas explícitamente como no soportadas.
+- [x] Diferencia entre confinamiento y detección explicada.
+- [x] Integración con Odoo presentada como factibilidad sobre
       **Development con datos demo**, no como réplica confirmatoria ni
       validación en producción.
-- [ ] Bibliografía breve y homogénea.
-- [ ] Derechos de uso de datos, privacidad/GDPR y procedencia de
+- [x] Bibliografía breve y homogénea.
+- [x] Derechos de uso de datos, privacidad/GDPR y procedencia de
       InjecAgent documentados.
-- [ ] Declaración transparente de uso de asistentes de IA incluida en
+- [x] Declaración transparente de uso de asistentes de IA incluida en
       anexos.
 
 ## 2. Reproducibilidad del repositorio
 
-Ejecutar desde un clon limpio antes de entregar:
+Verificado sobre el commit final de entrega mediante CI y cierre de protocolo.
+La CI debe permanecer verde en la referencia congelada.
 
 ```bash
 uv sync --group dev
@@ -75,38 +76,38 @@ Para el encuadre metodológico y la terminología sobre el benchmark, usar
 
 ## 4. Datos y privacidad
 
-- ERP-Skills-Bench-Proc v2.1: sintético y generado por el autor;
-  instrumento experimental de la evaluación confirmatoria.
-- Las 21.478 filas son observaciones experimentales de ejecuciones del
-  sistema sobre escenarios sintéticos; no registros procedentes de
-  usuarios o empresas.
-- InjecAgent: benchmark público bajo licencia MIT, utilizado con
-  atribución.
-- Odoo: solo Development con datos demo; producción y staging rechazados
-  por `require_development_instance()`.
-- No versionar credenciales, `.env`, peticiones identificables ni datos
-  de empresa.
+- [x] ERP-Skills-Bench-Proc v2.1: sintético y generado por el autor;
+      instrumento experimental de la evaluación confirmatoria.
+- [x] Las 21.478 filas son observaciones experimentales de ejecuciones del
+      sistema sobre escenarios sintéticos; no registros procedentes de
+      usuarios o empresas.
+- [x] InjecAgent: benchmark público bajo licencia MIT, utilizado con
+      atribución.
+- [x] Odoo: solo Development con datos demo; producción y staging rechazados
+      por `require_development_instance()`.
+- [x] No se versionan credenciales, `.env`, peticiones identificables ni datos
+      de empresa en los materiales de entrega.
 
 ## 5. Entregables
 
-- [ ] Memoria DOCX/PDF final.
-- [ ] Nombre de la memoria incluye nombre y dos apellidos.
-- [ ] Vídeo **MP4** de máximo **5 minutos**.
-- [ ] Objetivo recomendado de vídeo: no más de ~50 MB cuando sea posible.
-- [ ] Voz del autor incluida; no es obligatorio aparecer en cámara.
-- [ ] Repositorio público y accesible para Carlos Ortega y Santiago Mota.
-- [ ] Anexos/código/protocolo/resultados completos accesibles mediante el
+- [x] Memoria PDF final preparada.
+- [x] Nombre de la memoria incluye nombre y dos apellidos.
+- [ ] Vídeo **MP4** de máximo **5 minutos** — pendiente del fichero multimedia final.
+- [ ] Tamaño recomendado del vídeo <= ~50 MB cuando sea posible — pendiente del MP4 final.
+- [ ] Voz del autor incluida — pendiente de validar sobre el MP4 final; no es obligatorio aparecer en cámara.
+- [x] Repositorio público y accesible sin autenticación.
+- [x] Anexos/código/protocolo/resultados completos accesibles mediante el
       repositorio.
-- [ ] Comprobar enlaces desde una sesión no autenticada.
-- [ ] Registrar el commit exacto de entrega y congelar una referencia
-      estable de entrega.
+- [x] Enlaces canónicos del README y documentos de entrega resueltos.
+- [x] Commit final de entrega registrado y referencia estable preparada.
 
 ## 6. Vídeo
 
-Usar como fuente `docs/video-guion.md` y
+Fuentes canónicas: `docs/video-guion.md` y
 `docs/video-plan-rodaje.md`.
 
-Comprobar que el audio dice exactamente:
+El guion está alineado con la memoria. Sobre el MP4 final todavía debe
+comprobarse que el audio conserva exactamente estos límites:
 
 - H1b: no se demuestra superioridad sobre B.
 - H4: 19,0 % sobre 315 escenarios peligrosos del benchmark; criterio
@@ -135,8 +136,9 @@ Comprobar que el audio dice exactamente:
 
 ## 8. Freeze de entrega
 
-Antes de generar el paquete definitivo, registrar el commit exacto de
-entrega. A partir de ese punto, cualquier cambio que afecte a resultados,
-cifras o protocolo requiere una nueva revisión completa de coherencia.
-Cambios puramente documentales posteriores deben evitarse para que PDF,
-vídeo y repositorio apunten a una única versión.
+La referencia final del repositorio debe apuntar a un único commit y la
+release de entrega debe corresponder a ese mismo estado. A partir de ese
+punto, cualquier cambio que afecte a resultados, cifras o protocolo requiere
+una nueva revisión completa de coherencia. El único entregable todavía no
+certificable desde el repositorio es el MP4 final, porque no forma parte del
+árbol Git.
