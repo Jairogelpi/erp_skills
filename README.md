@@ -12,6 +12,8 @@ Trabajo Fin de Máster — Jairo Gelpi Moreno · Máster en Data Science, IA y B
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](pyproject.toml)
 
+> **Final TFM freeze:** the canonical submission is the Git tag/release **`v1.1-tfm-final`**. The branch `tfm-final-2026` mirrors that frozen state. The older `v1.0-tfm` release is historical and contains superseded pre-v2.1 results; it is not a current source of scientific claims.
+
 ---
 
 ## Current scientific status
@@ -283,6 +285,7 @@ CLAUDE.md            normative specification + append-only build log
 
 Recommended entry points:
 
+- [`FINAL_DELIVERY.md`](FINAL_DELIVERY.md) — final submission freeze, deliverable checks and canonical tag.
 - [`docs/results-v2.1.md`](docs/results-v2.1.md) — current confirmatory results.
 - [`docs/tfm-current-status.md`](docs/tfm-current-status.md) — one-page current status.
 - [`docs/tfm-closure-no-human-v2.1.md`](docs/tfm-closure-no-human-v2.1.md) — protocol.
