@@ -33,6 +33,7 @@ ROOT = Path(__file__).resolve().parent.parent
 UI_DIR = ROOT / "demo-ui"
 API_URL = "http://127.0.0.1:8000/demo/evidence"
 UI_URL = "http://127.0.0.1:5173"
+PROXY_EVIDENCE_URL = f"{UI_URL}/demo/evidence"
 
 
 class PrerequisiteError(RuntimeError):
@@ -128,7 +129,7 @@ def _wait_until_ready(url: str, *, timeout_seconds: float = 25.0) -> bool:
     while time.monotonic() < deadline:
         try:
             with urllib.request.urlopen(url, timeout=1.0) as response:
-                if 200 <= response.status < 500:
+                if 200 <= response.status < 400:
                     return True
         except (urllib.error.URLError, TimeoutError, OSError):
             time.sleep(0.25)
@@ -146,7 +147,7 @@ def _terminate(process: subprocess.Popen[bytes]) -> None:
         process.wait(timeout=5)
 
 
-def _launch(npm: str, *, open_browser: bool) -> int:
+def _launch(npm: str, *, open_browser: bool, smoke_only: bool = False) -> int:
     env = os.environ.copy()
     src_path = str(ROOT / "src")
     existing = env.get("PYTHONPATH")
@@ -194,6 +195,16 @@ def _launch(npm: str, *, open_browser: bool) -> int:
                 "Demo UI did not become ready on 127.0.0.1:5173. "
                 "Check whether the port is already in use."
             )
+        if not _wait_until_ready(PROXY_EVIDENCE_URL):
+            raise RuntimeError(
+                "The Vite UI started, but its /demo proxy could not reach the API."
+            )
+
+        if smoke_only:
+            print("  [PASS] Demo API HTTP readiness")
+            print("  [PASS] Demo UI HTTP readiness")
+            print("  [PASS] UI -> API proxy")
+            return 0
 
         print("\nDEMO READY")
         print(f"Open: {UI_URL}")
@@ -242,9 +253,15 @@ def main() -> int:
         npm = _check_prerequisites()
         _run_demo_preflight()
         _install_and_build_frontend(npm)
+        if args.check or args.full_check:
+            if _launch(npm, open_browser=False, smoke_only=True) != 0:
+                return 1
         if args.full_check:
             _run_full_scientific_check()
     except (PrerequisiteError, subprocess.CalledProcessError) as exc:
+        print(f"\nREVIEWER CHECK FAILED: {exc}", file=sys.stderr)
+        return 1
+    except RuntimeError as exc:
         print(f"\nREVIEWER CHECK FAILED: {exc}", file=sys.stderr)
         return 1
 
