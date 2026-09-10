@@ -63,7 +63,9 @@ def _node_major(node: str) -> int:
     try:
         return int(version.split(".", 1)[0])
     except ValueError as exc:
-        raise PrerequisiteError(f"Could not parse Node.js version: {version!r}") from exc
+        raise PrerequisiteError(
+            f"Could not parse Node.js version: {version!r}"
+        ) from exc
 
 
 def _check_prerequisites() -> str:
