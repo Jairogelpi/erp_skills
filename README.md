@@ -12,7 +12,9 @@ Trabajo Fin de Máster — Jairo Gelpi Moreno · Máster en Data Science, IA y B
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](pyproject.toml)
 
-> **Final TFM freeze:** the canonical submission is the Git tag/release **`v1.1-tfm-final`**. The branch `tfm-final-2026` mirrors that frozen state. The older `v1.0-tfm` release is historical and contains superseded pre-v2.1 results; it is not a current source of scientific claims.
+> **Final TFM freeze:** the canonical submission is the Git tag/release **`v1.2-tfm-final`**. The branch `tfm-final-2026` mirrors that frozen state. The older `v1.0-tfm` and `v1.1-tfm-final` releases are historical snapshots; current scientific claims must be read from the canonical final tag and `docs/results-v2.1.md`.
+
+> **Tutor / evaluator:** use [`PROFESSOR_QUICKSTART.md`](PROFESSOR_QUICKSTART.md). It gives one cross-platform installation/check command and launches the comparative web demo without API keys or Odoo credentials.
 
 ---
 
@@ -117,6 +119,15 @@ The dashes are intentional. The repository does **not** infer governance fields 
 
 The repository contains a presentation-oriented web demo that runs the same request through A, B and C, shows the resulting ERP state, and places the frozen confirmatory evidence beside the live behavior.
 
+Recommended cross-platform evaluator path:
+
+```sh
+uv run python scripts/professor_demo.py --check
+uv run python scripts/professor_demo.py
+```
+
+The second command starts the API and UI and opens `http://127.0.0.1:5173`. It does **not** need an LLM API key or Odoo credentials. On POSIX systems, the equivalent convenience targets remain available:
+
 ```sh
 make demo-preflight
 make demo-product
@@ -179,27 +190,32 @@ See [`docs/odoo-demo.md`](docs/odoo-demo.md).
 
 ### Requirements
 
-- CPython `>=3.12,<3.13`
-- [`uv`](https://docs.astral.sh/uv/)
-- Git
-- POSIX-compatible shell / GNU-compatible `make` for Make targets
-- Docker + Compose only for the optional container workflow
+- [`uv`](https://docs.astral.sh/uv/); it can install the required CPython 3.12 interpreter.
+- Git.
+- Node.js **18+** with npm for the comparative web UI; Node.js 20 LTS is recommended.
+- POSIX-compatible shell / GNU-compatible `make` only if using Make targets; the evaluator script does not require `make`.
+- Docker + Compose only for the optional container workflow.
 
 ### Install and verify
 
+For an evaluator, use the frozen academic tag and the same commands on Windows, macOS or Linux:
+
 ```sh
-git clone https://github.com/Jairogelpi/erp_skills.git
+git clone --branch v1.2-tfm-final --depth 1 https://github.com/Jairogelpi/erp_skills.git
 cd erp_skills
+uv python install 3.12
 uv lock --check
 uv sync --frozen --group dev
-make format-check
-make lint
-make typecheck
-make test
-make verify-tfm-closure
+uv run python scripts/professor_demo.py --check
 ```
 
-The v2.1 closure verifier checks the frozen campaign artifacts and final report rather than silently re-running or replacing them.
+The last command verifies the confirmatory evidence, A/B/C demo behavior, approval positive control, `npm ci`, TypeScript and the production Vite build. For the full Python suite and v2.1.2 closure verification:
+
+```sh
+uv run python scripts/professor_demo.py --full-check
+```
+
+No external LLM provider is called by either reviewer check. The v2.1 closure verifier reads the frozen campaign artifacts and final report rather than silently re-running or replacing them.
 
 ### Useful targets
 
@@ -210,14 +226,16 @@ make validate-dataset     # catalog / intents / generator checks
 make verify-freeze        # legacy freeze verification
 make verify-tfm-closure   # current v2.1.2 closure verification
 make demo-preflight       # product-demo evidence + positive control
-make demo-product         # comparative demo API + UI
+make demo-product         # POSIX comparative demo API + UI
+make professor-check      # cross-platform reviewer check
+make professor-demo       # cross-platform reviewer demo launcher
 make demo                 # deterministic core demo
 make compare-retrievers   # retrieval experiments
 make figures              # reproducible figures
 make build                # sdist + wheel
 ```
 
-The project uses pinned/reviewed dependencies through `uv.lock`, Ruff for format/lint, mypy for static checking, pytest/Hypothesis for tests, and CI on Python 3.12.
+The project uses pinned/reviewed dependencies through `uv.lock` and `demo-ui/package-lock.json`, Ruff for format/lint, mypy for static checking, pytest/Hypothesis for tests, and CI on Python 3.12. CI also executes the same `professor_demo.py --check` command documented for evaluators.
 
 ---
 
@@ -273,18 +291,20 @@ For vulnerability reporting and the difference between research findings and pro
 ## Repository map
 
 ```text
-src/erp_agent_os/   architecture and runtime implementation
-scripts/            experiments, verification and demos
-tests/              unit, property, contract and end-to-end tests
-data/               benchmark and frozen evidence artifacts
-docs/               thesis, protocol, results, audits and demos
-demo-ui/            comparative product-demo frontend
-reports/            generated figures / reporting artifacts
-CLAUDE.md            normative specification + append-only build log
+src/erp_agent_os/       architecture and runtime implementation
+scripts/                experiments, verification and demos
+tests/                  unit, property, contract and end-to-end tests
+data/                   benchmark and frozen evidence artifacts
+docs/                   thesis, protocol, results, audits and demos
+demo-ui/                comparative product-demo frontend
+reports/                generated figures / reporting artifacts
+PROFESSOR_QUICKSTART.md evaluator installation and demo path
+CLAUDE.md               normative specification + append-only build log
 ```
 
 Recommended entry points:
 
+- [`PROFESSOR_QUICKSTART.md`](PROFESSOR_QUICKSTART.md) — clean install, verification and demo for evaluators.
 - [`FINAL_DELIVERY.md`](FINAL_DELIVERY.md) — final submission freeze, deliverable checks and canonical tag.
 - [`docs/results-v2.1.md`](docs/results-v2.1.md) — current confirmatory results.
 - [`docs/tfm-current-status.md`](docs/tfm-current-status.md) — one-page current status.
