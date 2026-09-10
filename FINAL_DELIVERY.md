@@ -1,6 +1,6 @@
 # ERP Agent OS — auditoría final de entrega TFM
 
-Este fichero marca el **freeze documental de entrega**. La referencia canónica de entrega es el tag/release **`v1.1-tfm-final`**, que debe apuntar al mismo commit que la rama estable `tfm-final-2026`. El PDF entregado debe registrar el SHA exacto de ese estado congelado.
+Este fichero marca el **freeze documental de entrega**. La referencia canónica de entrega es el tag/release **`v1.2-tfm-final`**, que debe apuntar al mismo commit que la rama estable `tfm-final-2026`. El PDF entregado debe registrar el SHA exacto de ese estado congelado.
 
 ## 1. Fuente científica canónica
 
@@ -65,6 +65,7 @@ La formulación única de entrega es:
 ## 5. Documentos activos alineados
 
 - `README.md`
+- `PROFESSOR_QUICKSTART.md`
 - `CITATION.cff`
 - `docs/results-v2.1.md`
 - `docs/tfm-current-status.md`
@@ -101,12 +102,13 @@ Una formulación antigua dentro de esos registros no constituye un claim de
 entrega y se conserva precisamente para no reescribir la historia del
 experimento.
 
-## 7. Auditoría de enlaces y acceso
+## 7. Auditoría de enlaces, PR y acceso
 
 El repositorio está configurado con **visibilidad pública** en GitHub.
 Los destinos relativos utilizados por el README y por los documentos
 canónicos se han resuelto, incluidos:
 
+- `PROFESSOR_QUICKSTART.md`
 - `docs/results-v2.1.md`
 - `docs/tfm-current-status.md`
 - `docs/tfm-closure-no-human-v2.1.md`
@@ -119,10 +121,43 @@ canónicos se han resuelto, incluidos:
 - `SECURITY.md`
 - `CITATION.cff`
 
-La documentación externa principal de `uv` también resuelve públicamente.
+El PR histórico `#2` (`codex/competition-readiness`) se ha cerrado sin merge de
+forma deliberada: era una rama anterior al cierre v2.1.2, no era mergeable con
+el estado final y contenía documentación/artefactos ya superados. No existe una
+funcionalidad final pendiente que deba recuperarse mediante el merge de ese PR.
+
 La visibilidad pública del repositorio evita que los tutores necesiten permisos adicionales para leerlo.
 
-## 8. Vídeo del TFM
+## 8. Instalación y prueba por un evaluador
+
+La ruta canónica está documentada en `PROFESSOR_QUICKSTART.md` y no requiere
+GNU make, API keys ni Odoo para probar el artefacto principal.
+
+Secuencia prevista:
+
+```text
+git clone --branch v1.2-tfm-final --depth 1 ...
+uv python install 3.12
+uv sync --frozen --group dev
+uv run python scripts/professor_demo.py --check
+uv run python scripts/professor_demo.py
+```
+
+El `--check` ejecuta el mismo camino que CI y verifica:
+
+- evidencia confirmatoria legible;
+- A/B/C operativos;
+- aprobación R2 sin mutación previa;
+- control positivo tras aprobar;
+- auditoría;
+- `npm ci` sobre `demo-ui/package-lock.json`;
+- typecheck TypeScript;
+- build Vite.
+
+La demo comparativa usa `FakeERP` reproducible. Odoo y los proveedores LLM son
+opcionales y están fuera de la ruta mínima de evaluación.
+
+## 9. Vídeo del TFM
 
 Fuentes de narración:
 
@@ -145,7 +180,7 @@ Antes de subir el MP4 final deben comprobarse sobre el fichero multimedia:
 certifica el guion y los claims, no las propiedades técnicas de un fichero
 de vídeo que no forma parte del árbol Git.
 
-## 9. Entregables y fecha
+## 10. Entregables y fecha
 
 TFM ordinario:
 
@@ -165,12 +200,12 @@ Nombre de vídeo recomendado:
 
 `Jairo_Gelpi_Moreno_TFM_ERP_Agent_OS_VIDEO.mp4`
 
-## 10. Freeze final
+## 11. Freeze final
 
-- **Tag/release canónico:** `v1.1-tfm-final`.
+- **Tag/release canónico:** `v1.2-tfm-final`.
 - **Rama estable de espejo:** `tfm-final-2026`.
 - `main` puede continuar evolucionando después de la entrega; la referencia académica permanente es el tag.
-- La release `v1.0-tfm` se conserva únicamente como artefacto histórico y contiene resultados superseded de una fase anterior. No debe utilizarse como fuente vigente.
+- `v1.0-tfm` y `v1.1-tfm-final` se conservan únicamente como snapshots históricos y no son la fuente final de evaluación.
 - La fuente de claims sigue siendo `docs/results-v2.1.md` bajo `tfm-protocol-v2.1.2`.
 
 A partir del tag final, cualquier cambio de código, protocolo, resultados o documentación científica pertenece a una versión posterior y no modifica el artefacto académico entregado.
