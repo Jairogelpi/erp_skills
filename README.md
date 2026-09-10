@@ -12,7 +12,7 @@ Trabajo Fin de Máster — Jairo Gelpi Moreno · Máster en Data Science, IA y B
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](pyproject.toml)
 
-> **Final TFM freeze:** the canonical submission is the Git tag/release **`v1.2-tfm-final`**. The branch `tfm-final-2026` mirrors that frozen state. The older `v1.0-tfm` and `v1.1-tfm-final` releases are historical snapshots; current scientific claims must be read from the canonical final tag and `docs/results-v2.1.md`.
+> **Final TFM freeze:** the canonical submission is the Git tag/release **`v1.3-tfm-final`**. The branch `tfm-final-2026` mirrors that frozen state. The older `v1.0-tfm`, `v1.1-tfm-final` and `v1.2-tfm-final` releases are historical snapshots; current scientific claims must be read from the canonical final tag and `docs/results-v2.1.md`.
 
 > **Tutor / evaluator:** use [`PROFESSOR_QUICKSTART.md`](PROFESSOR_QUICKSTART.md). It gives one cross-platform installation/check command and launches the comparative web demo without API keys or Odoo credentials.
 
@@ -201,7 +201,7 @@ See [`docs/odoo-demo.md`](docs/odoo-demo.md).
 For an evaluator, use the frozen academic tag and the same commands on Windows, macOS or Linux:
 
 ```sh
-git clone --branch v1.2-tfm-final --depth 1 https://github.com/Jairogelpi/erp_skills.git
+git clone --branch v1.3-tfm-final --depth 1 https://github.com/Jairogelpi/erp_skills.git
 cd erp_skills
 uv python install 3.12
 uv lock --check
@@ -209,7 +209,7 @@ uv sync --frozen --group dev
 uv run python scripts/professor_demo.py --check
 ```
 
-The last command verifies the confirmatory evidence, A/B/C demo behavior, approval positive control, `npm ci`, TypeScript and the production Vite build. For the full Python suite and v2.1.2 closure verification:
+The last command verifies the confirmatory evidence, A/B/C demo behavior, approval positive control, `npm ci`, TypeScript, the production Vite build, real HTTP startup of API/UI and the UI → API proxy. For the full Python suite and v2.1.2 closure verification:
 
 ```sh
 uv run python scripts/professor_demo.py --full-check
